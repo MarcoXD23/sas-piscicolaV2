@@ -7,6 +7,7 @@ use App\Models\Concerns\PerteneceATenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -69,6 +70,13 @@ class User extends Authenticatable
         );
 
         $this->unsetRelation('roles');
+    }
+
+    /** Personal de campo: personas aprobadas con rol de trabajador o celador. */
+    public function scopeDeCampo(Builder $consulta): void
+    {
+        $consulta->whereNotNull('aprobado_at')
+            ->whereHas('roles', fn ($roles) => $roles->whereIn('nombre', Turno::ROLES));
     }
 
     public function turnos(): HasMany

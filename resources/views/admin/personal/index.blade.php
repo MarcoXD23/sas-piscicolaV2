@@ -5,7 +5,7 @@
 @section('contenido')
     <x-encabezado titulo="Personal" subtitulo="Aprueba solicitudes y asigna uno o varios roles a cada persona." />
 
-    <x-pestanas :enlaces="[['ruta' => 'admin.personal.index', 'texto' => 'Personas'], ['ruta' => 'admin.turnos.index', 'texto' => 'Turnos']]" />
+    <x-pestanas-personal />
 
     <x-tabla :columnas="['Persona', 'Estado', 'Roles']" vacio="Aún no hay personal registrado.">
         @foreach ($personal as $persona)

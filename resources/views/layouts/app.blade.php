@@ -30,8 +30,10 @@
                 ['ruta' => 'inicio', 'texto' => 'Inicio', 'icono' => 'inicio', 'roles' => null],
                 ['ruta' => 'admin.lagos.index', 'activa' => 'admin.lagos.*', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
-                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
+                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
                 ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
+                ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => 'Tareas', 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
+                ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => 'Mi trabajo', 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
                 ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)))

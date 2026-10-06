@@ -52,6 +52,20 @@
         </x-tarjeta>
     @endif
 
+    @if ($tareasPendientes > 0)
+        <a href="{{ route('mi-trabajo.index') }}" class="mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:ring-marca-300">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-marca-50 text-marca-700"><x-icono nombre="tareas" /></span>
+            <span class="text-lg font-semibold text-slate-900">Tienes {{ $tareasPendientes }} tarea(s) pendiente(s)</span>
+        </a>
+    @endif
+
+    @if ($solicitudesPendientes > 0)
+        <a href="{{ route('admin.solicitudes.index') }}" class="mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:ring-marca-300">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><x-icono nombre="personal" /></span>
+            <span class="text-lg font-semibold text-slate-900">{{ $solicitudesPendientes }} solicitud(es) de permiso u horas extra por revisar</span>
+        </a>
+    @endif
+
     @if ($novedadesNoche->isNotEmpty())
         <a href="{{ route('noche.index') }}" class="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900 hover:bg-red-100">
             <x-icono nombre="luna" class="mt-0.5" />

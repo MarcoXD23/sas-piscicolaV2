@@ -19,7 +19,7 @@
         </x-boton>
     </x-encabezado>
 
-    <x-pestanas :enlaces="[['ruta' => 'admin.personal.index', 'texto' => 'Personas'], ['ruta' => 'admin.turnos.index', 'texto' => 'Turnos']]" />
+    <x-pestanas-personal />
 
     @if ($personal->isEmpty())
         <x-vacio icono="personal" mensaje="Para programar turnos, primero aprueba personas con rol de trabajador o celador en la pestaña Personas." class="mb-6" />

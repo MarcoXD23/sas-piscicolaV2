@@ -152,11 +152,6 @@ class TurnoController extends Controller
     /** Personas aprobadas con rol de trabajador o celador. */
     private function personalPorTurnos()
     {
-        return User::query()
-            ->with('roles')
-            ->whereNotNull('aprobado_at')
-            ->whereHas('roles', fn ($consulta) => $consulta->whereIn('nombre', Turno::ROLES))
-            ->orderBy('name')
-            ->get();
+        return User::query()->with('roles')->deCampo()->orderBy('name')->get();
     }
 }

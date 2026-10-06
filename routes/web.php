@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\SiembraController;
+use App\Http\Controllers\Admin\SolicitudController;
+use App\Http\Controllers\Admin\TareaController;
 use App\Http\Controllers\Admin\TrasladoController;
 use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
 use App\Http\Controllers\Noche\RondaController;
@@ -42,6 +45,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/turnos', [TurnoController::class, 'store'])->name('turnos.store');
         Route::delete('/turnos/{turno}', [TurnoController::class, 'destroy'])->name('turnos.destroy');
 
+        Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
+        Route::post('/permisos/{permiso}/revisar', [SolicitudController::class, 'revisarPermiso'])->name('permisos.revisar');
+        Route::post('/horas-extras/{horaExtra}/revisar', [SolicitudController::class, 'revisarHoras'])->name('horas-extras.revisar');
+
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
     });
@@ -54,6 +61,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
         Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
+
+        Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
+        Route::post('/tareas', [TareaController::class, 'store'])->name('tareas.store');
+        Route::delete('/tareas/{tarea}', [TareaController::class, 'destroy'])->name('tareas.destroy');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
@@ -70,6 +81,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
         Route::get('/especies/{slug}', [EspecieController::class, 'show'])->name('especies.show');
+    });
+
+    // Autogestión del personal de campo: tareas, permisos y horas extra
+    Route::middleware('rol:trabajador,celador')->prefix('mi-trabajo')->name('mi-trabajo.')->group(function () {
+        Route::get('/', [MiTrabajoController::class, 'index'])->name('index');
+        Route::post('/tareas/{tarea}/completar', [MiTrabajoController::class, 'completar'])->name('tareas.completar');
+        Route::post('/permisos', [MiTrabajoController::class, 'solicitarPermiso'])->name('permisos.store');
+        Route::post('/horas-extras', [MiTrabajoController::class, 'reportarHoras'])->name('horas-extras.store');
     });
 
     // Seguridad & Noche: el celador solo registra dentro de su turno
