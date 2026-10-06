@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Paleta verde azulado de la marca */
+    --color-marca-50: #effcf9;
+    --color-marca-100: #c9f5ec;
+    --color-marca-200: #94e9da;
+    --color-marca-300: #57d5c3;
+    --color-marca-400: #2bb9a8;
+    --color-marca-500: #149d8f;
+    --color-marca-600: #0d7e75;
+    --color-marca-700: #0f655f;
+    --color-marca-800: #11514d;
+    --color-marca-900: #134441;
+    --color-marca-950: #042827;
+}
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-slate-50 font-sans text-base text-slate-800 antialiased;
+    }
+}
+
