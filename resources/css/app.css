@@ -30,3 +30,37 @@
     }
 }
 
+
+/* Ventanas emergentes (<x-modal>): hoja inferior en celular, centrada en pantallas grandes. */
+@layer components {
+    .modal {
+        @apply mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-3xl bg-white p-0 text-slate-800 shadow-2xl;
+        @apply md:m-auto md:max-w-lg md:rounded-3xl;
+    }
+
+    .modal::backdrop {
+        @apply bg-slate-900/50 backdrop-blur-[2px];
+    }
+
+    .modal[open] {
+        animation: modal-entrada 180ms ease-out;
+    }
+
+    .modal[open]::backdrop {
+        animation: modal-fondo 180ms ease-out;
+    }
+}
+
+@keyframes modal-entrada {
+    from { opacity: 0; transform: translateY(2rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modal-fondo {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal[open], .modal[open]::backdrop { animation: none; }
+}

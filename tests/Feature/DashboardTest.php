@@ -55,6 +55,6 @@ class DashboardTest extends TestCase
         // 900 + 1900 = 2800
         $response->assertSee('2.800');
         // 2 lagos con siembra
-        $response->assertSee('2</p>', false); 
+        $response->assertViewHas('lagosActivos', 2);
     }
 }

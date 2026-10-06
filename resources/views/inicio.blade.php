@@ -3,34 +3,30 @@
 @section('titulo', 'Inicio')
 
 @section('contenido')
-    <h1 class="mb-1 text-2xl font-bold text-slate-900">Hola, {{ $usuario->name }}</h1>
-    <p class="mb-6 text-base text-slate-500">{{ $usuario->tenant->nombre }}</p>
+    <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-md">
+        <img src="/images/estanque.webp" alt="" aria-hidden="true" decoding="async"
+             class="absolute inset-0 h-full w-full object-cover opacity-35">
+        <div class="absolute inset-0 bg-gradient-to-r from-marca-900/90 to-marca-800/40"></div>
 
-    <x-tarjeta titulo="Tus roles" class="mb-6">
-        <ul class="flex flex-wrap gap-2">
-            @foreach ($usuario->roles as $rol)
-                <li class="rounded-full bg-marca-100 px-3 py-1 text-sm font-semibold capitalize text-marca-800">{{ $rol->nombre }}</li>
-            @endforeach
-        </ul>
-    </x-tarjeta>
+        <div class="relative px-5 py-7 sm:px-8 sm:py-10">
+            <p class="text-base text-marca-100">{{ $usuario->tenant->nombre }}</p>
+            <h1 class="mt-1 text-2xl font-bold sm:text-3xl">Hola, {{ $usuario->name }}</h1>
 
-    @if($usuario->tieneRol('propietario') || $usuario->tieneRol('administrador'))
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <x-tarjeta>
-                <h3 class="text-sm font-medium text-slate-500">Biomasa Total</h3>
-                <p class="mt-2 text-3xl font-bold text-slate-900">{{ number_format($biomasaTotal, 2, ',', '.') }} <span class="text-lg text-slate-500">kg</span></p>
-            </x-tarjeta>
-            
-            <x-tarjeta>
-                <h3 class="text-sm font-medium text-slate-500">Total Peces Vivos</h3>
-                <p class="mt-2 text-3xl font-bold text-slate-900">{{ number_format($pecesVivos, 0, ',', '.') }}</p>
-            </x-tarjeta>
+            <ul class="mt-4 flex flex-wrap gap-2" aria-label="Tus roles">
+                @foreach ($usuario->roles as $rol)
+                    <li class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold capitalize ring-1 ring-white/25">{{ $rol->nombre }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </section>
 
-            <x-tarjeta>
-                <h3 class="text-sm font-medium text-slate-500">Lagos Activos</h3>
-                <p class="mt-2 text-3xl font-bold text-slate-900">{{ $lagosActivos }}</p>
-            </x-tarjeta>
+    @if ($usuario->tieneRol('propietario') || $usuario->tieneRol('administrador'))
+        <h2 class="mb-3 text-lg font-semibold text-slate-900">Resumen de producción</h2>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+            <x-indicador icono="biomasa" etiqueta="Biomasa total" :valor="number_format($biomasaTotal, 2, ',', '.')" unidad="kg" />
+            <x-indicador icono="pez" etiqueta="Peces vivos" :valor="number_format($pecesVivos, 0, ',', '.')" />
+            <x-indicador icono="lagos" etiqueta="Lagos con siembra" :valor="$lagosActivos" />
         </div>
     @endif
 @endsection
-

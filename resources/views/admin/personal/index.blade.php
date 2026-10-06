@@ -3,10 +3,7 @@
 @section('titulo', 'Personal')
 
 @section('contenido')
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">Personal</h1>
-        <p class="mt-1 text-base text-slate-500">Aprueba solicitudes y asigna uno o varios roles a cada persona.</p>
-    </div>
+    <x-encabezado titulo="Personal" subtitulo="Aprueba solicitudes y asigna uno o varios roles a cada persona." />
 
     <x-tabla :columnas="['Persona', 'Estado', 'Roles']" vacio="Aún no hay personal registrado.">
         @foreach ($personal as $persona)

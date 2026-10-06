@@ -19,6 +19,10 @@ class LagoController extends Controller
             'lagos' => $lagos,
             'tipos' => Lago::TIPOS,
             'especies' => \App\Models\Siembra::ESPECIES,
+            'stocksDisponibles' => \App\Models\StockAlimento::query()
+                ->where('cantidad_kg', '>', 0)
+                ->orderBy('tipo_concentrado')
+                ->get(),
         ]);
     }
 

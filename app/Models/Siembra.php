@@ -32,6 +32,16 @@ class Siembra extends Model
 
     public const ESPECIES = ['mojarra roja', 'cachama blanca', 'bagre rayado', 'bocachico'];
 
+    /**
+     * Ruta pública de la foto de una especie (public/images/especies/<especie>.webp), o null si no hay foto.
+     */
+    public static function fotoEspecie(string $especie): ?string
+    {
+        $ruta = 'images/especies/'.str_replace(' ', '-', mb_strtolower($especie)).'.webp';
+
+        return is_file(public_path($ruta)) ? '/'.$ruta : null;
+    }
+
     public function lago(): BelongsTo
     {
         return $this->belongsTo(Lago::class);
