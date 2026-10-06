@@ -33,7 +33,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // La app no sirve archivos privados por URL: sin rutas storage/{path} expuestas
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

@@ -148,3 +148,8 @@ if (asistente) {
         vacio.hidden = false;
     });
 }
+
+// Aplicación instalable: service worker para archivos estáticos y aviso sin conexión (public/sw.js)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
