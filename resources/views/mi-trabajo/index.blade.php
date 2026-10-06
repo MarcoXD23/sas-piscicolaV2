@@ -73,6 +73,28 @@
         @endif
     </section>
 
+    @if ($liquidaciones->isNotEmpty())
+        <x-tarjeta titulo="Mis pagos de nómina" class="mb-6">
+            @foreach ($liquidaciones as $liquidacion)
+                <div class="flex items-start justify-between gap-3 border-t border-slate-100 py-2.5 first:border-t-0 first:pt-0">
+                    <div>
+                        <p class="font-medium text-slate-900">Semana del {{ $liquidacion->semana_inicio->format('d/m') }} al {{ $liquidacion->semana_fin->format('d/m/Y') }}</p>
+                        <p class="text-sm text-slate-500">
+                            {{ $numero($liquidacion->horas_turnos) }} h de turno · {{ $numero($liquidacion->horas_extra) }} h extra
+                            @if ($liquidacion->descuento_pescado > 0) · descuento de pescado {{ \App\Support\Formato::pesos($liquidacion->descuento_pescado) }} @endif
+                        </p>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <p class="font-bold tabular-nums">{{ \App\Support\Formato::pesos($liquidacion->total_pagar) }}</p>
+                        <p @class(['text-xs font-semibold', 'text-marca-700' => $liquidacion->estaPagada(), 'text-amber-700' => ! $liquidacion->estaPagada()])>
+                            {{ $liquidacion->estaPagada() ? 'Pagada' : 'Por pagar' }}
+                        </p>
+                    </div>
+                </div>
+            @endforeach
+        </x-tarjeta>
+    @endif
+
     @if ($creditosPescado->isNotEmpty())
         <x-tarjeta titulo="Mi saldo de pescado" :subtitulo="'Debes '.\App\Support\Formato::pesos($creditosPescado->sum('saldo'))" class="mb-6">
             @foreach ($creditosPescado as $credito)

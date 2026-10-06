@@ -15,7 +15,7 @@ class Abono extends Model
 
     public const MEDIOS = ['efectivo' => 'Efectivo', 'transferencia' => 'Transferencia', 'nomina' => 'Descuento de nómina'];
 
-    protected $fillable = ['venta_id', 'user_id', 'fecha', 'valor', 'medio', 'observaciones'];
+    protected $fillable = ['venta_id', 'liquidacion_id', 'user_id', 'fecha', 'valor', 'medio', 'observaciones'];
 
     protected function casts(): array
     {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
+use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\ReporteController;
@@ -48,6 +49,12 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
         Route::post('/turnos', [TurnoController::class, 'store'])->name('turnos.store');
         Route::delete('/turnos/{turno}', [TurnoController::class, 'destroy'])->name('turnos.destroy');
+
+        Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
+        Route::post('/nomina', [NominaController::class, 'store'])->name('nomina.store');
+        Route::post('/nomina/{liquidacion}/pagar', [NominaController::class, 'pagar'])->name('nomina.pagar');
+        Route::delete('/nomina/{liquidacion}', [NominaController::class, 'destroy'])->name('nomina.destroy');
+        Route::put('/personal/{usuario}/tarifas', [NominaController::class, 'tarifas'])->whereNumber('usuario')->name('nomina.tarifas');
 
         Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
         Route::post('/permisos/{permiso}/revisar', [SolicitudController::class, 'revisarPermiso'])->name('permisos.revisar');

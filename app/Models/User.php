@@ -32,6 +32,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'aprobado_at' => 'datetime',
+            'valor_hora' => 'integer',
+            'valor_hora_extra' => 'integer',
             'password' => 'hashed',
         ];
     }

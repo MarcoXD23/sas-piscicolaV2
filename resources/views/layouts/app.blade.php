@@ -32,7 +32,7 @@
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
                 ['ruta' => 'admin.ventas.index', 'activa' => 'admin.ventas.*', 'texto' => 'Ventas', 'icono' => 'dinero', 'roles' => ['propietario']],
                 ['ruta' => 'admin.agenda.index', 'activa' => 'admin.agenda.*', 'texto' => 'Agenda', 'icono' => 'calendario', 'roles' => ['propietario']],
-                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
+                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*', 'admin.nomina.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
                 ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
                 ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => 'Tareas', 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
                 ['ruta' => 'admin.reportes.index', 'activa' => 'admin.reportes.*', 'texto' => 'Reportes', 'icono' => 'reporte', 'roles' => ['propietario', 'administrador']],
