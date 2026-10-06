@@ -21,6 +21,10 @@ class MortalidadController extends Controller
         DB::transaction(function () use ($datos, $siembra, $request) {
             $siembraBloqueada = Siembra::where('id', $siembra->id)->lockForUpdate()->first();
 
+            if (! $siembraBloqueada->estaActiva()) {
+                throw ValidationException::withMessages(['cantidad' => 'Esta siembra ya está finalizada.']);
+            }
+
             if ($datos['cantidad'] > $siembraBloqueada->peces_vivos) {
                 throw ValidationException::withMessages([
                     'cantidad' => 'La cantidad de mortalidad no puede ser mayor a los peces vivos (' . $siembraBloqueada->peces_vivos . ').'

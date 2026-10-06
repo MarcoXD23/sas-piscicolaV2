@@ -29,6 +29,7 @@
             $enlaces = collect([
                 ['ruta' => 'inicio', 'texto' => 'Inicio', 'icono' => 'inicio', 'roles' => null],
                 ['ruta' => 'admin.lagos.index', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
+                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
                 ['ruta' => 'admin.personal.index', 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
@@ -49,11 +50,11 @@
                 <nav class="hidden items-center gap-1 md:flex" aria-label="Principal">
                     @foreach ($enlaces as $enlace)
                         <a href="{{ route($enlace['ruta']) }}"
-                           @if (request()->routeIs($enlace['ruta'])) aria-current="page" @endif
+                           @if (request()->routeIs($enlace['activa'] ?? $enlace['ruta'])) aria-current="page" @endif
                            @class([
                                'flex min-h-11 items-center gap-2 rounded-xl px-4 text-base font-medium transition',
-                               'bg-white text-marca-800' => request()->routeIs($enlace['ruta']),
-                               'text-marca-50 hover:bg-marca-600' => ! request()->routeIs($enlace['ruta']),
+                               'bg-white text-marca-800' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
+                               'text-marca-50 hover:bg-marca-600' => ! request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
                            ])>
                             <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
                             {{ $enlace['texto'] }}
@@ -77,15 +78,15 @@
                     @foreach ($enlaces as $enlace)
                         <li>
                             <a href="{{ route($enlace['ruta']) }}"
-                               @if (request()->routeIs($enlace['ruta'])) aria-current="page" @endif
+                               @if (request()->routeIs($enlace['activa'] ?? $enlace['ruta'])) aria-current="page" @endif
                                @class([
                                    'flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold',
-                                   'text-marca-700' => request()->routeIs($enlace['ruta']),
-                                   'text-slate-500' => ! request()->routeIs($enlace['ruta']),
+                                   'text-marca-700' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
+                                   'text-slate-500' => ! request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
                                ])>
                                 <span @class([
                                     'flex h-8 w-14 items-center justify-center rounded-full transition',
-                                    'bg-marca-100' => request()->routeIs($enlace['ruta']),
+                                    'bg-marca-100' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
                                 ])>
                                     <x-icono :nombre="$enlace['icono']" />
                                 </span>

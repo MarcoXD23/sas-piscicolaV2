@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\PerteneceATenant;
+use App\Support\CatalogoEspecies;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,25 +23,15 @@ class Siembra extends Model
         'peces_vivos',
         'peso_actual_g',
         'biomasa_kg',
+        'finalizada_at',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha' => 'date',
+            'finalizada_at' => 'datetime',
         ];
-    }
-
-    public const ESPECIES = ['mojarra roja', 'cachama blanca', 'bagre rayado', 'bocachico'];
-
-    /**
-     * Ruta pública de la foto de una especie (public/images/especies/<especie>.webp), o null si no hay foto.
-     */
-    public static function fotoEspecie(string $especie): ?string
-    {
-        $ruta = 'images/especies/'.str_replace(' ', '-', mb_strtolower($especie)).'.webp';
-
-        return is_file(public_path($ruta)) ? '/'.$ruta : null;
     }
 
     public function lago(): BelongsTo
@@ -63,5 +55,26 @@ class Siembra extends Model
     protected function diasCultivo(): Attribute
     {
         return Attribute::get(fn () => (int) $this->fecha->startOfDay()->diffInDays(now()->startOfDay()));
+    }
+
+    /** Siembras que siguen en el agua (sin finalizar). */
+    public function scopeActivas(Builder $consulta): void
+    {
+        $consulta->whereNull('finalizada_at');
+    }
+
+    public function estaActiva(): bool
+    {
+        return $this->finalizada_at === null;
+    }
+
+    protected function nombreEspecie(): Attribute
+    {
+        return Attribute::get(fn () => CatalogoEspecies::nombre($this->especie));
+    }
+
+    protected function fotoEspecie(): Attribute
+    {
+        return Attribute::get(fn () => CatalogoEspecies::foto($this->especie));
     }
 }

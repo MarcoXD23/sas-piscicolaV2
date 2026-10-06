@@ -7,6 +7,7 @@ use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\CatalogoEspecies;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -91,7 +92,8 @@ class DisenoTest extends TestCase
 
     public function test_foto_de_especie_es_null_cuando_no_hay_imagen(): void
     {
-        $this->assertSame('/images/especies/bagre-rayado.webp', Siembra::fotoEspecie('Bagre rayado'));
-        $this->assertNull(Siembra::fotoEspecie('especie sin foto'));
+        $this->assertSame('/images/especies/bagre-rayado.webp', CatalogoEspecies::foto('Bagre rayado'));
+        $this->assertNull(CatalogoEspecies::foto('mojarra roja'));
+        $this->assertNull(CatalogoEspecies::foto('especie sin foto'));
     }
 }

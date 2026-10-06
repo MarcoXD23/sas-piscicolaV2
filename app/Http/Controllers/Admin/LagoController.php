@@ -13,12 +13,12 @@ class LagoController extends Controller
 {
     public function index(): View
     {
-        $lagos = Lago::query()->with('siembraActiva')->orderBy('nombre')->get();
+        $lagos = Lago::query()->with('siembrasActivas')->orderBy('nombre')->get();
 
         return view('admin.lagos.index', [
             'lagos' => $lagos,
             'tipos' => Lago::TIPOS,
-            'especies' => \App\Models\Siembra::ESPECIES,
+            'especies' => collect(\App\Support\CatalogoEspecies::todas())->map(fn ($ficha) => $ficha['nombre'])->all(),
             'stocksDisponibles' => \App\Models\StockAlimento::query()
                 ->where('cantidad_kg', '>', 0)
                 ->orderBy('tipo_concentrado')

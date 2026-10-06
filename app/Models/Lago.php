@@ -6,7 +6,6 @@ use App\Models\Concerns\PerteneceATenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Lago extends Model
 {
@@ -21,13 +20,9 @@ class Lago extends Model
         return $this->hasMany(Siembra::class);
     }
 
-    /**
-     * Devuelve la siembra más reciente del lago.
-     * En un sistema real puede requerirse un campo 'estado' (activa/cosechada),
-     * por ahora asumimos que la última siembra es la activa.
-     */
-    public function siembraActiva(): HasOne
+    /** Siembras que siguen en el agua. Con policultivo puede haber varias (de distinta especie). */
+    public function siembrasActivas(): HasMany
     {
-        return $this->hasOne(Siembra::class)->latestOfMany();
+        return $this->hasMany(Siembra::class)->whereNull('finalizada_at')->orderBy('fecha');
     }
 }

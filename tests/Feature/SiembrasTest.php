@@ -38,7 +38,7 @@ class SiembrasTest extends TestCase
         ]);
     }
 
-    public function test_no_permite_siembra_si_ya_hay_una_activa(): void
+    public function test_no_permite_dos_siembras_activas_de_la_misma_especie_en_un_lago(): void
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
@@ -59,10 +59,12 @@ class SiembrasTest extends TestCase
         ]);
 
         $this->actingAs($propietario)->post("/admin/lagos/{$lago->id}/siembras", [
-            'especie' => 'mojarra roja',
+            'especie' => 'cachama blanca',
             'fecha' => now()->format('Y-m-d'),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,
-        ])->assertInvalid(['lago']);
+        ])->assertInvalid(['especie']);
+
+        $this->assertSame(1, Siembra::count());
     }
 }

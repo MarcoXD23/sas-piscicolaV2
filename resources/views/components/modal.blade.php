@@ -15,6 +15,12 @@
     </div>
 
     <div class="px-5 py-5">
+        @if ($errors->any() && old('_modal') === $id)
+            <p role="alert" class="mb-5 flex items-start gap-2 rounded-xl bg-red-50 p-4 text-base font-medium text-red-700">
+                <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" /> {{ $errors->first() }}
+            </p>
+        @endif
+
         {{ $slot }}
     </div>
 </dialog>

@@ -26,74 +26,141 @@
         </x-vacio>
     @endif
 
-    <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+    <div class="grid items-start gap-5 md:grid-cols-2 lg:grid-cols-3">
         @foreach ($lagos as $lago)
             @php
-                $siembra = $lago->siembraActiva;
-                $foto = $siembra ? \App\Models\Siembra::fotoEspecie($siembra->especie) : null;
+                $siembras = $lago->siembrasActivas;
+                $foto = $siembras->first()?->foto_especie;
             @endphp
 
             <x-tarjeta class="flex flex-col overflow-hidden !p-0">
                 <div class="flex items-center gap-4 border-b border-slate-100 p-5">
                     @if ($foto)
-                        <img src="{{ $foto }}" alt="{{ ucfirst($siembra->especie) }}" loading="lazy" decoding="async"
+                        <img src="{{ $foto }}" alt="" loading="lazy" decoding="async"
                              class="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-slate-200">
                     @else
                         <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-marca-50 text-marca-600">
-                            <x-icono :nombre="$siembra ? 'pez' : 'lagos'" class="h-7 w-7" />
+                            <x-icono :nombre="$siembras->isNotEmpty() ? 'pez' : 'lagos'" class="h-7 w-7" />
                         </span>
                     @endif
 
                     <div class="min-w-0 flex-1">
                         <h2 class="truncate text-xl font-bold text-slate-900">{{ $lago->nombre }}</h2>
                         <p class="text-sm text-slate-500">
-                            Lago en {{ $lago->tipo }}@if ($siembra) · {{ ucfirst($siembra->especie) }}@endif
+                            Lago en {{ $lago->tipo }}@if ($siembras->count() > 1) · Policultivo @endif
                         </p>
                     </div>
 
                     <span @class([
                         'shrink-0 rounded-full px-3 py-1 text-xs font-semibold',
-                        'bg-marca-100 text-marca-800' => $siembra,
-                        'bg-slate-100 text-slate-600' => ! $siembra,
-                    ])>{{ $siembra ? 'Activo' : 'Libre' }}</span>
+                        'bg-marca-100 text-marca-800' => $siembras->isNotEmpty(),
+                        'bg-slate-100 text-slate-600' => $siembras->isEmpty(),
+                    ])>{{ $siembras->isNotEmpty() ? 'Activo' : 'Libre' }}</span>
                 </div>
 
-                @if ($siembra)
-                    <dl class="grid grid-cols-2 gap-px bg-slate-100 text-center">
-                        <div class="bg-white p-3">
-                            <dt class="text-xs font-medium text-slate-500">Peces vivos</dt>
-                            <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
+                @forelse ($siembras as $siembra)
+                    <div class="border-b border-slate-100">
+                        <div class="flex items-center justify-between gap-3 px-5 pt-4">
+                            <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
+                            <span class="text-sm text-slate-500">Desde {{ $siembra->fecha->format('d/m/Y') }}</span>
                         </div>
-                        <div class="bg-white p-3">
-                            <dt class="text-xs font-medium text-slate-500">Biomasa</dt>
-                            <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-slate-500">kg</span></dd>
-                        </div>
-                        <div class="bg-white p-3">
-                            <dt class="text-xs font-medium text-slate-500">Peso promedio</dt>
-                            <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-slate-500">g</span></dd>
-                        </div>
-                        <div class="bg-white p-3">
-                            <dt class="text-xs font-medium text-slate-500">Días de cultivo</dt>
-                            <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $siembra->dias_cultivo }}</dd>
-                        </div>
-                    </dl>
 
-                    <p class="px-5 pt-3 text-sm text-slate-500">Sembrado el {{ $siembra->fecha->format('d/m/Y') }}</p>
+                        <dl class="mt-3 grid grid-cols-2 gap-px bg-slate-100 text-center">
+                            <div class="bg-white p-3">
+                                <dt class="text-xs font-medium text-slate-500">Peces vivos</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
+                            </div>
+                            <div class="bg-white p-3">
+                                <dt class="text-xs font-medium text-slate-500">Biomasa</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-slate-500">kg</span></dd>
+                            </div>
+                            <div class="bg-white p-3">
+                                <dt class="text-xs font-medium text-slate-500">Peso promedio</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-slate-500">g</span></dd>
+                            </div>
+                            <div class="bg-white p-3">
+                                <dt class="text-xs font-medium text-slate-500">Días de cultivo</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $siembra->dias_cultivo }}</dd>
+                            </div>
+                        </dl>
 
-                    <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-3' => $esTecnico, 'grid-cols-2' => ! $esTecnico])>
-                        <x-boton tipo="button" class="min-h-16 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-racion-{{ $lago->id }}">
-                            <x-icono nombre="alimentar" /> Alimentar
-                        </x-boton>
-                        <x-boton tipo="button" variante="secundario" class="min-h-16 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}">
-                            <x-icono nombre="mortalidad" /> Mortalidad
-                        </x-boton>
-                        @if ($esTecnico)
-                            <x-boton tipo="button" variante="secundario" class="min-h-16 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
-                                <x-icono nombre="biomasa" /> Muestreo
+                        <div @class(['grid gap-2 p-4', 'grid-cols-3' => $esTecnico, 'grid-cols-1' => ! $esTecnico])>
+                            <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}">
+                                <x-icono nombre="mortalidad" /> Mortalidad
                             </x-boton>
-                        @endif
+                            @if ($esTecnico)
+                                <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
+                                    <x-icono nombre="biomasa" /> Muestreo
+                                </x-boton>
+                                <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-finalizar-{{ $siembra->id }}">
+                                    <x-icono nombre="ok" /> Finalizar
+                                </x-boton>
+                            @endif
+                        </div>
                     </div>
 
+                    <x-modal id="modal-mortalidad-{{ $siembra->id }}" titulo="Mortalidad · {{ $siembra->nombre_especie }} · {{ $lago->nombre }}">
+                        <x-formulario :action="route('admin.mortalidades.store', $siembra->id)">
+                            <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->format('Y-m-d')" required />
+                            <x-campo nombre="cantidad" id="mortalidad-cantidad-{{ $siembra->id }}" etiqueta="Peces muertos" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
+                                     ayuda="Hay {{ $numero($siembra->peces_vivos) }} peces vivos de esta especie." />
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
+                                <x-boton variante="peligro">Registrar</x-boton>
+                            </div>
+                        </x-formulario>
+                    </x-modal>
+
+                    @if ($esTecnico)
+                        <x-modal id="modal-muestreo-{{ $siembra->id }}" titulo="Muestreo · {{ $siembra->nombre_especie }} · {{ $lago->nombre }}">
+                            <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
+                                <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->format('Y-m-d')" required />
+                                <div class="grid grid-cols-2 gap-4">
+                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" etiqueta="Peces pesados" tipo="number" min="1" inputmode="numeric" required />
+                                    <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" etiqueta="Peso total (g)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 pt-2">
+                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
+                                    <x-boton>Guardar</x-boton>
+                                </div>
+                            </x-formulario>
+                        </x-modal>
+
+                        <x-modal id="modal-finalizar-{{ $siembra->id }}" titulo="Finalizar siembra">
+                            <x-formulario :action="route('admin.siembras.finalizar', $siembra->id)">
+                                <p class="text-base text-slate-700">
+                                    Vas a cerrar el ciclo de <strong>{{ $siembra->nombre_especie }}</strong> en el lago <strong>{{ $lago->nombre }}</strong>
+                                    ({{ $numero($siembra->peces_vivos) }} peces, {{ $numero($siembra->biomasa_kg, 2) }} kg).
+                                    La siembra queda guardada en el historial y deja de aparecer como activa.
+                                </p>
+
+                                <div class="grid grid-cols-2 gap-3 pt-2">
+                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
+                                    <x-boton variante="peligro">Finalizar</x-boton>
+                                </div>
+                            </x-formulario>
+                        </x-modal>
+                    @endif
+                @empty
+                    <p class="p-5 text-base text-slate-500">Este lago no tiene siembras activas.</p>
+                @endforelse
+
+                <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $esTecnico && $siembras->isNotEmpty()])>
+                    @if ($siembras->isNotEmpty())
+                        <x-boton tipo="button" data-abrir-modal="modal-racion-{{ $lago->id }}">
+                            <x-icono nombre="alimentar" class="h-5 w-5" /> Alimentar
+                        </x-boton>
+                    @endif
+                    @if ($esTecnico)
+                        <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-siembra-{{ $lago->id }}">
+                            <x-icono nombre="mas" class="h-5 w-5" /> {{ $siembras->isNotEmpty() ? 'Especie' : 'Registrar siembra' }}
+                        </x-boton>
+                    @endif
+                </div>
+
+                @if ($siembras->isNotEmpty())
                     <x-modal id="modal-racion-{{ $lago->id }}" titulo="Alimentar · {{ $lago->nombre }}">
                         <x-formulario :action="route('admin.raciones.store', $lago->id)">
                             <x-campo nombre="fecha" id="racion-fecha-{{ $lago->id }}" etiqueta="Fecha" tipo="date" :valor="now()->format('Y-m-d')" required />
@@ -115,63 +182,30 @@
                             </div>
                         </x-formulario>
                     </x-modal>
+                @endif
 
-                    <x-modal id="modal-mortalidad-{{ $siembra->id }}" titulo="Mortalidad · {{ $lago->nombre }}">
-                        <x-formulario :action="route('admin.mortalidades.store', $siembra->id)">
-                            <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->format('Y-m-d')" required />
-                            <x-campo nombre="cantidad" id="mortalidad-cantidad-{{ $siembra->id }}" etiqueta="Peces muertos" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
-                                     ayuda="Hay {{ $numero($siembra->peces_vivos) }} peces vivos en este lago." />
+                @if ($esTecnico)
+                    <x-modal id="modal-siembra-{{ $lago->id }}" :titulo="($siembras->isNotEmpty() ? 'Agregar especie a ' : 'Siembra en ').$lago->nombre">
+                        <x-formulario :action="route('admin.siembras.store', $lago->id)">
+                            @if ($siembras->isNotEmpty())
+                                <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
+                                    Policultivo: el lago ya tiene {{ $siembras->pluck('nombre_especie')->join(', ', ' y ') }}.
+                                    No se repite una especie ni se mezclan especies de agua fría y cálida.
+                                </p>
+                            @endif
+                            <x-seleccion nombre="especie" id="siembra-especie-{{ $lago->id }}" etiqueta="Especie" :opciones="$especies" required />
+                            <x-campo nombre="fecha" id="siembra-fecha-{{ $lago->id }}" etiqueta="Fecha de siembra" tipo="date" :valor="now()->format('Y-m-d')" required />
+                            <div class="grid grid-cols-2 gap-4">
+                                <x-campo nombre="cantidad_alevinos" id="siembra-alevinos-{{ $lago->id }}" etiqueta="Alevinos" tipo="number" min="1" inputmode="numeric" required />
+                                <x-campo nombre="peso_promedio_inicial_g" id="siembra-peso-{{ $lago->id }}" etiqueta="Peso inicial (g)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
+                            </div>
 
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                                <x-boton variante="peligro">Registrar</x-boton>
+                                <x-boton>Guardar</x-boton>
                             </div>
                         </x-formulario>
                     </x-modal>
-
-                    @if ($esTecnico)
-                        <x-modal id="modal-muestreo-{{ $siembra->id }}" titulo="Muestreo · {{ $lago->nombre }}">
-                            <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
-                                <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->format('Y-m-d')" required />
-                                <div class="grid grid-cols-2 gap-4">
-                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" etiqueta="Peces pesados" tipo="number" min="1" inputmode="numeric" required />
-                                    <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" etiqueta="Peso total (g)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                                    <x-boton>Guardar</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
-                    @endif
-                @else
-                    <div class="mt-auto p-5">
-                        <p class="mb-4 text-base text-slate-500">Este lago no tiene una siembra activa.</p>
-                        @if ($esTecnico)
-                            <x-boton tipo="button" variante="secundario" class="w-full" data-abrir-modal="modal-siembra-{{ $lago->id }}">
-                                <x-icono nombre="pez" class="h-5 w-5" /> Registrar siembra
-                            </x-boton>
-                        @endif
-                    </div>
-
-                    @if ($esTecnico)
-                        <x-modal id="modal-siembra-{{ $lago->id }}" titulo="Siembra en {{ $lago->nombre }}">
-                            <x-formulario :action="route('admin.siembras.store', $lago->id)">
-                                <x-seleccion nombre="especie" id="siembra-especie-{{ $lago->id }}" etiqueta="Especie" :opciones="$especies" required />
-                                <x-campo nombre="fecha" id="siembra-fecha-{{ $lago->id }}" etiqueta="Fecha de siembra" tipo="date" :valor="now()->format('Y-m-d')" required />
-                                <div class="grid grid-cols-2 gap-4">
-                                    <x-campo nombre="cantidad_alevinos" id="siembra-alevinos-{{ $lago->id }}" etiqueta="Alevinos" tipo="number" min="1" inputmode="numeric" required />
-                                    <x-campo nombre="peso_promedio_inicial_g" id="siembra-peso-{{ $lago->id }}" etiqueta="Peso inicial (g)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                                    <x-boton>Guardar</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
-                    @endif
                 @endif
             </x-tarjeta>
         @endforeach

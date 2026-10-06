@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\SiembraController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
+use App\Http\Controllers\EspecieController;
 use App\Http\Controllers\InicioController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
+        Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
@@ -45,5 +47,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
         Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
     });
-});
 
+    Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
+        Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
+        Route::get('/especies/{slug}', [EspecieController::class, 'show'])->name('especies.show');
+    });
+});
