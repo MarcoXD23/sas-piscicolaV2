@@ -18,7 +18,7 @@
     </div>
 
     <p data-asistente-no-configurado hidden class="mb-4 rounded-xl bg-amber-50 p-3 text-base text-amber-900">
-        El asistente aún no está configurado. El propietario debe agregar la clave de Anthropic.
+        El asistente aún no está configurado. El propietario debe agregar la clave del proveedor de IA (Claude o Gemini).
     </p>
 
     <form data-asistente-formulario class="flex items-end gap-2">
