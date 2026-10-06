@@ -12,6 +12,7 @@ use App\Models\Rol;
 use App\Models\StockAlimento;
 use App\Models\Traslado;
 use App\Models\Tratamiento;
+use App\Support\CalculadoraRacion;
 use App\Support\CatalogoEspecies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,13 +28,14 @@ class LagoController extends Controller
     public function index(Request $request): View
     {
         $lagos = Lago::query()
-            ->with('siembrasActivas')
+            ->with(['siembrasActivas', 'ultimaMedicion'])
             ->withExists('tratamientosEnRetiro as en_retiro')
             ->orderBy('nombre')
             ->get();
 
         return view('admin.lagos.index', [
             'lagos' => $lagos,
+            'raciones' => $lagos->mapWithKeys(fn (Lago $lago) => [$lago->id => CalculadoraRacion::paraLago($lago)]),
             'tipos' => Lago::TIPOS,
             'especies' => $this->opcionesEspecies(),
             // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
@@ -48,6 +50,7 @@ class LagoController extends Controller
 
         return view('admin.lagos.show', [
             'lago' => $lago,
+            'racion' => CalculadoraRacion::paraLago($lago),
             'alertasAgua' => $lago->ultimaMedicion?->alertas($lago->siembrasActivas->pluck('especie')) ?? [],
             'historial' => $this->historial($lago),
             'siembrasFinalizadas' => $lago->siembras()->whereNotNull('finalizada_at')->latest('finalizada_at')->get(),

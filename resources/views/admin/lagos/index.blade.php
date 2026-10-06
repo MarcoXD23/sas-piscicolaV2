@@ -192,7 +192,13 @@
                                              :opciones="$stocksDisponibles->mapWithKeys(fn ($stock) => [$stock->tipo_concentrado => $stock->tipo_concentrado.' ('.$numero($stock->cantidad_kg, 1).' kg disponibles)'])->all()" />
                             @endif
 
-                            <x-campo nombre="cantidad_kg" id="racion-cantidad-{{ $lago->id }}" etiqueta="Cantidad (kg)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
+                            @php $sugerida = $raciones[$lago->id]; @endphp
+                            <x-campo nombre="cantidad_kg" id="racion-cantidad-{{ $lago->id }}" etiqueta="Cantidad de esta toma (kg)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required
+                                     :valor="$sugerida['kg_por_toma'] > 0 ? $sugerida['kg_por_toma'] : null"
+                                     :ayuda="$sugerida['tomas'] > 0
+                                         ? 'Sugerido: '.$numero($sugerida['kg_por_toma'], 1).' kg por toma, '.$sugerida['tomas'].' tomas al día ('.$numero($sugerida['total_kg_dia'], 1).' kg/día).'
+                                             .($sugerida['factor'] < 1 ? ' Reducido a la mitad por la calidad del agua.' : '')
+                                         : null" />
 
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>

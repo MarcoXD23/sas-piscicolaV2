@@ -21,6 +21,10 @@ class RacionController extends Controller
             'cantidad_kg' => ['required', 'numeric', 'min:0.1'],
         ]);
 
+        if (! $lago->siembrasActivas()->exists()) {
+            throw ValidationException::withMessages(['cantidad_kg' => 'Este lago no tiene peces: no se puede registrar alimentación.']);
+        }
+
         DB::transaction(function () use ($datos, $lago, $request) {
             $stock = StockAlimento::where('tipo_concentrado', $datos['tipo_concentrado'])->lockForUpdate()->first();
 

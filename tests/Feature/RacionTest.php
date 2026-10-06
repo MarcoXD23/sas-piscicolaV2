@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lago;
 use App\Models\Rol;
+use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Tenant;
 use App\Models\User;
@@ -23,6 +24,7 @@ class RacionTest extends TestCase
         $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
+        $this->sembrar($lago);
         
         StockAlimento::create([
             'tipo_concentrado' => 'Mojarra 32% Engorde',
@@ -57,6 +59,7 @@ class RacionTest extends TestCase
         $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
+        $this->sembrar($lago);
         
         StockAlimento::create([
             'tipo_concentrado' => 'Cachama 24%',
@@ -68,5 +71,31 @@ class RacionTest extends TestCase
             'tipo_concentrado' => 'Cachama 24%',
             'cantidad_kg' => 51,
         ])->assertInvalid(['cantidad_kg']);
+    }
+
+    public function test_no_se_alimenta_un_lago_sin_peces_ni_se_descuenta_la_bodega(): void
+    {
+        $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
+        $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
+        $propietario->asignarRoles([Rol::PROPIETARIO]);
+        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+
+        $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
+        StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 50]);
+
+        $this->actingAs($propietario)->post(route('admin.raciones.store', $lago), [
+            'fecha' => now()->format('Y-m-d'),
+            'tipo_concentrado' => 'Engorde',
+            'cantidad_kg' => 5,
+        ])->assertInvalid(['cantidad_kg']);
+
+        $this->assertEquals(50, (float) StockAlimento::sole()->cantidad_kg);
+        $this->assertDatabaseCount('movimientos_alimento', 0);
+    }
+
+    private function sembrar(Lago $lago): Siembra
+    {
+        return Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(10),
+            'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MovimientoAlimento;
 use App\Models\StockAlimento;
+use App\Support\CoberturaBodega;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,10 +13,25 @@ use Illuminate\View\View;
 
 class BodegaController extends Controller
 {
-    public function index(): View
+    private const TIPOS_MOVIMIENTO = ['entrada', 'salida'];
+
+    public function index(Request $request): View
     {
-        $stocks = StockAlimento::orderBy('tipo_concentrado')->get();
-        return view('admin.bodega.index', ['stocks' => $stocks]);
+        $tipo = in_array($request->query('tipo'), self::TIPOS_MOVIMIENTO, true) ? $request->query('tipo') : null;
+
+        $movimientos = MovimientoAlimento::query()
+            ->with(['usuario', 'lago'])
+            ->when($tipo, fn ($consulta) => $consulta->where('tipo_movimiento', $tipo))
+            ->latest('fecha')
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.bodega.index', [
+            'cobertura' => CoberturaBodega::calcular(),
+            'movimientos' => $movimientos,
+            'tipo' => $tipo,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

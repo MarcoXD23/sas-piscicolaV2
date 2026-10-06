@@ -150,6 +150,40 @@
         </div>
 
         <aside class="space-y-6">
+            @if ($racion['filas'] !== [])
+                <x-tarjeta titulo="Ración sugerida" subtitulo="Según biomasa y peso promedio. Valores de referencia.">
+                    <p class="text-3xl font-bold tabular-nums text-marca-700">
+                        {{ $numero($racion['total_kg_dia'], 1) }} <span class="text-base font-medium text-slate-500">kg/día</span>
+                    </p>
+                    <p class="mt-1 text-base text-slate-600">
+                        {{ $racion['tomas'] }} tomas de {{ $numero($racion['kg_por_toma'], 1) }} kg
+                    </p>
+
+                    @if ($racion['factor'] < 1)
+                        <p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+                            Reducida a la mitad por alertas en la medición de agua de las últimas {{ \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE }} horas.
+                        </p>
+                    @endif
+
+                    <dl class="mt-4 divide-y divide-slate-100 text-sm">
+                        @foreach ($racion['filas'] as $fila)
+                            <div class="py-2.5">
+                                <dt class="flex justify-between gap-3 font-semibold text-slate-900">
+                                    <span>{{ $fila['especie'] }}</span>
+                                    <span class="tabular-nums">{{ $numero($fila['kg_dia'], 1) }} kg/día</span>
+                                </dt>
+                                <dd class="text-slate-500">
+                                    {{ str_replace('.', ',', (string) $fila['porcentaje']) }} % de {{ $numero($fila['biomasa_kg'], 1) }} kg
+                                    @if ($fila['proteina'])
+                                        · {{ ['iniciacion' => 'iniciación', 'levante' => 'levante', 'engorde' => 'engorde'][$fila['etapa']] }}, proteína {{ $fila['proteina'] }}
+                                    @endif
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </x-tarjeta>
+            @endif
+
             <x-tarjeta titulo="Calidad del agua" :subtitulo="$medicion ? 'Última medición: '.$medicion->medido_at->format('d/m/Y H:i') : null">
                 @if ($medicion)
                     <dl class="divide-y divide-slate-100 text-base">

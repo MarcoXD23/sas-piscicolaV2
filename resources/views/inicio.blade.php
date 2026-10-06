@@ -52,6 +52,27 @@
         </x-tarjeta>
     @endif
 
+    @if ($alertasBodega->isNotEmpty())
+        <a href="{{ route('admin.bodega.index') }}" class="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 hover:bg-amber-100">
+            <x-icono nombre="bodega" class="mt-0.5" />
+            <div>
+                <p class="font-semibold">Revisa la bodega</p>
+                <ul class="text-base">
+                    @foreach ($alertasBodega as $alerta)
+                        <li>
+                            {{ $alerta['stock']->tipo_concentrado }}:
+                            @if ($alerta['estado'] === \App\Support\CoberturaBodega::AGOTADO)
+                                agotado.
+                            @else
+                                alcanza para unos {{ number_format($alerta['dias'], 1, ',', '.') }} días.
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </a>
+    @endif
+
     @if ($usuario->tieneRol('propietario') || $usuario->tieneRol('administrador'))
         <h2 class="mb-3 text-lg font-semibold text-slate-900">Resumen de producción</h2>
 
