@@ -18,13 +18,13 @@ class AuthController extends Controller
 
         if ($usuario === null || ! Hash::check($request->input('password'), $usuario->password)) {
             throw ValidationException::withMessages([
-                'email' => 'El correo o la contraseña no son correctos.',
+                'email' => __('mensajes.auth.correo_contrasena_no_son_correctos'),
             ]);
         }
 
         if (! $usuario->estaAprobado()) {
             throw ValidationException::withMessages([
-                'email' => 'Tu cuenta aún no ha sido aprobada por el propietario de la finca.',
+                'email' => __('mensajes.auth.tu_cuenta_aun_no_ha'),
             ]);
         }
 
@@ -45,7 +45,7 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['mensaje' => 'Sesión cerrada.']);
+        return response()->json(['mensaje' => __('mensajes.auth.sesion_cerrada')]);
     }
 
     /**
@@ -62,4 +62,3 @@ class AuthController extends Controller
         ];
     }
 }
-

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Region;
 use App\Support\TenantActual;
 use Closure;
 use Illuminate\Http\Request;
@@ -24,6 +25,11 @@ class EstablecerTenant
         $anterior = $this->tenantActual->id();
         $this->tenantActual->establecer($usuario->tenant_id);
 
+        // Idioma de la finca (solo los que tienen traducción completa)
+        if (in_array(Region::idioma(), Region::IDIOMAS, true)) {
+            app()->setLocale(Region::idioma());
+        }
+
         try {
             return $next($request);
         } finally {
@@ -31,4 +37,3 @@ class EstablecerTenant
         }
     }
 }
-

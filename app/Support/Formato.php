@@ -3,18 +3,21 @@
 namespace App\Support;
 
 /**
- * Formatos de presentación en español de Colombia.
+ * Formatos de presentación según la región de la finca.
  */
 class Formato
 {
-    /** Pesos colombianos sin decimales: $ 1.234.567 */
-    public static function pesos(int|float $valor): string
+    /** Dinero en la moneda del país de la finca (los montos se guardan en unidades enteras). */
+    public static function dinero(int|float $valor): string
     {
-        return '$ '.number_format((float) $valor, 0, ',', '.');
+        return Region::dinero($valor);
     }
 
+    /** Número con los separadores decimal y de miles de la región de la finca. */
     public static function numero(int|float|string|null $valor, int $decimales = 0): string
     {
-        return number_format((float) $valor, $decimales, ',', '.');
+        [$decimal, $miles] = Region::separadores();
+
+        return number_format((float) $valor, $decimales, $decimal, $miles);
     }
 }

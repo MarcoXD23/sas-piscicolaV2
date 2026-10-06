@@ -3,6 +3,9 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 Alpine.start();
 
+// Textos de la interfaz (lang/es/js.php, publicados por el layout en window.textos). Reemplaza :marcadores.
+const t = (clave, datos = {}) => (window.textos?.[clave] ?? clave).replace(/:(\w+)/g, (marca, nombre) => datos[nombre] ?? marca);
+
 // Ventanas emergentes (<x-modal>)
 document.addEventListener('click', (evento) => {
     const abrir = evento.target.closest('[data-abrir-modal]');
@@ -108,7 +111,7 @@ if (asistente) {
         agregar('user', texto);
         campo.value = '';
         boton.disabled = true;
-        const pensando = agregar('assistant', 'Pensando…', 'italic text-slate-500');
+        const pensando = agregar('assistant', t('pensando'), 'italic text-slate-500');
 
         try {
             const respuesta = await fetch(asistente.dataset.url, {
@@ -123,12 +126,12 @@ if (asistente) {
             } else {
                 const error = datos.error
                     ?? datos.errors?.mensaje?.[0]
-                    ?? (respuesta.status === 429 ? 'Hiciste muchas preguntas seguidas. Espera un minuto.' : 'No se pudo enviar la pregunta.');
+                    ?? t(respuesta.status === 429 ? 'muchas_preguntas' : 'no_se_pudo_enviar');
                 agregar('assistant', error, 'bg-red-50 text-red-800');
             }
         } catch {
             pensando.remove();
-            agregar('assistant', 'Sin conexión. Intenta de nuevo.', 'bg-red-50 text-red-800');
+            agregar('assistant', t('sin_conexion'), 'bg-red-50 text-red-800');
         } finally {
             boton.disabled = false;
             campo.focus();
@@ -169,10 +172,11 @@ document.querySelectorAll('[data-pesaje]').forEach((pesaje) => {
         const filas = lista.querySelectorAll('[data-canasta]');
         let neto = 0;
         filas.forEach((fila, indice) => {
-            fila.querySelector('[data-etiqueta-canasta]').textContent = `Canasta ${indice + 1} · bruto (kg)`;
+            fila.querySelector('[data-etiqueta-canasta]').textContent = t('canasta_bruto', { numero: indice + 1 });
             neto += Math.max(numero(fila.querySelector('[data-bruto]').value) - numero(tara.value), 0);
         });
-        total.textContent = `${neto.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg en ${filas.length} canasta${filas.length === 1 ? '' : 's'}`;
+        const kg = neto.toLocaleString(document.documentElement.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        total.textContent = t(filas.length === 1 ? 'neto_una_canasta' : 'neto_canastas', { kg, canastas: filas.length });
     };
 
     // Los campos de la sección oculta se deshabilitan para que no se envíen

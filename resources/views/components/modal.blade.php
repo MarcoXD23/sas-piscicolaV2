@@ -9,7 +9,7 @@
         {{ $attributes->class('modal') }}>
     <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <h2 id="{{ $id }}-titulo" class="text-lg font-semibold text-slate-900">{{ $titulo }}</h2>
-        <button type="button" data-cerrar-modal class="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100" aria-label="Cerrar">
+        <button type="button" data-cerrar-modal class="-mr-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100" aria-label="{{ __('componentes.cerrar') }}">
             <x-icono nombre="cerrar" />
         </button>
     </div>

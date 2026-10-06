@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lago;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -14,11 +15,12 @@ class MedicionAguaController extends Controller
     public function store(Request $request, Lago $lago): RedirectResponse
     {
         // Desde Seguridad & Noche no se envía la hora: se usa la del momento de guardar
-        $request->mergeIfMissing(['medido_at' => now()->format('Y-m-d H:i:s')]);
+        // La hora del formulario es de la zona de la finca; el cast de MedicionAgua la guarda en UTC
+        $request->mergeIfMissing(['medido_at' => Region::ahora()->format('Y-m-d H:i:s')]);
         $alMenosUno = 'required_without_all:'.implode(',', self::PARAMETROS);
 
         $datos = $request->validate([
-            'medido_at' => ['required', 'date', 'before_or_equal:now'],
+            'medido_at' => ['required', 'date', 'before_or_equal:'.Region::ahora()->format('Y-m-d H:i:s')],
             'temperatura_c' => ['nullable', 'numeric', 'between:0,45', $alMenosUno],
             'oxigeno_mg_l' => ['nullable', 'numeric', 'between:0,30'],
             'ph' => ['nullable', 'numeric', 'between:0,14'],
@@ -27,9 +29,9 @@ class MedicionAguaController extends Controller
             'transparencia_cm' => ['nullable', 'integer', 'between:0,500'],
             'observaciones' => ['nullable', 'string', 'max:500'],
         ], [
-            'temperatura_c.required_without_all' => 'Registra al menos un parámetro.',
-            'medido_at.before_or_equal' => 'La medición no puede tener fecha futura.',
-            'between' => 'El valor está fuera del rango posible.',
+            'temperatura_c.required_without_all' => __('mensajes.medicion_agua.registra_menos_parametro'),
+            'medido_at.before_or_equal' => __('mensajes.medicion_agua.medicion_no_puede_tener_fecha'),
+            'between' => __('mensajes.medicion_agua.valor_esta_fuera_rango_posible'),
         ]);
 
         $medicion = $lago->mediciones()->create($datos + ['user_id' => $request->user()->id]);
@@ -37,7 +39,7 @@ class MedicionAguaController extends Controller
 
         // Se registra desde el detalle del lago o desde Seguridad & Noche: vuelve a la misma pantalla
         return back()->with('estado', $alertas === []
-            ? 'Medición registrada: todos los parámetros están en rango.'
-            : 'Medición registrada con '.count($alertas).' alerta(s). Revisa el lago.');
+            ? __('mensajes.medicion_agua.medicion_registrada_todos_parametros_estan')
+            : __('mensajes.medicion_agua.registrada_con_alertas', ['cantidad' => count($alertas)]));
     }
 }

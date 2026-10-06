@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use App\Support\CatalogoEspecies;
+use App\Support\Formato;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,7 +28,7 @@ class MedicionAgua extends Model
     protected function casts(): array
     {
         return [
-            'medido_at' => 'datetime',
+            'medido_at' => InstanteLocal::class,
             'temperatura_c' => 'float',
             'oxigeno_mg_l' => 'float',
             'ph' => 'float',
@@ -54,7 +56,7 @@ class MedicionAgua extends Model
     public function alertas(iterable $especies): array
     {
         $alertas = [];
-        $numero = fn (float $valor) => str_replace('.', ',', (string) round($valor, 2));
+        $numero = fn (float $valor) => rtrim(rtrim(Formato::numero($valor, 2), '0'), ',.');
 
         foreach ($especies as $clave) {
             $ficha = CatalogoEspecies::ficha($clave);
@@ -64,25 +66,25 @@ class MedicionAgua extends Model
 
             [$tMin, $tMax] = $ficha['temperatura'];
             if ($this->temperatura_c !== null && ($this->temperatura_c < $tMin || $this->temperatura_c > $tMax)) {
-                $alertas[] = "Temperatura de {$numero($this->temperatura_c)} °C fuera del rango de {$ficha['nombre']} ({$tMin} a {$tMax} °C).";
+                $alertas[] = __('lagos.alertas.temperatura', ['valor' => $numero($this->temperatura_c), 'especie' => $ficha['nombre'], 'min' => $tMin, 'max' => $tMax]);
             }
 
             if ($this->oxigeno_mg_l !== null && $this->oxigeno_mg_l < $ficha['oxigeno_min']) {
-                $alertas[] = "Oxígeno de {$numero($this->oxigeno_mg_l)} mg/L por debajo del mínimo de {$ficha['nombre']} ({$numero($ficha['oxigeno_min'])} mg/L).";
+                $alertas[] = __('lagos.alertas.oxigeno', ['valor' => $numero($this->oxigeno_mg_l), 'especie' => $ficha['nombre'], 'minimo' => $numero($ficha['oxigeno_min'])]);
             }
 
             [$phMin, $phMax] = $ficha['ph'];
             if ($this->ph !== null && ($this->ph < $phMin || $this->ph > $phMax)) {
-                $alertas[] = "pH de {$numero($this->ph)} fuera del rango de {$ficha['nombre']} ({$numero($phMin)} a {$numero($phMax)}).";
+                $alertas[] = __('lagos.alertas.ph', ['valor' => $numero($this->ph), 'especie' => $ficha['nombre'], 'min' => $numero($phMin), 'max' => $numero($phMax)]);
             }
         }
 
         if ($this->amonio_mg_l !== null && $this->amonio_mg_l > self::AMONIO_MAX) {
-            $alertas[] = "Amonio de {$numero($this->amonio_mg_l)} mg/L por encima de ".$numero(self::AMONIO_MAX).' mg/L.';
+            $alertas[] = __('lagos.alertas.amonio', ['valor' => $numero($this->amonio_mg_l), 'maximo' => $numero(self::AMONIO_MAX)]);
         }
 
         if ($this->nitritos_mg_l !== null && $this->nitritos_mg_l > self::NITRITOS_MAX) {
-            $alertas[] = "Nitritos de {$numero($this->nitritos_mg_l)} mg/L por encima de ".$numero(self::NITRITOS_MAX).' mg/L.';
+            $alertas[] = __('lagos.alertas.nitritos', ['valor' => $numero($this->nitritos_mg_l), 'maximo' => $numero(self::NITRITOS_MAX)]);
         }
 
         return $alertas;

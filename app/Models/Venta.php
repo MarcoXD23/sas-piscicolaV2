@@ -12,7 +12,13 @@ class Venta extends Model
 {
     use PerteneceATenant;
 
-    public const FORMAS_PAGO = ['contado' => 'De contado', 'credito' => 'A crédito'];
+    public const FORMAS_PAGO = ['contado', 'credito'];
+
+    /** @return array<string, string> código => texto en el idioma de la finca */
+    public static function opciones(): array
+    {
+        return collect(self::FORMAS_PAGO)->mapWithKeys(fn (string $codigo) => [$codigo => __('ventas.formas_pago.'.$codigo)])->all();
+    }
 
     protected $fillable = ['cosecha_id', 'user_id', 'comprador_id', 'cliente', 'fecha', 'kg', 'precio_kg', 'total', 'forma_pago', 'saldo'];
 

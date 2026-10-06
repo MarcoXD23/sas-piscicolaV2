@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MovimientoAlimento;
 use App\Models\StockAlimento;
 use App\Support\CoberturaBodega;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class BodegaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'proveedor' => ['required', 'string', 'max:255'],
             'tipo_concentrado' => ['required', 'string', 'max:255'],
             'bultos' => ['required', 'integer', 'min:1'],
@@ -73,6 +74,6 @@ class BodegaController extends Controller
             }
         });
 
-        return redirect()->route('admin.bodega.index')->with('estado', 'Recepción de alimento registrada.');
+        return redirect()->route('admin.bodega.index')->with('estado', __('mensajes.bodega.recepcion_alimento_registrada'));
     }
 }

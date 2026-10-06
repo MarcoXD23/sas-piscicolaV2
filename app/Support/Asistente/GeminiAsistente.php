@@ -31,7 +31,7 @@ class GeminiAsistente implements ClienteAsistente
     public function responder(string $instrucciones, string $contexto, array $mensajes): string
     {
         if (! $this->configurado()) {
-            throw new AsistenteNoDisponible('El asistente no está configurado. Pide al propietario que agregue la clave de Gemini.');
+            throw new AsistenteNoDisponible(__('asistente.errores.falta_clave_gemini'));
         }
 
         try {
@@ -49,7 +49,7 @@ class GeminiAsistente implements ClienteAsistente
                     'generationConfig' => ['maxOutputTokens' => 8000],
                 ]);
         } catch (ConnectionException) {
-            throw new AsistenteNoDisponible('No hay conexión con el asistente. Revisa el internet e intenta de nuevo.');
+            throw new AsistenteNoDisponible(__('asistente.errores.sin_conexion'));
         }
 
         if ($respuesta->failed()) {
@@ -57,7 +57,7 @@ class GeminiAsistente implements ClienteAsistente
         }
 
         if ($respuesta->json('promptFeedback.blockReason')) {
-            throw new AsistenteNoDisponible('El asistente no puede responder esa pregunta.');
+            throw new AsistenteNoDisponible(__('asistente.errores.pregunta_bloqueada'));
         }
 
         $candidato = $respuesta->json('candidates.0');
@@ -87,14 +87,14 @@ class GeminiAsistente implements ClienteAsistente
 
         if ($claveInvalida) {
             Log::error('Asistente IA: clave de Gemini inválida', ['estado' => $estado, 'error' => $error]);
-            throw new AsistenteNoDisponible('La clave del asistente no es válida. Avísale al propietario.');
+            throw new AsistenteNoDisponible(__('asistente.errores.clave_invalida'));
         }
 
         if ($estado === 429) {
-            throw new AsistenteNoDisponible('El asistente está muy ocupado. Intenta de nuevo en un minuto.');
+            throw new AsistenteNoDisponible(__('asistente.errores.ocupado'));
         }
 
         Log::error('Asistente IA: error de la API de Gemini', ['estado' => $estado, 'error' => $error]);
-        throw new AsistenteNoDisponible('El asistente no pudo responder. Intenta de nuevo más tarde.');
+        throw new AsistenteNoDisponible(__('asistente.errores.no_pudo_responder'));
     }
 }

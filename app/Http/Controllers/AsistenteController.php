@@ -32,8 +32,8 @@ class AsistenteController extends Controller
     public function enviar(Request $request): JsonResponse
     {
         $datos = $request->validate(['mensaje' => ['required', 'string', 'max:1000']], [
-            'mensaje.required' => 'Escribe tu pregunta.',
-            'mensaje.max' => 'La pregunta es muy larga (máximo 1.000 caracteres).',
+            'mensaje.required' => __('mensajes.asistente.escribe_tu_pregunta'),
+            'mensaje.max' => __('mensajes.asistente.pregunta_es_muy_larga_maximo'),
         ]);
 
         $historial = $request->session()->get(self::CLAVE_SESION, []);

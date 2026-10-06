@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Database\ConexionPostgresUtc;
 use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\GeminiAsistente;
 use App\Support\TenantActual;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantActual::class);
+
+        // Las fechas con hora viajan siempre en UTC a PostgreSQL (ver ConexionPostgresUtc)
+        Connection::resolverFor('pgsql', fn ($pdo, $base, $prefijo, $config) => new ConexionPostgresUtc($pdo, $base, $prefijo, $config));
 
         // Proveedor del asistente IA según ASISTENTE_PROVEEDOR (claude o gemini)
         $this->app->bind(ClienteAsistente::class, function () {
@@ -48,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
 
             public function responder(string $instrucciones, string $contexto, array $mensajes): string
             {
-                throw new AsistenteNoDisponible('El asistente no está configurado. Pide al propietario que revise el proveedor del asistente.');
+                throw new AsistenteNoDisponible(__('asistente.errores.proveedor_no_configurado'));
             }
         };
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,7 +32,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'aprobado_at' => 'datetime',
+            'aprobado_at' => InstanteLocal::class,
             'valor_hora' => 'integer',
             'valor_hora_extra' => 'integer',
             'password' => 'hashed',

@@ -34,9 +34,9 @@ class NominaTest extends TestCase
     {
         parent::setUp();
         // Miércoles 14 de octubre de 2026, 10:00. La semana va del lunes 12 al domingo 18.
-        $this->travelTo(Carbon::parse('2026-10-14 10:00'));
+        $this->travelTo(Carbon::parse('2026-10-14 10:00', 'America/Bogota'));
 
-        $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
+        $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'pais' => 'CO']);
         app(TenantActual::class)->establecer($this->tenant->id);
         $this->propietario = tap(User::factory()->create(['tenant_id' => $this->tenant->id]))->asignarRoles([Rol::PROPIETARIO]);
         $this->trabajador = tap(User::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Trabajador Uno']))->asignarRoles([Rol::TRABAJADOR]);

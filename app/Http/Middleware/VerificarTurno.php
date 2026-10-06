@@ -16,7 +16,7 @@ class VerificarTurno
     public function handle(Request $request, Closure $next, string $rol): Response
     {
         if (! $request->user()?->puedeTrabajarComo($rol)) {
-            abort(403, 'Estás fuera de tu turno. Solo puedes registrar durante tu turno asignado.');
+            abort(403, __('mensajes.verificar_turno.estas_fuera_tu_turno_solo'));
         }
 
         return $next($request);

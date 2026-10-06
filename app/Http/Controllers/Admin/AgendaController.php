@@ -7,6 +7,7 @@ use App\Models\EventoAgenda;
 use App\Models\Lago;
 use App\Models\Permiso;
 use App\Models\Tratamiento;
+use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
@@ -31,7 +32,7 @@ class AgendaController extends Controller
             'mes' => $mes,
             'dias' => collect(CarbonPeriod::create($desde, $hasta->startOfDay()))->map(fn ($dia) => CarbonImmutable::instance($dia)),
             'porDia' => $this->elementosPorDia($desde, $hasta),
-            'tipos' => EventoAgenda::TIPOS,
+            'tipos' => EventoAgenda::opciones(),
             'lagos' => Lago::query()->orderBy('nombre')->pluck('nombre', 'id')->all(),
         ]);
     }
@@ -47,7 +48,7 @@ class AgendaController extends Controller
     public function update(Request $request, EventoAgenda $evento): RedirectResponse
     {
         if ($evento->estaCompletado()) {
-            return back()->withErrors(['evento' => 'Un evento ya hecho no se edita: queda en el historial.']);
+            return back()->withErrors(['evento' => __('mensajes.agenda.evento_ya_hecho_no_edita')]);
         }
 
         $evento->update($this->datosEvento($request));
@@ -65,7 +66,7 @@ class AgendaController extends Controller
     {
         $datos = $request->validate([
             'titulo' => ['required', 'string', 'max:255'],
-            'tipo' => ['required', 'string', Rule::in(array_keys(EventoAgenda::TIPOS))],
+            'tipo' => ['required', 'string', Rule::in(EventoAgenda::TIPOS)],
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['nullable', 'date_format:H:i'],
             'hora_fin' => ['nullable', 'date_format:H:i'],
@@ -73,21 +74,22 @@ class AgendaController extends Controller
             'recordar_dias_antes' => ['required', 'integer', 'between:0,60'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
         ], [
-            'titulo.required' => 'Escribe el título.',
-            'tipo.in' => 'Elige un tipo válido.',
-            'recordar_dias_antes.between' => 'El aviso puede ser de 0 a 60 días antes.',
+            'titulo.required' => __('mensajes.agenda.escribe_titulo'),
+            'tipo.in' => __('mensajes.agenda.elige_tipo_valido'),
+            'recordar_dias_antes.between' => __('mensajes.agenda.aviso_puede_ser_0_60'),
         ]);
 
         if (! empty($datos['hora_fin'])) {
             if (empty($datos['hora'])) {
-                throw ValidationException::withMessages(['hora' => 'Si pones hora final, pon también la hora de inicio.']);
+                throw ValidationException::withMessages(['hora' => __('mensajes.agenda.si_pones_hora_final_pon')]);
             }
             if ($datos['hora_fin'] <= $datos['hora']) {
-                throw ValidationException::withMessages(['hora_fin' => 'La hora final debe ser posterior a la inicial.']);
+                throw ValidationException::withMessages(['hora_fin' => __('mensajes.agenda.hora_final_debe_ser_posterior')]);
             }
         }
 
-        $fecha = CarbonImmutable::parse($datos['fecha']);
+        // La fecha y la hora del formulario son de la zona de la finca (el cast las guarda en UTC)
+        $fecha = CarbonImmutable::parse($datos['fecha'], Region::zona());
 
         return [
             'lago_id' => $datos['lago_id'] ?? null,
@@ -113,21 +115,21 @@ class AgendaController extends Controller
     public function destroy(EventoAgenda $evento): RedirectResponse
     {
         if ($evento->estaCompletado()) {
-            return back()->withErrors(['evento' => 'Un evento ya hecho no se elimina: queda en el historial.']);
+            return back()->withErrors(['evento' => __('mensajes.agenda.evento_ya_hecho_no_elimina')]);
         }
 
         $evento->delete();
 
-        return back()->with('estado', 'Evento eliminado.');
+        return back()->with('estado', __('mensajes.agenda.evento_eliminado'));
     }
 
     private function mes(?string $valor): CarbonImmutable
     {
         if ($valor !== null && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $valor)) {
-            return CarbonImmutable::createFromFormat('!Y-m', $valor)->startOfMonth();
+            return CarbonImmutable::createFromFormat('!Y-m', $valor, Region::zona())->startOfMonth();
         }
 
-        return CarbonImmutable::today()->startOfMonth();
+        return Region::hoy()->startOfMonth();
     }
 
     /**
@@ -155,7 +157,7 @@ class AgendaController extends Controller
             ->each(fn (Tratamiento $tratamiento) => $elementos->push([
                 'fecha' => $tratamiento->finRetiro()->toDateString(),
                 'hora' => null,
-                'titulo' => "Fin del retiro sanitario · {$tratamiento->lago->nombre}",
+                'titulo' => __('mensajes.agenda.fin_retiro', ['lago' => $tratamiento->lago->nombre]),
                 'color' => 'retiro',
                 'evento' => null,
             ]));
@@ -165,12 +167,13 @@ class AgendaController extends Controller
             ->where('fecha_fin', '>=', $desde->toDateString())
             ->get()
             ->each(function (Permiso $permiso) use ($elementos, $desde, $hasta) {
-                $inicio = CarbonImmutable::instance($permiso->fecha_inicio)->max($desde);
-                $fin = CarbonImmutable::instance($permiso->fecha_fin)->min($hasta->startOfDay());
+                // Días de calendario: se comparan como texto Y-m-d para no cambiar de día por la zona
+                $inicio = max($permiso->fecha_inicio->toDateString(), $desde->toDateString());
+                $fin = min($permiso->fecha_fin->toDateString(), $hasta->toDateString());
 
                 foreach (CarbonPeriod::create($inicio, $fin) as $dia) {
                     $elementos->push(['fecha' => $dia->toDateString(), 'hora' => null,
-                        'titulo' => "Permiso: {$permiso->usuario->name}", 'color' => 'permiso', 'evento' => null]);
+                        'titulo' => __('mensajes.agenda.permiso_de', ['nombre' => $permiso->usuario->name]), 'color' => 'permiso', 'evento' => null]);
                 }
             });
 

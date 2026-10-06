@@ -31,9 +31,9 @@ class CosechasYVentasTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-20 08:00'));
+        $this->travelTo(Carbon::parse('2026-10-20 08:00', 'America/Bogota'));
 
-        $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
+        $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'pais' => 'CO']);
         app(TenantActual::class)->establecer($this->tenant->id);
         $this->propietario = $this->persona(Rol::PROPIETARIO);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
@@ -112,7 +112,7 @@ class CosechasYVentasTest extends TestCase
 
         $this->actingAs($this->propietario)->get(route('admin.lagos.show', $this->lago))->assertSee('Lago en retiro sanitario', false);
 
-        $this->travelTo(Carbon::parse('2026-10-24 08:00'));
+        $this->travelTo(Carbon::parse('2026-10-24 08:00', 'America/Bogota'));
         $this->cosechar(['fecha' => '2026-10-24'])->assertSessionHasNoErrors();
     }
 

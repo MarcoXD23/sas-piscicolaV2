@@ -22,7 +22,7 @@ class ReglasPolicultivo
 
         if ($activas->contains(fn (Siembra $siembra) => CatalogoEspecies::clima($siembra->especie) !== $clima)) {
             throw ValidationException::withMessages([
-                $campo => 'No se pueden mezclar especies de agua fría y de agua cálida en el mismo lago.',
+                $campo => __('mensajes.siembra.mezcla_clima'),
             ]);
         }
     }

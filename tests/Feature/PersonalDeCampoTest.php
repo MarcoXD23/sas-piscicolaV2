@@ -27,7 +27,7 @@ class PersonalDeCampoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-07 10:00'));
+        $this->travelTo(Carbon::parse('2026-10-07 10:00', 'America/Bogota'));
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);

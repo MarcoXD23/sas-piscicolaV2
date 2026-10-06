@@ -23,7 +23,7 @@ class LoginController extends Controller
 
         if (! Auth::attempt($credenciales, $request->boolean('recordarme'))) {
             throw ValidationException::withMessages([
-                'email' => 'El correo o la contraseña no son correctos.',
+                'email' => __('mensajes.login.correo_contrasena_no_son_correctos'),
             ]);
         }
 
@@ -31,7 +31,7 @@ class LoginController extends Controller
             Auth::logout();
 
             throw ValidationException::withMessages([
-                'email' => 'Tu cuenta aún no ha sido aprobada por el propietario de la finca.',
+                'email' => __('mensajes.login.tu_cuenta_aun_no_ha'),
             ]);
         }
 
@@ -50,4 +50,3 @@ class LoginController extends Controller
         return redirect()->route('login');
     }
 }
-

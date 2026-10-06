@@ -17,10 +17,9 @@ class VerificarRol
         $usuario = $request->user();
 
         if ($usuario === null || ! $usuario->estaAprobado() || ! $usuario->tieneRol(...$roles)) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
+            abort(403, __('mensajes.verificar_rol.no_tienes_permiso_acceder_esta'));
         }
 
         return $next($request);
     }
 }
-

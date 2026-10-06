@@ -19,6 +19,7 @@ use App\Models\Traslado;
 use App\Models\Tratamiento;
 use App\Models\Venta;
 use App\Support\HistorialLago;
+use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -101,8 +102,8 @@ class ReporteController extends Controller
         ]);
 
         $lago = Lago::query()->findOrFail($datos['lago_id']);
-        $hasta = CarbonImmutable::parse($datos['hasta'] ?? today());
-        $desde = CarbonImmutable::parse($datos['desde'] ?? $hasta->subMonths(3));
+        $hasta = CarbonImmutable::parse($datos['hasta'] ?? Region::hoy()->toDateString(), Region::zona());
+        $desde = CarbonImmutable::parse($datos['desde'] ?? $hasta->subMonths(3)->toDateString(), Region::zona());
 
         return view('admin.reportes.libro-campo', [
             'lago' => $lago,
@@ -120,9 +121,9 @@ class ReporteController extends Controller
     private function mes(?string $valor): CarbonImmutable
     {
         if ($valor !== null && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $valor)) {
-            return CarbonImmutable::createFromFormat('!Y-m', $valor)->startOfMonth();
+            return CarbonImmutable::createFromFormat('!Y-m', $valor, Region::zona())->startOfMonth();
         }
 
-        return CarbonImmutable::today()->startOfMonth();
+        return Region::hoy()->startOfMonth();
     }
 }

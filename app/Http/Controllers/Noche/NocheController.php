@@ -8,6 +8,7 @@ use App\Models\Lago;
 use App\Models\MedicionAgua;
 use App\Models\Rol;
 use App\Models\Ronda;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -31,13 +32,13 @@ class NocheController extends Controller
                 $lago->id => $lago->ultimaMedicion?->alertas($lago->siembrasActivas->pluck('especie')) ?? [],
             ]),
             'bitacora' => $this->bitacora(),
-            'tipos' => Ronda::TIPOS,
+            'tipos' => Ronda::opciones(),
             'puedeRegistrar' => $usuario->puedeTrabajarComo(Rol::CELADOR),
             'turno' => $usuario->turnoEnCurso(Rol::CELADOR),
         ]);
     }
 
-    /** @return Collection<int, array{momento: \Carbon\CarbonInterface, icono: string, titulo: string, detalle: string, tono: string}> */
+    /** @return Collection<int, array{momento: CarbonInterface, icono: string, titulo: string, detalle: string, tono: string}> */
     private function bitacora(): Collection
     {
         $desde = now()->subHours(self::HORAS_BITACORA);
@@ -60,12 +61,12 @@ class NocheController extends Controller
             ->each(function (Aireacion $aireacion) use ($eventos, $desde, $unir) {
                 if ($aireacion->encendido_at->gte($desde)) {
                     $eventos->push(['momento' => $aireacion->encendido_at, 'icono' => 'aireador', 'tono' => 'neutro',
-                        'titulo' => "Aireador encendido · {$aireacion->lago->nombre}",
+                        'titulo' => __('noche.aireador_encendido_en', ['lago' => $aireacion->lago->nombre]),
                         'detalle' => $unir($aireacion->motivo, $aireacion->usuario?->name)]);
                 }
                 if ($aireacion->apagado_at?->gte($desde)) {
                     $eventos->push(['momento' => $aireacion->apagado_at, 'icono' => 'aireador', 'tono' => 'neutro',
-                        'titulo' => "Aireador apagado · {$aireacion->lago->nombre}",
+                        'titulo' => __('noche.aireador_apagado_en', ['lago' => $aireacion->lago->nombre]),
                         'detalle' => $unir($aireacion->apagadoPor?->name)]);
                 }
             });
@@ -74,9 +75,9 @@ class NocheController extends Controller
             ->each(fn (MedicionAgua $medicion) => $eventos->push([
                 'momento' => $medicion->medido_at,
                 'icono' => 'reloj',
-                'titulo' => "Medición · {$medicion->lago->nombre}",
+                'titulo' => __('noche.medicion_de', ['lago' => $medicion->lago->nombre]),
                 'detalle' => $unir(
-                    $medicion->oxigeno_mg_l !== null ? "oxígeno {$numero($medicion->oxigeno_mg_l)} mg/L" : null,
+                    $medicion->oxigeno_mg_l !== null ? __('noche.oxigeno_valor', ['valor' => $numero($medicion->oxigeno_mg_l)]) : null,
                     $medicion->temperatura_c !== null ? "{$numero($medicion->temperatura_c)} °C" : null,
                     $medicion->usuario?->name,
                 ),

@@ -7,6 +7,7 @@ use App\Models\Liquidacion;
 use App\Models\Permiso;
 use App\Models\Tarea;
 use App\Models\Venta;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,7 @@ class MiTrabajoController extends Controller
             'permisos' => Permiso::query()->where('user_id', $usuario->id)->latest('fecha_inicio')->limit(10)->get(),
             'horasExtras' => HoraExtra::query()->where('user_id', $usuario->id)->latest('fecha')->limit(10)->get(),
             'horasAprobadasMes' => (float) HoraExtra::query()->where('user_id', $usuario->id)->aprobadas()
-                ->whereBetween('fecha', [today()->startOfMonth(), today()->endOfMonth()])->sum('horas'),
+                ->whereBetween('fecha', [Region::hoy()->startOfMonth()->toDateString(), Region::hoy()->endOfMonth()->toDateString()])->sum('horas'),
             'enTurno' => $usuario->turnos()->enCurso()->exists(),
             'liquidaciones' => Liquidacion::query()->where('user_id', $usuario->id)->latest('semana_inicio')->limit(8)->get(),
             // Pescado que la persona compró a crédito y aún debe
@@ -44,8 +45,8 @@ class MiTrabajoController extends Controller
     public function completar(Request $request, Tarea $tarea): RedirectResponse
     {
         $usuario = $request->user();
-        abort_unless($tarea->asignada_a === $usuario->id, 403, 'Esta tarea no está asignada a ti.');
-        abort_unless($usuario->turnos()->enCurso()->exists(), 403, 'Estás fuera de tu turno. Las tareas se marcan durante tu turno.');
+        abort_unless($tarea->asignada_a === $usuario->id, 403, __('mensajes.mi_trabajo.esta_tarea_no_esta_asignada'));
+        abort_unless($usuario->turnos()->enCurso()->exists(), 403, __('mensajes.mi_trabajo.estas_fuera_tu_turno_tareas'));
 
         $datos = $request->validate(['nota_cierre' => ['nullable', 'string', 'max:1000']]);
 
@@ -53,13 +54,13 @@ class MiTrabajoController extends Controller
             $bloqueada = Tarea::whereKey($tarea->id)->lockForUpdate()->first();
 
             if ($bloqueada->estaCompletada()) {
-                throw ValidationException::withMessages(['tarea' => 'Esta tarea ya estaba completada.']);
+                throw ValidationException::withMessages(['tarea' => __('mensajes.mi_trabajo.esta_tarea_ya_estaba_completada')]);
             }
 
             $bloqueada->update(['completada_at' => now(), 'nota_cierre' => $datos['nota_cierre'] ?? null]);
         });
 
-        return redirect()->route('mi-trabajo.index')->with('estado', "Tarea «{$tarea->titulo}» completada.");
+        return redirect()->route('mi-trabajo.index')->with('estado', __('mensajes.mi_trabajo.tarea_completada', ['titulo' => $tarea->titulo]));
     }
 
     public function solicitarPermiso(Request $request): RedirectResponse
@@ -67,14 +68,14 @@ class MiTrabajoController extends Controller
         $usuario = $request->user();
 
         $datos = $request->validate([
-            'fecha_inicio' => ['required', 'date', 'after_or_equal:today'],
+            'fecha_inicio' => ['required', 'date', 'after_or_equal:'.Region::hoy()->toDateString()],
             'fecha_fin' => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'motivo' => ['required', 'string', 'max:255'],
         ], [
-            'fecha_inicio.after_or_equal' => 'El permiso no puede empezar en una fecha pasada.',
-            'fecha_fin.after_or_equal' => 'La fecha final debe ser igual o posterior a la inicial.',
-            'motivo.required' => 'Escribe el motivo.',
-            'required' => 'Este dato es obligatorio.',
+            'fecha_inicio.after_or_equal' => __('mensajes.mi_trabajo.permiso_no_puede_empezar_fecha'),
+            'fecha_fin.after_or_equal' => __('mensajes.mi_trabajo.fecha_final_debe_ser_igual'),
+            'motivo.required' => __('mensajes.mi_trabajo.escribe_motivo'),
+            'required' => __('mensajes.mi_trabajo.este_dato_es_obligatorio'),
         ]);
 
         DB::transaction(function () use ($usuario, $datos) {
@@ -89,32 +90,32 @@ class MiTrabajoController extends Controller
                 ->exists();
 
             if ($cruzado) {
-                throw ValidationException::withMessages(['fecha_inicio' => 'Ya tienes un permiso pendiente o aprobado en esas fechas.']);
+                throw ValidationException::withMessages(['fecha_inicio' => __('mensajes.mi_trabajo.ya_tienes_permiso_pendiente_aprobado')]);
             }
 
             Permiso::create($datos + ['user_id' => $usuario->id, 'estado' => 'pendiente']);
         });
 
-        return redirect()->route('mi-trabajo.index')->with('estado', 'Permiso solicitado. El propietario lo revisará.');
+        return redirect()->route('mi-trabajo.index')->with('estado', __('mensajes.mi_trabajo.permiso_solicitado_propietario_revisara'));
     }
 
     public function reportarHoras(Request $request): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.today()->subDays(self::DIAS_REPORTE_HORAS)->toDateString()],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.Region::hoy()->subDays(self::DIAS_REPORTE_HORAS)->toDateString()],
             'horas' => ['required', 'numeric', 'min:0.5', 'max:12'],
             'motivo' => ['required', 'string', 'max:255'],
         ], [
-            'fecha.before_or_equal' => 'No se reportan horas de días que aún no pasan.',
-            'fecha.after_or_equal' => 'Solo se reportan horas de los últimos '.self::DIAS_REPORTE_HORAS.' días.',
-            'horas.min' => 'El mínimo es media hora.',
-            'horas.max' => 'El máximo es 12 horas por día.',
-            'motivo.required' => 'Escribe en qué trabajaste.',
-            'required' => 'Este dato es obligatorio.',
+            'fecha.before_or_equal' => __('mensajes.mi_trabajo.no_reportan_horas_dias_aun'),
+            'fecha.after_or_equal' => __('mensajes.mi_trabajo.horas_ultimos_dias', ['dias' => self::DIAS_REPORTE_HORAS]),
+            'horas.min' => __('mensajes.mi_trabajo.minimo_es_media_hora'),
+            'horas.max' => __('mensajes.mi_trabajo.maximo_es_12_horas_dia'),
+            'motivo.required' => __('mensajes.mi_trabajo.escribe_trabajaste'),
+            'required' => __('mensajes.mi_trabajo.este_dato_es_obligatorio'),
         ]);
 
         HoraExtra::create($datos + ['user_id' => $request->user()->id, 'estado' => 'pendiente']);
 
-        return redirect()->route('mi-trabajo.index')->with('estado', 'Horas extra reportadas. El propietario las revisará.');
+        return redirect()->route('mi-trabajo.index')->with('estado', __('mensajes.mi_trabajo.horas_extra_reportadas_propietario_revisara'));
     }
 }

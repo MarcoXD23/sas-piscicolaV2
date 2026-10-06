@@ -21,7 +21,7 @@ class AireacionController extends Controller
             Lago::whereKey($lago->id)->lockForUpdate()->first();
 
             if ($lago->aireacionActiva()->exists()) {
-                throw ValidationException::withMessages(['aireador' => "El aireador del lago {$lago->nombre} ya está encendido."]);
+                throw ValidationException::withMessages(['aireador' => __('mensajes.aireacion.ya_encendido', ['lago' => $lago->nombre])]);
             }
 
             Aireacion::create([
@@ -32,7 +32,7 @@ class AireacionController extends Controller
             ]);
         });
 
-        return redirect()->route('noche.index')->with('estado', "Aireador del lago {$lago->nombre} encendido.");
+        return redirect()->route('noche.index')->with('estado', __('mensajes.aireacion.encendido', ['lago' => $lago->nombre]));
     }
 
     public function apagar(Request $request, Aireacion $aireacion): RedirectResponse
@@ -41,12 +41,12 @@ class AireacionController extends Controller
             $bloqueada = Aireacion::whereKey($aireacion->id)->lockForUpdate()->first();
 
             if (! $bloqueada->estaEncendido()) {
-                throw ValidationException::withMessages(['aireador' => 'Ese aireador ya estaba apagado.']);
+                throw ValidationException::withMessages(['aireador' => __('mensajes.aireacion.ese_aireador_ya_estaba_apagado')]);
             }
 
             $bloqueada->update(['apagado_at' => now(), 'apagado_por' => $request->user()->id]);
         });
 
-        return redirect()->route('noche.index')->with('estado', "Aireador del lago {$aireacion->lago->nombre} apagado.");
+        return redirect()->route('noche.index')->with('estado', __('mensajes.aireacion.apagado', ['lago' => $aireacion->lago->nombre]));
     }
 }

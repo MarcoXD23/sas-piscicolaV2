@@ -6,7 +6,7 @@
     puntero o con el teclado, se rotula solo el máximo y hay una tabla con todos los datos.
 --}}
 @php
-    $numero = fn ($valor) => number_format((float) $valor, $decimales, ',', '.');
+    $numero = fn ($valor) => \App\Support\Formato::numero((float) $valor, $decimales);
     $maximo = (float) collect($datos)->max('valor');
     // Techo "redondo" del eje, lo más cercano posible al máximo para no desperdiciar altura
     $techo = 1;
@@ -70,15 +70,15 @@
             <div class="mt-1.5 flex justify-between text-xs text-slate-500" aria-hidden="true">
                 <span>{{ $datos[0]['fecha']->translatedFormat('j M') }}</span>
                 <span>{{ $datos[intdiv($total, 2)]['fecha']->translatedFormat('j M') }}</span>
-                <span>Hoy</span>
+                <span>{{ __('componentes.hoy') }}</span>
             </div>
         </div>
     </div>
 
     <details class="mt-3 text-sm">
-        <summary class="min-h-11 cursor-pointer content-center font-medium text-marca-700">Ver datos</summary>
+        <summary class="min-h-11 cursor-pointer content-center font-medium text-marca-700">{{ __('componentes.ver_datos') }}</summary>
         <table class="mt-2 w-full text-left">
-            <thead class="text-slate-500"><tr><th class="py-1 font-medium">Fecha</th><th class="py-1 text-right font-medium">{{ $unidad ? ucfirst($unidad) : 'Valor' }}</th></tr></thead>
+            <thead class="text-slate-500"><tr><th class="py-1 font-medium">{{ __('comun.fecha') }}</th><th class="py-1 text-right font-medium">{{ $unidad ? ucfirst($unidad) : __('componentes.valor') }}</th></tr></thead>
             <tbody class="divide-y divide-slate-100">
                 @foreach (collect($datos)->reverse() as $dato)
                     <tr><td class="py-1">{{ $dato['fecha']->format('d/m/Y') }}</td><td class="py-1 text-right tabular-nums">{{ $numero($dato['valor']) }}</td></tr>

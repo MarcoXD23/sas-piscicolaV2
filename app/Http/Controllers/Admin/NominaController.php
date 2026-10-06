@@ -7,7 +7,8 @@ use App\Models\Liquidacion;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\CalculadoraNomina;
-use Carbon\CarbonImmutable;
+use App\Support\Formato;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,12 +48,12 @@ class NominaController extends Controller
             'semana' => ['required', 'date_format:Y-m-d'],
             'descontar_pescado' => ['nullable', 'boolean'],
         ], [
-            'user_id.in' => 'Solo se liquida al personal de campo aprobado.',
+            'user_id.in' => __('mensajes.nomina.solo_liquida_personal_campo_aprobado'),
         ]);
 
         $lunes = CalculadoraNomina::lunes($datos['semana']);
-        if ($lunes->gt(today())) {
-            throw ValidationException::withMessages(['semana' => 'No se liquidan semanas que aún no empiezan.']);
+        if ($lunes->gt(Region::hoy())) {
+            throw ValidationException::withMessages(['semana' => __('mensajes.nomina.no_liquidan_semanas_aun_no')]);
         }
 
         $liquidacion = DB::transaction(function () use ($datos, $lunes, $request) {
@@ -60,15 +61,15 @@ class NominaController extends Controller
             $persona = User::whereKey($datos['user_id'])->lockForUpdate()->first();
 
             if ($persona->valor_hora === null || $persona->valor_hora_extra === null) {
-                throw ValidationException::withMessages(['user_id' => "Primero configura las tarifas de {$persona->name}."]);
+                throw ValidationException::withMessages(['user_id' => __('mensajes.nomina.configura_tarifas', ['nombre' => $persona->name])]);
             }
             if (Liquidacion::where('user_id', $persona->id)->where('semana_inicio', $lunes->toDateString())->exists()) {
-                throw ValidationException::withMessages(['user_id' => "La semana de {$persona->name} ya está liquidada."]);
+                throw ValidationException::withMessages(['user_id' => __('mensajes.nomina.ya_liquidada', ['nombre' => $persona->name])]);
             }
 
             $calculo = CalculadoraNomina::calcular($persona, $lunes);
             if ($calculo['bruto'] === 0) {
-                throw ValidationException::withMessages(['user_id' => "{$persona->name} no tiene turnos terminados ni horas extra aprobadas esa semana."]);
+                throw ValidationException::withMessages(['user_id' => __('mensajes.nomina.sin_horas', ['nombre' => $persona->name])]);
             }
 
             $liquidacion = Liquidacion::create([
@@ -95,7 +96,7 @@ class NominaController extends Controller
         });
 
         return redirect()->route('admin.nomina.index', ['semana' => $lunes->toDateString()])
-            ->with('estado', "Nómina de {$liquidacion->usuario->name}: ".'$ '.number_format($liquidacion->total_pagar, 0, ',', '.').' por pagar.');
+            ->with('estado', __('mensajes.nomina.por_pagar', ['nombre' => $liquidacion->usuario->name, 'total' => Formato::dinero($liquidacion->total_pagar)]));
     }
 
     public function pagar(Liquidacion $liquidacion): RedirectResponse
@@ -104,7 +105,7 @@ class NominaController extends Controller
             $liquidacion->update(['pagada_at' => now()]);
         }
 
-        return back()->with('estado', "Nómina de {$liquidacion->usuario->name} marcada como pagada.");
+        return back()->with('estado', __('mensajes.nomina.pagada', ['nombre' => $liquidacion->usuario->name]));
     }
 
     /** Anula una liquidación sin pagar y devuelve los saldos de pescado que se habían descontado. */
@@ -114,7 +115,7 @@ class NominaController extends Controller
             $bloqueada = Liquidacion::whereKey($liquidacion->id)->lockForUpdate()->first();
 
             if ($bloqueada->estaPagada()) {
-                throw ValidationException::withMessages(['liquidacion' => 'Una nómina pagada no se anula: queda en el historial.']);
+                throw ValidationException::withMessages(['liquidacion' => __('mensajes.nomina.nomina_pagada_no_anula_queda')]);
             }
 
             foreach ($bloqueada->abonos()->get() as $abono) {
@@ -125,7 +126,7 @@ class NominaController extends Controller
             $bloqueada->delete();
         });
 
-        return back()->with('estado', "Nómina de {$liquidacion->usuario->name} anulada.");
+        return back()->with('estado', __('mensajes.nomina.anulada', ['nombre' => $liquidacion->usuario->name]));
     }
 
     public function tarifas(Request $request, User $usuario): RedirectResponse
@@ -136,13 +137,13 @@ class NominaController extends Controller
             'valor_hora' => ['required', 'integer', 'min:1', 'max:1000000'],
             'valor_hora_extra' => ['required', 'integer', 'min:1', 'max:1000000'],
         ], [
-            'integer' => 'Escribe el valor en pesos, sin decimales.',
+            'integer' => __('region.dinero_sin_decimales'),
         ]);
 
         // Las tarifas no son asignables en masa (forman parte de la gestión de personal)
         $usuario->forceFill($datos)->save();
 
-        return back()->with('estado', "Tarifas de {$usuario->name} guardadas.");
+        return back()->with('estado', __('mensajes.nomina.tarifas_guardadas', ['nombre' => $usuario->name]));
     }
 
     /**
@@ -163,10 +164,10 @@ class NominaController extends Controller
             $credito->abonos()->create([
                 'liquidacion_id' => $liquidacion->id,
                 'user_id' => $registra->id,
-                'fecha' => today(),
+                'fecha' => Region::hoy()->toDateString(),
                 'valor' => $valor,
                 'medio' => 'nomina',
-                'observaciones' => 'Nómina de la semana del '.$liquidacion->semana_inicio->format('d/m/Y'),
+                'observaciones' => __('mensajes.nomina.observacion_abono', ['fecha' => $liquidacion->semana_inicio->format('d/m/Y')]),
             ]);
             $credito->decrement('saldo', $valor);
             $disponible -= $valor;

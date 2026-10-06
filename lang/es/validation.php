@@ -167,7 +167,7 @@ return [
         'transparencia_cm' => 'transparencia',
         'motivo' => 'motivo',
         'producto' => 'producto',
-        'registro_ica' => 'registro ICA',
+        'registro_sanitario' => 'registro sanitario',
         'dosis' => 'dosis',
         'via' => 'vía',
         'dias_retiro' => 'días de retiro',

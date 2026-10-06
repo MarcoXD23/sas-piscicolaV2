@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'confirmar_eliminar' => '¿Eliminar este turno?',
+    'dias' => 'Días',
+    'eliminar_turno_de' => 'Eliminar turno de :nombre',
+    'entrada' => 'Entrada',
+    'hasta' => 'hasta :hora',
+    'hoy' => 'Hoy',
+    'mas_un_dia' => '(+1 día)',
+    'nadie_esta_turno_este_momento' => 'Nadie está en turno en este momento.',
+    'persona' => 'Persona',
+    'programar' => 'Programar',
+    'programar_turnos' => 'Programar turnos',
+    'programar_turnos_primero_aprueba_personas' => 'Para programar turnos, primero aprueba personas con rol de trabajador o celador en la pestaña Personas.',
+    'salida' => 'Salida',
+    'semana_anterior' => 'Semana anterior',
+    'semana_siguiente' => 'Semana siguiente',
+    'si_es_antes_entrada_termina' => 'Si es antes de la entrada, termina al día siguiente.',
+    'sin_turnos' => 'Sin turnos.',
+    'turno' => 'Turno de',
+    'turno_ahora' => 'En turno ahora',
+    'turnos' => 'Turnos',
+    'turnos_rotativos_trabajadores_celadores' => 'Turnos rotativos de trabajadores y celadores.',
+];

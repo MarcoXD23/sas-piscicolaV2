@@ -46,7 +46,7 @@ class PersonalController extends Controller
         });
 
         return redirect()->route('admin.personal.index')
-            ->with('estado', "Se guardaron los roles de {$persona->name}.");
+            ->with('estado', __('mensajes.personal.roles_guardados', ['nombre' => $persona->name]));
     }
 
     /**
@@ -60,4 +60,3 @@ class PersonalController extends Controller
         );
     }
 }
-

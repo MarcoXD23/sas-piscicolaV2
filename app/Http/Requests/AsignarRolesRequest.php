@@ -30,10 +30,9 @@ class AsignarRolesRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'roles.required' => 'Selecciona al menos un rol.',
-            'roles.min' => 'Selecciona al menos un rol.',
-            'roles.*.in' => 'Rol no permitido.',
+            'roles.required' => __('mensajes.asignar_roles.selecciona_menos_rol'),
+            'roles.min' => __('mensajes.asignar_roles.selecciona_menos_rol'),
+            'roles.*.in' => __('mensajes.asignar_roles.rol_no_permitido'),
         ];
     }
 }
-

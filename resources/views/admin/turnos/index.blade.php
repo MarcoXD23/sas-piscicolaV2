@@ -1,31 +1,31 @@
 @extends('layouts.app')
 
-@section('titulo', 'Turnos')
+@section('titulo', __('turnos.turnos'))
 
 @section('contenido')
     @php
         $horario = function ($turno) {
             $texto = $turno->inicia_at->format('H:i').' – '.$turno->termina_at->format('H:i');
 
-            return $turno->termina_at->isSameDay($turno->inicia_at) ? $texto : $texto.' (+1 día)';
+            return $turno->termina_at->isSameDay($turno->inicia_at) ? $texto : $texto.' '.__('turnos.mas_un_dia');
         };
-        $diasSemana = [1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb', 7 => 'Dom'];
+        $diasSemana = array_combine(range(1, 7), __('comun.dias_cortos'));
         $diasMarcados = array_map('intval', old('dias', [1, 2, 3, 4, 5, 6]));
     @endphp
 
-    <x-encabezado titulo="Personal" subtitulo="Turnos rotativos de trabajadores y celadores.">
+    <x-encabezado :titulo="__('comun.personal')" :subtitulo="__('turnos.turnos_rotativos_trabajadores_celadores')">
         <x-boton tipo="button" data-abrir-modal="modal-turnos" :disabled="$personal->isEmpty()">
-            <x-icono nombre="mas" class="h-5 w-5" /> Programar turnos
+            <x-icono nombre="mas" class="h-5 w-5" /> {{ __('turnos.programar_turnos') }}
         </x-boton>
     </x-encabezado>
 
     <x-pestanas-personal />
 
     @if ($personal->isEmpty())
-        <x-vacio icono="personal" mensaje="Para programar turnos, primero aprueba personas con rol de trabajador o celador en la pestaña Personas." class="mb-6" />
+        <x-vacio icono="personal" :mensaje="__('turnos.programar_turnos_primero_aprueba_personas')" class="mb-6" />
     @endif
 
-    <x-tarjeta titulo="En turno ahora" class="mb-6">
+    <x-tarjeta :titulo="__('turnos.turno_ahora')" class="mb-6">
         @forelse ($enCurso as $turno)
             <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
                 <div class="flex min-w-0 items-center gap-3">
@@ -33,19 +33,19 @@
                     <span class="truncate font-semibold text-slate-900">{{ $turno->user->name }}</span>
                     <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold capitalize text-slate-700">{{ $turno->rol }}</span>
                 </div>
-                <span class="shrink-0 text-sm text-slate-500">hasta {{ $turno->termina_at->format('H:i') }}</span>
+                <span class="shrink-0 text-sm text-slate-500">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
             </div>
         @empty
-            <p class="text-base text-slate-500">Nadie está en turno en este momento.</p>
+            <p class="text-base text-slate-500">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
         @endforelse
     </x-tarjeta>
 
     <div class="mb-4 flex items-center justify-between gap-2">
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->subWeek()->toDateString()])" aria-label="Semana anterior">←</x-boton>
+        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->subWeek()->toDateString()])" :aria-label="__('turnos.semana_anterior')">←</x-boton>
         <h2 class="text-center text-lg font-semibold text-slate-900">
             {{ $semana->translatedFormat('j M') }} – {{ $semana->addDays(6)->translatedFormat('j M Y') }}
         </h2>
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->addWeek()->toDateString()])" aria-label="Semana siguiente">→</x-boton>
+        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->addWeek()->toDateString()])" :aria-label="__('turnos.semana_siguiente')">→</x-boton>
     </div>
 
     <div class="space-y-3">
@@ -60,7 +60,7 @@
                 <h3 class="mb-2 flex items-center gap-2 font-semibold capitalize text-slate-900">
                     {{ $dia->translatedFormat('l j') }}
                     @if ($dia->isToday())
-                        <span class="rounded-full bg-marca-100 px-2.5 py-0.5 text-xs font-semibold normal-case text-marca-800">Hoy</span>
+                        <span class="rounded-full bg-marca-100 px-2.5 py-0.5 text-xs font-semibold normal-case text-marca-800">{{ __('turnos.hoy') }}</span>
                     @endif
                 </h3>
 
@@ -77,35 +77,35 @@
                         @unless ($turno->haEmpezado())
                             <x-formulario :action="route('admin.turnos.destroy', $turno)" metodo="DELETE" class="!space-y-0">
                                 <button type="submit" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600"
-                                        aria-label="Eliminar turno de {{ $turno->user->name }}" onclick="return confirm('¿Eliminar este turno?')">
+                                        aria-label="{{ __('turnos.eliminar_turno_de', ['nombre' => $turno->user->name]) }}" onclick="return confirm(@js(__('turnos.confirmar_eliminar')))">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
                             </x-formulario>
                         @endunless
                     </div>
                 @empty
-                    <p class="text-sm text-slate-400">Sin turnos.</p>
+                    <p class="text-sm text-slate-400">{{ __('turnos.sin_turnos') }}</p>
                 @endforelse
             </section>
         @endforeach
     </div>
 
     @if ($personal->isNotEmpty())
-        <x-modal id="modal-turnos" titulo="Programar turnos">
+        <x-modal id="modal-turnos" :titulo="__('turnos.programar_turnos')">
             <x-formulario :action="route('admin.turnos.store')">
-                <x-seleccion nombre="user_id" etiqueta="Persona" required
+                <x-seleccion nombre="user_id" :etiqueta="__('turnos.persona')" required
                              :opciones="$personal->mapWithKeys(fn ($persona) => [
                                  $persona->id => $persona->name.' ('.$persona->roles->pluck('nombre')->intersect(\App\Models\Turno::ROLES)->join(' y ').')',
                              ])->all()" />
-                <x-seleccion nombre="rol" etiqueta="Turno de" :opciones="\App\Models\Turno::ROLES" required />
+                <x-seleccion nombre="rol" :etiqueta="__('turnos.turno')" :opciones="\App\Models\Turno::ROLES" required />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <x-campo nombre="desde" etiqueta="Desde" tipo="date" :valor="now()->toDateString()" :min="now()->toDateString()" required />
-                    <x-campo nombre="hasta" etiqueta="Hasta" tipo="date" :valor="now()->addDays(6)->toDateString()" :min="now()->toDateString()" required />
+                    <x-campo nombre="desde" :etiqueta="__('comun.desde')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" :min="\App\Support\Region::ahora()->toDateString()" required />
+                    <x-campo nombre="hasta" :etiqueta="__('comun.hasta')" tipo="date" :valor="\App\Support\Region::ahora()->addDays(6)->toDateString()" :min="\App\Support\Region::ahora()->toDateString()" required />
                 </div>
 
                 <fieldset>
-                    <legend class="mb-1.5 text-base font-medium text-slate-700">Días</legend>
+                    <legend class="mb-1.5 text-base font-medium text-slate-700">{{ __('turnos.dias') }}</legend>
                     <div class="grid grid-cols-7 gap-1">
                         @foreach ($diasSemana as $numero => $nombre)
                             <label class="flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-slate-300 text-sm font-semibold text-slate-600 has-checked:border-marca-500 has-checked:bg-marca-50 has-checked:text-marca-800">
@@ -120,14 +120,14 @@
                 </fieldset>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <x-campo nombre="hora_inicio" etiqueta="Entrada" tipo="time" valor="06:00" required />
-                    <x-campo nombre="hora_fin" etiqueta="Salida" tipo="time" valor="14:00" required
-                             ayuda="Si es antes de la entrada, termina al día siguiente." />
+                    <x-campo nombre="hora_inicio" :etiqueta="__('turnos.entrada')" tipo="time" valor="06:00" required />
+                    <x-campo nombre="hora_fin" :etiqueta="__('turnos.salida')" tipo="time" valor="14:00" required
+                             :ayuda="__('turnos.si_es_antes_entrada_termina')" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                    <x-boton>Programar</x-boton>
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ __('turnos.programar') }}</x-boton>
                 </div>
             </x-formulario>
         </x-modal>

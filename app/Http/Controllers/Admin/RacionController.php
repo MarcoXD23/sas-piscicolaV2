@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Lago;
 use App\Models\MovimientoAlimento;
 use App\Models\StockAlimento;
+use App\Support\Formato;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +18,13 @@ class RacionController extends Controller
     public function store(Request $request, Lago $lago): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'tipo_concentrado' => ['required', 'string', 'exists:stocks_alimento,tipo_concentrado'],
             'cantidad_kg' => ['required', 'numeric', 'min:0.1'],
         ]);
 
         if (! $lago->siembrasActivas()->exists()) {
-            throw ValidationException::withMessages(['cantidad_kg' => 'Este lago no tiene peces: no se puede registrar alimentación.']);
+            throw ValidationException::withMessages(['cantidad_kg' => __('mensajes.racion.este_lago_no_tiene_peces')]);
         }
 
         DB::transaction(function () use ($datos, $lago, $request) {
@@ -30,7 +32,7 @@ class RacionController extends Controller
 
             if (! $stock || $stock->cantidad_kg < $datos['cantidad_kg']) {
                 throw ValidationException::withMessages([
-                    'cantidad_kg' => 'No hay suficiente stock de este alimento en bodega. Disponible: ' . ($stock ? $stock->cantidad_kg : 0) . ' kg.'
+                    'cantidad_kg' => __('mensajes.racion.stock_insuficiente', ['kg' => Formato::numero($stock ? $stock->cantidad_kg : 0, 2)]),
                 ]);
             }
 
@@ -47,6 +49,6 @@ class RacionController extends Controller
             $stock->save();
         });
 
-        return back()->with('estado', "Ración de {$datos['cantidad_kg']} kg registrada en el lago {$lago->nombre}.");
+        return back()->with('estado', __('mensajes.racion.registrada', ['kg' => Formato::numero($datos['cantidad_kg'], 1), 'lago' => $lago->nombre]));
     }
 }

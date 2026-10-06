@@ -1,0 +1,37 @@
+<?php
+
+return [
+    'anteriores' => '← Anteriores',
+    'cancelar' => 'Cancelar',
+    'desde' => 'Desde',
+    'dias_cortos' => [
+        0 => 'Lun',
+        1 => 'Mar',
+        2 => 'Mié',
+        3 => 'Jue',
+        4 => 'Vie',
+        5 => 'Sáb',
+        6 => 'Dom',
+    ],
+    'fecha' => 'Fecha',
+    'formatos' => [
+        'mes_anio' => 'F \\d\\e Y',
+        'dia_mes' => 'l j \\d\\e F',
+        'dia_mes_hora' => 'l j \\d\\e F, H:i',
+        'fecha_larga' => 'l j \\d\\e F \\d\\e Y, H:i',
+    ],
+    'guardar' => 'Guardar',
+    'guardar_cambios' => 'Guardar cambios',
+    'hasta' => 'Hasta',
+    'horas_corto' => ':horas h',
+    'hoy' => 'Hoy',
+    'lago_opcional' => 'Lago (opcional)',
+    'ninguno' => 'Ninguno',
+    'pagina_de' => 'Página :actual de :total',
+    'paginas' => 'Páginas',
+    'personal' => 'Personal',
+    'rango_dias' => ':desde – :hasta (:dias día(s))',
+    'semana_del' => 'Semana del :desde al :hasta',
+    'siguientes' => 'Siguientes →',
+    'y' => 'y',
+];

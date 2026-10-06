@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,8 +18,8 @@ class Aireacion extends Model
     protected function casts(): array
     {
         return [
-            'encendido_at' => 'datetime',
-            'apagado_at' => 'datetime',
+            'encendido_at' => InstanteLocal::class,
+            'apagado_at' => InstanteLocal::class,
         ];
     }
 

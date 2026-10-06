@@ -21,16 +21,4 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string'],
         ];
     }
-
-    /**
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'email' => 'correo',
-            'password' => 'contraseña',
-        ];
-    }
 }
-

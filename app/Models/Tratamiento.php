@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\PerteneceATenant;
+use App\Support\Region;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -14,8 +15,14 @@ class Tratamiento extends Model
 
     public const VIAS = ['baño', 'alimento', 'agua'];
 
+    /** @return array<string, string> código => texto en el idioma de la finca */
+    public static function opciones(): array
+    {
+        return collect(self::VIAS)->mapWithKeys(fn (string $codigo) => [$codigo => __('lagos.vias.'.$codigo)])->all();
+    }
+
     protected $fillable = [
-        'lago_id', 'user_id', 'fecha_inicio', 'fecha_fin', 'motivo', 'producto', 'registro_ica', 'dosis', 'via', 'dias_retiro', 'observaciones',
+        'lago_id', 'user_id', 'fecha_inicio', 'fecha_fin', 'motivo', 'producto', 'registro_sanitario', 'dosis', 'via', 'dias_retiro', 'observaciones',
     ];
 
     protected function casts(): array
@@ -46,6 +53,6 @@ class Tratamiento extends Model
     /** Tratamientos cuyo período de retiro sigue vigente en la fecha indicada (por defecto, hoy). */
     public function scopeEnRetiro(Builder $consulta, ?CarbonInterface $fecha = null): void
     {
-        $consulta->whereRaw('fecha_fin + dias_retiro >= ?', [($fecha ?? today())->toDateString()]);
+        $consulta->whereRaw('fecha_fin + dias_retiro >= ?', [($fecha ?? Region::hoy())->toDateString()]);
     }
 }

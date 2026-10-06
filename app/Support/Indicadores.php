@@ -35,7 +35,7 @@ class Indicadores
      */
     public static function mortalidadReciente(int $dias = self::DIAS_SERIE): array
     {
-        $muertos = (int) Mortalidad::where('fecha', '>', today()->subDays($dias))->sum('cantidad');
+        $muertos = (int) Mortalidad::where('fecha', '>', Region::hoy()->subDays($dias)->toDateString())->sum('cantidad');
         $poblacion = (int) Siembra::activas()->sum('peces_vivos') + $muertos;
 
         return [
@@ -46,7 +46,7 @@ class Indicadores
 
     public static function alimentoReciente(int $dias = self::DIAS_SERIE): float
     {
-        return (float) MovimientoAlimento::where('tipo_movimiento', 'salida')->where('fecha', '>', today()->subDays($dias))->sum('cantidad_kg');
+        return (float) MovimientoAlimento::where('tipo_movimiento', 'salida')->where('fecha', '>', Region::hoy()->subDays($dias)->toDateString())->sum('cantidad_kg');
     }
 
     /** @return Collection<int, array{etiqueta: string, valor: float}> Biomasa de cada lago con siembras activas, de mayor a menor */
@@ -62,7 +62,7 @@ class Indicadores
     /** @return Collection<int, array{fecha: CarbonImmutable, valor: float}> Peces muertos por día */
     public static function mortalidadDiaria(int $dias = self::DIAS_SERIE): Collection
     {
-        $totales = Mortalidad::where('fecha', '>', today()->subDays($dias))
+        $totales = Mortalidad::where('fecha', '>', Region::hoy()->subDays($dias)->toDateString())
             ->groupBy('fecha')->selectRaw('fecha, SUM(cantidad) AS total')->pluck('total', 'fecha');
 
         return self::rellenarDias($totales, $dias);
@@ -71,7 +71,7 @@ class Indicadores
     /** @return Collection<int, array{fecha: CarbonImmutable, valor: float}> Kg de alimento suministrado por día */
     public static function alimentoDiario(int $dias = self::DIAS_SERIE): Collection
     {
-        $totales = MovimientoAlimento::where('tipo_movimiento', 'salida')->where('fecha', '>', today()->subDays($dias))
+        $totales = MovimientoAlimento::where('tipo_movimiento', 'salida')->where('fecha', '>', Region::hoy()->subDays($dias)->toDateString())
             ->groupBy('fecha')->selectRaw('fecha, SUM(cantidad_kg) AS total')->pluck('total', 'fecha');
 
         return self::rellenarDias($totales, $dias);
@@ -86,7 +86,7 @@ class Indicadores
     {
         $porFecha = $totales->mapWithKeys(fn ($total, $fecha) => [CarbonImmutable::parse($fecha)->toDateString() => (float) $total]);
 
-        return collect(CarbonPeriod::create(today()->subDays($dias - 1), today()))
+        return collect(CarbonPeriod::create(Region::hoy()->subDays($dias - 1), Region::hoy()))
             ->map(fn ($dia) => ['fecha' => CarbonImmutable::instance($dia), 'valor' => $porFecha[$dia->toDateString()] ?? 0.0])
             ->values();
     }

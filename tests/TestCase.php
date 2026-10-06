@@ -4,8 +4,10 @@ namespace Tests;
 
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\Region;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -29,6 +31,17 @@ abstract class TestCase extends BaseTestCase
         return $app;
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Reloj fijo por defecto: mediodía en la zona por defecto de las fincas. Así "hoy" es el mismo día
+        // en UTC y en la finca, y las pruebas no dependen de la hora en que se corren. Cada prueba puede
+        // fijar otra hora con travelTo().
+        $this->travelTo(Carbon::parse('2026-10-15 12:00', Region::ZONA_POR_DEFECTO));
+        Region::olvidar();
+    }
+
     /** Crea un turno en curso (de 1 hora antes a 7 horas después de ahora) para el rol indicado. */
     protected function ponerEnTurno(User $usuario, string $rol): Turno
     {
@@ -41,4 +54,3 @@ abstract class TestCase extends BaseTestCase
         ]);
     }
 }
-

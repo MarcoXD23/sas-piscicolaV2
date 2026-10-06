@@ -27,7 +27,7 @@ class TurnosTest extends TestCase
         parent::setUp();
 
         // Miércoles 7 de octubre de 2026, 10:00 (America/Bogota)
-        $this->travelTo(Carbon::parse('2026-10-07 10:00'));
+        $this->travelTo(Carbon::parse('2026-10-07 10:00', 'America/Bogota'));
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);

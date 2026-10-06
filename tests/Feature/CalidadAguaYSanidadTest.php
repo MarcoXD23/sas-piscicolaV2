@@ -9,6 +9,7 @@ use App\Models\Siembra;
 use App\Models\Tenant;
 use App\Models\Tratamiento;
 use App\Models\User;
+use App\Support\Region;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -25,7 +26,7 @@ class CalidadAguaYSanidadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-07 06:00'));
+        $this->travelTo(Carbon::parse('2026-10-07 06:00', 'America/Bogota'));
 
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($tenant->id);
@@ -38,7 +39,7 @@ class CalidadAguaYSanidadTest extends TestCase
     private function medir(array $datos)
     {
         return $this->actingAs($this->administrador)
-            ->post(route('admin.mediciones-agua.store', $this->lago), $datos + ['medido_at' => now()->format('Y-m-d\TH:i')]);
+            ->post(route('admin.mediciones-agua.store', $this->lago), $datos + ['medido_at' => Region::ahora()->format('Y-m-d\TH:i')]);
     }
 
     public function test_registra_una_medicion_en_rango_sin_alertas(): void
@@ -79,7 +80,7 @@ class CalidadAguaYSanidadTest extends TestCase
     {
         $this->medir([])->assertInvalid(['temperatura_c']);
         $this->medir(['ph' => 15])->assertInvalid(['ph']);
-        $this->medir(['temperatura_c' => 28, 'medido_at' => now()->addDay()->format('Y-m-d\TH:i')])->assertInvalid(['medido_at']);
+        $this->medir(['temperatura_c' => 28, 'medido_at' => Region::ahora()->addDay()->format('Y-m-d\TH:i')])->assertInvalid(['medido_at']);
         $this->assertSame(0, MedicionAgua::count());
     }
 
@@ -98,9 +99,9 @@ class CalidadAguaYSanidadTest extends TestCase
         $this->actingAs($this->administrador)->get(route('admin.lagos.show', $this->lago))->assertSee('Retiro sanitario hasta el 19/10/2026');
 
         // El último día de retiro todavía cuenta; el siguiente ya no
-        $this->travelTo(Carbon::parse('2026-10-19 23:00'));
+        $this->travelTo(Carbon::parse('2026-10-19 23:00', 'America/Bogota'));
         $this->assertTrue($this->lago->tratamientosEnRetiro()->exists());
-        $this->travelTo(Carbon::parse('2026-10-20 00:01'));
+        $this->travelTo(Carbon::parse('2026-10-20 00:01', 'America/Bogota'));
         $this->assertFalse($this->lago->tratamientosEnRetiro()->exists());
     }
 

@@ -12,6 +12,9 @@ class TenantActual
 
     public function establecer(?int $id): void
     {
+        if ($id !== $this->id) {
+            Region::olvidar();
+        }
         $this->id = $id;
     }
 
@@ -25,4 +28,3 @@ class TenantActual
         return $this->id !== null;
     }
 }
-

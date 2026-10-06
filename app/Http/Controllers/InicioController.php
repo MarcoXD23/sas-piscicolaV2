@@ -14,6 +14,7 @@ use App\Models\Venta;
 use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\Indicadores;
+use App\Support\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -68,7 +69,7 @@ class InicioController extends Controller
             'alimento30' => $esPropietario ? Indicadores::alimentoReciente() : null,
             'alimentoDiario' => $esPropietario ? Indicadores::alimentoDiario() : collect(),
             // Dinero: solo en el panel ejecutivo
-            'ventasMes' => $esPropietario ? (int) Venta::where('fecha', '>=', today()->startOfMonth())->sum('total') : null,
+            'ventasMes' => $esPropietario ? (int) Venta::where('fecha', '>=', Region::hoy()->startOfMonth()->toDateString())->sum('total') : null,
             'cartera' => $esPropietario ? (int) Venta::conSaldo()->sum('saldo') : null,
         ]);
     }

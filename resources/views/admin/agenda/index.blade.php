@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('titulo', 'Agenda')
+@section('titulo', __('agenda.agenda'))
 
 @section('contenido')
     @php
@@ -16,19 +16,19 @@
             'permiso' => 'bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200',
         ];
         $eventos = $porDia->flatten(1)->pluck('evento')->filter()->unique('id');
-        $diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        $diasSemana = __('comun.dias_cortos');
     @endphp
 
-    <x-encabezado titulo="Agenda" subtitulo="Actividades de la finca: cosechas, compras, visitas, mantenimiento y pagos.">
+    <x-encabezado :titulo="__('agenda.agenda')" :subtitulo="__('agenda.actividades_finca_cosechas_compras_visitas')">
         <x-boton tipo="button" data-abrir-modal="modal-evento">
-            <x-icono nombre="mas" class="h-5 w-5" /> Nuevo evento
+            <x-icono nombre="mas" class="h-5 w-5" /> {{ __('agenda.nuevo_evento') }}
         </x-boton>
     </x-encabezado>
 
     <div class="mb-4 flex items-center justify-between gap-2">
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->subMonth()->format('Y-m')])" aria-label="Mes anterior">←</x-boton>
+        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->subMonth()->format('Y-m')])" :aria-label="__('agenda.mes_anterior')">←</x-boton>
         <h2 class="text-center text-xl font-semibold capitalize text-slate-900">{{ $mes->translatedFormat('F Y') }}</h2>
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->addMonth()->format('Y-m')])" aria-label="Mes siguiente">→</x-boton>
+        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->addMonth()->format('Y-m')])" :aria-label="__('agenda.mes_siguiente')">→</x-boton>
     </div>
 
     {{-- Escritorio: calendario mensual --}}
@@ -66,7 +66,7 @@
                             </li>
                         @endforeach
                         @if ($elementos->count() > 3)
-                            <li class="px-1.5 text-xs text-slate-500">+{{ $elementos->count() - 3 }} más</li>
+                            <li class="px-1.5 text-xs text-slate-500">{{ __('agenda.mas', ['cantidad' => $elementos->count() - 3]) }}</li>
                         @endif
                     </ul>
                 </div>
@@ -97,12 +97,12 @@
                 </ul>
             </section>
         @empty
-            <x-vacio icono="calendario" mensaje="No hay nada agendado este mes." />
+            <x-vacio icono="calendario" :mensaje="__('agenda.no_hay_nada_agendado_este')" />
         @endforelse
     </div>
 
-    <ul class="mt-4 flex flex-wrap gap-2 text-xs" aria-label="Colores">
-        @foreach ($tipos + ['retiro' => 'Fin de retiro sanitario', 'permiso' => 'Permiso del personal'] as $clave => $texto)
+    <ul class="mt-4 flex flex-wrap gap-2 text-xs" aria-label="{{ __('agenda.colores') }}">
+        @foreach ($tipos + ['retiro' => __('agenda.fin_retiro'), 'permiso' => __('agenda.permiso_personal')] as $clave => $texto)
             <li class="rounded-full px-2.5 py-1 font-medium {{ $colores[$clave] }}">{{ $texto }}</li>
         @endforeach
     </ul>
@@ -110,20 +110,20 @@
     @foreach ($eventos as $evento)
         <x-modal id="evento-{{ $evento->id }}" :titulo="$evento->titulo">
             <dl class="space-y-2 text-base">
-                <div class="flex justify-between gap-3"><dt class="text-slate-500">Tipo</dt><dd class="font-semibold">{{ $evento->textoTipo() }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-slate-500">{{ __('agenda.tipo') }}</dt><dd class="font-semibold">{{ $evento->textoTipo() }}</dd></div>
                 <div class="flex justify-between gap-3">
-                    <dt class="text-slate-500">Cuándo</dt>
+                    <dt class="text-slate-500">{{ __('agenda.cuando') }}</dt>
                     <dd class="text-right font-semibold first-letter:uppercase">
-                        {{ $evento->inicia_at->translatedFormat('l j \d\e F')
+                        {{ $evento->inicia_at->translatedFormat(__('comun.formatos.dia_mes'))
                             .($evento->todo_el_dia ? '' : ', '.$evento->inicia_at->format('H:i'))
                             .($evento->termina_at ? ' a '.$evento->termina_at->format('H:i') : '') }}
                     </dd>
                 </div>
                 @if ($evento->lago)
-                    <div class="flex justify-between gap-3"><dt class="text-slate-500">Lago</dt><dd class="font-semibold">{{ $evento->lago->nombre }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-slate-500">{{ __('agenda.lago') }}</dt><dd class="font-semibold">{{ $evento->lago->nombre }}</dd></div>
                 @endif
                 @if ($evento->recordar_dias_antes > 0)
-                    <div class="flex justify-between gap-3"><dt class="text-slate-500">Aviso</dt><dd class="font-semibold">{{ $evento->recordar_dias_antes }} día(s) antes</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-slate-500">{{ __('agenda.aviso') }}</dt><dd class="font-semibold">{{ __('agenda.dias_antes', ['dias' => $evento->recordar_dias_antes]) }}</dd></div>
                 @endif
             </dl>
             @if ($evento->descripcion)
@@ -131,17 +131,17 @@
             @endif
 
             @if ($evento->estaCompletado())
-                <p class="mt-4 text-base font-medium text-marca-700">Hecho el {{ $evento->completado_at->format('d/m/Y H:i') }}.</p>
+                <p class="mt-4 text-base font-medium text-marca-700">{{ __('agenda.hecho_el', ['momento' => $evento->completado_at->format('d/m/Y H:i')]) }}</p>
             @else
                 <div class="mt-5 grid grid-cols-3 gap-2">
                     <x-formulario :action="route('admin.agenda.destroy', $evento)" metodo="DELETE" class="!space-y-0">
-                        <x-boton variante="secundario" class="w-full !px-2" onclick="return confirm('¿Eliminar este evento?')">
-                            <x-icono nombre="basura" class="h-5 w-5" /> Eliminar
+                        <x-boton variante="secundario" class="w-full !px-2" onclick="return confirm(@js(__('agenda.confirmar_eliminar')))">
+                            <x-icono nombre="basura" class="h-5 w-5" /> {{ __('agenda.eliminar') }}
                         </x-boton>
                     </x-formulario>
-                    <x-boton tipo="button" variante="secundario" class="w-full !px-2" data-abrir-modal="editar-evento-{{ $evento->id }}">Editar</x-boton>
+                    <x-boton tipo="button" variante="secundario" class="w-full !px-2" data-abrir-modal="editar-evento-{{ $evento->id }}">{{ __('agenda.editar') }}</x-boton>
                     <x-formulario :action="route('admin.agenda.completar', $evento)" class="!space-y-0">
-                        <x-boton class="w-full !px-2"><x-icono nombre="ok" class="h-5 w-5" /> Hecho</x-boton>
+                        <x-boton class="w-full !px-2"><x-icono nombre="ok" class="h-5 w-5" /> {{ __('agenda.hecho') }}</x-boton>
                     </x-formulario>
                 </div>
             @endif
@@ -154,25 +154,25 @@
             $id = $editar ? 'editar-evento-'.$editar->id : 'modal-evento';
             $sufijo = $editar ? '-'.$editar->id : '';
         @endphp
-        <x-modal :id="$id" :titulo="$editar ? 'Editar evento' : 'Nuevo evento'">
+        <x-modal :id="$id" :titulo="$editar ? __('agenda.editar_evento') : __('agenda.nuevo_evento')">
             <x-formulario :action="$editar ? route('admin.agenda.update', $editar) : route('admin.agenda.store')" :metodo="$editar ? 'PUT' : 'POST'">
-                <x-campo nombre="titulo" id="titulo{{ $sufijo }}" etiqueta="Título" placeholder="Ej. cosecha del lago L02" :valor="$editar?->titulo" required />
+                <x-campo nombre="titulo" id="titulo{{ $sufijo }}" :etiqueta="__('agenda.titulo')" :placeholder="__('agenda.ej_cosecha_lago_l02')" :valor="$editar?->titulo" required />
                 <div class="grid grid-cols-2 gap-4">
-                    <x-seleccion nombre="tipo" id="tipo{{ $sufijo }}" etiqueta="Tipo" :opciones="$tipos" :valor="$editar?->tipo" required />
-                    <x-campo nombre="fecha" id="fecha{{ $sufijo }}" etiqueta="Fecha" tipo="date" :valor="($editar?->inicia_at ?? today())->toDateString()" required />
-                    <x-campo nombre="hora" id="hora{{ $sufijo }}" etiqueta="Hora (opcional)" tipo="time"
+                    <x-seleccion nombre="tipo" id="tipo{{ $sufijo }}" :etiqueta="__('agenda.tipo')" :opciones="$tipos" :valor="$editar?->tipo" required />
+                    <x-campo nombre="fecha" id="fecha{{ $sufijo }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="($editar?->inicia_at ?? \App\Support\Region::hoy())->toDateString()" required />
+                    <x-campo nombre="hora" id="hora{{ $sufijo }}" :etiqueta="__('agenda.hora_opcional')" tipo="time"
                              :valor="$editar && ! $editar->todo_el_dia ? $editar->inicia_at->format('H:i') : null" />
-                    <x-campo nombre="hora_fin" id="hora-fin{{ $sufijo }}" etiqueta="Hasta (opcional)" tipo="time" :valor="$editar?->termina_at?->format('H:i')" />
-                    <x-seleccion nombre="lago_id" id="lago{{ $sufijo }}" etiqueta="Lago (opcional)" :opciones="['' => 'Ninguno'] + $lagos" :valor="$editar?->lago_id" />
-                    <x-campo nombre="recordar_dias_antes" id="aviso{{ $sufijo }}" etiqueta="Avisar días antes" tipo="number" min="0" max="60" inputmode="numeric"
+                    <x-campo nombre="hora_fin" id="hora-fin{{ $sufijo }}" :etiqueta="__('agenda.hasta_opcional')" tipo="time" :valor="$editar?->termina_at?->format('H:i')" />
+                    <x-seleccion nombre="lago_id" id="lago{{ $sufijo }}" :etiqueta="__('comun.lago_opcional')" :opciones="['' => __('comun.ninguno')] + $lagos" :valor="$editar?->lago_id" />
+                    <x-campo nombre="recordar_dias_antes" id="aviso{{ $sufijo }}" :etiqueta="__('agenda.avisar_dias_antes')" tipo="number" min="0" max="60" inputmode="numeric"
                              :valor="$editar?->recordar_dias_antes ?? 1" required />
                 </div>
-                <x-campo nombre="descripcion" id="descripcion{{ $sufijo }}" etiqueta="Notas (opcional)" :valor="$editar?->descripcion" />
-                <p class="text-sm text-slate-500">Sin hora, el evento es de todo el día. El aviso aparece en tu inicio.</p>
+                <x-campo nombre="descripcion" id="descripcion{{ $sufijo }}" :etiqueta="__('agenda.notas_opcional')" :valor="$editar?->descripcion" />
+                <p class="text-sm text-slate-500">{{ __('agenda.sin_hora_evento_es_todo') }}</p>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                    <x-boton>{{ $editar ? 'Guardar cambios' : 'Agendar' }}</x-boton>
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ $editar ? __('comun.guardar_cambios') : __('agenda.agendar') }}</x-boton>
                 </div>
             </x-formulario>
         </x-modal>

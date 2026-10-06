@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Lago;
 use App\Models\Siembra;
 use App\Models\Traslado;
+use App\Support\Formato;
+use App\Support\Region;
 use App\Support\ReglasPolicultivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,19 +24,19 @@ class TrasladoController extends Controller
     {
         $datos = $request->validate([
             'lago_destino_id' => ['required', 'integer', Rule::exists('lagos', 'id')->where('tenant_id', $request->user()->tenant_id)],
-            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
             'cantidad' => ['required', 'integer', 'min:1'],
             'peso_promedio_g' => ['required', 'numeric', 'min:0.1'],
             'observaciones' => ['nullable', 'string', 'max:500'],
         ], [
-            'lago_destino_id.required' => 'Elige el lago de destino.',
-            'lago_destino_id.exists' => 'El lago de destino no existe.',
-            'fecha.after_or_equal' => 'La fecha no puede ser anterior a la siembra.',
-            'fecha.before_or_equal' => 'La fecha no puede ser futura.',
+            'lago_destino_id.required' => __('mensajes.traslado.elige_lago_destino'),
+            'lago_destino_id.exists' => __('mensajes.traslado.lago_destino_no_existe'),
+            'fecha.after_or_equal' => __('mensajes.traslado.fecha_no_puede_ser_anterior'),
+            'fecha.before_or_equal' => __('mensajes.traslado.fecha_no_puede_ser_futura'),
         ]);
 
         if ((int) $datos['lago_destino_id'] === $siembra->lago_id) {
-            throw ValidationException::withMessages(['lago_destino_id' => 'El lago de destino debe ser distinto al de origen.']);
+            throw ValidationException::withMessages(['lago_destino_id' => __('mensajes.traslado.lago_destino_debe_ser_distinto')]);
         }
 
         $traslado = DB::transaction(function () use ($siembra, $datos, $request) {
@@ -44,12 +46,12 @@ class TrasladoController extends Controller
             $lagoDestino = Lago::findOrFail($datos['lago_destino_id']);
 
             if (! $origen->estaActiva()) {
-                throw ValidationException::withMessages(['cantidad' => 'Esta siembra ya está finalizada.']);
+                throw ValidationException::withMessages(['cantidad' => __('mensajes.traslado.esta_siembra_ya_esta_finalizada')]);
             }
 
             $cantidad = (int) $datos['cantidad'];
             if ($cantidad > $origen->peces_vivos) {
-                throw ValidationException::withMessages(['cantidad' => "Solo hay {$origen->peces_vivos} peces vivos en esta siembra."]);
+                throw ValidationException::withMessages(['cantidad' => __('mensajes.comun.solo_hay_peces', ['cantidad' => Formato::numero($origen->peces_vivos)])]);
             }
 
             $peso = (float) $datos['peso_promedio_g'];
@@ -103,6 +105,6 @@ class TrasladoController extends Controller
         });
 
         return redirect()->route('admin.lagos.show', $siembra->lago_id)
-            ->with('estado', number_format($traslado->cantidad, 0, ',', '.')." peces trasladados al lago {$traslado->lagoDestino->nombre}.");
+            ->with('estado', __('mensajes.traslado.registrado', ['cantidad' => Formato::numero($traslado->cantidad), 'lago' => $traslado->lagoDestino->nombre]));
     }
 }

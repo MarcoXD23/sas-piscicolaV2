@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siembra;
+use App\Support\Formato;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +16,7 @@ class MortalidadController extends Controller
     public function store(Request $request, Siembra $siembra): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:' . $siembra->fecha->format('Y-m-d')],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
             'cantidad' => ['required', 'integer', 'min:1'],
         ]);
 
@@ -22,12 +24,12 @@ class MortalidadController extends Controller
             $siembraBloqueada = Siembra::where('id', $siembra->id)->lockForUpdate()->first();
 
             if (! $siembraBloqueada->estaActiva()) {
-                throw ValidationException::withMessages(['cantidad' => 'Esta siembra ya está finalizada.']);
+                throw ValidationException::withMessages(['cantidad' => __('mensajes.mortalidad.esta_siembra_ya_esta_finalizada')]);
             }
 
             if ($datos['cantidad'] > $siembraBloqueada->peces_vivos) {
                 throw ValidationException::withMessages([
-                    'cantidad' => 'La cantidad de mortalidad no puede ser mayor a los peces vivos (' . $siembraBloqueada->peces_vivos . ').'
+                    'cantidad' => __('mensajes.mortalidad.mayor_a_vivos', ['cantidad' => Formato::numero($siembraBloqueada->peces_vivos)]),
                 ]);
             }
 
@@ -42,6 +44,6 @@ class MortalidadController extends Controller
             $siembraBloqueada->save();
         });
 
-        return back()->with('estado', 'Mortalidad registrada y peces descontados.');
+        return back()->with('estado', __('mensajes.mortalidad.mortalidad_registrada_peces_descontados'));
     }
 }

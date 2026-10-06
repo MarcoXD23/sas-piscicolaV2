@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
+use App\Support\Region;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,16 +15,14 @@ class EventoAgenda extends Model
 
     protected $table = 'eventos_agenda';
 
-    /** Tipos de evento: clave => texto. */
-    public const TIPOS = [
-        'cosecha' => 'Cosecha',
-        'compra' => 'Compra',
-        'visita' => 'Visita',
-        'mantenimiento' => 'Mantenimiento',
-        'pago' => 'Pago',
-        'sanidad' => 'Sanidad',
-        'otro' => 'Otro',
-    ];
+    /** Tipos de evento (el texto de cada uno está en lang/es/agenda.php, «tipos»). */
+    public const TIPOS = ['cosecha', 'compra', 'visita', 'mantenimiento', 'pago', 'sanidad', 'otro'];
+
+    /** @return array<string, string> código => texto en el idioma de la finca */
+    public static function opciones(): array
+    {
+        return collect(self::TIPOS)->mapWithKeys(fn (string $codigo) => [$codigo => __('agenda.tipos.'.$codigo)])->all();
+    }
 
     protected $fillable = [
         'creado_por', 'lago_id', 'titulo', 'tipo', 'inicia_at', 'termina_at',
@@ -32,9 +32,9 @@ class EventoAgenda extends Model
     protected function casts(): array
     {
         return [
-            'inicia_at' => 'datetime',
-            'termina_at' => 'datetime',
-            'completado_at' => 'datetime',
+            'inicia_at' => InstanteLocal::class,
+            'termina_at' => InstanteLocal::class,
+            'completado_at' => InstanteLocal::class,
             'todo_el_dia' => 'boolean',
             'recordar_dias_antes' => 'integer',
         ];
@@ -57,7 +57,7 @@ class EventoAgenda extends Model
 
     public function textoTipo(): string
     {
-        return self::TIPOS[$this->tipo] ?? $this->tipo;
+        return in_array($this->tipo, self::TIPOS, true) ? __('agenda.tipos.'.$this->tipo) : $this->tipo;
     }
 
     /**
@@ -68,11 +68,11 @@ class EventoAgenda extends Model
     {
         // Un evento vencido también cumple la condición (su fecha menos los días de aviso ya pasó)
         $consulta->whereNull('completado_at')
-            ->whereRaw('inicia_at::date - recordar_dias_antes <= ?', [today()->toDateString()]);
+            ->whereRaw("((inicia_at AT TIME ZONE 'UTC') AT TIME ZONE ?)::date - recordar_dias_antes <= ?", [Region::zona(), Region::hoy()->toDateString()]);
     }
 
     public function estaVencido(): bool
     {
-        return ! $this->estaCompletado() && $this->inicia_at->lt(today());
+        return ! $this->estaCompletado() && $this->inicia_at->toDateString() < Region::hoy()->toDateString();
     }
 }

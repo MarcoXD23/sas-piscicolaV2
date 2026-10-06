@@ -31,7 +31,7 @@ class LagoController extends Controller
         return view('admin.lagos.index', [
             'lagos' => $lagos,
             'raciones' => $lagos->mapWithKeys(fn (Lago $lago) => [$lago->id => CalculadoraRacion::paraLago($lago)]),
-            'tipos' => Lago::TIPOS,
+            'tipos' => Lago::opciones(),
             'especies' => $this->opcionesEspecies(),
             // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
             'puedeRegistrar' => $request->user()->puedeTrabajarComo(Rol::TRABAJADOR),
@@ -50,7 +50,7 @@ class LagoController extends Controller
             'historial' => HistorialLago::eventos($lago, limitePorTipo: self::LIMITE_POR_TIPO)->take(60),
             'siembrasFinalizadas' => $lago->siembras()->whereNotNull('finalizada_at')->latest('finalizada_at')->get(),
             'otrosLagos' => Lago::query()->whereKeyNot($lago->id)->orderBy('nombre')->pluck('nombre', 'id')->all(),
-            'vias' => Tratamiento::VIAS,
+            'vias' => Tratamiento::opciones(),
         ]);
     }
 
@@ -68,7 +68,7 @@ class LagoController extends Controller
         Lago::create($datos);
 
         return redirect()->route('admin.lagos.index')
-            ->with('estado', "Lago «{$datos['nombre']}» registrado.");
+            ->with('estado', __('mensajes.lago.registrado', ['nombre' => $datos['nombre']]));
     }
 
     /** @return array<string, string> clave => nombre de cada especie del catálogo */

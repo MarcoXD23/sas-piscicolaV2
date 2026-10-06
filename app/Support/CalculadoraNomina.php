@@ -38,8 +38,8 @@ class CalculadoraNomina
             ->get();
 
         // Un turno que se cruza con un permiso aprobado no se trabajó
-        $enPermiso = fn (Turno $turno) => $permisos->contains(fn (Permiso $permiso) => $turno->inicia_at->lt($permiso->fecha_fin->copy()->addDay()->startOfDay())
-            && $turno->termina_at->gt($permiso->fecha_inicio->copy()->startOfDay()));
+        $enPermiso = fn (Turno $turno) => $permisos->contains(fn (Permiso $permiso) => $turno->inicia_at->lt($permiso->finLocal())
+            && $turno->termina_at->gt($permiso->inicioLocal()));
 
         $terminados = $turnos->filter(fn (Turno $turno) => $turno->termina_at->lte(now()));
         $turnosEnPermiso = $terminados->filter($enPermiso)->values();
@@ -67,6 +67,6 @@ class CalculadoraNomina
     /** Lunes de la semana que contiene la fecha. */
     public static function lunes(CarbonImmutable|string|null $fecha = null): CarbonImmutable
     {
-        return CarbonImmutable::parse($fecha ?? today())->startOfWeek(CarbonImmutable::MONDAY)->startOfDay();
+        return CarbonImmutable::parse($fecha ?? Region::hoy()->toDateString(), Region::zona())->startOfWeek(CarbonImmutable::MONDAY)->startOfDay();
     }
 }

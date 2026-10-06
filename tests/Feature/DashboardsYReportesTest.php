@@ -32,7 +32,7 @@ class DashboardsYReportesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-20 09:00'));
+        $this->travelTo(Carbon::parse('2026-10-20 09:00', 'America/Bogota'));
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);
@@ -155,7 +155,7 @@ class DashboardsYReportesTest extends TestCase
         $this->salida('2026-10-01', 15);
         $this->mortalidad('2026-06-01', 9); // fuera del período
         Tratamiento::create(['lago_id' => $this->lago->id, 'user_id' => $this->propietario->id, 'fecha_inicio' => '2026-10-08',
-            'fecha_fin' => '2026-10-10', 'motivo' => 'Parásitos', 'producto' => 'Producto X', 'registro_ica' => 'ICA-123',
+            'fecha_fin' => '2026-10-10', 'motivo' => 'Parásitos', 'producto' => 'Producto X', 'registro_sanitario' => 'RS-123',
             'dosis' => '1 g/m³', 'via' => 'baño', 'dias_retiro' => 5]);
 
         $respuesta = $this->actingAs($this->propietario)
@@ -163,7 +163,7 @@ class DashboardsYReportesTest extends TestCase
             ->assertOk()
             ->assertSee('Estación piscícola X')
             ->assertSee('A-17')
-            ->assertSee('registro ICA ICA-123')
+            ->assertSee('registro sanitario RS-123')
             ->assertDontSee('9 peces');
 
         $fechas = $respuesta->viewData('registros')->map(fn ($r) => $r['fecha']->toDateString())->all();

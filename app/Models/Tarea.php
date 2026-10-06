@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
+use App\Support\Region;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +19,7 @@ class Tarea extends Model
     {
         return [
             'fecha' => 'date',
-            'completada_at' => 'datetime',
+            'completada_at' => InstanteLocal::class,
         ];
     }
 
@@ -48,6 +50,6 @@ class Tarea extends Model
 
     public function estaVencida(): bool
     {
-        return ! $this->estaCompletada() && $this->fecha->lt(today());
+        return ! $this->estaCompletada() && $this->fecha->toDateString() < Region::hoy()->toDateString();
     }
 }

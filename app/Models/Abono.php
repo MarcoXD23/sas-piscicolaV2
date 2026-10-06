@@ -13,7 +13,13 @@ class Abono extends Model
 {
     use PerteneceATenant;
 
-    public const MEDIOS = ['efectivo' => 'Efectivo', 'transferencia' => 'Transferencia', 'nomina' => 'Descuento de nómina'];
+    public const MEDIOS = ['efectivo', 'transferencia', 'nomina'];
+
+    /** @return array<string, string> código => texto en el idioma de la finca */
+    public static function opciones(): array
+    {
+        return collect(self::MEDIOS)->mapWithKeys(fn (string $codigo) => [$codigo => __('ventas.medios.'.$codigo)])->all();
+    }
 
     protected $fillable = ['venta_id', 'liquidacion_id', 'user_id', 'fecha', 'valor', 'medio', 'observaciones'];
 

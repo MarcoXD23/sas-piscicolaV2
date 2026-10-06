@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Cosecha;
 use App\Models\Siembra;
 use App\Models\Tratamiento;
+use App\Support\Formato;
+use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ class CosechaController extends Controller
     public function store(Request $request, Siembra $siembra): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
             'peces' => ['required', 'integer', 'min:1'],
             // Dos modos: total neto (kg) o canastas (tara común + peso bruto de cada canasta)
             'kg' => ['nullable', 'required_without:pesajes', 'numeric', 'min:0.1', 'max:9999999'],
@@ -28,15 +30,15 @@ class CosechaController extends Controller
             'tara_kg' => ['nullable', 'required_with:pesajes', 'numeric', 'min:0', 'max:999'],
             'observaciones' => ['nullable', 'string', 'max:500'],
         ], [
-            'fecha.before_or_equal' => 'La fecha no puede ser futura.',
-            'fecha.after_or_equal' => 'La fecha no puede ser anterior a la siembra.',
-            'peces.min' => 'Cosecha al menos un pez.',
-            'kg.required_without' => 'Registra el peso neto o el peso de cada canasta.',
-            'kg.min' => 'Registra el peso cosechado.',
-            'pesajes.max' => 'Máximo '.self::MAX_CANASTAS.' canastas por cosecha.',
-            'pesajes.*.required' => 'Escribe el peso de cada canasta.',
-            'pesajes.*.numeric' => 'El peso de cada canasta debe ser un número.',
-            'tara_kg.required_with' => 'Escribe la tara (peso de la canasta vacía).',
+            'fecha.before_or_equal' => __('mensajes.cosecha.fecha_no_puede_ser_futura'),
+            'fecha.after_or_equal' => __('mensajes.cosecha.fecha_no_puede_ser_anterior'),
+            'peces.min' => __('mensajes.cosecha.cosecha_menos_pez'),
+            'kg.required_without' => __('mensajes.cosecha.registra_peso_neto_peso_cada'),
+            'kg.min' => __('mensajes.cosecha.registra_peso_cosechado'),
+            'pesajes.max' => __('mensajes.cosecha.maximo_canastas', ['maximo' => self::MAX_CANASTAS]),
+            'pesajes.*.required' => __('mensajes.cosecha.escribe_peso_cada_canasta'),
+            'pesajes.*.numeric' => __('mensajes.cosecha.peso_cada_canasta_debe_ser'),
+            'tara_kg.required_with' => __('mensajes.cosecha.escribe_tara_peso_canasta_vacia'),
         ]);
 
         $canastas = $this->canastas($datos);
@@ -45,7 +47,7 @@ class CosechaController extends Controller
             $bloqueada = Siembra::whereKey($siembra->id)->lockForUpdate()->first();
 
             if (! $bloqueada->estaActiva()) {
-                throw ValidationException::withMessages(['peces' => 'Esta siembra ya está finalizada.']);
+                throw ValidationException::withMessages(['peces' => __('mensajes.cosecha.esta_siembra_ya_esta_finalizada')]);
             }
 
             // Bloqueo sanitario: no se cosecha mientras corre el período de retiro de un tratamiento
@@ -54,13 +56,13 @@ class CosechaController extends Controller
                 ->sortByDesc(fn (Tratamiento $t) => $t->finRetiro())->first();
             if ($retiro) {
                 throw ValidationException::withMessages([
-                    'fecha' => "El lago está en retiro sanitario hasta el {$retiro->finRetiro()->format('d/m/Y')} por el tratamiento con {$retiro->producto}: no se puede cosechar.",
+                    'fecha' => __('mensajes.cosecha.lago_en_retiro', ['fecha' => $retiro->finRetiro()->format('d/m/Y'), 'producto' => $retiro->producto]),
                 ]);
             }
 
             $peces = (int) $datos['peces'];
             if ($peces > $bloqueada->peces_vivos) {
-                throw ValidationException::withMessages(['peces' => "Solo hay {$bloqueada->peces_vivos} peces vivos en esta siembra."]);
+                throw ValidationException::withMessages(['peces' => __('mensajes.comun.solo_hay_peces', ['cantidad' => Formato::numero($bloqueada->peces_vivos)])]);
             }
 
             // Con canastas, el total lo calcula el servidor (no se confía en un total enviado por el navegador)
@@ -91,9 +93,12 @@ class CosechaController extends Controller
             return $cosecha;
         });
 
-        return back()->with('estado', number_format($cosecha->kg, 1, ',', '.')." kg cosechados ({$cosecha->peces} peces de "
-            .number_format($cosecha->peso_promedio_g, 0, ',', '.').' g en promedio'
-            .($canastas !== [] ? ', en '.count($canastas).' canastas' : '').').');
+        return back()->with('estado', __($canastas !== [] ? 'mensajes.cosecha.registrada_canastas' : 'mensajes.cosecha.registrada', [
+            'kg' => Formato::numero($cosecha->kg, 1),
+            'peces' => Formato::numero($cosecha->peces),
+            'gramos' => Formato::numero($cosecha->peso_promedio_g),
+            'canastas' => count($canastas),
+        ]));
     }
 
     /**
@@ -115,7 +120,7 @@ class CosechaController extends Controller
             $bruto = round((float) $bruto, 2);
             if ($bruto <= $tara) {
                 throw ValidationException::withMessages([
-                    "pesajes.{$indice}" => 'La canasta '.($indice + 1).' pesa igual o menos que la tara: revisa el peso.',
+                    "pesajes.{$indice}" => __('mensajes.cosecha.canasta_bajo_tara', ['numero' => $indice + 1]),
                 ]);
             }
             $canastas[] = ['numero' => $indice + 1, 'bruto_kg' => $bruto, 'tara_kg' => $tara, 'neto_kg' => round($bruto - $tara, 2)];

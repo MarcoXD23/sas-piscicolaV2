@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ \App\Support\Region::etiquetaIdioma() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -10,11 +10,12 @@
     <link rel="icon" href="/icono.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
+    <script>window.textos = @json(__('js'));</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen">
     <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-marca-800 focus:shadow">
-        Saltar al contenido
+        {{ __('layout.saltar_contenido') }}
     </a>
 
     @guest
@@ -28,17 +29,18 @@
         @php
             $usuarioActual = auth()->user()->loadMissing('roles', 'tenant');
             $enlaces = collect([
-                ['ruta' => 'inicio', 'texto' => 'Inicio', 'icono' => 'inicio', 'roles' => null],
-                ['ruta' => 'admin.lagos.index', 'activa' => 'admin.lagos.*', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
-                ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
-                ['ruta' => 'admin.ventas.index', 'activa' => 'admin.ventas.*', 'texto' => 'Ventas', 'icono' => 'dinero', 'roles' => ['propietario']],
-                ['ruta' => 'admin.agenda.index', 'activa' => 'admin.agenda.*', 'texto' => 'Agenda', 'icono' => 'calendario', 'roles' => ['propietario']],
-                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*', 'admin.nomina.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
-                ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
-                ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => 'Tareas', 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
-                ['ruta' => 'admin.reportes.index', 'activa' => 'admin.reportes.*', 'texto' => 'Reportes', 'icono' => 'reporte', 'roles' => ['propietario', 'administrador']],
-                ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => 'Mi trabajo', 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
-                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
+                ['ruta' => 'inicio', 'texto' => __('layout.menu.inicio'), 'icono' => 'inicio', 'roles' => null],
+                ['ruta' => 'admin.lagos.index', 'activa' => 'admin.lagos.*', 'texto' => __('layout.menu.lagos'), 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
+                ['ruta' => 'admin.bodega.index', 'texto' => __('layout.menu.bodega'), 'icono' => 'bodega', 'roles' => ['propietario']],
+                ['ruta' => 'admin.ventas.index', 'activa' => 'admin.ventas.*', 'texto' => __('layout.menu.ventas'), 'icono' => 'dinero', 'roles' => ['propietario']],
+                ['ruta' => 'admin.agenda.index', 'activa' => 'admin.agenda.*', 'texto' => __('layout.menu.agenda'), 'icono' => 'calendario', 'roles' => ['propietario']],
+                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*', 'admin.nomina.*'], 'texto' => __('layout.menu.personal'), 'icono' => 'personal', 'roles' => ['propietario']],
+                ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => __('layout.menu.noche'), 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
+                ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => __('layout.menu.tareas'), 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
+                ['ruta' => 'admin.reportes.index', 'activa' => 'admin.reportes.*', 'texto' => __('layout.menu.reportes'), 'icono' => 'reporte', 'roles' => ['propietario', 'administrador']],
+                ['ruta' => 'admin.ajustes.edit', 'activa' => 'admin.ajustes.*', 'texto' => __('region.ajustes.enlace'), 'icono' => 'ajustes', 'roles' => ['propietario']],
+                ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => __('layout.menu.mi_trabajo'), 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
+                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)))
                 ->map(fn ($enlace) => $enlace + ['es_actual' => request()->routeIs($enlace['activa'] ?? $enlace['ruta'])])
@@ -62,14 +64,14 @@
                     @csrf
                     <button type="submit" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600">
                         <x-icono nombre="salir" class="h-5 w-5" />
-                        <span>Salir</span>
+                        <span>{{ __('layout.salir') }}</span>
                     </button>
                 </form>
             </div>
 
             {{-- Escritorio: segunda fila con todas las secciones (en celular va el menú inferior) --}}
             @if ($conMenuInferior)
-                <nav class="mx-auto hidden max-w-5xl gap-1 overflow-x-auto px-3 pb-2 md:flex" aria-label="Principal">
+                <nav class="mx-auto hidden max-w-5xl gap-1 overflow-x-auto px-3 pb-2 md:flex" aria-label="{{ __('layout.principal') }}">
                     @foreach ($enlaces as $enlace)
                         <a href="{{ route($enlace['ruta']) }}"
                            @if ($enlace['es_actual']) aria-current="page" @endif
@@ -87,7 +89,7 @@
         </header>
 
         @if ($conMenuInferior)
-            <nav class="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur md:hidden" aria-label="Principal (móvil)">
+            <nav class="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur md:hidden" aria-label="{{ __('layout.principal_movil') }}">
                 <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
                     @foreach ($enlacesInferiores as $enlace)
                         <li>
@@ -117,7 +119,7 @@
                                 <span @class(['flex h-8 w-14 items-center justify-center rounded-full transition', 'bg-marca-100' => $masActivo])>
                                     <x-icono nombre="menu" />
                                 </span>
-                                Más
+                                {{ __('layout.mas') }}
                             </button>
                         </li>
                     @endif
@@ -125,7 +127,7 @@
             </nav>
 
             @if ($enlacesMas->isNotEmpty())
-                <x-modal id="menu-mas" titulo="Más secciones">
+                <x-modal id="menu-mas" :titulo="__('layout.mas_secciones')">
                     <ul class="space-y-2">
                         @foreach ($enlacesMas as $enlace)
                             <li>

@@ -17,6 +17,7 @@ use App\Support\CatalogoEspecies;
 use App\Support\CoberturaBodega;
 use App\Support\Formato;
 use App\Support\Indicadores;
+use App\Support\Region;
 
 /**
  * Arma lo que el asistente sabe de la finca. Solo incluye lo que el rol de quien pregunta puede ver en la aplicación:
@@ -65,7 +66,7 @@ class ContextoFinca
         $esCelador = $usuario->tieneRol(Rol::CELADOR);
 
         $secciones = [
-            "Finca: {$usuario->tenant->nombre}. Ahora: ".now()->translatedFormat('l j \d\e F \d\e Y, H:i').'.',
+            "Finca: {$usuario->tenant->nombre}. Ahora: ".Region::ahora()->translatedFormat('l j \d\e F \d\e Y, H:i').'.',
             "Quien pregunta: {$usuario->name}, rol: {$roles->join(' y ')}.",
         ];
 
@@ -178,8 +179,8 @@ class ContextoFinca
 
         return implode("\n\n", array_filter([
             'Bodega de alimento:'."\n".($bodega ?: '- vacía'),
-            'Ventas del mes: '.Formato::pesos((int) Venta::where('fecha', '>=', today()->startOfMonth())->sum('total'))
-                .'. Por cobrar: '.Formato::pesos((int) Venta::conSaldo()->sum('saldo')).'.',
+            'Ventas del mes: '.Formato::dinero((int) Venta::where('fecha', '>=', Region::hoy()->startOfMonth()->toDateString())->sum('total'))
+                .'. Por cobrar: '.Formato::dinero((int) Venta::conSaldo()->sum('saldo')).'.',
             'Solicitudes de personal por revisar: '.Permiso::query()->pendientes()->count().' permisos y '
                 .HoraExtra::query()->pendientes()->count().' reportes de horas extra.',
             $recordatorios ? "Agenda pendiente:\n{$recordatorios}" : null,

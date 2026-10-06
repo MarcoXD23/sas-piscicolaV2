@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lago;
 use App\Models\Tarea;
 use App\Models\User;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,28 +46,28 @@ class TareaController extends Controller
             'titulo' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
             'lago_id' => ['nullable', 'integer', Rule::exists('lagos', 'id')->where('tenant_id', $tenant)],
-            'fecha' => ['required', 'date', 'after_or_equal:today'],
+            'fecha' => ['required', 'date', 'after_or_equal:'.Region::hoy()->toDateString()],
         ], [
-            'asignada_a.required' => 'Elige a quién se asigna.',
-            'asignada_a.in' => 'Solo se asignan tareas a trabajadores o celadores aprobados.',
-            'titulo.required' => 'Escribe qué hay que hacer.',
-            'fecha.after_or_equal' => 'La fecha no puede ser pasada.',
+            'asignada_a.required' => __('mensajes.tarea.elige_quien_asigna'),
+            'asignada_a.in' => __('mensajes.tarea.solo_asignan_tareas_trabajadores_celadores'),
+            'titulo.required' => __('mensajes.tarea.escribe_hay_hacer'),
+            'fecha.after_or_equal' => __('mensajes.tarea.fecha_no_puede_ser_pasada'),
         ]);
 
         $tarea = Tarea::create($datos + ['creada_por' => $request->user()->id]);
 
         return redirect()->route('admin.tareas.index')
-            ->with('estado', "Tarea asignada a {$tarea->asignado->name} para el {$tarea->fecha->format('d/m/Y')}.");
+            ->with('estado', __('mensajes.tarea.asignada', ['nombre' => $tarea->asignado->name, 'fecha' => $tarea->fecha->format('d/m/Y')]));
     }
 
     public function destroy(Tarea $tarea): RedirectResponse
     {
         if ($tarea->estaCompletada()) {
-            return back()->withErrors(['tarea' => 'Una tarea completada no se elimina: queda en el historial.']);
+            return back()->withErrors(['tarea' => __('mensajes.tarea.tarea_completada_no_elimina_queda')]);
         }
 
         $tarea->delete();
 
-        return back()->with('estado', 'Tarea eliminada.');
+        return back()->with('estado', __('mensajes.tarea.tarea_eliminada'));
     }
 }

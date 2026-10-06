@@ -7,6 +7,8 @@ use App\Models\Abono;
 use App\Models\Cosecha;
 use App\Models\User;
 use App\Models\Venta;
+use App\Support\Formato;
+use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +23,7 @@ class VentaController extends Controller
 {
     public function index(): View
     {
-        $inicioMes = today()->startOfMonth();
+        $inicioMes = Region::hoy()->startOfMonth()->toDateString();
 
         return view('admin.ventas.index', [
             'disponibles' => Cosecha::query()->with(['lago', 'siembra'])->withSum('ventas', 'kg')->latest('fecha')->limit(50)->get()
@@ -32,8 +34,8 @@ class VentaController extends Controller
             'kgMes' => (float) Venta::where('fecha', '>=', $inicioMes)->sum('kg'),
             'cartera' => (int) Venta::conSaldo()->sum('saldo'),
             'empleados' => User::query()->whereNotNull('aprobado_at')->orderBy('name')->pluck('name', 'id')->all(),
-            'formasPago' => Venta::FORMAS_PAGO,
-            'medios' => Abono::MEDIOS,
+            'formasPago' => Venta::opciones(),
+            'medios' => Abono::opciones(),
         ]);
     }
 
@@ -45,16 +47,16 @@ class VentaController extends Controller
             'cosecha_id' => ['required', 'integer', Rule::exists('cosechas', 'id')->where('tenant_id', $tenant)],
             'comprador_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('tenant_id', $tenant)->whereNotNull('aprobado_at')],
             'cliente' => ['nullable', 'string', 'max:255', 'required_without:comprador_id'],
-            'fecha' => ['required', 'date', 'before_or_equal:today'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'kg' => ['required', 'numeric', 'min:0.1'],
             'precio_kg' => ['required', 'integer', 'min:1', 'max:10000000'],
-            'forma_pago' => ['required', Rule::in(array_keys(Venta::FORMAS_PAGO))],
+            'forma_pago' => ['required', Rule::in(Venta::FORMAS_PAGO)],
         ], [
-            'cosecha_id.required' => 'Elige de qué cosecha sale el pescado.',
-            'cliente.required_without' => 'Escribe el cliente o elige un empleado.',
-            'comprador_id.exists' => 'Ese empleado no pertenece a la finca.',
-            'precio_kg.integer' => 'Escribe el precio en pesos, sin decimales.',
-            'fecha.before_or_equal' => 'La fecha no puede ser futura.',
+            'cosecha_id.required' => __('mensajes.venta.elige_cosecha_sale_pescado'),
+            'cliente.required_without' => __('mensajes.venta.escribe_cliente_elige_empleado'),
+            'comprador_id.exists' => __('mensajes.venta.ese_empleado_no_pertenece_finca'),
+            'precio_kg.integer' => __('region.dinero_sin_decimales'),
+            'fecha.before_or_equal' => __('mensajes.venta.fecha_no_puede_ser_futura'),
         ]);
 
         $venta = DB::transaction(function () use ($datos, $request) {
@@ -63,12 +65,12 @@ class VentaController extends Controller
             $kg = round((float) $datos['kg'], 2);
 
             if ($datos['fecha'] < $cosecha->fecha->toDateString()) {
-                throw ValidationException::withMessages(['fecha' => 'La venta no puede ser anterior a la cosecha.']);
+                throw ValidationException::withMessages(['fecha' => __('mensajes.venta.venta_no_puede_ser_anterior')]);
             }
 
             $disponible = $cosecha->kgDisponibles();
             if ($kg > $disponible) {
-                throw ValidationException::withMessages(['kg' => 'De esa cosecha quedan '.number_format($disponible, 2, ',', '.').' kg sin vender.']);
+                throw ValidationException::withMessages(['kg' => __('mensajes.venta.kg_disponibles', ['kg' => Formato::numero($disponible, 2)])]);
             }
 
             $total = (int) round($kg * (int) $datos['precio_kg']);
@@ -88,30 +90,29 @@ class VentaController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.ventas.index')->with('estado', 'Venta registrada a '.$venta->cliente
-            .($venta->esCredito() ? ' a crédito.' : ' de contado.'));
+        return redirect()->route('admin.ventas.index')->with('estado', __($venta->esCredito() ? 'mensajes.venta.registrada_credito' : 'mensajes.venta.registrada_contado', ['cliente' => $venta->cliente]));
     }
 
     public function abonar(Request $request, Venta $venta): RedirectResponse
     {
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:today'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'valor' => ['required', 'integer', 'min:1'],
-            'medio' => ['required', Rule::in(array_keys(Abono::MEDIOS))],
+            'medio' => ['required', Rule::in(Abono::MEDIOS)],
             'observaciones' => ['nullable', 'string', 'max:255'],
         ], [
-            'valor.integer' => 'Escribe el valor en pesos, sin decimales.',
-            'valor.min' => 'El abono debe ser mayor que cero.',
+            'valor.integer' => __('region.dinero_sin_decimales'),
+            'valor.min' => __('mensajes.venta.abono_debe_ser_mayor_cero'),
         ]);
 
         DB::transaction(function () use ($venta, $datos, $request) {
             $bloqueada = Venta::whereKey($venta->id)->lockForUpdate()->first();
 
             if ($bloqueada->saldo === 0) {
-                throw ValidationException::withMessages(['valor' => 'Esta venta no tiene saldo pendiente.']);
+                throw ValidationException::withMessages(['valor' => __('mensajes.venta.esta_venta_no_tiene_saldo')]);
             }
             if ((int) $datos['valor'] > $bloqueada->saldo) {
-                throw ValidationException::withMessages(['valor' => 'El abono supera el saldo de $ '.number_format($bloqueada->saldo, 0, ',', '.').'.']);
+                throw ValidationException::withMessages(['valor' => __('mensajes.venta.abono_supera_saldo', ['saldo' => Formato::dinero($bloqueada->saldo)])]);
             }
 
             $bloqueada->abonos()->create($datos + ['user_id' => $request->user()->id]);
@@ -119,6 +120,6 @@ class VentaController extends Controller
             $bloqueada->save();
         });
 
-        return back()->with('estado', 'Abono registrado.');
+        return back()->with('estado', __('mensajes.venta.abono_registrado'));
     }
 }

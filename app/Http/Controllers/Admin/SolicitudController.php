@@ -36,11 +36,11 @@ class SolicitudController extends Controller
     {
         $this->revisar($request, $permiso);
 
-        $mensaje = $permiso->estado === 'aprobado' ? "Permiso de {$permiso->usuario->name} aprobado." : "Permiso de {$permiso->usuario->name} rechazado.";
+        $mensaje = __($permiso->estado === 'aprobado' ? 'mensajes.solicitud.permiso_aprobado' : 'mensajes.solicitud.permiso_rechazado', ['nombre' => $permiso->usuario->name]);
         $turnos = $permiso->estado === 'aprobado' ? $permiso->turnosAfectados()->count() : 0;
 
         return back()->with('estado', $turnos > 0
-            ? $mensaje." Tiene {$turnos} turno(s) en esas fechas: reprográmalos en Turnos."
+            ? $mensaje.' '.__('mensajes.solicitud.turnos_por_reprogramar', ['cantidad' => $turnos])
             : $mensaje);
     }
 
@@ -48,7 +48,7 @@ class SolicitudController extends Controller
     {
         $this->revisar($request, $horaExtra);
 
-        return back()->with('estado', "Horas extra de {$horaExtra->usuario->name} ".($horaExtra->estado === 'aprobado' ? 'aprobadas.' : 'rechazadas.'));
+        return back()->with('estado', __($horaExtra->estado === 'aprobado' ? 'mensajes.solicitud.horas_aprobadas' : 'mensajes.solicitud.horas_rechazadas', ['nombre' => $horaExtra->usuario->name]));
     }
 
     /** Aprueba o rechaza una solicitud pendiente, en transacción y una sola vez. */
@@ -58,15 +58,15 @@ class SolicitudController extends Controller
             'decision' => ['required', Rule::in(['aprobado', 'rechazado'])],
             'respuesta' => ['nullable', 'string', 'max:255', 'required_if:decision,rechazado'],
         ], [
-            'decision.in' => 'Elige aprobar o rechazar.',
-            'respuesta.required_if' => 'Escribe el motivo del rechazo.',
+            'decision.in' => __('mensajes.solicitud.elige_aprobar_rechazar'),
+            'respuesta.required_if' => __('mensajes.solicitud.escribe_motivo_rechazo'),
         ]);
 
         DB::transaction(function () use ($solicitud, $datos, $request) {
             $bloqueada = $solicitud->newQuery()->whereKey($solicitud->getKey())->lockForUpdate()->first();
 
             if (! $bloqueada->estaPendiente()) {
-                throw ValidationException::withMessages(['decision' => 'Esta solicitud ya fue revisada.']);
+                throw ValidationException::withMessages(['decision' => __('mensajes.solicitud.esta_solicitud_ya_fue_revisada')]);
             }
 
             $bloqueada->update([

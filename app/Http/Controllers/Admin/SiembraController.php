@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lago;
 use App\Models\Siembra;
 use App\Support\CatalogoEspecies;
+use App\Support\Region;
 use App\Support\ReglasPolicultivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class SiembraController extends Controller
             'especie' => ['required', 'string', Rule::in(CatalogoEspecies::claves())],
             'proveedor_alevinos' => ['nullable', 'string', 'max:255'],
             'lote_alevinos' => ['nullable', 'string', 'max:100'],
-            'fecha' => ['required', 'date', 'before_or_equal:today'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'cantidad_alevinos' => ['required', 'integer', 'min:1'],
             'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1'],
         ]);
@@ -33,7 +34,7 @@ class SiembraController extends Controller
 
             if ($activas->contains('especie', $datos['especie'])) {
                 throw ValidationException::withMessages([
-                    'especie' => 'Este lago ya tiene una siembra activa de '.CatalogoEspecies::nombre($datos['especie']).'.',
+                    'especie' => __('mensajes.siembra.especie_repetida', ['especie' => CatalogoEspecies::nombre($datos['especie'])]),
                 ]);
             }
 
@@ -51,7 +52,7 @@ class SiembraController extends Controller
         });
 
         return redirect()->route('admin.lagos.index')
-            ->with('estado', CatalogoEspecies::nombre($datos['especie'])." sembrada en el lago {$lago->nombre}.");
+            ->with('estado', __('mensajes.siembra.registrada', ['especie' => CatalogoEspecies::nombre($datos['especie']), 'lago' => $lago->nombre]));
     }
 
     /**
@@ -63,13 +64,13 @@ class SiembraController extends Controller
             $bloqueada = Siembra::whereKey($siembra->id)->lockForUpdate()->first();
 
             if (! $bloqueada->estaActiva()) {
-                throw ValidationException::withMessages(['siembra' => 'Esta siembra ya estaba finalizada.']);
+                throw ValidationException::withMessages(['siembra' => __('mensajes.siembra.esta_siembra_ya_estaba_finalizada')]);
             }
 
             $bloqueada->update(['finalizada_at' => now()]);
         });
 
         return redirect()->route('admin.lagos.index')
-            ->with('estado', "Siembra de {$siembra->nombre_especie} finalizada en el lago {$siembra->lago->nombre}.");
+            ->with('estado', __('mensajes.siembra.finalizada', ['especie' => $siembra->nombre_especie, 'lago' => $siembra->lago->nombre]));
     }
 }

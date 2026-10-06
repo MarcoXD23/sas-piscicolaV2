@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,8 +21,8 @@ class Turno extends Model
     protected function casts(): array
     {
         return [
-            'inicia_at' => 'datetime',
-            'termina_at' => 'datetime',
+            'inicia_at' => InstanteLocal::class,
+            'termina_at' => InstanteLocal::class,
         ];
     }
 

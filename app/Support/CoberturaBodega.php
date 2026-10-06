@@ -30,7 +30,7 @@ class CoberturaBodega
     {
         $consumos = MovimientoAlimento::query()
             ->where('tipo_movimiento', 'salida')
-            ->where('fecha', '>', today()->subDays(self::VENTANA_DIAS))
+            ->where('fecha', '>', Region::hoy()->subDays(self::VENTANA_DIAS)->toDateString())
             ->groupBy('tipo_concentrado')
             ->selectRaw('tipo_concentrado, SUM(cantidad_kg) AS total')
             ->pluck('total', 'tipo_concentrado');

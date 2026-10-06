@@ -1,9 +1,9 @@
 # El SAS Piscícola
 
-SaaS multi-tenant para la gestión de fincas piscícolas (Tolima, Colombia): lagos, siembras y policultivo, alimentación y bodega, calidad del agua y sanidad, turnos y nómina, seguridad nocturna, cosecha y ventas, reportes y un asistente con IA.
+SaaS multi-tenant para la gestión de fincas piscícolas: lagos, siembras y policultivo, alimentación y bodega, calidad del agua y sanidad, turnos y nómina, seguridad nocturna, cosecha y ventas, reportes y un asistente con IA.
 
 - **Stack:** Laravel 13 · PostgreSQL · Blade + Tailwind 4 (compilado con Vite, sin CDN) · Alpine.js · Sanctum (API) · SDK oficial de Anthropic (asistente).
-- **Zona horaria:** America/Bogota. **Idioma:** español (incluidos los mensajes de validación, en `lang/es`).
+- **Región por finca:** país, zona horaria e idioma se configuran en **Ajustes** (ver [Regionalización](#regionalización)). **Idioma:** español; todos los textos de la interfaz están en `lang/es`.
 - **Pensado primero para celular**, porque el personal la usa en la finca. Se instala como app (PWA) y muestra un aviso cuando no hay conexión.
 
 ## Roles
@@ -41,9 +41,21 @@ Todo movimiento de stock, peces, biomasa o dinero se hace en una transacción y 
 
 Cada finca es un `tenant`. Toda tabla de negocio lleva `tenant_id` y se filtra con un único global scope ([`TenantScope`](app/Models/Scopes/TenantScope.php), aplicado con el trait [`PerteneceATenant`](app/Models/Concerns/PerteneceATenant.php)). Los middlewares `tenant`, `rol` y `turno` fijan la finca activa, restringen por rol y exigen turno en curso. Una prueba (`CierreTest`) verifica que toda ruta privada exija sesión, finca y, en los módulos restringidos, rol.
 
+## Regionalización
+
+Nada está atado a un país. Cada finca define en **Ajustes** (solo el propietario):
+
+- **País:** fija la moneda y el formato de números y dinero (con `intl`; por ejemplo `$ 118.750` en Colombia y `$118,750` en México). Los montos se guardan como enteros, sin centavos.
+- **Zona horaria** (por defecto `America/Bogota`): las fechas con hora se guardan en **UTC** y se muestran e interpretan en la zona de la finca, también al validar turnos y al decidir qué es "hoy". Las fechas de solo día (siembras, muestreos, ventas) son días del calendario de la finca y no se convierten.
+- **Idioma** (por defecto `es`): hoy solo hay traducción completa al español, en `lang/es` (vistas, mensajes, ficha de especies y textos del JavaScript, publicados como `window.textos`). Una prueba (`TextosEnLangTest`) falla si una vista tiene textos fijos o usa una clave que no existe.
+
+La lógica de zona, "hoy" y formatos está en [`App\Support\Region`](app/Support/Region.php); el cast [`InstanteLocal`](app/Casts/InstanteLocal.php) y la conexión [`ConexionPostgresUtc`](app/Database/ConexionPostgresUtc.php) garantizan que todo instante llegue a la base en UTC.
+
+**Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca un respaldo: `pg_dump -Fc sas_piscicola_v2 > respaldo.dump`.
+
 ## Requisitos
 
-- PHP 8.4 o superior
+- PHP 8.4 o superior, con la extensión `intl` (formatos de número y moneda por país)
 - Composer
 - Node.js y npm
 - PostgreSQL
@@ -89,7 +101,7 @@ npm run build      # o `npm run dev` durante el desarrollo
 
 ### Primer propietario
 
-No hay usuarios ni contraseñas fijas. Crea la finca y su propietario con un comando que pide la contraseña:
+No hay usuarios ni contraseñas fijas. Crea la finca y su propietario con un comando que pide el país, la zona horaria y la contraseña:
 
 ```bash
 php artisan piscicola:crear-propietario
@@ -117,7 +129,7 @@ composer test
 
 ## Valores de referencia
 
-Las fichas de especies, las tablas de alimentación y los umbrales de calidad del agua son **orientativos**: ajústalos con el asistente técnico de la finca. La nómina usa las tarifas que configura el propietario y **no calcula recargos de ley** (nocturno, dominical, festivo). El libro de campo es un formato de apoyo: confirma con tu oficina del ICA lo que exige la norma vigente.
+Las fichas de especies, las tablas de alimentación y los umbrales de calidad del agua son **orientativos**: ajústalos con el asistente técnico de la finca. La nómina usa las tarifas que configura el propietario y **no calcula recargos de ley** (nocturno, dominical, festivo). El libro de campo es un formato de apoyo: confirma con la autoridad sanitaria de tu país lo que exige la norma vigente.
 
 ## Pendiente
 

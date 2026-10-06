@@ -1,11 +1,11 @@
-@props(['titulo', 'subtitulo' => null, 'datos', 'unidad' => '', 'decimales' => 0, 'vacio' => 'Sin datos.'])
+@props(['titulo', 'subtitulo' => null, 'datos', 'unidad' => '', 'decimales' => 0, 'vacio' => null])
 
 {{--
     Barras horizontales de una sola serie para comparar magnitudes entre categorías (por ejemplo, lagos).
     $datos: lista de ['etiqueta' => texto, 'valor' => número], ya ordenada. Cada barra lleva su valor en la punta.
 --}}
 @php
-    $numero = fn ($valor) => number_format((float) $valor, $decimales, ',', '.');
+    $numero = fn ($valor) => \App\Support\Formato::numero((float) $valor, $decimales);
     $maximo = (float) collect($datos)->max('valor');
 @endphp
 
@@ -18,7 +18,7 @@
     </figcaption>
 
     @if (count($datos) === 0)
-        <p class="text-base text-slate-500">{{ $vacio }}</p>
+        <p class="text-base text-slate-500">{{ $vacio ?? __('componentes.sin_datos') }}</p>
     @else
         <ul class="space-y-2" aria-label="{{ $titulo }}">
             @foreach ($datos as $dato)

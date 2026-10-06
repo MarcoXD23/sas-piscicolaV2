@@ -16,6 +16,12 @@ class Lago extends Model
 
     public const TIPOS = ['tierra', 'geomembrana', 'concreto'];
 
+    /** @return array<string, string> código => texto en el idioma de la finca */
+    public static function opciones(): array
+    {
+        return collect(self::TIPOS)->mapWithKeys(fn (string $codigo) => [$codigo => __('lagos.tipos.'.$codigo)])->all();
+    }
+
     public function siembras(): HasMany
     {
         return $this->hasMany(Siembra::class);

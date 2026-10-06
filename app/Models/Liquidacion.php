@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +36,7 @@ class Liquidacion extends Model
             'bruto' => 'integer',
             'descuento_pescado' => 'integer',
             'total_pagar' => 'integer',
-            'pagada_at' => 'datetime',
+            'pagada_at' => InstanteLocal::class,
         ];
     }
 

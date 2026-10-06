@@ -29,12 +29,7 @@ class RegistroController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ], [
-            'codigo_finca.exists' => 'No existe una finca con ese código.',
-        ], [
-            'codigo_finca' => 'código de la finca',
-            'name' => 'nombre',
-            'email' => 'correo',
-            'password' => 'contraseña',
+            'codigo_finca.exists' => __('mensajes.registro.no_existe_finca_ese_codigo'),
         ]);
 
         $tenant = Tenant::query()->where('codigo', $datos['codigo_finca'])->firstOrFail();
@@ -49,7 +44,6 @@ class RegistroController extends Controller
         $usuario->save();
 
         return redirect()->route('login')
-            ->with('estado', 'Solicitud enviada. El propietario de la finca debe aprobar tu cuenta.');
+            ->with('estado', __('mensajes.registro.solicitud_enviada_propietario_finca_debe'));
     }
 }
-

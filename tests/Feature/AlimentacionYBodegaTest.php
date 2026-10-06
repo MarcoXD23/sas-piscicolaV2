@@ -28,7 +28,7 @@ class AlimentacionYBodegaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-07 09:00'));
+        $this->travelTo(Carbon::parse('2026-10-07 09:00', 'America/Bogota'));
 
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($tenant->id);

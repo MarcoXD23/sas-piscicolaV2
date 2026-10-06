@@ -2,7 +2,7 @@
     "name": "El SAS Piscícola",
     "short_name": "SAS Piscícola",
     "description": "Gestión de fincas piscícolas",
-    "lang": "es-CO",
+    "lang": "es",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",

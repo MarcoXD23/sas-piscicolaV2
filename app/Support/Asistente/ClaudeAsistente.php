@@ -27,7 +27,7 @@ class ClaudeAsistente implements ClienteAsistente
     public function responder(string $instrucciones, string $contexto, array $mensajes): string
     {
         if (! $this->configurado()) {
-            throw new AsistenteNoDisponible('El asistente no está configurado. Pide al propietario que agregue la clave de Anthropic.');
+            throw new AsistenteNoDisponible(__('asistente.errores.falta_clave_anthropic'));
         }
 
         try {
@@ -50,18 +50,18 @@ class ClaudeAsistente implements ClienteAsistente
             );
         } catch (AuthenticationException $e) {
             Log::error('Asistente IA: clave de Anthropic inválida', ['error' => $e->getMessage()]);
-            throw new AsistenteNoDisponible('La clave del asistente no es válida. Avísale al propietario.');
+            throw new AsistenteNoDisponible(__('asistente.errores.clave_invalida'));
         } catch (RateLimitException $e) {
-            throw new AsistenteNoDisponible('El asistente está muy ocupado. Intenta de nuevo en un minuto.');
+            throw new AsistenteNoDisponible(__('asistente.errores.ocupado'));
         } catch (APIConnectionException $e) {
-            throw new AsistenteNoDisponible('No hay conexión con el asistente. Revisa el internet e intenta de nuevo.');
+            throw new AsistenteNoDisponible(__('asistente.errores.sin_conexion'));
         } catch (APIStatusException $e) {
             Log::error('Asistente IA: error de la API', ['estado' => $e->getCode(), 'error' => $e->getMessage()]);
-            throw new AsistenteNoDisponible('El asistente no pudo responder. Intenta de nuevo más tarde.');
+            throw new AsistenteNoDisponible(__('asistente.errores.no_pudo_responder'));
         }
 
         if ($respuesta->stopReason === 'refusal') {
-            throw new AsistenteNoDisponible('El asistente no puede responder esa pregunta.');
+            throw new AsistenteNoDisponible(__('asistente.errores.pregunta_bloqueada'));
         }
 
         $texto = collect($respuesta->content)
@@ -70,7 +70,7 @@ class ClaudeAsistente implements ClienteAsistente
             ->implode("\n");
 
         if (trim($texto) === '') {
-            throw new AsistenteNoDisponible('El asistente no devolvió una respuesta. Intenta de nuevo.');
+            throw new AsistenteNoDisponible(__('asistente.errores.sin_respuesta'));
         }
 
         return trim($texto);

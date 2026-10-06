@@ -25,7 +25,7 @@ class AgendaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->travelTo(Carbon::parse('2026-10-07 10:00'));
+        $this->travelTo(Carbon::parse('2026-10-07 10:00', 'America/Bogota'));
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);
@@ -35,7 +35,7 @@ class AgendaTest extends TestCase
     private function evento(string $fecha, int $avisoDias = 0, array $datos = []): EventoAgenda
     {
         return EventoAgenda::create($datos + ['creado_por' => $this->propietario->id, 'titulo' => "Evento {$fecha}", 'tipo' => 'compra',
-            'inicia_at' => Carbon::parse($fecha), 'todo_el_dia' => true, 'recordar_dias_antes' => $avisoDias]);
+            'inicia_at' => $fecha /* texto: hora de la finca */, 'todo_el_dia' => true, 'recordar_dias_antes' => $avisoDias]);
     }
 
     private function agendar(array $datos)

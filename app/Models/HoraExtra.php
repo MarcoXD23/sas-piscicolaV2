@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use App\Models\Concerns\TieneRevision;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class HoraExtra extends Model
         return [
             'fecha' => 'date',
             'horas' => 'float',
-            'revisado_at' => 'datetime',
+            'revisado_at' => InstanteLocal::class,
         ];
     }
 }

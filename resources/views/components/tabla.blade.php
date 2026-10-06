@@ -1,8 +1,8 @@
-@props(['columnas' => [], 'vacio' => 'No hay registros.'])
+@props(['columnas' => [], 'vacio' => null])
 
 {{--
     Tabla responsiva: en celular cada fila se muestra como bloque apilado.
-    Cada <td> debe llevar data-label="Nombre de la columna" para verse en celular.
+    Cada <td> debe llevar data-label="{{ __('componentes.nombre_columna') }}" para verse en celular.
 --}}
 <div {{ $attributes->class('overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200') }}>
     <table class="w-full text-left text-base
@@ -22,7 +22,7 @@
         <tbody>
             @if (trim($slot) === '')
                 <tr>
-                    <td colspan="{{ max(count($columnas), 1) }}" class="px-5 py-8 text-center text-slate-500">{{ $vacio }}</td>
+                    <td colspan="{{ max(count($columnas), 1) }}" class="px-5 py-8 text-center text-slate-500">{{ $vacio ?? __('componentes.no_hay_registros') }}</td>
                 </tr>
             @else
                 {{ $slot }}

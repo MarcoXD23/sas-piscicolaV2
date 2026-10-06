@@ -1,7 +1,7 @@
 @props(['enlaces' => []])
 
 {{-- $enlaces: lista de ['ruta' => nombre de ruta, 'texto' => etiqueta] --}}
-<nav {{ $attributes->class('mb-6 flex gap-1 rounded-2xl bg-slate-200/70 p-1') }} aria-label="Secciones">
+<nav {{ $attributes->class('mb-6 flex gap-1 rounded-2xl bg-slate-200/70 p-1') }} aria-label="{{ __('componentes.secciones') }}">
     @foreach ($enlaces as $enlace)
         @php $activa = request()->routeIs($enlace['ruta']); @endphp
         <a href="{{ route($enlace['ruta']) }}" @if ($activa) aria-current="page" @endif

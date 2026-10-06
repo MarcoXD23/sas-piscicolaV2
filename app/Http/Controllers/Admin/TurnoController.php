@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Rol;
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +24,8 @@ class TurnoController extends Controller
 
     public function index(Request $request): View
     {
-        $semana = CarbonImmutable::parse($request->query('semana', now()->toDateString()))->startOfWeek();
+        // La semana se arma con los días de la finca (los turnos se agrupan por su día local)
+        $semana = CarbonImmutable::parse($request->query('semana', Region::hoy()->toDateString()), Region::zona())->startOfWeek();
         $finSemana = $semana->addWeek();
 
         $turnos = Turno::query()
@@ -49,38 +52,39 @@ class TurnoController extends Controller
         $datos = $request->validate([
             'user_id' => ['required', 'integer'],
             'rol' => ['required', 'string', Rule::in(Turno::ROLES)],
-            'desde' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'desde' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.Region::hoy()->toDateString()],
             'hasta' => ['required', 'date_format:Y-m-d', 'after_or_equal:desde'],
             'dias' => ['required', 'array', 'min:1'],
             'dias.*' => ['integer', 'between:1,7', 'distinct'],
             'hora_inicio' => ['required', 'date_format:H:i'],
             'hora_fin' => ['required', 'date_format:H:i', 'different:hora_inicio'],
         ], [
-            'user_id.required' => 'Elige la persona.',
-            'rol.in' => 'El turno debe ser de trabajador o de celador.',
-            'desde.after_or_equal' => 'No se pueden programar turnos en fechas pasadas.',
-            'hasta.after_or_equal' => 'La fecha final debe ser igual o posterior a la inicial.',
-            'dias.required' => 'Elige al menos un día de la semana.',
-            'hora_fin.different' => 'La hora de salida debe ser distinta a la de entrada.',
-            'required' => 'Este dato es obligatorio.',
-            'date_format' => 'El formato no es válido.',
+            'user_id.required' => __('mensajes.turno.elige_persona'),
+            'rol.in' => __('mensajes.turno.turno_debe_ser_trabajador_celador'),
+            'desde.after_or_equal' => __('mensajes.turno.no_pueden_programar_turnos_fechas'),
+            'hasta.after_or_equal' => __('mensajes.turno.fecha_final_debe_ser_igual'),
+            'dias.required' => __('mensajes.turno.elige_menos_dia_semana'),
+            'hora_fin.different' => __('mensajes.turno.hora_salida_debe_ser_distinta'),
+            'required' => __('mensajes.turno.este_dato_es_obligatorio'),
+            'date_format' => __('mensajes.turno.formato_no_es_valido'),
         ]);
 
-        $desde = CarbonImmutable::parse($datos['desde']);
-        $hasta = CarbonImmutable::parse($datos['hasta']);
+        // Las fechas y horas del formulario son de la zona de la finca (el cast de Turno las guarda en UTC)
+        $desde = CarbonImmutable::parse($datos['desde'], Region::zona());
+        $hasta = CarbonImmutable::parse($datos['hasta'], Region::zona());
 
         if ($desde->diffInDays($hasta) >= self::MAX_DIAS_RANGO) {
-            throw ValidationException::withMessages(['hasta' => 'Programa como máximo '.self::MAX_DIAS_RANGO.' días a la vez.']);
+            throw ValidationException::withMessages(['hasta' => __('mensajes.turno.maximo_dias', ['dias' => self::MAX_DIAS_RANGO])]);
         }
 
         $persona = User::query()->with('roles')->find($datos['user_id']);
         if ($persona === null || ! $persona->estaAprobado() || ! $persona->tieneRol($datos['rol'])) {
-            throw ValidationException::withMessages(['user_id' => "Esa persona no tiene el rol de {$datos['rol']}."]);
+            throw ValidationException::withMessages(['user_id' => __('mensajes.turno.sin_rol', ['rol' => $datos['rol']])]);
         }
 
         $nuevos = $this->generarTurnos($desde, $hasta, $datos['dias'], $datos['hora_inicio'], $datos['hora_fin']);
         if ($nuevos->isEmpty()) {
-            throw ValidationException::withMessages(['dias' => 'No hay turnos por crear: ningún día elegido cae dentro de las fechas (o ya pasaron).']);
+            throw ValidationException::withMessages(['dias' => __('mensajes.turno.no_hay_turnos_crear_ningun')]);
         }
 
         DB::transaction(function () use ($persona, $nuevos, $datos, $request) {
@@ -98,8 +102,10 @@ class TurnoController extends Controller
 
             if ($choques->isNotEmpty()) {
                 throw ValidationException::withMessages([
-                    'dias' => 'Se cruza con turnos que '.$persona->name.' ya tiene el '
-                        .$choques->map(fn ($nuevo) => $nuevo['inicia_at']->format('d/m'))->join(', ', ' y ').'.',
+                    'dias' => __('mensajes.turno.choque', [
+                        'nombre' => $persona->name,
+                        'fechas' => $choques->map(fn ($nuevo) => $nuevo['inicia_at']->format('d/m'))->join(', ', ' '.__('comun.y').' '),
+                    ]),
                 ]);
             }
 
@@ -113,23 +119,23 @@ class TurnoController extends Controller
         });
 
         return redirect()->route('admin.turnos.index', ['semana' => $desde->toDateString()])
-            ->with('estado', "Se programaron {$nuevos->count()} turnos de {$datos['rol']} para {$persona->name}.");
+            ->with('estado', __('mensajes.turno.programados', ['cantidad' => $nuevos->count(), 'rol' => $datos['rol'], 'nombre' => $persona->name]));
     }
 
     public function destroy(Turno $turno): RedirectResponse
     {
         if ($turno->haEmpezado()) {
-            return back()->withErrors(['turno' => 'Un turno que ya empezó no se puede eliminar: queda en el historial.']);
+            return back()->withErrors(['turno' => __('mensajes.turno.turno_ya_empezo_no_puede')]);
         }
 
         $turno->delete();
 
-        return back()->with('estado', 'Turno eliminado.');
+        return back()->with('estado', __('mensajes.turno.turno_eliminado'));
     }
 
     /**
      * @param  array<int, int|string>  $dias  Días ISO (1 = lunes … 7 = domingo)
-     * @return \Illuminate\Support\Collection<int, array{inicia_at: CarbonImmutable, termina_at: CarbonImmutable}>
+     * @return Collection<int, array{inicia_at: CarbonImmutable, termina_at: CarbonImmutable}>
      */
     private function generarTurnos(CarbonImmutable $desde, CarbonImmutable $hasta, array $dias, string $horaInicio, string $horaFin)
     {

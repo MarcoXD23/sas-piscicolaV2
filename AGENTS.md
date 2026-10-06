@@ -1,6 +1,6 @@
 # AGENTS.md — El SAS Piscícola
 
-SaaS multi-tenant para fincas piscícolas (Tolima, Colombia). Stack: Laravel + PostgreSQL + Blade con Tailwind compilado con Vite (sin CDN). Zona horaria America/Bogota. Interfaz en español.
+SaaS multi-tenant para fincas piscícolas, sin atarse a una región. Stack: Laravel + PostgreSQL + Blade con Tailwind compilado con Vite (sin CDN). Interfaz en español; país, zona horaria e idioma son ajustes de cada finca.
 
 ## Fase 0 – Reglas generales (seguirlas siempre)
 
@@ -20,7 +20,8 @@ SaaS multi-tenant para fincas piscícolas (Tolima, Colombia). Stack: Laravel + P
 - Todo movimiento de stock, peces o biomasa va en transacción y se guarda como registro histórico (nunca solo sobrescribir saldos).
 - Pruebas: cada regla de negocio tiene prueba. Corren contra las migraciones reales de PostgreSQL en la base sas_piscicola_v2_test con RefreshDatabase, nunca con tablas en memoria ni sobre sas_piscicola_v2.
 - No leas ni modifiques el .env. No uses migrate:fresh ni migrate:rollback sobre sas_piscicola_v2. Si necesitas una variable nueva, agrégala vacía en .env.example e informa cuál.
-- Seguridad: no crees usuarios con contraseñas fijas ni datos reales de nadie (NIT, registros ICA, correos) en el código. El primer propietario se crea con un comando artisan que pide la contraseña.
+- Regionalización: nada fijo a un país. Nombres de lugares, normas, entidades, monedas y formatos salen de la configuración de la finca (país, zona horaria, idioma). Las fechas con hora se guardan en UTC y se muestran e interpretan en la zona de la finca (usa App\Support\Region). Todo texto de la interfaz va en lang/es, nunca fijo en vistas, controladores ni JavaScript.
+- Seguridad: no crees usuarios con contraseñas fijas ni datos reales de nadie (identificaciones tributarias, registros sanitarios, correos) en el código. El primer propietario se crea con un comando artisan que pide la contraseña.
 - Diseño: interfaz limpia y profesional, pensada primero para celular (los trabajadores la usan en la finca). Paleta verde azulado, tipografía legible, botones grandes. Un solo layout y componentes Blade reutilizables (tarjeta, tabla, formulario, botón). Un solo dashboard por rol y un solo widget del asistente IA. Sin imágenes pesadas: cada imagen optimizada y de menos de 200 KB.
 - Al cerrar cada fase: corre las pruebas y da un resumen de máximo 10 líneas (qué se hizo, resultado de las pruebas, qué falta). Luego espera.
 

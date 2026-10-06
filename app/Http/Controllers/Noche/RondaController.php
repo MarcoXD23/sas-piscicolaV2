@@ -14,14 +14,14 @@ class RondaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $datos = $request->validate([
-            'tipo' => ['required', 'string', Rule::in(array_keys(Ronda::TIPOS))],
+            'tipo' => ['required', 'string', Rule::in(Ronda::TIPOS)],
             'lago_id' => ['nullable', 'integer', Rule::exists('lagos', 'id')->where('tenant_id', $request->user()->tenant_id)],
             'descripcion' => ['nullable', 'string', 'max:1000', Rule::requiredIf($request->input('tipo') !== Ronda::SIN_NOVEDAD)],
         ], [
-            'tipo.required' => 'Elige el tipo de ronda.',
-            'tipo.in' => 'Elige un tipo de ronda válido.',
-            'lago_id.exists' => 'El lago no existe.',
-            'descripcion.required' => 'Describe la novedad.',
+            'tipo.required' => __('mensajes.ronda.elige_tipo_ronda'),
+            'tipo.in' => __('mensajes.ronda.elige_tipo_ronda_valido'),
+            'lago_id.exists' => __('mensajes.ronda.lago_no_existe'),
+            'descripcion.required' => __('mensajes.ronda.describe_novedad'),
         ]);
 
         $ronda = Ronda::create($datos + [
@@ -31,7 +31,7 @@ class RondaController extends Controller
         ]);
 
         return redirect()->route('noche.index')->with('estado', $ronda->esNovedad()
-            ? 'Novedad registrada. El propietario la verá en su inicio.'
-            : 'Ronda sin novedad registrada.');
+            ? __('mensajes.ronda.novedad_registrada_propietario_vera_inicio')
+            : __('mensajes.ronda.ronda_sin_novedad_registrada'));
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AgendaController;
+use App\Http\Controllers\Admin\AjustesFincaController;
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\LagoController;
@@ -60,6 +61,9 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
         Route::post('/permisos/{permiso}/revisar', [SolicitudController::class, 'revisarPermiso'])->name('permisos.revisar');
         Route::post('/horas-extras/{horaExtra}/revisar', [SolicitudController::class, 'revisarHoras'])->name('horas-extras.revisar');
+
+        Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
+        Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
 
         Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');

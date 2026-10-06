@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => 'America/Bogota',
+    // Las fechas se guardan en UTC; cada finca las ve en su zona horaria (App\Support\Region)
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
