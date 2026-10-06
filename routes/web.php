@@ -63,6 +63,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
         Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');
+        Route::put('/agenda/{evento}', [AgendaController::class, 'update'])->name('agenda.update');
         Route::post('/agenda/{evento}/completar', [AgendaController::class, 'completar'])->name('agenda.completar');
         Route::delete('/agenda/{evento}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 

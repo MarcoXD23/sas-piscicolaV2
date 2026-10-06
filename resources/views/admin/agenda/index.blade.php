@@ -133,38 +133,48 @@
             @if ($evento->estaCompletado())
                 <p class="mt-4 text-base font-medium text-marca-700">Hecho el {{ $evento->completado_at->format('d/m/Y H:i') }}.</p>
             @else
-                <div class="mt-5 grid grid-cols-2 gap-3">
+                <div class="mt-5 grid grid-cols-3 gap-2">
                     <x-formulario :action="route('admin.agenda.destroy', $evento)" metodo="DELETE" class="!space-y-0">
-                        <x-boton variante="secundario" class="w-full" onclick="return confirm('¿Eliminar este evento?')">
+                        <x-boton variante="secundario" class="w-full !px-2" onclick="return confirm('¿Eliminar este evento?')">
                             <x-icono nombre="basura" class="h-5 w-5" /> Eliminar
                         </x-boton>
                     </x-formulario>
+                    <x-boton tipo="button" variante="secundario" class="w-full !px-2" data-abrir-modal="editar-evento-{{ $evento->id }}">Editar</x-boton>
                     <x-formulario :action="route('admin.agenda.completar', $evento)" class="!space-y-0">
-                        <x-boton class="w-full"><x-icono nombre="ok" class="h-5 w-5" /> Hecho</x-boton>
+                        <x-boton class="w-full !px-2"><x-icono nombre="ok" class="h-5 w-5" /> Hecho</x-boton>
                     </x-formulario>
                 </div>
             @endif
         </x-modal>
     @endforeach
 
-    <x-modal id="modal-evento" titulo="Nuevo evento">
-        <x-formulario :action="route('admin.agenda.store')">
-            <x-campo nombre="titulo" etiqueta="Título" placeholder="Ej. cosecha del lago L02" required />
-            <div class="grid grid-cols-2 gap-4">
-                <x-seleccion nombre="tipo" etiqueta="Tipo" :opciones="$tipos" required />
-                <x-campo nombre="fecha" etiqueta="Fecha" tipo="date" :valor="today()->toDateString()" required />
-                <x-campo nombre="hora" etiqueta="Hora (opcional)" tipo="time" />
-                <x-campo nombre="hora_fin" etiqueta="Hasta (opcional)" tipo="time" />
-                <x-seleccion nombre="lago_id" etiqueta="Lago (opcional)" :opciones="['' => 'Ninguno'] + $lagos" />
-                <x-campo nombre="recordar_dias_antes" etiqueta="Avisar días antes" tipo="number" min="0" max="60" inputmode="numeric" valor="1" required />
-            </div>
-            <x-campo nombre="descripcion" etiqueta="Notas (opcional)" />
-            <p class="text-sm text-slate-500">Sin hora, el evento es de todo el día. El aviso aparece en tu inicio.</p>
+    {{-- Un solo formulario de evento: "Nuevo evento" (null) y la edición de cada evento sin completar --}}
+    @foreach ([null, ...$eventos->reject->estaCompletado()] as $editar)
+        @php
+            $id = $editar ? 'editar-evento-'.$editar->id : 'modal-evento';
+            $sufijo = $editar ? '-'.$editar->id : '';
+        @endphp
+        <x-modal :id="$id" :titulo="$editar ? 'Editar evento' : 'Nuevo evento'">
+            <x-formulario :action="$editar ? route('admin.agenda.update', $editar) : route('admin.agenda.store')" :metodo="$editar ? 'PUT' : 'POST'">
+                <x-campo nombre="titulo" id="titulo{{ $sufijo }}" etiqueta="Título" placeholder="Ej. cosecha del lago L02" :valor="$editar?->titulo" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-seleccion nombre="tipo" id="tipo{{ $sufijo }}" etiqueta="Tipo" :opciones="$tipos" :valor="$editar?->tipo" required />
+                    <x-campo nombre="fecha" id="fecha{{ $sufijo }}" etiqueta="Fecha" tipo="date" :valor="($editar?->inicia_at ?? today())->toDateString()" required />
+                    <x-campo nombre="hora" id="hora{{ $sufijo }}" etiqueta="Hora (opcional)" tipo="time"
+                             :valor="$editar && ! $editar->todo_el_dia ? $editar->inicia_at->format('H:i') : null" />
+                    <x-campo nombre="hora_fin" id="hora-fin{{ $sufijo }}" etiqueta="Hasta (opcional)" tipo="time" :valor="$editar?->termina_at?->format('H:i')" />
+                    <x-seleccion nombre="lago_id" id="lago{{ $sufijo }}" etiqueta="Lago (opcional)" :opciones="['' => 'Ninguno'] + $lagos" :valor="$editar?->lago_id" />
+                    <x-campo nombre="recordar_dias_antes" id="aviso{{ $sufijo }}" etiqueta="Avisar días antes" tipo="number" min="0" max="60" inputmode="numeric"
+                             :valor="$editar?->recordar_dias_antes ?? 1" required />
+                </div>
+                <x-campo nombre="descripcion" id="descripcion{{ $sufijo }}" etiqueta="Notas (opcional)" :valor="$editar?->descripcion" />
+                <p class="text-sm text-slate-500">Sin hora, el evento es de todo el día. El aviso aparece en tu inicio.</p>
 
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
-                <x-boton>Agendar</x-boton>
-            </div>
-        </x-formulario>
-    </x-modal>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
+                    <x-boton>{{ $editar ? 'Guardar cambios' : 'Agendar' }}</x-boton>
+                </div>
+            </x-formulario>
+        </x-modal>
+    @endforeach
 @endsection

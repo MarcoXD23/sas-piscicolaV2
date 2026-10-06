@@ -153,3 +153,58 @@ if (asistente) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
+
+// Cosecha: pesaje por total neto o por canastas (el total que vale lo calcula el servidor)
+document.querySelectorAll('[data-pesaje]').forEach((pesaje) => {
+    const secciones = {
+        total: pesaje.querySelector('[data-seccion="total"]'),
+        canastas: pesaje.querySelector('[data-seccion="canastas"]'),
+    };
+    const lista = pesaje.querySelector('[data-canastas]');
+    const tara = pesaje.querySelector('[data-tara]');
+    const total = pesaje.querySelector('[data-total-neto]');
+    const numero = (valor) => Number.parseFloat(String(valor).replace(',', '.')) || 0;
+
+    const recalcular = () => {
+        const filas = lista.querySelectorAll('[data-canasta]');
+        let neto = 0;
+        filas.forEach((fila, indice) => {
+            fila.querySelector('[data-etiqueta-canasta]').textContent = `Canasta ${indice + 1} · bruto (kg)`;
+            neto += Math.max(numero(fila.querySelector('[data-bruto]').value) - numero(tara.value), 0);
+        });
+        total.textContent = `${neto.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg en ${filas.length} canasta${filas.length === 1 ? '' : 's'}`;
+    };
+
+    // Los campos de la sección oculta se deshabilitan para que no se envíen
+    const usarModo = (modo) => {
+        Object.entries(secciones).forEach(([nombre, seccion]) => {
+            seccion.hidden = nombre !== modo;
+            seccion.querySelectorAll('input').forEach((campo) => { campo.disabled = nombre !== modo; });
+        });
+        recalcular();
+    };
+
+    pesaje.querySelectorAll('[data-modo-pesaje]').forEach((opcion) => opcion.addEventListener('change', () => usarModo(opcion.value)));
+
+    pesaje.querySelector('[data-agregar-canasta]').addEventListener('click', () => {
+        const nueva = lista.querySelector('[data-canasta]').cloneNode(true);
+        const campo = nueva.querySelector('[data-bruto]');
+        campo.value = '';
+        campo.disabled = false;
+        lista.appendChild(nueva);
+        recalcular();
+        campo.focus();
+    });
+
+    lista.addEventListener('click', (evento) => {
+        const boton = evento.target.closest('[data-quitar-canasta]');
+        if (!boton) return;
+        const filas = lista.querySelectorAll('[data-canasta]');
+        if (filas.length > 1) boton.closest('[data-canasta]').remove();
+        else filas[0].querySelector('[data-bruto]').value = '';
+        recalcular();
+    });
+
+    pesaje.addEventListener('input', recalcular);
+    recalcular();
+});

@@ -42,6 +42,12 @@ class Cosecha extends Model
         return $this->hasMany(Venta::class);
     }
 
+    /** Canastas pesadas (vacío si la cosecha se registró con el total neto). */
+    public function pesajes(): HasMany
+    {
+        return $this->hasMany(PesajeCosecha::class)->orderBy('numero');
+    }
+
     /** Kg de esta cosecha que aún no se han vendido. Usa ventas_sum_kg si viene precargado. */
     public function kgDisponibles(): float
     {

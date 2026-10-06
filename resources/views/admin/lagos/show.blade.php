@@ -131,11 +131,64 @@
                                     Si cosechas todos los peces, la siembra se cierra y el lago queda libre.
                                 </p>
                                 <x-campo nombre="fecha" id="cosecha-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->toDateString()" required />
-                                <div class="grid grid-cols-2 gap-4">
-                                    <x-campo nombre="peces" id="cosecha-peces-{{ $siembra->id }}" etiqueta="Peces" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
-                                             ayuda="Hay {{ $numero($siembra->peces_vivos) }}." />
-                                    <x-campo nombre="kg" id="cosecha-kg-{{ $siembra->id }}" etiqueta="Kg netos" tipo="number" step="0.01" min="0.1" inputmode="decimal" required
-                                             ayuda="Peso sin la tara de las canastas." />
+                                <x-campo nombre="peces" id="cosecha-peces-{{ $siembra->id }}" etiqueta="Peces" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
+                                         ayuda="Hay {{ $numero($siembra->peces_vivos) }}." />
+
+                                @php
+                                    // Si el formulario volvió con errores, se reabre en el modo y con las canastas que se escribieron
+                                    $porCanastas = old('_modal') === 'modal-cosecha-'.$siembra->id && is_array(old('pesajes'));
+                                    $brutos = $porCanastas ? array_values(old('pesajes')) : [''];
+                                @endphp
+                                <div data-pesaje class="space-y-4">
+                                    <fieldset>
+                                        <legend class="mb-1.5 text-base font-medium text-slate-700">Peso</legend>
+                                        <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+                                            @foreach (['total' => 'Total neto', 'canastas' => 'Por canastas'] as $modo => $texto)
+                                                <label class="flex min-h-11 cursor-pointer items-center justify-center rounded-lg text-base font-semibold text-slate-600 has-checked:bg-white has-checked:text-marca-800 has-checked:shadow-sm">
+                                                    <input type="radio" name="modo_pesaje_{{ $siembra->id }}" value="{{ $modo }}" class="sr-only" data-modo-pesaje
+                                                           @checked(($modo === 'canastas') === $porCanastas)>
+                                                    {{ $texto }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </fieldset>
+
+                                    <div data-seccion="total" @if ($porCanastas) hidden @endif>
+                                        <x-campo nombre="kg" id="cosecha-kg-{{ $siembra->id }}" etiqueta="Kg netos" tipo="number" step="0.01" min="0.1" inputmode="decimal"
+                                                 required :disabled="$porCanastas" ayuda="Peso total sin la tara de las canastas." />
+                                    </div>
+
+                                    <div data-seccion="canastas" class="space-y-3" @unless ($porCanastas) hidden @endunless>
+                                        <x-campo nombre="tara_kg" id="cosecha-tara-{{ $siembra->id }}" etiqueta="Tara por canasta (kg)" tipo="number" step="0.01" min="0" inputmode="decimal"
+                                                 required :disabled="! $porCanastas" data-tara ayuda="Peso de la canasta vacía." />
+
+                                        <ol data-canastas class="space-y-2">
+                                            @foreach ($brutos as $indice => $bruto)
+                                                <li data-canasta class="flex items-end gap-2">
+                                                    <div class="min-w-0 flex-1">
+                                                        <label class="mb-1 block text-sm font-medium text-slate-600" data-etiqueta-canasta>Canasta {{ $indice + 1 }} · bruto (kg)</label>
+                                                        <input type="number" name="pesajes[]" value="{{ $bruto }}" step="0.01" min="0.1" inputmode="decimal" required
+                                                               @disabled(! $porCanastas) data-bruto
+                                                               @class([
+                                                                   'block min-h-12 w-full rounded-xl border bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:outline-none focus:ring-2',
+                                                                   'border-slate-300 focus:border-marca-500 focus:ring-marca-200' => ! $errors->has("pesajes.{$indice}"),
+                                                                   'border-red-400 focus:ring-red-200' => $errors->has("pesajes.{$indice}"),
+                                                               ])>
+                                                    </div>
+                                                    <button type="button" data-quitar-canasta class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Quitar canasta">
+                                                        <x-icono nombre="basura" class="h-5 w-5" />
+                                                    </button>
+                                                </li>
+                                            @endforeach
+                                        </ol>
+
+                                        <div class="flex items-center justify-between gap-3">
+                                            <x-boton tipo="button" variante="secundario" class="!px-3" data-agregar-canasta>
+                                                <x-icono nombre="mas" class="h-5 w-5" /> Canasta
+                                            </x-boton>
+                                            <p class="text-right text-base text-slate-700" aria-live="polite">Neto: <strong data-total-neto class="tabular-nums">0,00 kg</strong></p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <x-campo nombre="observaciones" id="cosecha-obs-{{ $siembra->id }}" etiqueta="Observaciones (opcional)" />
 

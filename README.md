@@ -22,7 +22,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Módulo | Dónde | Qué hace |
 |---|---|---|
 | Inicio | `/` | Un panel por rol: ejecutivo (gráficas, ventas, cartera), técnico, ración del día (trabajador) y alertas de agua (celador). |
-| Lagos | `/admin/lagos` | Siembras y **policultivo** (sin repetir especie ni mezclar agua fría y cálida), alimentación con ración sugerida, mortalidad, muestreos, traslados y desdobles, cosecha. Detalle con historial completo. |
+| Lagos | `/admin/lagos` | Siembras y **policultivo** (sin repetir especie ni mezclar agua fría y cálida), alimentación con ración sugerida, mortalidad, muestreos, traslados y desdobles, cosecha (total neto o pesaje por canastas). Detalle con historial completo. |
 | Calidad del agua y sanidad | detalle del lago | Mediciones con alertas según las especies del lago; tratamientos con **retiro sanitario** que bloquea la cosecha. |
 | Especies | `/especies` | Guía con fichas de referencia de 6 especies. |
 | Bodega | `/admin/bodega` | Entradas y salidas de concentrado, días de cobertura y alertas de stock bajo. |
@@ -124,7 +124,6 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 - Foto real de la mojarra roja (`public/images/especies/mojarra-roja.webp`, menos de 200 KB).
 - Registro sin conexión con sincronización posterior (hoy, sin internet solo se muestra un aviso).
 - Superadmin y planes de suscripción para varias fincas.
-- Edición de eventos de la agenda y pesajes por canasta en la cosecha.
 
 ## Estructura
 

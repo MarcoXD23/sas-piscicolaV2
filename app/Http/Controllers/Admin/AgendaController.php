@@ -38,6 +38,31 @@ class AgendaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $evento = EventoAgenda::create($this->datosEvento($request) + ['creado_por' => $request->user()->id]);
+
+        return redirect()->route('admin.agenda.index', ['mes' => $evento->inicia_at->format('Y-m')])
+            ->with('estado', "«{$evento->titulo}» agendado para el {$evento->inicia_at->format('d/m/Y')}.");
+    }
+
+    public function update(Request $request, EventoAgenda $evento): RedirectResponse
+    {
+        if ($evento->estaCompletado()) {
+            return back()->withErrors(['evento' => 'Un evento ya hecho no se edita: queda en el historial.']);
+        }
+
+        $evento->update($this->datosEvento($request));
+
+        return redirect()->route('admin.agenda.index', ['mes' => $evento->inicia_at->format('Y-m')])
+            ->with('estado', "«{$evento->titulo}» actualizado para el {$evento->inicia_at->format('d/m/Y')}.");
+    }
+
+    /**
+     * Valida el formulario del evento (el mismo para crear y editar) y lo convierte en atributos.
+     *
+     * @return array<string, mixed>
+     */
+    private function datosEvento(Request $request): array
+    {
         $datos = $request->validate([
             'titulo' => ['required', 'string', 'max:255'],
             'tipo' => ['required', 'string', Rule::in(array_keys(EventoAgenda::TIPOS))],
@@ -63,8 +88,8 @@ class AgendaController extends Controller
         }
 
         $fecha = CarbonImmutable::parse($datos['fecha']);
-        $evento = EventoAgenda::create([
-            'creado_por' => $request->user()->id,
+
+        return [
             'lago_id' => $datos['lago_id'] ?? null,
             'titulo' => $datos['titulo'],
             'tipo' => $datos['tipo'],
@@ -73,10 +98,7 @@ class AgendaController extends Controller
             'termina_at' => empty($datos['hora_fin']) ? null : $fecha->setTimeFromTimeString($datos['hora_fin']),
             'recordar_dias_antes' => $datos['recordar_dias_antes'],
             'descripcion' => $datos['descripcion'] ?? null,
-        ]);
-
-        return redirect()->route('admin.agenda.index', ['mes' => $fecha->format('Y-m')])
-            ->with('estado', "«{$evento->titulo}» agendado para el {$fecha->format('d/m/Y')}.");
+        ];
     }
 
     public function completar(EventoAgenda $evento): RedirectResponse

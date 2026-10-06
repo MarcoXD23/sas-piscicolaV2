@@ -83,9 +83,10 @@ class HistorialLago
                     "{$numero($t->cantidad)} peces de {$t->siembraOrigen->nombre_especie} ({$numero($t->biomasa_kg, 2)} kg)", $t->usuario?->name);
             });
 
-        $filtrar(Cosecha::where('lago_id', $lago->id)->with('usuario'), 'fecha')
+        $filtrar(Cosecha::where('lago_id', $lago->id)->with('usuario')->withCount('pesajes'), 'fecha')
             ->each(fn (Cosecha $c) => $agregar($c->fecha, $c->created_at, 'pez', 'Cosecha', 'Cosecha · '.$siembras[$c->siembra_id]->nombre_especie,
-                "{$numero($c->peces)} peces, {$numero($c->kg, 2)} kg ({$numero($c->peso_promedio_g)} g en promedio)", $c->usuario?->name, 'positivo'));
+                "{$numero($c->peces)} peces, {$numero($c->kg, 2)} kg ({$numero($c->peso_promedio_g)} g en promedio)"
+                .($c->pesajes_count > 0 ? " en {$c->pesajes_count} canastas" : ''), $c->usuario?->name, 'positivo'));
 
         $filtrar(MedicionAgua::where('lago_id', $lago->id)->with('usuario'), 'medido_at')
             ->each(fn (MedicionAgua $m) => $agregar($m->medido_at, $m->medido_at, 'reloj', 'Calidad del agua', 'Calidad del agua · '.$m->medido_at->format('H:i'),
