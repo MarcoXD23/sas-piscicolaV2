@@ -52,10 +52,17 @@
                     @endif
 
                     <div class="min-w-0 flex-1">
-                        <h2 class="truncate text-xl font-bold text-slate-900">{{ $lago->nombre }}</h2>
+                        <h2 class="truncate text-xl font-bold text-slate-900">
+                            <a href="{{ route('admin.lagos.show', $lago) }}" class="hover:text-marca-700 hover:underline">{{ $lago->nombre }}</a>
+                        </h2>
                         <p class="text-sm text-slate-500">
                             Lago en {{ $lago->tipo }}@if ($siembras->count() > 1) · Policultivo @endif
                         </p>
+                        @if ($lago->en_retiro)
+                            <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+                                <x-icono nombre="alerta" class="h-3.5 w-3.5" /> Retiro sanitario
+                            </p>
+                        @endif
                     </div>
 
                     <span @class([
@@ -165,6 +172,10 @@
                             <x-icono nombre="mas" class="h-5 w-5" /> {{ $siembras->isNotEmpty() ? 'Especie' : 'Registrar siembra' }}
                         </x-boton>
                     @endif
+                    <a href="{{ route('admin.lagos.show', $lago) }}" @class([
+                        'flex min-h-11 items-center justify-center text-base font-semibold text-marca-700 hover:underline',
+                        'col-span-2' => $esTecnico && $siembras->isNotEmpty(),
+                    ])>Ver detalle e historial →</a>
                 </div>
 
                 @if ($siembras->isNotEmpty())

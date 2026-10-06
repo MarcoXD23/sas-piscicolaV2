@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Lago;
+use App\Models\Siembra;
+use App\Models\Traslado;
+use App\Support\ReglasPolicultivo;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Traslada peces de una siembra a otro lago. Si la cantidad es parcial es un desdoble.
+ */
+class TrasladoController extends Controller
+{
+    public function store(Request $request, Siembra $siembra): RedirectResponse
+    {
+        $datos = $request->validate([
+            'lago_destino_id' => ['required', 'integer', Rule::exists('lagos', 'id')->where('tenant_id', $request->user()->tenant_id)],
+            'fecha' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
+            'cantidad' => ['required', 'integer', 'min:1'],
+            'peso_promedio_g' => ['required', 'numeric', 'min:0.1'],
+            'observaciones' => ['nullable', 'string', 'max:500'],
+        ], [
+            'lago_destino_id.required' => 'Elige el lago de destino.',
+            'lago_destino_id.exists' => 'El lago de destino no existe.',
+            'fecha.after_or_equal' => 'La fecha no puede ser anterior a la siembra.',
+            'fecha.before_or_equal' => 'La fecha no puede ser futura.',
+        ]);
+
+        if ((int) $datos['lago_destino_id'] === $siembra->lago_id) {
+            throw ValidationException::withMessages(['lago_destino_id' => 'El lago de destino debe ser distinto al de origen.']);
+        }
+
+        $traslado = DB::transaction(function () use ($siembra, $datos, $request) {
+            // Bloquea ambos lagos en orden fijo (evita bloqueos cruzados) y la siembra de origen
+            Lago::whereKey([$siembra->lago_id, $datos['lago_destino_id']])->orderBy('id')->lockForUpdate()->get();
+            $origen = Siembra::whereKey($siembra->id)->lockForUpdate()->first();
+            $lagoDestino = Lago::findOrFail($datos['lago_destino_id']);
+
+            if (! $origen->estaActiva()) {
+                throw ValidationException::withMessages(['cantidad' => 'Esta siembra ya está finalizada.']);
+            }
+
+            $cantidad = (int) $datos['cantidad'];
+            if ($cantidad > $origen->peces_vivos) {
+                throw ValidationException::withMessages(['cantidad' => "Solo hay {$origen->peces_vivos} peces vivos en esta siembra."]);
+            }
+
+            $peso = (float) $datos['peso_promedio_g'];
+            $activasDestino = $lagoDestino->siembrasActivas()->lockForUpdate()->get();
+            $destino = $activasDestino->firstWhere('especie', $origen->especie);
+
+            if ($destino) {
+                // Se suman a la siembra de la misma especie con peso promedio ponderado
+                $total = $destino->peces_vivos + $cantidad;
+                $destino->peso_actual_g = (($destino->peces_vivos * $destino->peso_actual_g) + ($cantidad * $peso)) / $total;
+                $destino->peces_vivos = $total;
+                $destino->biomasa_kg = ($total * $destino->peso_actual_g) / 1000;
+                $destino->save();
+            } else {
+                ReglasPolicultivo::verificarClima($activasDestino, $origen->especie, 'lago_destino_id');
+
+                $destino = $lagoDestino->siembras()->create([
+                    'especie' => $origen->especie,
+                    'fecha' => $datos['fecha'],
+                    'cantidad_alevinos' => $cantidad,
+                    'peso_promedio_inicial_g' => $peso,
+                    'peces_vivos' => $cantidad,
+                    'peso_actual_g' => $peso,
+                    'biomasa_kg' => ($cantidad * $peso) / 1000,
+                ]);
+            }
+
+            $origen->peces_vivos -= $cantidad;
+            $origen->biomasa_kg = ($origen->peces_vivos * $origen->peso_actual_g) / 1000;
+            if ($origen->peces_vivos === 0) {
+                // Traslado total: la siembra de origen queda cerrada y el lago libre
+                $origen->finalizada_at = now();
+            }
+            $origen->save();
+
+            return Traslado::create([
+                'siembra_origen_id' => $origen->id,
+                'siembra_destino_id' => $destino->id,
+                'lago_origen_id' => $origen->lago_id,
+                'lago_destino_id' => $lagoDestino->id,
+                'user_id' => $request->user()->id,
+                'fecha' => $datos['fecha'],
+                'cantidad' => $cantidad,
+                'peso_promedio_g' => $peso,
+                'biomasa_kg' => ($cantidad * $peso) / 1000,
+                'observaciones' => $datos['observaciones'] ?? null,
+            ]);
+        });
+
+        return redirect()->route('admin.lagos.show', $siembra->lago_id)
+            ->with('estado', number_format($traslado->cantidad, 0, ',', '.')." peces trasladados al lago {$traslado->lagoDestino->nombre}.");
+    }
+}

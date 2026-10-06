@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lago;
 use App\Models\Siembra;
 use App\Support\CatalogoEspecies;
+use App\Support\ReglasPolicultivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,12 +35,7 @@ class SiembraController extends Controller
                 ]);
             }
 
-            $clima = CatalogoEspecies::clima($datos['especie']);
-            if ($activas->contains(fn (Siembra $siembra) => CatalogoEspecies::clima($siembra->especie) !== $clima)) {
-                throw ValidationException::withMessages([
-                    'especie' => 'No se pueden mezclar especies de agua fría y de agua cálida en el mismo lago.',
-                ]);
-            }
+            ReglasPolicultivo::verificarClima($activas, $datos['especie'], 'especie');
 
             $peces = (int) $datos['cantidad_alevinos'];
             $peso = (float) $datos['peso_promedio_inicial_g'];

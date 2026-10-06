@@ -6,6 +6,7 @@ use App\Models\Concerns\PerteneceATenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Lago extends Model
 {
@@ -24,5 +25,26 @@ class Lago extends Model
     public function siembrasActivas(): HasMany
     {
         return $this->hasMany(Siembra::class)->whereNull('finalizada_at')->orderBy('fecha');
+    }
+
+    public function mediciones(): HasMany
+    {
+        return $this->hasMany(MedicionAgua::class);
+    }
+
+    public function ultimaMedicion(): HasOne
+    {
+        return $this->hasOne(MedicionAgua::class)->latestOfMany('medido_at');
+    }
+
+    public function tratamientos(): HasMany
+    {
+        return $this->hasMany(Tratamiento::class);
+    }
+
+    /** Tratamientos cuyo período de retiro sigue vigente: el pescado de este lago no se debe cosechar. */
+    public function tratamientosEnRetiro(): HasMany
+    {
+        return $this->hasMany(Tratamiento::class)->enRetiro();
     }
 }

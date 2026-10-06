@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\LagoController;
+use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\SiembraController;
+use App\Http\Controllers\Admin\TrasladoController;
+use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
@@ -45,10 +48,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
+        Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
+        Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
+        Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/lagos', [LagoController::class, 'index'])->name('lagos.index');
+        Route::get('/lagos/{lago}', [LagoController::class, 'show'])->whereNumber('lago')->name('lagos.show');
 
         // El trabajador solo registra alimentación y mortalidad dentro de su turno
         Route::middleware('turno:trabajador')->group(function () {
