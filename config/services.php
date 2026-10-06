@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Asistente IA (Claude). Sin clave, el widget se muestra como "no configurado".
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'modelo' => env('ANTHROPIC_MODEL') ?: 'claude-opus-5-5',
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

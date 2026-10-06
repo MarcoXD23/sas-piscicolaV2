@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0f655f">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@hasSection('titulo')@yield('titulo') · @endif{{ config('app.name') }}</title>
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/icono.svg" type="image/svg+xml">
@@ -141,6 +142,8 @@
                 </x-modal>
             @endif
         @endif
+
+        <x-asistente />
     @endauth
 
     <main id="contenido" @class([

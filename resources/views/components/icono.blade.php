@@ -70,6 +70,9 @@
         @case('dinero')
             <rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01"/><path d="M18 15v.01"/>
             @break
+        @case('chat')
+            <path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8"/><path d="M8 12h5"/>
+            @break
         @case('alerta')
             <circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5v.01"/>
             @break

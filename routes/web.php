@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\TrasladoController;
 use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Admin\VentaController;
+use App\Http\Controllers\AsistenteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
@@ -107,6 +108,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
         Route::get('/especies/{slug}', [EspecieController::class, 'show'])->name('especies.show');
     });
+
+    // Asistente IA: un solo widget para todos los roles (el contexto se filtra por rol)
+    Route::get('/asistente', [AsistenteController::class, 'historial'])->name('asistente.historial');
+    Route::post('/asistente', [AsistenteController::class, 'enviar'])->middleware('throttle:asistente')->name('asistente.enviar');
+    Route::delete('/asistente', [AsistenteController::class, 'reiniciar'])->name('asistente.reiniciar');
 
     // Autogestión del personal de campo: tareas, permisos y horas extra
     Route::middleware('rol:trabajador,celador')->prefix('mi-trabajo')->name('mi-trabajo.')->group(function () {
