@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
 use App\Models\Permiso;
@@ -28,6 +29,10 @@ class InicioController extends Controller
             'trabajaPorTurnos' => $trabajaPorTurnos,
             // La bodega es exclusiva del propietario
             'alertasBodega' => $usuario->tieneRol(Rol::PROPIETARIO) ? CoberturaBodega::alertas() : collect(),
+            // La agenda operativa es exclusiva del propietario
+            'recordatorios' => $usuario->tieneRol(Rol::PROPIETARIO)
+                ? EventoAgenda::query()->with('lago')->paraRecordar()->orderBy('inicia_at')->limit(10)->get()
+                : collect(),
             'tareasPendientes' => $trabajaPorTurnos ? Tarea::query()->where('asignada_a', $usuario->id)->pendientes()->count() : 0,
             'solicitudesPendientes' => $usuario->tieneRol(Rol::PROPIETARIO)
                 ? Permiso::query()->pendientes()->count() + HoraExtra::query()->pendientes()->count()

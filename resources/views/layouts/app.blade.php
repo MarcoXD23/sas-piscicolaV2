@@ -30,6 +30,7 @@
                 ['ruta' => 'inicio', 'texto' => 'Inicio', 'icono' => 'inicio', 'roles' => null],
                 ['ruta' => 'admin.lagos.index', 'activa' => 'admin.lagos.*', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
+                ['ruta' => 'admin.agenda.index', 'activa' => 'admin.agenda.*', 'texto' => 'Agenda', 'icono' => 'calendario', 'roles' => ['propietario']],
                 ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
                 ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
                 ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => 'Tareas', 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
@@ -54,21 +55,6 @@
                     </span>
                 </a>
 
-                <nav class="hidden items-center gap-1 md:flex" aria-label="Principal">
-                    @foreach ($enlaces as $enlace)
-                        <a href="{{ route($enlace['ruta']) }}" title="{{ $enlace['texto'] }}"
-                           @if ($enlace['es_actual']) aria-current="page" @endif
-                           @class([
-                               'flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium transition lg:px-4',
-                               'bg-white text-marca-800' => $enlace['es_actual'],
-                               'text-marca-50 hover:bg-marca-600' => ! $enlace['es_actual'],
-                           ])>
-                            <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
-                            <span class="sr-only lg:not-sr-only">{{ $enlace['texto'] }}</span>
-                        </a>
-                    @endforeach
-                </nav>
-
                 <form method="POST" action="{{ route('logout') }}" class="shrink-0">
                     @csrf
                     <button type="submit" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600">
@@ -77,6 +63,24 @@
                     </button>
                 </form>
             </div>
+
+            {{-- Escritorio: segunda fila con todas las secciones (en celular va el menú inferior) --}}
+            @if ($conMenuInferior)
+                <nav class="mx-auto hidden max-w-5xl gap-1 overflow-x-auto px-3 pb-2 md:flex" aria-label="Principal">
+                    @foreach ($enlaces as $enlace)
+                        <a href="{{ route($enlace['ruta']) }}"
+                           @if ($enlace['es_actual']) aria-current="page" @endif
+                           @class([
+                               'flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3 text-base font-medium transition',
+                               'bg-white text-marca-800' => $enlace['es_actual'],
+                               'text-marca-50 hover:bg-marca-600' => ! $enlace['es_actual'],
+                           ])>
+                            <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
+                            {{ $enlace['texto'] }}
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
         </header>
 
         @if ($conMenuInferior)

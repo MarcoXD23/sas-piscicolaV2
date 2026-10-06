@@ -52,6 +52,29 @@
         </x-tarjeta>
     @endif
 
+    @if ($recordatorios->isNotEmpty())
+        <x-tarjeta titulo="Agenda: no olvides" class="mb-6">
+            <ul class="divide-y divide-slate-100">
+                @foreach ($recordatorios as $evento)
+                    <li class="flex items-center justify-between gap-3 py-2.5">
+                        <a href="{{ route('admin.agenda.index', ['mes' => $evento->inicia_at->format('Y-m')]) }}" class="min-w-0 hover:underline">
+                            <span class="block truncate font-medium text-slate-900">{{ $evento->titulo }}@if ($evento->lago) · {{ $evento->lago->nombre }}@endif</span>
+                            <span class="text-sm text-slate-500">{{ $evento->textoTipo() }}</span>
+                        </a>
+                        <span @class([
+                            'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                            'bg-red-100 text-red-800' => $evento->estaVencido(),
+                            'bg-marca-100 text-marca-800' => $evento->inicia_at->isToday(),
+                            'bg-slate-100 text-slate-700' => ! $evento->estaVencido() && ! $evento->inicia_at->isToday(),
+                        ])>
+                            {{ $evento->estaVencido() ? 'Vencido '.$evento->inicia_at->format('d/m') : ($evento->inicia_at->isToday() ? 'Hoy' : $evento->inicia_at->format('d/m')) }}
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+        </x-tarjeta>
+    @endif
+
     @if ($tareasPendientes > 0)
         <a href="{{ route('mi-trabajo.index') }}" class="mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:ring-marca-300">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-marca-50 text-marca-700"><x-icono nombre="tareas" /></span>
