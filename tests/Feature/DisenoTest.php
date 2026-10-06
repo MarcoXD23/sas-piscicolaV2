@@ -38,12 +38,28 @@ class DisenoTest extends TestCase
             ->assertDontSee(route('admin.personal.index'));
     }
 
-    public function test_el_celador_no_tiene_menu_inferior_porque_solo_tiene_inicio(): void
+    public function test_el_celador_solo_ve_inicio_y_seguridad_noche(): void
     {
         $this->actingAs($this->usuario(Rol::CELADOR))->get(route('inicio'))
             ->assertOk()
-            ->assertDontSee('Principal (móvil)')
-            ->assertDontSee(route('admin.lagos.index'));
+            ->assertSee(route('noche.index'))
+            ->assertDontSee(route('admin.lagos.index'))
+            ->assertDontSee(route('especies.index'))
+            ->assertDontSee('Más secciones');
+    }
+
+    public function test_con_mas_de_cinco_secciones_el_menu_movil_agrupa_el_resto_en_mas(): void
+    {
+        // Propietario: Inicio, Lagos, Bodega, Personal, Noche y Especies
+        $this->actingAs($this->usuario(Rol::PROPIETARIO))->get(route('inicio'))
+            ->assertOk()
+            ->assertSee('data-abrir-modal="menu-mas"', false)
+            ->assertSee('Más secciones');
+
+        // Administrador: Inicio, Lagos, Noche y Especies caben sin "Más"
+        $this->actingAs($this->usuario(Rol::ADMINISTRADOR))->get(route('inicio'))
+            ->assertOk()
+            ->assertDontSee('Más secciones');
     }
 
     public function test_la_ventana_del_formulario_se_reabre_si_hay_errores(): void

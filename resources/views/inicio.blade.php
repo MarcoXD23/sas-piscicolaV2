@@ -52,6 +52,33 @@
         </x-tarjeta>
     @endif
 
+    @if ($novedadesNoche->isNotEmpty())
+        <a href="{{ route('noche.index') }}" class="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900 hover:bg-red-100">
+            <x-icono nombre="luna" class="mt-0.5" />
+            <div>
+                <p class="font-semibold">Novedades de seguridad (últimas 24 horas)</p>
+                <ul class="text-base">
+                    @foreach ($novedadesNoche as $novedad)
+                        <li>
+                            {{ $novedad->registrada_at->format('H:i') }} · {{ $novedad->textoTipo() }}@if ($novedad->lago) en {{ $novedad->lago->nombre }}@endif:
+                            {{ $novedad->descripcion }} <span class="text-red-700">({{ $novedad->usuario?->name }})</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </a>
+    @endif
+
+    @if ($usuario->tieneRol('celador'))
+        <a href="{{ route('noche.index') }}" class="mb-6 flex items-center gap-4 rounded-2xl bg-marca-700 p-5 text-white shadow-md hover:bg-marca-800">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15"><x-icono nombre="luna" /></span>
+            <span>
+                <span class="block text-lg font-semibold">Seguridad & Noche</span>
+                <span class="block text-marca-100">Rondas, oxígeno y aireadores</span>
+            </span>
+        </a>
+    @endif
+
     @if ($alertasBodega->isNotEmpty())
         <a href="{{ route('admin.bodega.index') }}" class="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 hover:bg-amber-100">
             <x-icono nombre="bodega" class="mt-0.5" />

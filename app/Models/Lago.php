@@ -42,6 +42,12 @@ class Lago extends Model
         return $this->hasMany(Tratamiento::class);
     }
 
+    /** Encendido del aireador que sigue abierto (si el aireador está prendido). */
+    public function aireacionActiva(): HasOne
+    {
+        return $this->hasOne(Aireacion::class)->whereNull('apagado_at');
+    }
+
     /** Tratamientos cuyo período de retiro sigue vigente: el pescado de este lago no se debe cosechar. */
     public function tratamientosEnRetiro(): HasMany
     {

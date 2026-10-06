@@ -28,13 +28,18 @@
             $usuarioActual = auth()->user()->loadMissing('roles', 'tenant');
             $enlaces = collect([
                 ['ruta' => 'inicio', 'texto' => 'Inicio', 'icono' => 'inicio', 'roles' => null],
-                ['ruta' => 'admin.lagos.index', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
-                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
+                ['ruta' => 'admin.lagos.index', 'activa' => 'admin.lagos.*', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
                 ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
+                ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
+                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
-                || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)));
+                || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)))
+                ->map(fn ($enlace) => $enlace + ['es_actual' => request()->routeIs($enlace['activa'] ?? $enlace['ruta'])])
+                ->values();
             $conMenuInferior = $enlaces->count() > 1;
+            // En celular caben 5 botones: si hay más, se muestran 4 y el resto va en "Más"
+            [$enlacesInferiores, $enlacesMas] = $enlaces->count() > 5 ? [$enlaces->take(4), $enlaces->slice(4)] : [$enlaces, collect()];
         @endphp
 
         <header class="sticky top-0 z-30 bg-marca-700 text-white shadow-md pt-[env(safe-area-inset-top)]">
@@ -49,15 +54,15 @@
 
                 <nav class="hidden items-center gap-1 md:flex" aria-label="Principal">
                     @foreach ($enlaces as $enlace)
-                        <a href="{{ route($enlace['ruta']) }}"
-                           @if (request()->routeIs($enlace['activa'] ?? $enlace['ruta'])) aria-current="page" @endif
+                        <a href="{{ route($enlace['ruta']) }}" title="{{ $enlace['texto'] }}"
+                           @if ($enlace['es_actual']) aria-current="page" @endif
                            @class([
-                               'flex min-h-11 items-center gap-2 rounded-xl px-4 text-base font-medium transition',
-                               'bg-white text-marca-800' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
-                               'text-marca-50 hover:bg-marca-600' => ! request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
+                               'flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium transition lg:px-4',
+                               'bg-white text-marca-800' => $enlace['es_actual'],
+                               'text-marca-50 hover:bg-marca-600' => ! $enlace['es_actual'],
                            ])>
                             <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
-                            {{ $enlace['texto'] }}
+                            <span class="sr-only lg:not-sr-only">{{ $enlace['texto'] }}</span>
                         </a>
                     @endforeach
                 </nav>
@@ -74,28 +79,59 @@
 
         @if ($conMenuInferior)
             <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur md:hidden" aria-label="Principal (móvil)">
-                <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlaces->count() }}, minmax(0, 1fr))">
-                    @foreach ($enlaces as $enlace)
+                <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
+                    @foreach ($enlacesInferiores as $enlace)
                         <li>
                             <a href="{{ route($enlace['ruta']) }}"
-                               @if (request()->routeIs($enlace['activa'] ?? $enlace['ruta'])) aria-current="page" @endif
+                               @if ($enlace['es_actual']) aria-current="page" @endif
                                @class([
                                    'flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold',
-                                   'text-marca-700' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
-                                   'text-slate-500' => ! request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
+                                   'text-marca-700' => $enlace['es_actual'],
+                                   'text-slate-500' => ! $enlace['es_actual'],
                                ])>
-                                <span @class([
-                                    'flex h-8 w-14 items-center justify-center rounded-full transition',
-                                    'bg-marca-100' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']),
-                                ])>
+                                <span @class(['flex h-8 w-14 items-center justify-center rounded-full transition', 'bg-marca-100' => $enlace['es_actual']])>
                                     <x-icono :nombre="$enlace['icono']" />
                                 </span>
                                 {{ $enlace['texto'] }}
                             </a>
                         </li>
                     @endforeach
+
+                    @if ($enlacesMas->isNotEmpty())
+                        @php $masActivo = $enlacesMas->contains('es_actual', true); @endphp
+                        <li>
+                            <button type="button" data-abrir-modal="menu-mas" @class([
+                                'flex min-h-16 w-full flex-col items-center justify-center gap-1 text-xs font-semibold',
+                                'text-marca-700' => $masActivo,
+                                'text-slate-500' => ! $masActivo,
+                            ])>
+                                <span @class(['flex h-8 w-14 items-center justify-center rounded-full transition', 'bg-marca-100' => $masActivo])>
+                                    <x-icono nombre="menu" />
+                                </span>
+                                Más
+                            </button>
+                        </li>
+                    @endif
                 </ul>
             </nav>
+
+            @if ($enlacesMas->isNotEmpty())
+                <x-modal id="menu-mas" titulo="Más secciones">
+                    <ul class="space-y-2">
+                        @foreach ($enlacesMas as $enlace)
+                            <li>
+                                <a href="{{ route($enlace['ruta']) }}" @class([
+                                    'flex min-h-14 items-center gap-4 rounded-2xl px-4 text-lg font-semibold',
+                                    'bg-marca-100 text-marca-800' => $enlace['es_actual'],
+                                    'bg-slate-50 text-slate-800 hover:bg-slate-100' => ! $enlace['es_actual'],
+                                ])>
+                                    <x-icono :nombre="$enlace['icono']" /> {{ $enlace['texto'] }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </x-modal>
+            @endif
         @endif
     @endauth
 

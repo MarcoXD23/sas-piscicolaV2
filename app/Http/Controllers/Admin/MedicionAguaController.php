@@ -13,6 +13,8 @@ class MedicionAguaController extends Controller
 
     public function store(Request $request, Lago $lago): RedirectResponse
     {
+        // Desde Seguridad & Noche no se envía la hora: se usa la del momento de guardar
+        $request->mergeIfMissing(['medido_at' => now()->format('Y-m-d H:i:s')]);
         $alMenosUno = 'required_without_all:'.implode(',', self::PARAMETROS);
 
         $datos = $request->validate([
@@ -33,7 +35,8 @@ class MedicionAguaController extends Controller
         $medicion = $lago->mediciones()->create($datos + ['user_id' => $request->user()->id]);
         $alertas = $medicion->alertas($lago->siembrasActivas()->pluck('especie'));
 
-        return redirect()->route('admin.lagos.show', $lago)->with('estado', $alertas === []
+        // Se registra desde el detalle del lago o desde Seguridad & Noche: vuelve a la misma pantalla
+        return back()->with('estado', $alertas === []
             ? 'Medición registrada: todos los parámetros están en rango.'
             : 'Medición registrada con '.count($alertas).' alerta(s). Revisa el lago.');
     }

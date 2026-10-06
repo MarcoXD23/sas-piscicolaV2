@@ -15,6 +15,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\Noche\AireacionController;
+use App\Http\Controllers\Noche\NocheController;
+use App\Http\Controllers\Noche\RondaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -67,5 +70,17 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
         Route::get('/especies/{slug}', [EspecieController::class, 'show'])->name('especies.show');
+    });
+
+    // Seguridad & Noche: el celador solo registra dentro de su turno
+    Route::middleware('rol:propietario,administrador,celador')->prefix('noche')->name('noche.')->group(function () {
+        Route::get('/', [NocheController::class, 'index'])->name('index');
+
+        Route::middleware('turno:celador')->group(function () {
+            Route::post('/rondas', [RondaController::class, 'store'])->name('rondas.store');
+            Route::post('/lagos/{lago}/aireador', [AireacionController::class, 'encender'])->name('aireador.encender');
+            Route::post('/aireaciones/{aireacion}/apagar', [AireacionController::class, 'apagar'])->name('aireador.apagar');
+            Route::post('/lagos/{lago}/mediciones', [MedicionAguaController::class, 'store'])->name('mediciones.store');
+        });
     });
 });
