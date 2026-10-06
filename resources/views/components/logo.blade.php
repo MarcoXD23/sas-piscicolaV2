@@ -1,6 +1,9 @@
-<svg viewBox="0 0 48 48" fill="none" aria-hidden="true" {{ $attributes }}>
-    <path d="M6 24c5-8 13-12 22-12 6 0 10 3 13 6l5-5v22l-5-5c-3 3-7 6-13 6-9 0-17-4-22-12Z" fill="currentColor" opacity=".9"/>
-    <circle cx="16" cy="22" r="2.5" fill="#042827"/>
-    <path d="M4 38c4-2 8-2 12 0s8 2 12 0 8-2 12 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+{{-- Ícono de la marca; mismas formas que public/icono.svg --}}
+<svg viewBox="0 0 512 512" aria-hidden="true" {{ $attributes }}>
+    <rect width="512" height="512" rx="128" fill="#11514d"/>
+    <ellipse cx="256" cy="268" rx="184" ry="128" fill="#0d7e75"/>
+    <path d="M176 262C226 196 326 186 396 262C326 338 226 328 176 262Z" fill="#effcf9"/>
+    <path d="M186 262L124 212L136 262L124 312Z" fill="#effcf9"/>
+    <circle cx="350" cy="250" r="13" fill="#11514d"/>
+    <path d="M178 104c26-14 52-14 78 0s52 14 78 0" fill="none" stroke="#57d5c3" stroke-width="18" stroke-linecap="round"/>
 </svg>
-

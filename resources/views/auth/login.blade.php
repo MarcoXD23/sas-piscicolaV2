@@ -4,11 +4,9 @@
 
 @section('contenido')
     <div class="mb-8 text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-marca-600 shadow-md">
-            <x-logo class="h-10 w-10 text-white" />
-        </div>
-        <h1 class="text-2xl font-bold text-slate-900">{{ config('app.name') }}</h1>
-        <p class="mt-1 text-base text-slate-500">Gestión de tu finca piscícola</p>
+        <x-logo class="mx-auto mb-4 h-20 w-20 rounded-3xl shadow-lg ring-1 ring-white/20" />
+        <h1 class="text-2xl font-bold text-white">{{ config('app.name') }}</h1>
+        <p class="mt-1 text-base text-marca-100">Gestión de tu finca piscícola</p>
     </div>
 
     <x-tarjeta>
@@ -25,9 +23,9 @@
         </x-formulario>
     </x-tarjeta>
 
-    <p class="mt-6 text-center text-base text-slate-600">
+    <p class="mt-6 text-center text-base text-marca-50">
         ¿Eres nuevo en la finca?
-        <a href="{{ route('registro') }}" class="font-semibold text-marca-700 underline-offset-2 hover:underline">Solicita acceso</a>
+        <a href="{{ route('registro') }}" class="font-semibold text-white underline underline-offset-2">Solicita acceso</a>
     </p>
 @endsection
 

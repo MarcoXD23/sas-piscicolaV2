@@ -4,7 +4,7 @@ SaaS multi-tenant para fincas piscícolas (Tolima, Colombia). Permite llevar el 
 
 - **Stack:** Laravel, PostgreSQL, Blade con Tailwind compilado con Vite (sin CDN) y Alpine.js.
 - **Zona horaria:** America/Bogota. **Idioma:** español.
-- **Pensado primero para celular**, porque los trabajadores lo usan en la finca.
+- **Pensado primero para celular**, porque los trabajadores lo usan en la finca. Se puede instalar en el celular como app (PWA, `public/manifest.webmanifest`).
 
 ## Roles
 
@@ -19,7 +19,16 @@ Un usuario puede tener más de un rol (por ejemplo trabajador y celador, por la 
 
 ## Multi-tenant
 
-Cada finca es un `tenant`. Toda tabla de negocio lleva `tenant_id` y se filtra con un único global scope (`TenantScope`), de modo que una finca nunca ve los datos de otra.
+Cada finca es un `tenant`. Toda tabla de negocio lleva `tenant_id` y se filtra con un único global scope ([`TenantScope`](app/Models/Scopes/TenantScope.php), aplicado con el trait [`PerteneceATenant`](app/Models/Concerns/PerteneceATenant.php)), de modo que una finca nunca ve los datos de otra. Los middlewares `tenant` y `rol` fijan la finca activa y restringen las rutas por rol.
+
+## Módulos actuales
+
+- **Acceso:** login y registro web (el personal se registra en `/registro` con el código de la finca y el propietario lo aprueba); API con Sanctum (`POST /api/login`, `GET /api/yo`, `POST /api/logout`).
+- **Personal y bodega** (propietario): roles del personal, stock y movimientos de alimento.
+- **Lagos, siembras y muestreos** (propietario y administrador).
+- **Mortalidad y raciones** (propietario, administrador y trabajador).
+
+Todo movimiento de stock, peces o biomasa se hace en transacción y queda como registro histórico.
 
 ## Requisitos
 
@@ -69,6 +78,10 @@ createdb sas_piscicola_v2_test
 npm run build        # las vistas necesitan el manifest de Vite
 php artisan test
 ```
+
+## Imágenes e íconos
+
+El ícono de la app está en `public/icono.svg` (y sus versiones PNG en `public/icons/`); el componente `<x-logo>` usa las mismas formas. Las fotos van en `public/images/` en formato WebP y cada una debe pesar menos de 200 KB (lo verifica `IdentidadVisualTest`).
 
 ## Estructura
 

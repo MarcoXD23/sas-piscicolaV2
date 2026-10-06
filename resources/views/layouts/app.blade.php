@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0d7e75">
     <title>@hasSection('titulo')@yield('titulo') · @endif{{ config('app.name') }}</title>
+    <link rel="icon" href="/favicon.ico" sizes="32x32">
+    <link rel="icon" href="/icono.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen">
+    @guest
+        <div class="fixed inset-0 -z-10" aria-hidden="true">
+            <img src="/images/login-fondo.webp" alt="" class="h-full w-full object-cover" decoding="async">
+            <div class="absolute inset-0 bg-gradient-to-b from-marca-950/80 via-marca-900/70 to-marca-950/90"></div>
+        </div>
+    @endguest
+
     @auth
         @php
             $usuarioActual = auth()->user()->loadMissing('roles');
@@ -20,7 +31,7 @@
         <header class="sticky top-0 z-30 bg-marca-700 text-white shadow">
             <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
                 <a href="{{ route('inicio') }}" class="flex items-center gap-2 text-lg font-bold">
-                    <x-logo class="h-8 w-8 text-marca-100" />
+                    <x-logo class="h-9 w-9 rounded-xl ring-1 ring-white/20" />
                     <span>{{ config('app.name') }}</span>
                 </a>
 

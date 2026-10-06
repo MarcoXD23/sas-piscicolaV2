@@ -80,7 +80,7 @@
                                 
                                 <div class="mt-6 flex justify-end gap-3">
                                     <x-boton variante="secundario" type="button" onclick="this.closest('dialog').close()">Cancelar</x-boton>
-                                    <x-boton {{ $stocksDisponibles->isEmpty() ? 'disabled' : '' }}>Guardar Ración</x-boton>
+                                    <x-boton :disabled="$stocksDisponibles->isEmpty()">Guardar Ración</x-boton>
                                 </div>
                             </x-formulario>
                         </x-tarjeta>

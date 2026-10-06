@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>El SAS Piscícola</title>
+  <rect width="512" height="512" rx="128" fill="#11514d"/>
+  <ellipse cx="256" cy="268" rx="184" ry="128" fill="#0d7e75"/>
+  <path d="M176 262C226 196 326 186 396 262C326 338 226 328 176 262Z" fill="#effcf9"/>
+  <path d="M186 262L124 212L136 262L124 312Z" fill="#effcf9"/>
+  <circle cx="350" cy="250" r="13" fill="#11514d"/>
+  <path d="M178 104c26-14 52-14 78 0s52 14 78 0" fill="none" stroke="#57d5c3" stroke-width="18" stroke-linecap="round"/>
+</svg>
