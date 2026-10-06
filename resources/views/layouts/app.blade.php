@@ -31,7 +31,7 @@
                 ['ruta' => 'admin.lagos.index', 'texto' => 'Lagos', 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
                 ['ruta' => 'admin.bodega.index', 'texto' => 'Bodega', 'icono' => 'bodega', 'roles' => ['propietario']],
-                ['ruta' => 'admin.personal.index', 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
+                ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)));
             $conMenuInferior = $enlaces->count() > 1;

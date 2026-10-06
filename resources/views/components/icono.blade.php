@@ -40,6 +40,12 @@
         @case('ok')
             <path d="M5 12l5 5 9-10"/>
             @break
+        @case('reloj')
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+            @break
+        @case('basura')
+            <path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>
+            @break
         @case('alerta')
             <circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5v.01"/>
             @break

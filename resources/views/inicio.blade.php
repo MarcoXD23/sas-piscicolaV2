@@ -20,6 +20,38 @@
         </div>
     </section>
 
+    @if ($trabajaPorTurnos)
+        <x-tarjeta class="mb-6">
+            <div class="flex items-start gap-4">
+                <span @class([
+                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
+                    'bg-marca-100 text-marca-700' => $turnoActual,
+                    'bg-slate-100 text-slate-500' => ! $turnoActual,
+                ])>
+                    <x-icono nombre="reloj" />
+                </span>
+                <div>
+                    @if ($turnoActual)
+                        <p class="text-sm font-medium text-marca-700">Estás en turno</p>
+                        <p class="text-lg font-semibold text-slate-900">
+                            <span class="capitalize">{{ $turnoActual->rol }}</span> hasta las {{ $turnoActual->termina_at->format('H:i') }}
+                        </p>
+                    @else
+                        <p class="text-sm font-medium text-slate-500">Fuera de turno</p>
+                        <p class="text-lg font-semibold text-slate-900">
+                            @if ($proximoTurno)
+                                Próximo turno: <span class="first-letter:uppercase">{{ $proximoTurno->inicia_at->translatedFormat('l j \d\e F, H:i') }}</span>
+                                <span class="capitalize">({{ $proximoTurno->rol }})</span>
+                            @else
+                                No tienes turnos programados.
+                            @endif
+                        </p>
+                    @endif
+                </div>
+            </div>
+        </x-tarjeta>
+    @endif
+
     @if ($usuario->tieneRol('propietario') || $usuario->tieneRol('administrador'))
         <h2 class="mb-3 text-lg font-semibold text-slate-900">Resumen de producción</h2>
 

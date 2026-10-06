@@ -16,6 +16,13 @@
         @endif
     </x-encabezado>
 
+    @unless ($puedeRegistrar)
+        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
+            <x-icono nombre="reloj" class="mt-0.5 h-5 w-5" />
+            <span>Estás fuera de tu turno. Puedes consultar los lagos, pero alimentar y registrar mortalidad solo se habilita durante tu turno.</span>
+        </div>
+    @endunless
+
     @if ($lagos->isEmpty())
         <x-vacio icono="lagos" mensaje="Aún no hay lagos registrados en la finca.">
             @if ($esTecnico)
@@ -85,7 +92,7 @@
                         </dl>
 
                         <div @class(['grid gap-2 p-4', 'grid-cols-3' => $esTecnico, 'grid-cols-1' => ! $esTecnico])>
-                            <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}">
+                            <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}" :disabled="! $puedeRegistrar">
                                 <x-icono nombre="mortalidad" /> Mortalidad
                             </x-boton>
                             @if ($esTecnico)
@@ -149,7 +156,7 @@
 
                 <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $esTecnico && $siembras->isNotEmpty()])>
                     @if ($siembras->isNotEmpty())
-                        <x-boton tipo="button" data-abrir-modal="modal-racion-{{ $lago->id }}">
+                        <x-boton tipo="button" data-abrir-modal="modal-racion-{{ $lago->id }}" :disabled="! $puedeRegistrar">
                             <x-icono nombre="alimentar" class="h-5 w-5" /> Alimentar
                         </x-boton>
                     @endif

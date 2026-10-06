@@ -11,7 +11,7 @@ use Illuminate\View\View;
 
 class LagoController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $lagos = Lago::query()->with('siembrasActivas')->orderBy('nombre')->get();
 
@@ -19,6 +19,8 @@ class LagoController extends Controller
             'lagos' => $lagos,
             'tipos' => Lago::TIPOS,
             'especies' => collect(\App\Support\CatalogoEspecies::todas())->map(fn ($ficha) => $ficha['nombre'])->all(),
+            // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
+            'puedeRegistrar' => $request->user()->puedeTrabajarComo(\App\Models\Rol::TRABAJADOR),
             'stocksDisponibles' => \App\Models\StockAlimento::query()
                 ->where('cantidad_kg', '>', 0)
                 ->orderBy('tipo_concentrado')

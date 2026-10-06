@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\SiembraController;
+use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
@@ -31,6 +32,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             ->whereNumber('usuario')
             ->name('personal.update');
 
+        Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
+        Route::post('/turnos', [TurnoController::class, 'store'])->name('turnos.store');
+        Route::delete('/turnos/{turno}', [TurnoController::class, 'destroy'])->name('turnos.destroy');
+
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
     });
@@ -44,8 +49,12 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/lagos', [LagoController::class, 'index'])->name('lagos.index');
-        Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
-        Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
+
+        // El trabajador solo registra alimentación y mortalidad dentro de su turno
+        Route::middleware('turno:trabajador')->group(function () {
+            Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
+            Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
+        });
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {

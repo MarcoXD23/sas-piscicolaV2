@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EstablecerTenant;
 use App\Http\Middleware\VerificarRol;
+use App\Http\Middleware\VerificarTurno;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => EstablecerTenant::class,
             'rol' => VerificarRol::class,
+            'turno' => VerificarTurno::class,
         ]);
 
         // El tenant debe fijarse antes del route model binding para que el scope aplique.

@@ -20,6 +20,7 @@ class MortalidadTest extends TestCase
         $trabajador = User::factory()->create(['tenant_id' => $tenant->id]);
         $trabajador->asignarRoles([Rol::TRABAJADOR]);
         app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $siembra = Siembra::create([
@@ -57,6 +58,7 @@ class MortalidadTest extends TestCase
         $trabajador = User::factory()->create(['tenant_id' => $tenant->id]);
         $trabajador->asignarRoles([Rol::TRABAJADOR]);
         app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $siembra = Siembra::create([

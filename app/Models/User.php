@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -69,5 +70,34 @@ class User extends Authenticatable
 
         $this->unsetRelation('roles');
     }
-}
 
+    public function turnos(): HasMany
+    {
+        return $this->hasMany(Turno::class);
+    }
+
+    /** Turno en curso para el rol indicado, si lo hay. */
+    public function turnoEnCurso(string $rol): ?Turno
+    {
+        return $this->turnos()->where('rol', $rol)->enCurso()->first();
+    }
+
+    /** Próximo turno (de cualquier rol) que aún no ha empezado. */
+    public function proximoTurno(): ?Turno
+    {
+        return $this->turnos()->where('inicia_at', '>', now())->orderBy('inicia_at')->first();
+    }
+
+    /**
+     * ¿Puede trabajar ahora como el rol indicado? Propietario y administrador no dependen de turnos;
+     * trabajador y celador solo dentro de un turno en curso de ese rol.
+     */
+    public function puedeTrabajarComo(string $rol): bool
+    {
+        if ($this->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR)) {
+            return true;
+        }
+
+        return $this->tieneRol($rol) && $this->turnoEnCurso($rol) !== null;
+    }
+}

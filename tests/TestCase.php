@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Models\Turno;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use RuntimeException;
@@ -25,6 +27,18 @@ abstract class TestCase extends BaseTestCase
         }
 
         return $app;
+    }
+
+    /** Crea un turno en curso (de 1 hora antes a 7 horas después de ahora) para el rol indicado. */
+    protected function ponerEnTurno(User $usuario, string $rol): Turno
+    {
+        return Turno::create([
+            'tenant_id' => $usuario->tenant_id,
+            'user_id' => $usuario->id,
+            'rol' => $rol,
+            'inicia_at' => now()->subHour(),
+            'termina_at' => now()->addHours(7),
+        ]);
     }
 }
 
