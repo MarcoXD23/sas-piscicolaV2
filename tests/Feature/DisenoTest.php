@@ -56,8 +56,8 @@ class DisenoTest extends TestCase
             ->assertSee('data-abrir-modal="menu-mas"', false)
             ->assertSee('Más secciones');
 
-        // Administrador: Inicio, Lagos, Noche y Especies caben sin "Más"
-        $this->actingAs($this->usuario(Rol::ADMINISTRADOR))->get(route('inicio'))
+        // Trabajador: Inicio, Lagos, Mi trabajo y Especies caben sin "Más"
+        $this->actingAs($this->usuario(Rol::TRABAJADOR))->get(route('inicio'))
             ->assertOk()
             ->assertDontSee('Más secciones');
     }

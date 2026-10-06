@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\RacionController;
+use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Admin\SiembraController;
 use App\Http\Controllers\Admin\SolicitudController;
 use App\Http\Controllers\Admin\TareaController;
@@ -71,6 +72,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
         Route::post('/tareas', [TareaController::class, 'store'])->name('tareas.store');
         Route::delete('/tareas/{tarea}', [TareaController::class, 'destroy'])->name('tareas.destroy');
+
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
+        Route::get('/reportes/libro-de-campo', [ReporteController::class, 'libroCampo'])->name('reportes.libro-campo');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {

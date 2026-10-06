@@ -68,6 +68,9 @@ class TrasladoController extends Controller
 
                 $destino = $lagoDestino->siembras()->create([
                     'especie' => $origen->especie,
+                    // Conserva el origen de los alevinos para la trazabilidad
+                    'proveedor_alevinos' => $origen->proveedor_alevinos,
+                    'lote_alevinos' => $origen->lote_alevinos,
                     'fecha' => $datos['fecha'],
                     'cantidad_alevinos' => $cantidad,
                     'peso_promedio_inicial_g' => $peso,

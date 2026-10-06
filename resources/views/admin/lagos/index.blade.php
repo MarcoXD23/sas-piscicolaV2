@@ -222,6 +222,8 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <x-campo nombre="cantidad_alevinos" id="siembra-alevinos-{{ $lago->id }}" etiqueta="Alevinos" tipo="number" min="1" inputmode="numeric" required />
                                 <x-campo nombre="peso_promedio_inicial_g" id="siembra-peso-{{ $lago->id }}" etiqueta="Peso inicial (g)" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
+                                <x-campo nombre="proveedor_alevinos" id="siembra-proveedor-{{ $lago->id }}" etiqueta="Proveedor (opcional)" />
+                                <x-campo nombre="lote_alevinos" id="siembra-lote-{{ $lago->id }}" etiqueta="Lote (opcional)" />
                             </div>
 
                             <div class="grid grid-cols-2 gap-3 pt-2">

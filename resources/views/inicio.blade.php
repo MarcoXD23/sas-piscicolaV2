@@ -137,13 +137,76 @@
         </a>
     @endif
 
-    @if ($usuario->tieneRol('propietario') || $usuario->tieneRol('administrador'))
-        <h2 class="mb-3 text-lg font-semibold text-slate-900">Resumen de producción</h2>
+    @if ($lagosConAlertaAgua->isNotEmpty())
+        <section class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900" role="alert">
+            <p class="mb-1 flex items-center gap-2 font-semibold"><x-icono nombre="alerta" class="h-5 w-5" /> Calidad del agua fuera de rango</p>
+            <ul class="space-y-1 text-base">
+                @foreach ($lagosConAlertaAgua as $item)
+                    <li>
+                        <a href="{{ $esTecnico ? route('admin.lagos.show', $item['lago']) : route('noche.index') }}" class="font-semibold underline-offset-2 hover:underline">{{ $item['lago']->nombre }}</a>:
+                        {{ $item['alertas'][0] }}@if (count($item['alertas']) > 1) (y {{ count($item['alertas']) - 1 }} más)@endif
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
-        <div class="grid gap-4 sm:grid-cols-3">
-            <x-indicador icono="biomasa" etiqueta="Biomasa total" :valor="number_format($biomasaTotal, 2, ',', '.')" unidad="kg" />
-            <x-indicador icono="pez" etiqueta="Peces vivos" :valor="number_format($pecesVivos, 0, ',', '.')" />
-            <x-indicador icono="lagos" etiqueta="Lagos con siembra" :valor="$lagosActivos" />
+    @if ($racionesHoy->isNotEmpty())
+        <x-tarjeta titulo="Ración sugerida para hoy" subtitulo="Según biomasa y peso promedio de cada lago." class="mb-6">
+            <ul class="divide-y divide-slate-100">
+                @foreach ($racionesHoy as $item)
+                    <li class="flex items-center justify-between gap-3 py-3">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-slate-900">Lago {{ $item['lago']->nombre }}</p>
+                            <p class="text-sm text-slate-500">
+                                {{ $item['racion']['tomas'] }} tomas de {{ number_format($item['racion']['kg_por_toma'], 1, ',', '.') }} kg
+                                @if ($item['racion']['factor'] < 1) · <span class="font-semibold text-amber-700">reducida por el agua</span>@endif
+                            </p>
+                        </div>
+                        <p class="shrink-0 text-xl font-bold tabular-nums text-slate-900">
+                            {{ number_format($item['racion']['total_kg_dia'], 1, ',', '.') }} <span class="text-sm font-medium text-slate-500">kg/día</span>
+                        </p>
+                    </li>
+                @endforeach
+            </ul>
+            <x-boton :href="route('admin.lagos.index')" variante="secundario" class="mt-3 w-full">
+                <x-icono nombre="alimentar" class="h-5 w-5" /> Ir a alimentar
+            </x-boton>
+        </x-tarjeta>
+    @endif
+
+    @if ($esTecnico)
+        @php $numero = fn ($valor, $decimales = 0) => number_format((float) $valor, $decimales, ',', '.'); @endphp
+
+        <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ $esPropietario ? 'Panel ejecutivo' : 'Panel técnico' }}</h2>
+
+        {{-- Cifra principal: una sola por vista --}}
+        <section class="mb-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+            <p class="text-sm font-medium text-slate-500">Biomasa total en el agua</p>
+            <p class="mt-1 text-5xl font-semibold tracking-tight text-slate-900">
+                {{ $numero($biomasaTotal, 2) }} <span class="text-xl font-medium text-slate-500">kg</span>
+            </p>
+        </section>
+
+        <div @class(['mb-6 grid grid-cols-2 gap-4', 'lg:grid-cols-4' => $esPropietario, 'lg:grid-cols-3' => ! $esPropietario])>
+            <x-indicador etiqueta="Peces vivos" :valor="$numero($pecesVivos)" />
+            <x-indicador etiqueta="Lagos con siembra" :valor="$lagosActivos" />
+            <x-indicador etiqueta="Mortalidad 30 días" :valor="$numero($mortalidad['muertos'])"
+                         :unidad="'peces · '.str_replace('.', ',', (string) $mortalidad['porcentaje']).' %'" />
+            @if ($esPropietario)
+                <x-indicador etiqueta="Alimento 30 días" :valor="$numero($alimento30, 1)" unidad="kg" />
+            @endif
+        </div>
+
+        <div class="grid items-start gap-4 lg:grid-cols-2">
+            <x-grafica-barras titulo="Biomasa por lago" subtitulo="Kilogramos en cultivo hoy." :datos="$biomasaPorLago->all()"
+                              unidad="kg" :decimales="1" vacio="No hay lagos con siembras activas." />
+            <x-grafica-columnas titulo="Mortalidad diaria" subtitulo="Peces muertos por día, últimos 30 días."
+                                :datos="$mortalidadDiaria->all()" unidad="peces" />
+            @if ($esPropietario)
+                <x-grafica-columnas titulo="Alimento suministrado" subtitulo="Kilogramos por día, últimos 30 días."
+                                    :datos="$alimentoDiario->all()" unidad="kg" :decimales="1" />
+            @endif
         </div>
     @endif
 @endsection

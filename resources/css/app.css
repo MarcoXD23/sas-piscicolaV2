@@ -3,6 +3,10 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Tablas: formato apilado solo en pantallas pequeñas; al imprimir siempre son tablas */
+@custom-variant movil (@media screen and (width < 48rem));
+@custom-variant ancho (@media print, (width >= 48rem));
+
 @theme {
     --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
@@ -63,4 +67,14 @@
 
 @media (prefers-reduced-motion: reduce) {
     .modal[open], .modal[open]::backdrop { animation: none; }
+}
+
+/* Tooltip de las gráficas (ver resources/js/app.js) */
+.tooltip-grafica {
+    @apply pointer-events-none fixed z-50 rounded-lg bg-slate-900 px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-white shadow-lg;
+}
+
+/* Impresión de reportes: sin menús ni botones */
+@media print {
+    body { @apply bg-white; }
 }

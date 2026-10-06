@@ -19,6 +19,8 @@ class SiembraController extends Controller
     {
         $datos = $request->validate([
             'especie' => ['required', 'string', Rule::in(CatalogoEspecies::claves())],
+            'proveedor_alevinos' => ['nullable', 'string', 'max:255'],
+            'lote_alevinos' => ['nullable', 'string', 'max:100'],
             'fecha' => ['required', 'date', 'before_or_equal:today'],
             'cantidad_alevinos' => ['required', 'integer', 'min:1'],
             'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1'],

@@ -36,3 +36,34 @@ document.addEventListener('submit', (evento) => {
 });
 
 document.querySelectorAll('dialog[data-abrir-al-cargar]').forEach((ventana) => ventana.showModal());
+
+// Tooltip de las gráficas: cualquier elemento con data-tip muestra su texto al pasar el puntero o al enfocarlo
+const tooltip = document.createElement('div');
+tooltip.className = 'tooltip-grafica';
+tooltip.setAttribute('role', 'tooltip');
+tooltip.hidden = true;
+document.body.appendChild(tooltip);
+
+const mostrarTooltip = (elemento, x, y) => {
+    tooltip.textContent = elemento.dataset.tip; // textContent: los datos nunca se interpretan como HTML
+    tooltip.hidden = false;
+    const ancho = tooltip.offsetWidth;
+    tooltip.style.left = `${Math.min(Math.max(8, x - ancho / 2), window.innerWidth - ancho - 8)}px`;
+    tooltip.style.top = `${Math.max(8, y - tooltip.offsetHeight - 12)}px`;
+};
+
+document.addEventListener('pointermove', (evento) => {
+    const elemento = evento.target.closest?.('[data-tip]');
+    if (elemento) mostrarTooltip(elemento, evento.clientX, evento.clientY);
+    else tooltip.hidden = true;
+});
+
+document.addEventListener('focusin', (evento) => {
+    const elemento = evento.target.closest?.('[data-tip]');
+    if (!elemento) return;
+    const caja = elemento.getBoundingClientRect();
+    mostrarTooltip(elemento, caja.left + caja.width / 2, caja.top);
+});
+
+document.addEventListener('focusout', () => { tooltip.hidden = true; });
+document.addEventListener('scroll', () => { tooltip.hidden = true; }, { passive: true });

@@ -15,7 +15,7 @@ class Tratamiento extends Model
     public const VIAS = ['baño', 'alimento', 'agua'];
 
     protected $fillable = [
-        'lago_id', 'user_id', 'fecha_inicio', 'fecha_fin', 'motivo', 'producto', 'dosis', 'via', 'dias_retiro', 'observaciones',
+        'lago_id', 'user_id', 'fecha_inicio', 'fecha_fin', 'motivo', 'producto', 'registro_ica', 'dosis', 'via', 'dias_retiro', 'observaciones',
     ];
 
     protected function casts(): array

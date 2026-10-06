@@ -18,6 +18,7 @@ class TratamientoController extends Controller
             'fecha_fin' => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'motivo' => ['required', 'string', 'max:255'],
             'producto' => ['required', 'string', 'max:255'],
+            'registro_ica' => ['nullable', 'string', 'max:100'],
             'dosis' => ['required', 'string', 'max:255'],
             'via' => ['required', 'string', Rule::in(Tratamiento::VIAS)],
             'dias_retiro' => ['required', 'integer', 'between:0,365'],

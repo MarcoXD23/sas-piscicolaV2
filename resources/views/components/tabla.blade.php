@@ -6,12 +6,12 @@
 --}}
 <div {{ $attributes->class('overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200') }}>
     <table class="w-full text-left text-base
-        max-md:[&_thead]:hidden max-md:[&_tr]:block max-md:[&_tr]:border-b max-md:[&_tr]:border-slate-200 max-md:[&_tr]:p-4
-        max-md:[&_td]:block max-md:[&_td]:py-1.5
-        max-md:[&_td[data-label]]:before:mb-0.5 max-md:[&_td[data-label]]:before:block max-md:[&_td[data-label]]:before:text-xs
-        max-md:[&_td[data-label]]:before:font-semibold max-md:[&_td[data-label]]:before:uppercase max-md:[&_td[data-label]]:before:tracking-wide
-        max-md:[&_td[data-label]]:before:text-slate-500 max-md:[&_td[data-label]]:before:content-[attr(data-label)]
-        md:[&_td]:px-5 md:[&_td]:py-4 md:[&_td]:align-top md:[&_tbody_tr]:border-t md:[&_tbody_tr]:border-slate-100">
+        movil:[&_thead]:hidden movil:[&_tr]:block movil:[&_tr]:border-b movil:[&_tr]:border-slate-200 movil:[&_tr]:p-4
+        movil:[&_td]:block movil:[&_td]:py-1.5
+        movil:[&_td[data-label]]:before:mb-0.5 movil:[&_td[data-label]]:before:block movil:[&_td[data-label]]:before:text-xs
+        movil:[&_td[data-label]]:before:font-semibold movil:[&_td[data-label]]:before:uppercase movil:[&_td[data-label]]:before:tracking-wide
+        movil:[&_td[data-label]]:before:text-slate-500 movil:[&_td[data-label]]:before:content-[attr(data-label)]
+        ancho:[&_td]:px-5 ancho:[&_td]:py-4 ancho:[&_td]:align-top ancho:[&_tbody_tr]:border-t ancho:[&_tbody_tr]:border-slate-100">
         <thead class="bg-marca-50 text-sm font-semibold text-marca-900">
             <tr>
                 @foreach ($columnas as $columna)

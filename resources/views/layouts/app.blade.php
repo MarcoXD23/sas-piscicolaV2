@@ -34,6 +34,7 @@
                 ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*'], 'texto' => 'Personal', 'icono' => 'personal', 'roles' => ['propietario']],
                 ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => 'Noche', 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],
                 ['ruta' => 'admin.tareas.index', 'activa' => 'admin.tareas.*', 'texto' => 'Tareas', 'icono' => 'tareas', 'roles' => ['propietario', 'administrador']],
+                ['ruta' => 'admin.reportes.index', 'activa' => 'admin.reportes.*', 'texto' => 'Reportes', 'icono' => 'reporte', 'roles' => ['propietario', 'administrador']],
                 ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => 'Mi trabajo', 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
                 ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => 'Especies', 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
@@ -45,7 +46,7 @@
             [$enlacesInferiores, $enlacesMas] = $enlaces->count() > 5 ? [$enlaces->take(4), $enlaces->slice(4)] : [$enlaces, collect()];
         @endphp
 
-        <header class="sticky top-0 z-30 bg-marca-700 text-white shadow-md pt-[env(safe-area-inset-top)]">
+        <header class="sticky top-0 z-30 print:hidden bg-marca-700 text-white shadow-md pt-[env(safe-area-inset-top)]">
             <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
                 <a href="{{ route('inicio') }}" class="flex min-w-0 items-center gap-3">
                     <x-logo class="h-10 w-10 shrink-0 rounded-xl ring-1 ring-white/20" />
@@ -84,7 +85,7 @@
         </header>
 
         @if ($conMenuInferior)
-            <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur md:hidden" aria-label="Principal (móvil)">
+            <nav class="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur md:hidden" aria-label="Principal (móvil)">
                 <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
                     @foreach ($enlacesInferiores as $enlace)
                         <li>

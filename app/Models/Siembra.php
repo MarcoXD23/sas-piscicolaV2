@@ -17,6 +17,8 @@ class Siembra extends Model
     protected $fillable = [
         'lago_id',
         'especie',
+        'proveedor_alevinos',
+        'lote_alevinos',
         'fecha',
         'cantidad_alevinos',
         'peso_promedio_inicial_g',

@@ -138,8 +138,8 @@
                                         <p class="font-semibold text-slate-900">{{ $evento['titulo'] }}</p>
                                         <time class="text-sm text-slate-500" datetime="{{ $evento['fecha']->toDateString() }}">{{ $evento['fecha']->format('d/m/Y') }}</time>
                                     </div>
-                                    @if ($evento['detalle'] !== '')
-                                        <p class="text-sm text-slate-600">{{ $evento['detalle'] }}</p>
+                                    @if ($evento['detalle'] !== '' || $evento['responsable'])
+                                        <p class="text-sm text-slate-600">{{ collect([$evento['detalle'], $evento['responsable']])->filter()->join(' · ') }}</p>
                                     @endif
                                 </div>
                             </li>
@@ -250,7 +250,10 @@
         <x-modal id="modal-tratamiento" titulo="Tratamiento sanitario · {{ $lago->nombre }}">
             <x-formulario :action="route('admin.tratamientos.store', $lago)">
                 <x-campo nombre="motivo" etiqueta="Motivo o diagnóstico" required />
-                <x-campo nombre="producto" etiqueta="Producto" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-campo nombre="producto" etiqueta="Producto" required />
+                    <x-campo nombre="registro_ica" etiqueta="Registro ICA (opcional)" />
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <x-campo nombre="dosis" etiqueta="Dosis" placeholder="Ej. 2 g/kg de alimento" required />
                     <x-seleccion nombre="via" etiqueta="Vía" :opciones="$vias" required />
