@@ -14,6 +14,7 @@ SaaS multi-tenant para fincas piscícolas (Tolima, Colombia). Stack: Laravel + P
   - administrador: área técnica (lagos, siembras, muestreos, mortalidad, traslados). Bloqueado de personal, bodega y agenda.
   - trabajador: alimentación y mortalidad, solo en su turno.
   - celador: solo el módulo Seguridad & Noche, solo en su turno.
+  - trabajador y celador además tienen autogestión ("Mi trabajo"): marcar como hechas sus tareas (solo en su turno), pedir permisos, reportar horas extra y ver su saldo de pescado y sus pagos de nómina. Aprobar permisos y horas extra, y liquidar la nómina, es exclusivo del propietario.
 - Un solo modelo y una sola tabla por concepto, con nombres del dominio en español y consistentes (lagos, siembras, muestreos, mortalidades, traslados). Nunca dos nombres para lo mismo ni versiones en inglés y español.
 - Base de datos: solo PostgreSQL. No uses enum de base de datos: para valores fijos (tipo de lago, especie) usa string y valídalos en la aplicación. No uses sintaxis de otras bases (nada de CREATE VIEW IF NOT EXISTS ni SQL de MySQL o SQLite). No uses try/catch para esconder errores de SQL dentro de migraciones.
 - Todo movimiento de stock, peces o biomasa va en transacción y se guarda como registro histórico (nunca solo sobrescribir saldos).
