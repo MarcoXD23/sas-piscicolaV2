@@ -57,6 +57,25 @@
             @endforelse
         </x-tarjeta>
 
+        <x-tarjeta titulo="Cosechas y ventas" class="break-inside-avoid">
+            @forelse ($cosechas as $cosecha)
+                <p class="border-t border-slate-100 py-2 first:border-t-0">
+                    {{ $cosecha->fecha->format('d/m') }} · Lago {{ $cosecha->lago->nombre }} · {{ $cosecha->siembra->nombre_especie }}:
+                    {{ $numero($cosecha->kg, 1) }} kg ({{ $numero($cosecha->peces) }} peces)
+                </p>
+            @empty
+                <p class="text-slate-500">Sin cosechas.</p>
+            @endforelse
+            @if ($ventas !== null)
+                <div class="mt-2 space-y-1 border-t border-slate-200 pt-2">
+                    <p>Vendido: <strong>{{ \App\Support\Formato::pesos($ventas['total']) }}</strong> ({{ $numero($ventas['kg'], 1) }} kg)</p>
+                    <p class="text-sm text-slate-600">
+                        A crédito: {{ \App\Support\Formato::pesos($ventas['a_credito']) }} · abonos recibidos: {{ \App\Support\Formato::pesos($ventas['abonos']) }}
+                    </p>
+                </div>
+            @endif
+        </x-tarjeta>
+
         <x-tarjeta titulo="Traslados" class="break-inside-avoid">
             @forelse ($traslados as $traslado)
                 <p class="border-t border-slate-100 py-2 first:border-t-0">

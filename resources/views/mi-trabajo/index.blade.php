@@ -73,6 +73,17 @@
         @endif
     </section>
 
+    @if ($creditosPescado->isNotEmpty())
+        <x-tarjeta titulo="Mi saldo de pescado" :subtitulo="'Debes '.\App\Support\Formato::pesos($creditosPescado->sum('saldo'))" class="mb-6">
+            @foreach ($creditosPescado as $credito)
+                <div class="flex justify-between gap-3 border-t border-slate-100 py-2.5 first:border-t-0 first:pt-0">
+                    <span>{{ $credito->fecha->format('d/m/Y') }} · {{ $numero($credito->kg) }} kg</span>
+                    <span class="font-semibold tabular-nums">{{ \App\Support\Formato::pesos($credito->saldo) }}</span>
+                </div>
+            @endforeach
+        </x-tarjeta>
+    @endif
+
     <div class="grid gap-6 md:grid-cols-2">
         <x-tarjeta titulo="Mis permisos">
             @forelse ($permisos as $permiso)

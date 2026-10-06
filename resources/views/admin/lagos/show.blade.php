@@ -70,12 +70,19 @@
                                 <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
                                 <p class="text-sm text-slate-500">Desde {{ $siembra->fecha->format('d/m/Y') }} · {{ $siembra->dias_cultivo }} días</p>
                             </div>
-                            @if ($esTecnico && $otrosLagos !== [])
-                                <x-boton tipo="button" variante="secundario" class="!px-3 !py-2 !text-sm" data-abrir-modal="modal-traslado-{{ $siembra->id }}">
+                        </div>
+
+                        @if ($esTecnico)
+                            <div class="grid grid-cols-2 gap-2 px-5 pb-4">
+                                <x-boton tipo="button" class="!px-2" data-abrir-modal="modal-cosecha-{{ $siembra->id }}" :disabled="$lago->tratamientosEnRetiro->isNotEmpty()"
+                                         :title="$lago->tratamientosEnRetiro->isNotEmpty() ? 'Lago en retiro sanitario' : null">
+                                    <x-icono nombre="pez" class="h-5 w-5" /> Cosechar
+                                </x-boton>
+                                <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-traslado-{{ $siembra->id }}" :disabled="$otrosLagos === []">
                                     <x-icono nombre="lagos" class="h-5 w-5" /> Trasladar
                                 </x-boton>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
 
                         <dl class="grid grid-cols-3 gap-px border-t border-slate-100 bg-slate-100 text-center">
                             <div class="bg-white p-3">
@@ -112,6 +119,29 @@
                                 <div class="grid grid-cols-2 gap-3 pt-2">
                                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
                                     <x-boton>Trasladar</x-boton>
+                                </div>
+                            </x-formulario>
+                        </x-modal>
+                    @endif
+
+                    @if ($esTecnico && $lago->tratamientosEnRetiro->isEmpty())
+                        <x-modal id="modal-cosecha-{{ $siembra->id }}" titulo="Cosechar {{ $siembra->nombre_especie }}">
+                            <x-formulario :action="route('admin.cosechas.store', $siembra)">
+                                <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
+                                    Si cosechas todos los peces, la siembra se cierra y el lago queda libre.
+                                </p>
+                                <x-campo nombre="fecha" id="cosecha-fecha-{{ $siembra->id }}" etiqueta="Fecha" tipo="date" :valor="now()->toDateString()" required />
+                                <div class="grid grid-cols-2 gap-4">
+                                    <x-campo nombre="peces" id="cosecha-peces-{{ $siembra->id }}" etiqueta="Peces" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
+                                             ayuda="Hay {{ $numero($siembra->peces_vivos) }}." />
+                                    <x-campo nombre="kg" id="cosecha-kg-{{ $siembra->id }}" etiqueta="Kg netos" tipo="number" step="0.01" min="0.1" inputmode="decimal" required
+                                             ayuda="Peso sin la tara de las canastas." />
+                                </div>
+                                <x-campo nombre="observaciones" id="cosecha-obs-{{ $siembra->id }}" etiqueta="Observaciones (opcional)" />
+
+                                <div class="grid grid-cols-2 gap-3 pt-2">
+                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>Cancelar</x-boton>
+                                    <x-boton>Registrar cosecha</x-boton>
                                 </div>
                             </x-formulario>
                         </x-modal>

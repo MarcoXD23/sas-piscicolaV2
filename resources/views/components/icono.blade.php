@@ -67,6 +67,9 @@
         @case('imprimir')
             <path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>
             @break
+        @case('dinero')
+            <rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01"/><path d="M18 15v.01"/>
+            @break
         @case('alerta')
             <circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5v.01"/>
             @break

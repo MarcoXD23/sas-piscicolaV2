@@ -188,13 +188,15 @@
             </p>
         </section>
 
-        <div @class(['mb-6 grid grid-cols-2 gap-4', 'lg:grid-cols-4' => $esPropietario, 'lg:grid-cols-3' => ! $esPropietario])>
+        <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             <x-indicador etiqueta="Peces vivos" :valor="$numero($pecesVivos)" />
             <x-indicador etiqueta="Lagos con siembra" :valor="$lagosActivos" />
             <x-indicador etiqueta="Mortalidad 30 días" :valor="$numero($mortalidad['muertos'])"
                          :unidad="'peces · '.str_replace('.', ',', (string) $mortalidad['porcentaje']).' %'" />
             @if ($esPropietario)
                 <x-indicador etiqueta="Alimento 30 días" :valor="$numero($alimento30, 1)" unidad="kg" />
+                <x-indicador etiqueta="Ventas del mes" :valor="\App\Support\Formato::pesos($ventasMes)" />
+                <x-indicador etiqueta="Por cobrar" :valor="\App\Support\Formato::pesos($cartera)" />
             @endif
         </div>
 

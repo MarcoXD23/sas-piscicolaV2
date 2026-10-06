@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Cosecha;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
 use App\Models\Mortalidad;
@@ -81,6 +82,10 @@ class HistorialLago
                     $sale ? "Traslado hacia {$t->lagoDestino->nombre}" : "Traslado desde {$t->lagoOrigen->nombre}",
                     "{$numero($t->cantidad)} peces de {$t->siembraOrigen->nombre_especie} ({$numero($t->biomasa_kg, 2)} kg)", $t->usuario?->name);
             });
+
+        $filtrar(Cosecha::where('lago_id', $lago->id)->with('usuario'), 'fecha')
+            ->each(fn (Cosecha $c) => $agregar($c->fecha, $c->created_at, 'pez', 'Cosecha', 'Cosecha · '.$siembras[$c->siembra_id]->nombre_especie,
+                "{$numero($c->peces)} peces, {$numero($c->kg, 2)} kg ({$numero($c->peso_promedio_g)} g en promedio)", $c->usuario?->name, 'positivo'));
 
         $filtrar(MedicionAgua::where('lago_id', $lago->id)->with('usuario'), 'medido_at')
             ->each(fn (MedicionAgua $m) => $agregar($m->medido_at, $m->medido_at, 'reloj', 'Calidad del agua', 'Calidad del agua · '.$m->medido_at->format('H:i'),

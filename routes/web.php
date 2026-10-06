@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\BodegaController;
+use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Admin\TareaController;
 use App\Http\Controllers\Admin\TrasladoController;
 use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
+use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
@@ -56,6 +58,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/agenda/{evento}/completar', [AgendaController::class, 'completar'])->name('agenda.completar');
         Route::delete('/agenda/{evento}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 
+        Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
+        Route::post('/ventas/{venta}/abonos', [VentaController::class, 'abonar'])->name('ventas.abonar');
+
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
     });
@@ -66,6 +72,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
+        Route::post('/siembras/{siembra}/cosechas', [CosechaController::class, 'store'])->name('cosechas.store');
         Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
 

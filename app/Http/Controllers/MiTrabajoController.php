@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\HoraExtra;
 use App\Models\Permiso;
 use App\Models\Tarea;
+use App\Models\Venta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,8 @@ class MiTrabajoController extends Controller
             'horasAprobadasMes' => (float) HoraExtra::query()->where('user_id', $usuario->id)->aprobadas()
                 ->whereBetween('fecha', [today()->startOfMonth(), today()->endOfMonth()])->sum('horas'),
             'enTurno' => $usuario->turnos()->enCurso()->exists(),
+            // Pescado que la persona compró a crédito y aún debe
+            'creditosPescado' => Venta::query()->where('comprador_id', $usuario->id)->conSaldo()->orderBy('fecha')->get(),
         ]);
     }
 

@@ -10,6 +10,7 @@ use App\Models\Rol;
 use App\Models\Ronda;
 use App\Models\Tarea;
 use App\Models\Turno;
+use App\Models\Venta;
 use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\Indicadores;
@@ -66,6 +67,9 @@ class InicioController extends Controller
             // Consumo de alimento: parte del dashboard ejecutivo (la bodega es del propietario)
             'alimento30' => $esPropietario ? Indicadores::alimentoReciente() : null,
             'alimentoDiario' => $esPropietario ? Indicadores::alimentoDiario() : collect(),
+            // Dinero: solo en el panel ejecutivo
+            'ventasMes' => $esPropietario ? (int) Venta::where('fecha', '>=', today()->startOfMonth())->sum('total') : null,
+            'cartera' => $esPropietario ? (int) Venta::conSaldo()->sum('saldo') : null,
         ]);
     }
 

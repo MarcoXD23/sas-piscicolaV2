@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Abono;
+use App\Models\Cosecha;
 use App\Models\HoraExtra;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
@@ -15,6 +17,7 @@ use App\Models\Siembra;
 use App\Models\Tarea;
 use App\Models\Traslado;
 use App\Models\Tratamiento;
+use App\Models\Venta;
 use App\Support\HistorialLago;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -68,6 +71,16 @@ class ReporteController extends Controller
             // Las entradas a bodega son información del propietario
             'entradasBodega' => $request->user()->tieneRol(Rol::PROPIETARIO)
                 ? $enMes(MovimientoAlimento::where('tipo_movimiento', 'entrada'))->orderBy('fecha')->get()
+                : null,
+            'cosechas' => $enMes(Cosecha::query()->with(['lago', 'siembra']))->orderBy('fecha')->get(),
+            // Las ventas (dinero) son información del propietario
+            'ventas' => $request->user()->tieneRol(Rol::PROPIETARIO)
+                ? [
+                    'total' => (int) $enMes(Venta::query())->sum('total'),
+                    'kg' => (float) $enMes(Venta::query())->sum('kg'),
+                    'a_credito' => (int) $enMes(Venta::where('forma_pago', 'credito'))->sum('total'),
+                    'abonos' => (int) $enMes(Abono::query())->sum('valor'),
+                ]
                 : null,
             'traslados' => $enMes(Traslado::query()->with(['lagoOrigen', 'lagoDestino', 'siembraOrigen']))->orderBy('fecha')->get(),
             'tratamientos' => $enMes(Tratamiento::query()->with('lago'), 'fecha_inicio')->orderBy('fecha_inicio')->get(),
