@@ -1,6 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\BodegaController;
+use App\Http\Controllers\Admin\LagoController;
+use App\Http\Controllers\Admin\MortalidadController;
+use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\PersonalController;
+use App\Http\Controllers\Admin\RacionController;
+use App\Http\Controllers\Admin\SiembraController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\InicioController;
@@ -23,21 +29,21 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::put('/personal/{usuario}', [PersonalController::class, 'update'])
             ->whereNumber('usuario')
             ->name('personal.update');
-            
-        Route::get('/bodega', [\App\Http\Controllers\Admin\BodegaController::class, 'index'])->name('bodega.index');
-        Route::post('/bodega', [\App\Http\Controllers\Admin\BodegaController::class, 'store'])->name('bodega.store');
+
+        Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
+        Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
     });
 
     Route::middleware('rol:propietario,administrador')->prefix('admin')->name('admin.')->group(function () {
-        Route::post('/lagos', [\App\Http\Controllers\Admin\LagoController::class, 'store'])->name('lagos.store');
-        Route::post('/lagos/{lago}/siembras', [\App\Http\Controllers\Admin\SiembraController::class, 'store'])->name('siembras.store');
-        Route::post('/siembras/{siembra}/muestreos', [\App\Http\Controllers\Admin\MuestreoController::class, 'store'])->name('muestreos.store');
+        Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
+        Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
+        Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/lagos', [\App\Http\Controllers\Admin\LagoController::class, 'index'])->name('lagos.index');
-        Route::post('/siembras/{siembra}/mortalidades', [\App\Http\Controllers\Admin\MortalidadController::class, 'store'])->name('mortalidades.store');
-        Route::post('/lagos/{lago}/raciones', [\App\Http\Controllers\Admin\RacionController::class, 'store'])->name('raciones.store');
+        Route::get('/lagos', [LagoController::class, 'index'])->name('lagos.index');
+        Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
+        Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
     });
 });
 
