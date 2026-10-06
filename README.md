@@ -33,7 +33,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Seguridad & Noche | `/noche` | Rondas con o sin novedad, encendido de aireadores y oxígeno nocturno. |
 | Agenda | `/admin/agenda` | Calendario de la finca con recordatorios; muestra retiros sanitarios y permisos aprobados. |
 | Reportes | `/admin/reportes` | Informe mensual y libro de campo por lago (imprimibles o PDF desde el navegador). |
-| Asistente IA | botón flotante | Preguntas sobre la finca con Claude; solo usa los datos que el rol puede ver. |
+| Asistente IA | botón flotante | Preguntas sobre la finca con Claude o Gemini; solo usa los datos que el rol puede ver. |
 
 Todo movimiento de stock, peces, biomasa o dinero se hace en una transacción y queda como registro histórico (nunca se sobrescribe solo un saldo).
 
@@ -62,8 +62,23 @@ Edita `.env`:
 | Variable | Para qué |
 |---|---|
 | `DB_*` | Tu PostgreSQL. La base por defecto es `sas_piscicola_v2`. |
-| `ANTHROPIC_API_KEY` | Clave de [console.anthropic.com](https://console.anthropic.com) para el asistente IA. Sin clave, el asistente aparece como "no configurado". |
+| `ASISTENTE_PROVEEDOR` | Proveedor del asistente IA: `claude` o `gemini`. Vacío = `claude`. |
+| `ANTHROPIC_API_KEY` | Clave de Claude, en [console.anthropic.com](https://console.anthropic.com). |
 | `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5`. |
+| `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
+| `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash`. |
+
+### Asistente IA: elegir proveedor
+
+El asistente funciona con **Claude** (Anthropic) o con **Gemini** (Google). Las dos opciones usan las mismas instrucciones y los mismos datos de la finca, filtrados por rol, y se llaman siempre desde el servidor: la clave vive solo en el `.env` y nunca llega al navegador.
+
+1. Pon `ASISTENTE_PROVEEDOR=claude` o `ASISTENTE_PROVEEDOR=gemini`.
+2. Pon la clave del proveedor elegido (`ANTHROPIC_API_KEY` o `GEMINI_API_KEY`). Si falta, el asistente aparece como "no configurado".
+3. Si cambiaste el `.env` con la configuración en caché, ejecuta `php artisan config:clear`.
+
+Gemini tiene un nivel gratuito: la clave se saca en [aistudio.google.com](https://aistudio.google.com).
+
+> **Advertencia sobre el nivel gratuito de Gemini:** según las condiciones de Google, en el nivel gratuito lo que envías **puede usarse para mejorar sus productos y modelos**. Cada pregunta al asistente envía datos de la finca (lagos, producción y, para el propietario, bodega y ventas). **No uses el nivel gratuito si manejas datos de clientes o información que no deba compartirse**; para eso usa el nivel de pago de Gemini o Claude.
 
 Luego:
 
@@ -92,7 +107,7 @@ Las contraseñas de los usuarios demo se generan al azar y se muestran una sola 
 
 ## Pruebas
 
-Corren contra PostgreSQL real, en la base `sas_piscicola_v2_test`, con `RefreshDatabase`; nunca con tablas en memoria ni sobre `sas_piscicola_v2`. El asistente se prueba con un doble: las pruebas no llaman a la API de Anthropic.
+Corren contra PostgreSQL real, en la base `sas_piscicola_v2_test`, con `RefreshDatabase`; nunca con tablas en memoria ni sobre `sas_piscicola_v2`. El asistente se prueba con un doble (Claude) y con `Http::fake()` (Gemini): las pruebas nunca llaman a las APIs reales.
 
 ```bash
 createdb sas_piscicola_v2_test

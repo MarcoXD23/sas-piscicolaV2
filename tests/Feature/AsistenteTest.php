@@ -185,6 +185,11 @@ class AsistenteTest extends TestCase
 
         $this->assertStringContainsString('no lo inventes', $instrucciones);
         $this->assertStringContainsString('Pseudoplatystoma magdaleniatum', $instrucciones);
+        // No asume país ni normativa: remite a la autoridad del país del usuario
+        $this->assertStringNotContainsString('Tolima', $instrucciones);
+        $this->assertStringNotContainsString('Colombia', $instrucciones);
+        $this->assertStringContainsString('No asumas el país', $instrucciones);
+        $this->assertStringContainsString('autoridad sanitaria o agropecuaria de su país', $instrucciones);
         // Las instrucciones no cambian entre preguntas (prefijo cacheable)
         $this->assertSame($instrucciones, ContextoFinca::instrucciones());
     }

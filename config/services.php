@@ -28,10 +28,19 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    // Asistente IA (Claude). Sin clave, el widget se muestra como "no configurado".
+    // Asistente IA. Proveedor: claude (por defecto) o gemini. Sin clave, el widget se muestra como "no configurado".
+    'asistente' => [
+        'proveedor' => env('ASISTENTE_PROVEEDOR') ?: 'claude',
+    ],
+
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         'modelo' => env('ANTHROPIC_MODEL') ?: 'claude-opus-5-5',
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'modelo' => env('GEMINI_MODEL') ?: 'gemini-3.8-flash',
     ],
 
     'slack' => [
