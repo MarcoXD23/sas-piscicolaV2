@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
             return match ($proveedor) {
                 'claude' => new ClaudeAsistente(config('services.anthropic.key'), config('services.anthropic.modelo')),
-                'gemini' => new GeminiAsistente(config('services.gemini.key'), config('services.gemini.modelo')),
+                'gemini' => new GeminiAsistente(config('services.gemini.key'), config('services.gemini.modelo'), config('services.gemini.modelo_respaldo')),
                 default => $this->proveedorDesconocido((string) $proveedor),
             };
         });

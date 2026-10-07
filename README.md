@@ -80,6 +80,7 @@ Edita `.env`:
 | `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5`. |
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash`. |
+| `GEMINI_MODEL_RESPALDO` | Opcional. Modelo que se prueba una vez si el principal sigue respondiendo 500 o 503 después de 2 reintentos (1 s y 3 s). Vacío = sin respaldo. |
 | `MAIL_*` | Correo saliente (recuperar contraseña). Vacío = los correos se escriben en `storage/logs/laravel.log`. |
 
 ### Asistente IA: elegir proveedor
