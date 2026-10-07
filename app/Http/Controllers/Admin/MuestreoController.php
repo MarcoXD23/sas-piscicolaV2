@@ -19,8 +19,8 @@ class MuestreoController extends Controller
     {
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
-            'peces_pesados' => ['required', 'integer', 'min:1'],
-            'peso_total_g' => ['required', 'numeric', 'min:0.1'],
+            'peces_pesados' => ['required', 'integer', 'min:1', 'max:100000'],
+            'peso_total_g' => ['required', 'numeric', 'min:0.1', 'max:999999'],
         ]);
 
         $resultado = DB::transaction(function () use ($datos, $siembra, $request) {

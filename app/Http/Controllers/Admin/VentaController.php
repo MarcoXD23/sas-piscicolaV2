@@ -52,7 +52,7 @@ class VentaController extends Controller
             'comprador_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('tenant_id', $tenant)->whereNotNull('aprobado_at')],
             'cliente' => ['nullable', 'string', 'max:255', 'required_without:comprador_id'],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
-            'kg' => ['required', 'numeric', 'min:0.1'],
+            'kg' => ['required', 'numeric', 'min:0.1', 'max:100000'],
             'precio_kg' => ['required', 'integer', 'min:1', 'max:10000000'],
             'forma_pago' => ['required', Rule::in(Venta::FORMAS_PAGO)],
         ], [
@@ -108,7 +108,7 @@ class VentaController extends Controller
     {
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
-            'valor' => ['required', 'integer', 'min:1'],
+            'valor' => ['required', 'integer', 'min:1', 'max:100000000000'],
             'medio' => ['required', Rule::in(Abono::MEDIOS)],
             'observaciones' => ['nullable', 'string', 'max:255'],
         ], [

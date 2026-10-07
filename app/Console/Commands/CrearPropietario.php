@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Rol;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Rules\NoIgualAlCorreo;
 use App\Support\Region;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class CrearPropietario extends Command
             'zona_horaria' => ['required', Rule::in(Region::zonasValidas())],
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'clave' => ['required', 'confirmed', Password::min(8)],
+            'clave' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($correo)],
         ], [
             'zona_horaria.in' => __('comandos.crear_propietario.zona_invalida'),
         ]);

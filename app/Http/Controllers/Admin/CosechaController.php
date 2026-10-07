@@ -21,11 +21,14 @@ class CosechaController extends Controller
 {
     public const MAX_CANASTAS = 200;
 
+    /** Peso promedio máximo por pez (g) que se acepta en una cosecha. */
+    public const PESO_MAXIMO_PEZ_G = 20000;
+
     public function store(Request $request, Siembra $siembra): RedirectResponse
     {
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
-            'peces' => ['required', 'integer', 'min:1'],
+            'peces' => ['required', 'integer', 'min:1', 'max:10000000'],
             // Dos modos: total neto (kg) o canastas (tara común + peso bruto de cada canasta)
             'kg' => ['nullable', 'required_without:pesajes', 'numeric', 'min:0.1', 'max:9999999'],
             'pesajes' => ['nullable', 'array', 'min:1', 'max:'.self::MAX_CANASTAS],
@@ -70,6 +73,11 @@ class CosechaController extends Controller
 
             // Con canastas, el total lo calcula el servidor (no se confía en un total enviado por el navegador)
             $kg = $canastas !== [] ? round(array_sum(array_column($canastas, 'neto_kg')), 2) : round((float) $datos['kg'], 2);
+            // Peso promedio por pez realista (y dentro de la columna): evita un error 500 con kg desproporcionados
+            if ($kg * 1000 / $peces > self::PESO_MAXIMO_PEZ_G) {
+                throw ValidationException::withMessages(['kg' => __('mensajes.cosecha.peso_promedio_irreal', ['gramos' => Formato::numero($kg * 1000 / $peces), 'maximo' => Formato::numero(self::PESO_MAXIMO_PEZ_G)])]);
+            }
+
             $cosecha = Cosecha::create([
                 'siembra_id' => $bloqueada->id,
                 'lago_id' => $bloqueada->lago_id,

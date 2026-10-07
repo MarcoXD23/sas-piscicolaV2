@@ -67,7 +67,7 @@ class BodegaController extends Controller
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'proveedor' => ['required', 'string', 'max:255'],
             'tipo_concentrado' => ['required', 'string', 'max:255'],
-            'bultos' => ['required', 'integer', 'min:1'],
+            'bultos' => ['required', 'integer', 'min:1', 'max:10000'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
             'lote' => ['required', 'string', 'max:255'],
         ]);
@@ -96,7 +96,7 @@ class BodegaController extends Controller
             'tipo_concentrado' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
             'proveedor' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
             'lote' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
-            'bultos' => ['required', 'integer', 'min:1'],
+            'bultos' => ['required', 'integer', 'min:1', 'max:10000'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
         ], [
             'despacho_id.exists' => __('mensajes.bodega.despacho_no_existe'),

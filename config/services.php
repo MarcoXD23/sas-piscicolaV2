@@ -31,6 +31,9 @@ return [
     // Asistente IA. Proveedor: claude (por defecto) o gemini. Sin clave, el widget se muestra como "no configurado".
     'asistente' => [
         'proveedor' => env('ASISTENTE_PROVEEDOR') ?: 'claude',
+        // Cada pregunta cuesta dinero: además del límite por minuto hay topes diarios
+        'limite_diario_persona' => (int) (env('ASISTENTE_LIMITE_DIARIO_PERSONA') ?: 100),
+        'limite_diario_finca' => (int) (env('ASISTENTE_LIMITE_DIARIO_FINCA') ?: 500),
     ],
 
     'anthropic' => [

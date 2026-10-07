@@ -39,10 +39,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:ingreso');
 
     Route::get('/registro', [RegistroController::class, 'create'])->name('registro');
-    Route::post('/registro', [RegistroController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/registro', [RegistroController::class, 'store'])->middleware('throttle:registro');
 
     Route::get('/olvide-contrasena', [RecuperarContrasenaController::class, 'create'])->name('password.request');
     Route::post('/olvide-contrasena', [RecuperarContrasenaController::class, 'store'])->middleware('throttle:pedir-enlace-contrasena')->name('password.email');
@@ -181,7 +181,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 Route::prefix('plataforma')->name('plataforma.')->group(function () {
     Route::middleware('guest:plataforma')->group(function () {
         Route::get('/login', [PlataformaLoginController::class, 'create'])->name('login');
-        Route::post('/login', [PlataformaLoginController::class, 'store'])->middleware('throttle:5,1');
+        Route::post('/login', [PlataformaLoginController::class, 'store'])->middleware('throttle:ingreso-plataforma');
     });
 
     Route::middleware('auth:plataforma')->group(function () {

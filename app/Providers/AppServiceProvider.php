@@ -86,8 +86,43 @@ class AppServiceProvider extends ServiceProvider
             $modelo::deleted($evaluar);
         }
 
-        // Cada pregunta al asistente cuesta dinero: máximo 10 por minuto por persona
-        RateLimiter::for('asistente', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id));
+        // Publicar con APP_DEBUG activo mostraría SQL, rutas y configuración en cada error
+        if ($this->app->isProduction() && config('app.debug')) {
+            Log::critical('Seguridad: APP_DEBUG está activo en producción. Ponlo en false en el .env.');
+        }
+
+        // Con HTTPS (directo o detrás de un proxy de confianza) la cookie de sesión se marca segura sola
+        if (! is_bool(config('session.secure')) && $this->app->bound('request') && request()->isSecure()) {
+            config(['session.secure' => true]);
+        }
+
+        $this->limitesDeIntentos();
+    }
+
+    /**
+     * Límites de intentos con nombre: cada formulario tiene su propio contador (un límite sin nombre
+     * comparte el contador de la IP entre todas las rutas, y en la finca todos salen por la misma IP).
+     */
+    private function limitesDeIntentos(): void
+    {
+        $correo = fn (Request $request) => mb_strtolower(trim((string) $request->input('email')));
+
+        // Ingreso (web y API): 5 por minuto por correo, aunque cambie la IP, y 20 por minuto por IP
+        foreach (['ingreso', 'ingreso-api', 'ingreso-plataforma'] as $nombre) {
+            RateLimiter::for($nombre, fn (Request $request) => [
+                Limit::perMinute(5)->by('correo|'.$correo($request)),
+                Limit::perMinute(20)->by('ip|'.$request->ip()),
+            ]);
+        }
+
+        RateLimiter::for('registro', fn (Request $request) => Limit::perMinute(10)->by('registro|'.$request->ip()));
+
+        // Cada pregunta al asistente cuesta dinero: 10 por minuto por persona y topes diarios por persona y por finca
+        RateLimiter::for('asistente', fn (Request $request) => [
+            Limit::perMinute(10)->by('minuto|'.$request->user()?->id),
+            Limit::perDay(config('services.asistente.limite_diario_persona'))->by('persona|'.$request->user()?->id),
+            Limit::perDay(config('services.asistente.limite_diario_finca'))->by('finca|'.$request->user()?->tenant_id),
+        ]);
 
         // Recuperar contraseña: 5 intentos por minuto por IP, con un contador aparte para pedir enlaces y para restablecer
         RateLimiter::for('pedir-enlace-contrasena', fn (Request $request) => Limit::perMinute(5)->by('enlace|'.$request->ip()));

@@ -1,9 +1,5 @@
 <?php
 
-/*
-| Textos de los comandos de consola.
-*/
-
 return [
     'crear_admin_plataforma' => [
         'descripcion' => 'Crea el acceso al panel de plataforma (dueño del software; pide la contraseña)',
@@ -30,5 +26,12 @@ return [
     'evaluar_alertas' => [
         'descripcion' => 'Revisa las alertas de todas las fincas activas (se programa cada hora)',
         'listo' => 'Alertas revisadas en :fincas finca(s).',
+    ],
+    'usuario_base' => [
+        'descripcion' => 'Imprime el SQL para usar dos roles de PostgreSQL (dueño para migraciones y uno de la app sin cambiar estructura) en lugar de un superusuario. No ejecuta nada.',
+        'nombres_invalidos' => 'Los nombres de los roles deben ser distintos y usar solo minúsculas, números y guion bajo.',
+        'hoy_superusuario' => 'Hoy la app se conecta como «:rol», que es SUPERUSUARIO. En producción usa los roles de abajo.',
+        'hoy_normal' => 'Hoy la app se conecta como «:rol» (no es superusuario).',
+        'como_ejecutar' => 'Guarda el SQL en un archivo y córrelo como superusuario: psql -U postgres -d :base -v clave_dueno=\'...\' -v clave_app=\'...\' -f roles.sql. Luego: migraciones con :dueno y la app (DB_USERNAME en el .env) con :app. Ver README, «Despliegue».',
     ],
 ];

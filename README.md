@@ -198,6 +198,24 @@ php artisan db:seed --class=DemoPiscicolaSeeder
 
 Las contraseñas de los usuarios demo se generan al azar y se muestran una sola vez en la consola.
 
+## Seguridad y notas para el despliegue (Fase 25)
+
+Resultado de la auditoría de la Fase 24 (ya aplicado):
+
+- **Cabeceras** en todas las respuestas: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy: camera=(self), microphone=(), geolocation=()` y HSTS solo con HTTPS.
+- **Límites de intentos con contador propio**: ingreso (5 por minuto por correo y 20 por IP), registro, API y panel de plataforma. Una persona bloqueada no bloquea a las demás de la misma red.
+- **Registro** con un mensaje único para código de finca inexistente o correo ya registrado (con enlace a «¿Olvidaste tu contraseña?»). La contraseña no puede ser el correo.
+- **Topes numéricos** en todos los formularios (un valor enorme recibe un mensaje y no un error 500).
+- **Tokens de la API** que vencen (`SANCTUM_TOKEN_MINUTOS`, 30 días por defecto) y **topes diarios del asistente** (`ASISTENTE_LIMITE_DIARIO_PERSONA` y `ASISTENTE_LIMITE_DIARIO_FINCA`).
+- Pruebas generales de aislamiento: todos los modelos de finca y todas las rutas con ids (`AislamientoFincasTest`).
+
+Pendiente para publicar (Fase 25):
+
+1. **`.env` de producción**: `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=warning` (así viene `.env.example`). Si se publica con `APP_DEBUG=true`, la app lo registra como alerta crítica en el log.
+2. **Usuario de base de datos sin superusuario**: `php artisan piscicola:usuario-base` imprime el SQL (no lo ejecuta) para dos roles: `sas_piscicola_dueno`, dueño de las tablas y solo para migraciones, y `sas_piscicola_app`, con el que se conecta la app, con solo `SELECT, INSERT, UPDATE, DELETE`, sin cambiar la estructura y sin `UPDATE, DELETE, TRUNCATE` sobre la bitácora. Las contraseñas se pasan a `psql` como variables (`-v clave_dueno=... -v clave_app=...`). Las migraciones se corren con el dueño y el `.env` de la app usa el rol de la app.
+3. **HTTPS detrás de Nginx o Cloudflare**: configurar los **proxies de confianza** (`$middleware->trustProxies(at: [...])` en `bootstrap/app.php`, con las IPs del proxy o los rangos de Cloudflare) para que Laravel sepa que la petición llegó por HTTPS. Así se activan la cookie segura (o `SESSION_SECURE_COOKIE=true`), HSTS y las URLs `https`.
+4. **Correo**: en producción configura `MAIL_*`. Con `MAIL_MAILER` vacío los correos, incluidos los enlaces de recuperación de contraseña, quedan escritos en `storage/logs/laravel.log`.
+
 ## Pruebas
 
 Corren contra PostgreSQL real, en la base `sas_piscicola_v2_test`, con `RefreshDatabase`; nunca con tablas en memoria ni sobre `sas_piscicola_v2`. El asistente se prueba con un doble (Claude) y con `Http::fake()` (Gemini): las pruebas nunca llaman a las APIs reales.

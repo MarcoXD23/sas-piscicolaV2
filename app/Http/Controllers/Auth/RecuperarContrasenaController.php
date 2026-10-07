@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\NoIgualAlCorreo;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,7 +45,7 @@ class RecuperarContrasenaController extends Controller
         $datos = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'confirmed', ReglaContrasena::min(8)],
+            'password' => ['required', 'confirmed', ReglaContrasena::min(8), new NoIgualAlCorreo($request->input('email'))],
         ]);
 
         $estado = Password::reset(

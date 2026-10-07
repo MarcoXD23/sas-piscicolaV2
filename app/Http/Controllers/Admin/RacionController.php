@@ -22,7 +22,7 @@ class RacionController extends Controller
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'tipo_concentrado' => ['required', 'string', 'max:255'],
-            'cantidad_kg' => ['required', 'numeric', 'min:0.1'],
+            'cantidad_kg' => ['required', 'numeric', 'min:0.1', 'max:100000'],
         ]);
 
         if (! $lago->siembrasActivas()->exists()) {

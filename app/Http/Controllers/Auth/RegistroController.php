@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Rules\NoIgualAlCorreo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -24,15 +26,18 @@ class RegistroController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $datos = $request->validate([
-            'codigo_finca' => ['required', 'string', 'exists:tenants,codigo'],
+            'codigo_finca' => ['required', 'string', 'max:60'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ], [
-            'codigo_finca.exists' => __('mensajes.registro.no_existe_finca_ese_codigo'),
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($request->input('email'))],
         ]);
 
-        $tenant = Tenant::query()->where('codigo', $datos['codigo_finca'])->firstOrFail();
+        // Un solo mensaje para «código inexistente» y «correo ya registrado»: no revela qué fincas ni qué correos existen
+        $tenant = Tenant::query()->where('codigo', $datos['codigo_finca'])->first();
+        $correoUsado = User::withoutGlobalScopes()->whereRaw('LOWER(email) = ?', [mb_strtolower($datos['email'])])->exists();
+        if ($tenant === null || $correoUsado) {
+            throw ValidationException::withMessages(['registro' => __('mensajes.registro.no_se_pudo')]);
+        }
 
         $usuario = new User([
             'name' => $datos['name'],

@@ -27,8 +27,8 @@ class TrasladoController extends Controller
         $datos = $request->validate([
             'lago_destino_id' => ['required', 'integer', Rule::exists('lagos', 'id')->where('tenant_id', $request->user()->tenant_id)],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
-            'cantidad' => ['required', 'integer', 'min:1'],
-            'peso_promedio_g' => ['required', 'numeric', 'min:0.1'],
+            'cantidad' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'peso_promedio_g' => ['required', 'numeric', 'min:0.1', 'max:20000'],
             'observaciones' => ['nullable', 'string', 'max:500'],
         ], [
             'lago_destino_id.required' => __('mensajes.traslado.elige_lago_destino'),

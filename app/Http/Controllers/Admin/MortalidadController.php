@@ -19,7 +19,7 @@ class MortalidadController extends Controller
     {
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
-            'cantidad' => ['required', 'integer', 'min:1'],
+            'cantidad' => ['required', 'integer', 'min:1', 'max:10000000'],
         ]);
 
         DB::transaction(function () use ($datos, $siembra, $request) {

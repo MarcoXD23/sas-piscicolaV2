@@ -79,7 +79,7 @@ class LoginWebTest extends TestCase
             'email' => 'persona@example.test',
             'password' => 'clave-segura-123',
             'password_confirmation' => 'clave-segura-123',
-        ])->assertSessionHasErrors('codigo_finca');
+        ])->assertSessionHasErrors(['registro' => __('mensajes.registro.no_se_pudo')]);   // mensaje genérico: no revela qué códigos existen
 
         $this->assertDatabaseCount('users', 0);
     }
@@ -93,4 +93,3 @@ class LoginWebTest extends TestCase
         $this->assertGuest();
     }
 }
-

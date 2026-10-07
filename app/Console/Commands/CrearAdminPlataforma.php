@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AdministradorPlataforma;
+use App\Rules\NoIgualAlCorreo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -32,7 +33,7 @@ class CrearAdminPlataforma extends Command
         $validador = Validator::make($datos, [
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'email', 'max:255', 'unique:administradores_plataforma,email'],
-            'clave' => ['required', 'confirmed', Password::min(12)],
+            'clave' => ['required', 'confirmed', Password::min(12), new NoIgualAlCorreo($datos['correo'])],
         ]);
 
         if ($validador->fails()) {

@@ -23,8 +23,8 @@ class SiembraController extends Controller
             'proveedor_alevinos' => ['nullable', 'string', 'max:255'],
             'lote_alevinos' => ['nullable', 'string', 'max:100'],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
-            'cantidad_alevinos' => ['required', 'integer', 'min:1'],
-            'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1'],
+            'cantidad_alevinos' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1', 'max:20000'],
         ]);
 
         DB::transaction(function () use ($lago, $datos) {

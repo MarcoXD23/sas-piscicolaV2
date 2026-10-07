@@ -10,6 +10,12 @@
     </div>
 
     <x-tarjeta>
+        @error('registro')
+            <div role="alert" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800">
+                <p>{{ $message }}</p>
+                <a href="{{ route('password.request') }}" class="mt-1 inline-flex min-h-11 items-center font-semibold underline underline-offset-2">{{ __('acceso.recuperar.enlace_login') }}</a>
+            </div>
+        @enderror
         <x-formulario :action="route('registro')">
             <x-campo nombre="codigo_finca" :etiqueta="__('acceso.codigo_finca')" autocomplete="off" autocapitalize="none" required
                      :ayuda="__('acceso.pideselo_propietario_finca')" />

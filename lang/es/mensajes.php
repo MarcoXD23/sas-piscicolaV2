@@ -49,6 +49,9 @@ return [
     'comun' => [
         'solo_hay_peces' => 'Solo hay :cantidad peces vivos en esta siembra.',
     ],
+    'contrasena' => [
+        'igual_al_correo' => 'La contraseña no puede ser igual a tu correo.',
+    ],
     'cosecha' => [
         'canasta_bajo_tara' => 'La canasta :numero pesa igual o menos que la tara: revisa el peso.',
         'cosecha_menos_pez' => 'Cosecha al menos un pez.',
@@ -60,6 +63,7 @@ return [
         'lago_en_retiro' => 'El lago está en retiro sanitario hasta el :fecha por el tratamiento con :producto: no se puede cosechar.',
         'maximo_canastas' => 'Máximo :maximo canastas por cosecha.',
         'peso_cada_canasta_debe_ser' => 'El peso de cada canasta debe ser un número.',
+        'peso_promedio_irreal' => 'Con esos kilos cada pez pesaría :gramos g en promedio (el máximo es :maximo g). Revisa los kilos o la cantidad de peces.',
         'registra_peso_cosechado' => 'Registra el peso cosechado.',
         'registra_peso_neto_peso_cada' => 'Registra el peso neto o el peso de cada canasta.',
         'registrada' => ':kg kg cosechados (:peces peces de :gramos g en promedio).',
@@ -132,7 +136,7 @@ return [
         'stock_insuficiente' => 'Solo hay :kg kg de :concentrado recibidos. El administrador debe registrar la recepción.',
     ],
     'registro' => [
-        'no_existe_finca_ese_codigo' => 'No existe una finca con ese código.',
+        'no_se_pudo' => 'No pudimos enviar la solicitud con esos datos. Revisa el código de la finca con el propietario. Si ya tienes una cuenta con ese correo, recupera tu contraseña.',
         'solicitud_enviada_propietario_finca_debe' => 'Solicitud enviada. El propietario de la finca debe aprobar tu cuenta.',
     ],
     'ronda' => [

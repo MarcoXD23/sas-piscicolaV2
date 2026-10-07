@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CabecerasSeguridad;
 use App\Http\Middleware\EstablecerTenant;
 use App\Http\Middleware\VerificarRol;
 use App\Http\Middleware\VerificarTurno;
@@ -17,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Cabeceras de seguridad en toda la app (web y API)
+        $middleware->append(CabecerasSeguridad::class);
+
         $middleware->alias([
             'tenant' => EstablecerTenant::class,
             'rol' => VerificarRol::class,
