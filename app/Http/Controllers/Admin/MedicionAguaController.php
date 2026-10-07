@@ -36,7 +36,7 @@ class MedicionAguaController extends Controller
         ]);
 
         $medicion = $lago->mediciones()->create($datos + ['user_id' => $request->user()->id]);
-        $alertas = $medicion->alertas($lago->siembrasActivas()->pluck('especie'));
+        $alertas = $medicion->alertas($lago->siembrasActivas()->get()->pluck('especie'));
 
         // Se registra desde el detalle del lago o desde Seguridad & Noche: vuelve a la misma pantalla
         return back()->with('estado', $alertas === []

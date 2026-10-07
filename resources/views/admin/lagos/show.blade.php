@@ -122,6 +122,14 @@
                                              :valor="$siembra->peso_actual_g" required />
                                 </div>
                                 <x-campo nombre="observaciones" id="traslado-obs-{{ $siembra->id }}" :etiqueta="__('lagos.observaciones_opcional')" />
+                                {{-- Agua fría con cálida en el lago de destino: advertencia que se confirma --}}
+                                <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-base text-amber-900">
+                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-1 h-5 w-5 rounded border-amber-400">
+                                    <span>{{ __('lagos.confirmar_clima') }}</span>
+                                </label>
+                                @error('confirmar_clima')
+                                    <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+                                @enderror
 
                                 <div class="grid grid-cols-2 gap-3 pt-2">
                                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
@@ -199,6 +207,24 @@
                             </div>
                         @endforeach
                     </dl>
+                </x-tarjeta>
+            @endif
+
+            {{-- Especies sin tipo de alimentación: no hay ración sugerida, se registra a mano --}}
+            @if ($racion['sin_sugerencia'] !== [])
+                <p class="rounded-xl bg-amber-50 p-4 text-base text-amber-900" role="status">
+                    {{ __('lagos.racion_manual', ['especies' => implode(', ', $racion['sin_sugerencia'])]) }}
+                </p>
+            @endif
+
+            {{-- Avisos del rango común de agua (especies sin rangos o sin rango común) --}}
+            @if ($avisosRango !== [])
+                <x-tarjeta :titulo="__('lagos.rango.titulo')">
+                    <ul class="space-y-2 text-base text-amber-900">
+                        @foreach ($avisosRango as $aviso)
+                            <li>{{ $aviso }}</li>
+                        @endforeach
+                    </ul>
                 </x-tarjeta>
             @endif
 

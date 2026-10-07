@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\Especie;
 use App\Models\Turno;
 use App\Models\User;
 use App\Support\Region;
@@ -43,6 +44,12 @@ abstract class TestCase extends BaseTestCase
     }
 
     /** Crea un turno en curso (de 1 hora antes a 7 horas después de ahora) para el rol indicado. */
+    /** Id de una especie por defecto ('mojarra roja', 'cachama blanca'...) en el catálogo de la finca activa. */
+    protected function especie(string $clave): int
+    {
+        return Especie::deClave($clave)->id;
+    }
+
     protected function ponerEnTurno(User $usuario, string $rol): Turno
     {
         return Turno::create([

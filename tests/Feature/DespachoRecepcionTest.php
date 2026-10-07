@@ -148,7 +148,7 @@ class DespachoRecepcionTest extends TestCase
     public function test_la_racion_explica_por_que_se_bloquea_y_el_stock_nunca_queda_negativo(): void
     {
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
+        Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 100, 'peso_actual_g' => 100, 'biomasa_kg' => 10]);
         $racion = fn (float $kg) => $this->actingAs($this->administrador)->post(route('admin.raciones.store', $lago), ['fecha' => '2026-10-15', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => $kg]);
 
@@ -182,7 +182,7 @@ class DespachoRecepcionTest extends TestCase
     public function test_bitacora_conversion_y_alertas_de_stock_siguen_funcionando(): void
     {
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 10, 'biomasa_kg' => 10]);
 
         $despacho = $this->despachar(['bultos' => 3]);   // 120 kg

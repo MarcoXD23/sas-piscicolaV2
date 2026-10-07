@@ -52,7 +52,7 @@ class SinConexionTest extends TestCase
         $this->celador = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::CELADOR]);
         $this->trabajador = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::TRABAJADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(30),
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
 
         $this->turnoNoche = $this->turno($this->celador, Rol::CELADOR, '2026-10-07 22:00', '2026-10-08 06:00');

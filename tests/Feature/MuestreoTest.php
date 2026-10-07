@@ -26,7 +26,7 @@ class MuestreoTest extends TestCase
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $siembra = Siembra::create([
             'lago_id' => $lago->id,
-            'especie' => 'mojarra roja',
+            'especie_id' => $this->especie('mojarra roja'),
             'fecha' => now()->subDays(10),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,
@@ -66,7 +66,7 @@ class MuestreoTest extends TestCase
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $siembra = Siembra::create([
             'lago_id' => $lago->id,
-            'especie' => 'mojarra roja',
+            'especie_id' => $this->especie('mojarra roja'),
             'fecha' => now(),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,

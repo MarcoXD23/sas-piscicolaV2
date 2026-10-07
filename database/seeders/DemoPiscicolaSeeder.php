@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\Siembra;
@@ -52,7 +53,7 @@ class DemoPiscicolaSeeder extends Seeder
             $lago1 = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
             Siembra::create([
                 'lago_id' => $lago1->id,
-                'especie' => 'mojarra roja',
+                'especie_id' => Especie::deClave('mojarra roja')->id,
                 'fecha' => now()->subDays(45),
                 'cantidad_alevinos' => 10000,
                 'peso_promedio_inicial_g' => 5.0,
@@ -64,7 +65,7 @@ class DemoPiscicolaSeeder extends Seeder
             $lago2 = Lago::create(['nombre' => 'L02', 'tipo' => 'geomembrana']);
             Siembra::create([
                 'lago_id' => $lago2->id,
-                'especie' => 'cachama blanca',
+                'especie_id' => Especie::deClave('cachama blanca')->id,
                 'fecha' => now()->subDays(10),
                 'cantidad_alevinos' => 5000,
                 'peso_promedio_inicial_g' => 3.5,

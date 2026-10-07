@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\CatalogoEspecies;
+use App\Models\Especie;
 use Illuminate\View\View;
 
+/**
+ * Guía de especies: las especies del catálogo de ESTA finca (nunca una lista fija), con su ficha.
+ */
 class EspecieController extends Controller
 {
     public function index(): View
     {
-        return view('especies.index', ['especies' => CatalogoEspecies::todas()]);
+        return view('especies.index', [
+            'especies' => Especie::query()->activas()->orderBy('nombre')->get()->map(fn (Especie $especie) => $especie->ficha()),
+        ]);
     }
 
-    public function show(string $slug): View
+    public function show(Especie $especie): View
     {
-        $especie = CatalogoEspecies::porSlug($slug);
-        abort_if($especie === null, 404);
-
-        return view('especies.show', ['especie' => $especie]);
+        return view('especies.show', ['especie' => $especie->ficha()]);
     }
 }

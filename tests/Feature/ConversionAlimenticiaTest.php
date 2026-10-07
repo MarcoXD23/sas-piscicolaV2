@@ -44,7 +44,7 @@ class ConversionAlimenticiaTest extends TestCase
 
     private function sembrar(Lago $lago, int $peces, float $pesoG, string $fecha = '2026-09-01', string $especie = 'mojarra roja'): Siembra
     {
-        return Siembra::create(['lago_id' => $lago->id, 'especie' => $especie, 'fecha' => $fecha, 'cantidad_alevinos' => $peces,
+        return Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie($especie), 'fecha' => $fecha, 'cantidad_alevinos' => $peces,
             'peso_promedio_inicial_g' => $pesoG, 'peces_vivos' => $peces, 'peso_actual_g' => $pesoG, 'biomasa_kg' => $peces * $pesoG / 1000]);
     }
 

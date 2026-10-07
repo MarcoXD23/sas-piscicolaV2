@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
-use App\Support\CatalogoEspecies;
 use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +19,7 @@ class Siembra extends Model
 
     protected $fillable = [
         'lago_id',
-        'especie',
+        'especie_id',
         'proveedor_alevinos',
         'lote_alevinos',
         'fecha',
@@ -31,6 +30,9 @@ class Siembra extends Model
         'biomasa_kg',
         'finalizada_at',
     ];
+
+    /** La especie se usa en casi todas las pantallas (nombre, foto, rangos): siempre se carga. */
+    protected $with = ['especie'];
 
     protected function casts(): array
     {
@@ -43,6 +45,12 @@ class Siembra extends Model
     public function lago(): BelongsTo
     {
         return $this->belongsTo(Lago::class);
+    }
+
+    /** Especie del catálogo de la finca. */
+    public function especie(): BelongsTo
+    {
+        return $this->belongsTo(Especie::class);
     }
 
     public function muestreos(): HasMany
@@ -78,11 +86,11 @@ class Siembra extends Model
 
     protected function nombreEspecie(): Attribute
     {
-        return Attribute::get(fn () => CatalogoEspecies::nombre($this->especie));
+        return Attribute::get(fn () => (string) $this->especie?->nombre);
     }
 
     protected function fotoEspecie(): Attribute
     {
-        return Attribute::get(fn () => CatalogoEspecies::foto($this->especie));
+        return Attribute::get(fn () => $this->especie?->foto());
     }
 }

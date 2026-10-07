@@ -10,6 +10,7 @@ use App\Models\Bitacora;
 use App\Models\Concerns\PerteneceATenant;
 use App\Models\Cosecha;
 use App\Models\DespachoAlimento;
+use App\Models\Especie;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -57,7 +58,7 @@ class AislamientoFincasTest extends TestCase
         'lago' => Lago::class, 'siembra' => Siembra::class, 'aviso' => AvisoPesca::class, 'despacho' => DespachoAlimento::class,
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
-        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class,
+        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -101,9 +102,9 @@ class AislamientoFincasTest extends TestCase
         $persona = tap(User::factory()->create(['tenant_id' => $finca->id, 'name' => "Persona {$sufijo}"]))->asignarRoles([Rol::TRABAJADOR, Rol::CELADOR]);
         $lago = Lago::create(['nombre' => "Lago {$sufijo}", 'tipo' => 'tierra']);
         $otroLago = Lago::create(['nombre' => "Destino {$sufijo}", 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 200, 'biomasa_kg' => 200]);
-        $destino = Siembra::create(['lago_id' => $otroLago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-10-01', 'cantidad_alevinos' => 10,
+        $destino = Siembra::create(['lago_id' => $otroLago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-10-01', 'cantidad_alevinos' => 10,
             'peso_promedio_inicial_g' => 200, 'peces_vivos' => 10, 'peso_actual_g' => 200, 'biomasa_kg' => 2]);
         $cosecha = Cosecha::create(['siembra_id' => $siembra->id, 'lago_id' => $lago->id, 'user_id' => $persona->id, 'fecha' => '2026-10-10',
             'peces' => 10, 'kg' => 2, 'peso_promedio_g' => 200]);
@@ -136,6 +137,7 @@ class AislamientoFincasTest extends TestCase
             Muestreo::class => Muestreo::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'peces_pesados' => 1, 'peso_total_g' => 200, 'peso_promedio_g' => 200]),
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
+            Especie::class => Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
             RegistroSinConexion::class => RegistroSinConexion::create(['user_id' => $persona->id, 'uuid' => (string) Str::uuid(), 'ruta' => 'noche.rondas.store', 'registrado_at' => now()]),
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
             StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),

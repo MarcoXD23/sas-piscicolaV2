@@ -65,8 +65,8 @@ class ConversionAlimenticia
      */
     public function porEspecie(): Collection
     {
-        return Siembra::query()->get()->groupBy('especie')
-            ->map(function (Collection $siembras, string $especie) {
+        return Siembra::query()->get()->groupBy('especie_id')
+            ->map(function (Collection $siembras) {
                 $filas = $siembras->map(fn (Siembra $siembra) => $this->deSiembra($siembra))->all();
 
                 return ['especie' => $siembras->first()->nombre_especie, 'siembras' => $siembras->count()] + $this->sumar($filas);

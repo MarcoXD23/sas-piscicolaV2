@@ -64,7 +64,7 @@ class NominaTest extends TestCase
     private function credito(int $saldo, string $fecha): Venta
     {
         $lago = Lago::firstOrCreate(['nombre' => 'L01'], ['tipo' => 'tierra']);
-        $siembra = Siembra::firstOrCreate(['lago_id' => $lago->id], ['especie' => 'mojarra roja', 'fecha' => '2026-05-01',
+        $siembra = Siembra::firstOrCreate(['lago_id' => $lago->id], ['especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-05-01',
             'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 100, 'peso_actual_g' => 400, 'biomasa_kg' => 40]);
         $cosecha = Cosecha::create(['siembra_id' => $siembra->id, 'lago_id' => $lago->id, 'user_id' => $this->propietario->id,
             'fecha' => '2026-10-01', 'peces' => 50, 'kg' => 20, 'peso_promedio_g' => 400]);

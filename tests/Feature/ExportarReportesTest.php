@@ -47,7 +47,7 @@ class ExportarReportesTest extends TestCase
         app(TenantActual::class)->establecer($this->finca->id);
         $this->propietario = tap(User::factory()->create(['tenant_id' => $this->finca->id, 'name' => 'Marta']))->asignarRoles([Rol::PROPIETARIO]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-10-02', 'cantidad_alevinos' => 1500,
+        Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-10-02', 'cantidad_alevinos' => 1500,
             'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1500, 'peso_actual_g' => 5, 'biomasa_kg' => 7.5]);
         MovimientoAlimento::create(['user_id' => $this->propietario->id, 'lago_id' => $this->lago->id, 'fecha' => '2026-10-05', 'tipo_movimiento' => 'salida', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 12.5]);
         MovimientoAlimento::create(['user_id' => $this->propietario->id, 'lago_id' => null, 'fecha' => '2026-10-03', 'tipo_movimiento' => 'entrada', 'tipo_concentrado' => 'Engorde',

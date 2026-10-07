@@ -39,7 +39,7 @@ class DashboardsYReportesTest extends TestCase
         // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
         $this->propietario = tap($this->persona(Rol::PROPIETARIO))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'cachama blanca', 'fecha' => '2026-08-01',
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('cachama blanca'), 'fecha' => '2026-08-01',
             'proveedor_alevinos' => 'Estación piscícola X', 'lote_alevinos' => 'A-17',
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 900, 'peso_actual_g' => 200, 'biomasa_kg' => 180]);
     }
@@ -90,7 +90,7 @@ class DashboardsYReportesTest extends TestCase
     public function test_biomasa_por_lago_de_mayor_a_menor_sin_lagos_vacios(): void
     {
         $grande = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $grande->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01',
+        Siembra::create(['lago_id' => $grande->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01',
             'cantidad_alevinos' => 2000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 2000, 'peso_actual_g' => 150, 'biomasa_kg' => 300]);
         Lago::create(['nombre' => 'L03', 'tipo' => 'tierra']);
 

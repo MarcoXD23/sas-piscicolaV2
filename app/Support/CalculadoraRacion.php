@@ -36,7 +36,9 @@ class CalculadoraRacion
     public const FACTOR_REDUCCION = 0.5;
 
     /**
-     * @return array{filas: list<array<string, mixed>>, total_kg_dia: float, tomas: int, kg_por_toma: float, factor: float, motivos: list<string>}
+     * Las siembras cuya especie no tiene tipo de alimentación no tienen sugerencia: van en sin_sugerencia (ración manual).
+     *
+     * @return array{filas: list<array<string, mixed>>, total_kg_dia: float, tomas: int, kg_por_toma: float, factor: float, motivos: list<string>, sin_sugerencia: list<string>}
      */
     public static function paraLago(Lago $lago): array
     {
@@ -50,7 +52,8 @@ class CalculadoraRacion
         }
         $factor = $motivos === [] ? 1.0 : self::FACTOR_REDUCCION;
 
-        $filas = $siembras->map(fn (Siembra $siembra) => self::fila($siembra, $factor))->values()->all();
+        [$conPerfil, $sinPerfil] = $siembras->partition(fn (Siembra $siembra) => $siembra->especie?->alimentacion !== null);
+        $filas = $conPerfil->map(fn (Siembra $siembra) => self::fila($siembra, $factor))->values()->all();
         $total = round(array_sum(array_column($filas, 'kg_dia')), 1);
         $tomas = $filas === [] ? 0 : max(array_column($filas, 'tomas'));
 
@@ -61,13 +64,16 @@ class CalculadoraRacion
             'kg_por_toma' => $tomas > 0 ? round($total / $tomas, 1) : 0.0,
             'factor' => $factor,
             'motivos' => $motivos,
+            'sin_sugerencia' => $sinPerfil->pluck('nombre_especie')->unique()->values()->all(),
         ];
     }
 
-    /** @return array{0: float, 1: int} [% de biomasa al día, tomas al día] */
-    public static function porcentajeYTomas(string $especie, float $pesoPromedioG): array
+    /**
+     * @param  string  $perfil  Tipo de alimentación de la especie (calido, frio o detritivoro)
+     * @return array{0: float, 1: int} [% de biomasa al día, tomas al día]
+     */
+    public static function porcentajeYTomas(string $perfil, float $pesoPromedioG): array
     {
-        $perfil = CatalogoEspecies::ficha($especie)['alimentacion'] ?? 'calido';
 
         foreach (self::TABLAS[$perfil] as [$hasta, $porcentaje, $tomas]) {
             if ($pesoPromedioG <= $hasta) {
@@ -92,7 +98,7 @@ class CalculadoraRacion
     private static function fila(Siembra $siembra, float $factor): array
     {
         $peso = (float) $siembra->peso_actual_g;
-        [$porcentaje, $tomas] = self::porcentajeYTomas($siembra->especie, $peso);
+        [$porcentaje, $tomas] = self::porcentajeYTomas($siembra->especie->alimentacion, $peso);
         $etapa = self::etapa($peso);
 
         return [
@@ -103,7 +109,7 @@ class CalculadoraRacion
             'kg_dia' => round((float) $siembra->biomasa_kg * $porcentaje / 100 * $factor, 1),
             'tomas' => $tomas,
             'etapa' => $etapa,
-            'proteina' => CatalogoEspecies::ficha($siembra->especie)['proteina'][$etapa] ?? null,
+            'proteina' => $siembra->especie->referencia()['proteina'][$etapa] ?? null,
         ];
     }
 }

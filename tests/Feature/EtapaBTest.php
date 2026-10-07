@@ -47,7 +47,7 @@ class EtapaBTest extends TestCase
         $this->administrador = $this->persona(Rol::ADMINISTRADOR);
         $this->trabajador = $this->persona(Rol::TRABAJADOR);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 200, 'biomasa_kg' => 200]);
     }
 
@@ -232,7 +232,7 @@ class EtapaBTest extends TestCase
         app(TenantActual::class)->establecer($otra->id);
         $ajenoTrabajador = tap(User::factory()->create(['tenant_id' => $otra->id]))->asignarRoles([Rol::TRABAJADOR]);
         $lagoAjeno = Lago::create(['nombre' => 'LagoAjeno', 'tipo' => 'tierra']);
-        $siembraAjena = Siembra::create(['lago_id' => $lagoAjeno->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 10,
+        $siembraAjena = Siembra::create(['lago_id' => $lagoAjeno->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 10,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 10, 'peso_actual_g' => 10, 'biomasa_kg' => 0.1]);
         $avisoAjeno = AvisoPesca::create(['lago_id' => $lagoAjeno->id, 'siembra_id' => $siembraAjena->id, 'user_id' => $ajenoTrabajador->id,
             'estado' => AvisoPesca::PENDIENTE, 'reportado_at' => now(), 'nota' => 'SecretoAjeno']);

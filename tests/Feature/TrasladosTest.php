@@ -35,7 +35,7 @@ class TrasladosTest extends TestCase
 
     private function siembra(Lago $lago, string $especie, int $peces, float $peso): Siembra
     {
-        return Siembra::create(['lago_id' => $lago->id, 'especie' => $especie, 'fecha' => now()->subDays(30),
+        return Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie($especie), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => $peces, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => $peces,
             'peso_actual_g' => $peso, 'biomasa_kg' => $peces * $peso / 1000]);
     }
@@ -62,7 +62,7 @@ class TrasladosTest extends TestCase
         $this->assertNull($origen->finalizada_at);
 
         $nueva = $this->destino->siembrasActivas()->sole();
-        $this->assertSame('mojarra roja', $nueva->especie);
+        $this->assertSame('mojarra roja', $nueva->especie->clave);
         $this->assertSame(400, $nueva->peces_vivos);
         $this->assertEquals(20.0, (float) $nueva->biomasa_kg);
 
@@ -121,8 +121,12 @@ class TrasladosTest extends TestCase
         $origen = $this->siembra($this->origen, 'trucha arcoiris', 1000, 50);
         $this->siembra($this->destino, 'mojarra roja', 500, 50);
 
-        $this->trasladar($origen)->assertInvalid(['lago_destino_id']);
+        // Frío hacia un lago con cálido: advertencia que se confirma
+        $this->trasladar($origen)->assertInvalid(['confirmar_clima']);
         $this->assertSame(1000, $origen->fresh()->peces_vivos);
+
+        $this->trasladar($origen, ['confirmar_clima' => '1'])->assertSessionHasNoErrors();
+        $this->assertSame(600, $origen->fresh()->peces_vivos);
     }
 
     public function test_no_traslada_desde_siembras_finalizadas(): void

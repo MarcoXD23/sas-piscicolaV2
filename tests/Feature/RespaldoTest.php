@@ -173,7 +173,7 @@ class RespaldoTest extends TestCase
                 app(TenantActual::class)->establecer($finca->id);
                 User::factory()->conRoles(Rol::PROPIETARIO)->create(['tenant_id' => $finca->id]);
                 $lago = Lago::create(['nombre' => 'L-'.$nombre, 'tipo' => 'tierra']);
-                Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(10),
+                Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(10),
                     'cantidad_alevinos' => 1500, 'peso_promedio_inicial_g' => 5.25, 'peces_vivos' => 1480,
                     'peso_actual_g' => 32.5, 'biomasa_kg' => 48.1]);
             }
@@ -208,6 +208,7 @@ class RespaldoTest extends TestCase
             DB::table('siembras')->whereIn('tenant_id', $tenants)->delete();
             DB::table('lagos')->whereIn('tenant_id', $tenants)->delete();
             DB::table('users')->whereIn('tenant_id', $tenants)->delete();
+            DB::table('especies')->whereIn('tenant_id', $tenants)->delete();
             DB::table('tenants')->whereIn('id', $tenants)->delete();
             DB::beginTransaction();
         }

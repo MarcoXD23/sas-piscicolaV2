@@ -40,7 +40,7 @@ class AlimentacionYBodegaTest extends TestCase
 
     private function sembrar(string $especie, int $peces, float $pesoG): Siembra
     {
-        return Siembra::create(['lago_id' => $this->lago->id, 'especie' => $especie, 'fecha' => now()->subDays(30),
+        return Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie($especie), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => $peces, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => $peces,
             'peso_actual_g' => $pesoG, 'biomasa_kg' => $peces * $pesoG / 1000]);
     }
@@ -80,10 +80,10 @@ class AlimentacionYBodegaTest extends TestCase
 
     public function test_tablas_de_alimentacion_por_peso_y_perfil(): void
     {
-        $this->assertSame([8.0, 5], CalculadoraRacion::porcentajeYTomas('mojarra negra', 5));
-        $this->assertSame([6.0, 4], CalculadoraRacion::porcentajeYTomas('mojarra negra', 5.1));
-        $this->assertSame([1.2, 2], CalculadoraRacion::porcentajeYTomas('cachama blanca', 900));
-        $this->assertSame([2.5, 4], CalculadoraRacion::porcentajeYTomas('trucha arcoiris', 30));
+        $this->assertSame([8.0, 5], CalculadoraRacion::porcentajeYTomas('calido', 5));
+        $this->assertSame([6.0, 4], CalculadoraRacion::porcentajeYTomas('calido', 5.1));
+        $this->assertSame([1.2, 2], CalculadoraRacion::porcentajeYTomas('calido', 900));
+        $this->assertSame([2.5, 4], CalculadoraRacion::porcentajeYTomas('frio', 30));
         $this->assertSame('iniciacion', CalculadoraRacion::etapa(10));
         $this->assertSame('engorde', CalculadoraRacion::etapa(150));
     }

@@ -7,7 +7,6 @@ use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\CatalogoEspecies;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -94,7 +93,7 @@ class DisenoTest extends TestCase
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         Siembra::create([
             'lago_id' => $lago->id,
-            'especie' => 'cachama blanca',
+            'especie_id' => $this->especie('cachama blanca'),
             'fecha' => now(),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,
@@ -110,8 +109,13 @@ class DisenoTest extends TestCase
 
     public function test_foto_de_especie_es_null_cuando_no_hay_imagen(): void
     {
-        $this->assertSame('/images/especies/bagre-rayado.webp', CatalogoEspecies::foto('Bagre rayado'));
-        $this->assertNull(CatalogoEspecies::foto('mojarra roja'));
-        $this->assertNull(CatalogoEspecies::foto('especie sin foto'));
+        // Las especies por defecto traen su foto de referencia; la mojarra roja y una especie nueva, ninguna
+        $finca = \App\Models\Tenant::factory()->create();
+        \App\Support\TenantActual::sinFiltro(function () use ($finca) {
+            $especies = \App\Models\Especie::query()->where('tenant_id', $finca->id)->get()->keyBy('clave');
+            $this->assertSame('/images/especies/bagre-rayado.webp', $especies['bagre rayado']->foto());
+            $this->assertNull($especies['mojarra roja']->foto());
+            $this->assertNull((new \App\Models\Especie(['nombre' => 'Especie sin foto', 'clima' => 'calido']))->foto());
+        });
     }
 }

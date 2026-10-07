@@ -25,7 +25,7 @@ class LagoDetalleTest extends TestCase
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $otro = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'cachama blanca', 'fecha' => now()->subDays(20),
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('cachama blanca'), 'fecha' => now()->subDays(20),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
         StockAlimento::create(['tipo_concentrado' => 'Levante 32 %', 'cantidad_kg' => 100]);
 

@@ -58,7 +58,8 @@ class TrasladoController extends Controller
 
             $peso = (float) $datos['peso_promedio_g'];
             $activasDestino = $lagoDestino->siembrasActivas()->lockForUpdate()->get();
-            $destino = $activasDestino->firstWhere('especie', $origen->especie);
+            // Se suman al lote MÁS ANTIGUO de la misma especie en el destino; si no hay, se crea un lote nuevo
+            $destino = $activasDestino->where('especie_id', $origen->especie_id)->sortBy(fn (Siembra $s) => $s->fecha->toDateString().'|'.$s->id)->first();
 
             if ($destino) {
                 // Se suman a la siembra de la misma especie con peso promedio ponderado
@@ -68,10 +69,10 @@ class TrasladoController extends Controller
                 $destino->biomasa_kg = ($total * $destino->peso_actual_g) / 1000;
                 $destino->save();
             } else {
-                ReglasPolicultivo::verificarClima($activasDestino, $origen->especie, 'lago_destino_id');
+                ReglasPolicultivo::verificarClima($activasDestino, $origen->especie, $request->boolean(ReglasPolicultivo::CAMPO_CONFIRMACION));
 
                 $destino = $lagoDestino->siembras()->create([
-                    'especie' => $origen->especie,
+                    'especie_id' => $origen->especie_id,
                     // Conserva el origen de los alevinos para la trazabilidad
                     'proveedor_alevinos' => $origen->proveedor_alevinos,
                     'lote_alevinos' => $origen->lote_alevinos,

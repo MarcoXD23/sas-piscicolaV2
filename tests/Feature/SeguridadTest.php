@@ -187,13 +187,13 @@ class SeguridadTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-10-15 09:00', 'America/Bogota'));
         $administrador = $this->persona(Rol::ADMINISTRADOR);
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 100, 'peso_actual_g' => 100, 'biomasa_kg' => 10]);
         $hoy = '2026-10-15';
 
         $casos = [
-            [route('admin.siembras.store', $lago), ['especie' => 'cachama blanca', 'fecha' => $hoy, 'cantidad_alevinos' => 99999999999, 'peso_promedio_inicial_g' => 5], 'cantidad_alevinos'],
-            [route('admin.siembras.store', $lago), ['especie' => 'cachama blanca', 'fecha' => $hoy, 'cantidad_alevinos' => 10, 'peso_promedio_inicial_g' => 99999999], 'peso_promedio_inicial_g'],
+            [route('admin.siembras.store', $lago), ['especie_id' => $this->especie('cachama blanca'), 'fecha' => $hoy, 'cantidad_alevinos' => 99999999999, 'peso_promedio_inicial_g' => 5], 'cantidad_alevinos'],
+            [route('admin.siembras.store', $lago), ['especie_id' => $this->especie('cachama blanca'), 'fecha' => $hoy, 'cantidad_alevinos' => 10, 'peso_promedio_inicial_g' => 99999999], 'peso_promedio_inicial_g'],
             [route('admin.bodega.recepciones.store'), ['fecha' => $hoy, 'proveedor' => 'P', 'tipo_concentrado' => 'E', 'lote' => 'L', 'bultos' => 999999999, 'peso_bulto_kg' => 40], 'bultos'],
             [route('admin.muestreos.store', $siembra), ['fecha' => $hoy, 'peces_pesados' => 10, 'peso_total_g' => 99999999], 'peso_total_g'],
             [route('admin.raciones.store', $lago), ['fecha' => $hoy, 'tipo_concentrado' => 'E', 'cantidad_kg' => 99999999], 'cantidad_kg'],

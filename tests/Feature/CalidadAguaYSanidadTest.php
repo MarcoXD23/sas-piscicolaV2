@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
 use App\Models\Rol;
@@ -32,7 +33,7 @@ class CalidadAguaYSanidadTest extends TestCase
         app(TenantActual::class)->establecer($tenant->id);
         $this->administrador = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(30),
+        Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
     }
 
@@ -50,7 +51,7 @@ class CalidadAguaYSanidadTest extends TestCase
 
         $medicion = MedicionAgua::sole();
         $this->assertSame($this->administrador->id, $medicion->user_id);
-        $this->assertSame([], $medicion->alertas(['mojarra roja']));
+        $this->assertSame([], $medicion->alertas([Especie::deClave('mojarra roja')]));
     }
 
     public function test_genera_alertas_segun_las_especies_del_lago(): void
@@ -58,7 +59,7 @@ class CalidadAguaYSanidadTest extends TestCase
         $this->medir(['temperatura_c' => 33, 'oxigeno_mg_l' => 2.5, 'ph' => 9.1, 'amonio_mg_l' => 1.5, 'nitritos_mg_l' => 0.2])
             ->assertSessionHasNoErrors();
 
-        $alertas = MedicionAgua::sole()->alertas(['mojarra roja']);
+        $alertas = MedicionAgua::sole()->alertas([Especie::deClave('mojarra roja')]);
         $this->assertCount(4, $alertas); // temperatura, oxígeno, pH y amonio; nitritos en rango
         $this->assertStringContainsString('Temperatura de 33 °C', $alertas[0]);
 
@@ -71,9 +72,9 @@ class CalidadAguaYSanidadTest extends TestCase
     {
         $medicion = new MedicionAgua(['temperatura_c' => 20]);
 
-        $this->assertCount(1, $medicion->alertas(['mojarra roja']));
-        $this->assertCount(1, $medicion->alertas(['trucha arcoiris']));
-        $this->assertSame([], (new MedicionAgua(['temperatura_c' => 14]))->alertas(['trucha arcoiris']));
+        $this->assertCount(1, $medicion->alertas([Especie::deClave('mojarra roja')]));
+        $this->assertCount(1, $medicion->alertas([Especie::deClave('trucha arcoiris')]));
+        $this->assertSame([], (new MedicionAgua(['temperatura_c' => 14]))->alertas([Especie::deClave('trucha arcoiris')]));
     }
 
     public function test_exige_al_menos_un_parametro_y_valores_posibles(): void

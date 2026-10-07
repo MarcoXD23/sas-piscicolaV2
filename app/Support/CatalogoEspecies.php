@@ -3,8 +3,10 @@
 namespace App\Support;
 
 /**
- * Catálogo fijo de especies que se pueden sembrar, con su ficha técnica de referencia.
- * La especie se guarda como string en siembras.especie (la clave de este catálogo).
+ * Datos de REFERENCIA de las 6 especies por defecto. Ya no es la lista de especies de la finca:
+ * cada finca tiene su catálogo editable en la tabla especies (App\Models\Especie), que se carga con estos valores
+ * al crear la finca. La clave une cada especie por defecto con sus textos de referencia (densidades, proteína,
+ * manejo) y su foto de referencia mientras no tenga ficha y fotos propias.
  * Los valores son orientativos: cada finca debe ajustarlos con su asistente técnico.
  */
 class CatalogoEspecies
@@ -77,25 +79,45 @@ class CatalogoEspecies
         ],
     ];
 
-    /** @return list<string> Claves válidas para siembras.especie */
+    /** @return list<string> Claves de las especies por defecto */
     public static function claves(): array
     {
         return array_keys(self::ESPECIES);
     }
 
-    /** @return array<string, array<string, mixed>> */
-    public static function todas(): array
+    /**
+     * Filas para cargar el catálogo de una finca nueva (o existente, en la migración).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function porDefecto(): array
     {
-        return array_map(fn (string $clave) => self::ficha($clave), array_combine(self::claves(), self::claves()));
+        return array_map(fn (string $clave) => [
+            'clave' => $clave,
+            'nombre' => self::textos($clave)['nombre'] ?? ucfirst($clave),
+            'nombre_cientifico' => self::ESPECIES[$clave]['cientifico'],
+            'clima' => self::ESPECIES[$clave]['clima'] === self::CLIMA_FRIO ? 'frio' : 'calido',
+            'temp_min' => self::ESPECIES[$clave]['temperatura'][0],
+            'temp_max' => self::ESPECIES[$clave]['temperatura'][1],
+            'oxigeno_min' => self::ESPECIES[$clave]['oxigeno_min'],
+            'ph_min' => self::ESPECIES[$clave]['ph'][0],
+            'ph_max' => self::ESPECIES[$clave]['ph'][1],
+            'alimentacion' => self::ESPECIES[$clave]['alimentacion'],
+        ], self::claves());
     }
 
-    /** @return array<string, mixed>|null */
-    public static function ficha(string $clave): ?array
+    /**
+     * Textos y foto de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
+     *
+     * @return array<string, mixed>
+     */
+    public static function referencia(?string $clave): array
     {
-        $clave = mb_strtolower($clave);
-        $ficha = self::ESPECIES[$clave] ?? null;
+        if ($clave === null || ! isset(self::ESPECIES[$clave])) {
+            return [];
+        }
 
-        return $ficha === null ? null : ['clave' => $clave, 'slug' => self::slug($clave)] + self::textos($clave) + $ficha;
+        return self::textos($clave) + ['familia' => self::ESPECIES[$clave]['familia'], 'foto' => self::ESPECIES[$clave]['foto']];
     }
 
     /** @return array<string, mixed> Textos de la ficha en el idioma actual (nombre, densidades, proteína, manejo...) */
@@ -104,37 +126,5 @@ class CatalogoEspecies
         $textos = __('especies.catalogo.'.$clave);
 
         return is_array($textos) ? $textos : [];
-    }
-
-    /** @return array<string, mixed>|null */
-    public static function porSlug(string $slug): ?array
-    {
-        foreach (self::claves() as $clave) {
-            if (self::slug($clave) === $slug) {
-                return self::ficha($clave);
-            }
-        }
-
-        return null;
-    }
-
-    public static function slug(string $clave): string
-    {
-        return str_replace(' ', '-', mb_strtolower($clave));
-    }
-
-    public static function nombre(string $clave): string
-    {
-        return self::textos(mb_strtolower($clave))['nombre'] ?? ucfirst($clave);
-    }
-
-    public static function foto(string $clave): ?string
-    {
-        return self::ESPECIES[mb_strtolower($clave)]['foto'] ?? null;
-    }
-
-    public static function clima(string $clave): ?string
-    {
-        return self::ESPECIES[mb_strtolower($clave)]['clima'] ?? null;
     }
 }

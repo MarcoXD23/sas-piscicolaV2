@@ -45,7 +45,7 @@ class GeminiAsistenteTest extends TestCase
         app(TenantActual::class)->establecer($tenant->id);
         $this->propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO]);
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(30),
+        Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
     }
 

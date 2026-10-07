@@ -7,7 +7,7 @@
 
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($especies as $especie)
-            <a href="{{ route('especies.show', $especie['slug']) }}"
+            <a href="{{ route('especies.show', $especie['id']) }}"
                class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md hover:ring-marca-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600">
                 <div class="relative aspect-[16/10] bg-marca-50">
                     @if ($especie['foto'])
@@ -22,24 +22,27 @@
 
                     <span @class([
                         'absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm',
-                        'bg-amber-100 text-amber-900' => $especie['clima'] === \App\Support\CatalogoEspecies::CLIMA_CALIDO,
-                        'bg-sky-100 text-sky-900' => $especie['clima'] === \App\Support\CatalogoEspecies::CLIMA_FRIO,
-                    ])>{{ __($especie['clima'] === \App\Support\CatalogoEspecies::CLIMA_FRIO ? 'especies.agua_fria' : 'especies.agua_calida') }}</span>
+                        'bg-amber-100 text-amber-900' => $especie['clima'] === \App\Models\Especie::CALIDO,
+                        'bg-sky-100 text-sky-900' => $especie['clima'] === \App\Models\Especie::FRIO,
+                    ])>{{ __($especie['clima'] === \App\Models\Especie::FRIO ? 'especies.agua_fria' : 'especies.agua_calida') }}</span>
                 </div>
 
                 <div class="flex flex-1 flex-col p-5">
                     <h2 class="text-lg font-bold text-slate-900">{{ $especie['nombre'] }}</h2>
-                    <p class="text-sm italic text-slate-500">{{ $especie['cientifico'] }}</p>
+                    @if ($especie['cientifico'])
+                        <p class="text-sm italic text-slate-500">{{ $especie['cientifico'] }}</p>
+                    @endif
 
                     <dl class="mt-4 divide-y divide-slate-100 text-base">
+                        {{-- Sin el dato en la ficha se muestra «sin dato»: nunca se inventa --}}
                         @foreach ([
-                            __('especies.temperatura') => __('especies.rango_temperatura', ['min' => $especie['temperatura'][0], 'max' => $especie['temperatura'][1]]),
+                            __('especies.temperatura') => $especie['temperatura'] ? __('especies.rango_temperatura', ['min' => \App\Support\Formato::sinCeros($especie['temperatura'][0]), 'max' => \App\Support\Formato::sinCeros($especie['temperatura'][1])]) : null,
                             __('especies.cosecha') => $especie['meses_cosecha'],
                             __('especies.peso_comercial') => $especie['peso_comercial'],
                         ] as $etiqueta => $valor)
                             <div class="flex items-center justify-between gap-3 py-2">
                                 <dt class="text-slate-500">{{ $etiqueta }}</dt>
-                                <dd class="text-right font-semibold text-slate-900">{{ $valor }}</dd>
+                                <dd class="text-right font-semibold text-slate-900">{{ $valor ?? __('especies.sin_dato') }}</dd>
                             </div>
                         @endforeach
                     </dl>

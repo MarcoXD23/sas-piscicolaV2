@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\CosechaController;
+use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
@@ -98,6 +99,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/conversion', [ConversionController::class, 'index'])->name('conversion.index');
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        // Catálogo de especies de la finca: el propietario lo consulta, el administrador lo edita
+        Route::get('/especies', [EspecieFincaController::class, 'index'])->name('especies.index');
         // Detalle de una cosecha (encabezado, pesadas y totales): el administrador y el propietario en solo lectura
         Route::get('/cosechas/{cosecha}', [CosechaController::class, 'show'])->whereNumber('cosecha')->name('cosechas.show');
 
@@ -120,6 +123,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/cosechas/crear', [CosechaController::class, 'create'])->name('cosechas.create');
         Route::post('/cosechas', [CosechaController::class, 'store'])->name('cosechas.store');
         Route::get('/ajustes-pesaje', [AjustesPesajeController::class, 'edit'])->name('ajustes-pesaje.edit');
+        Route::post('/especies', [EspecieFincaController::class, 'store'])->name('especies.store');
+        Route::get('/especies/{especie}/editar', [EspecieFincaController::class, 'edit'])->name('especies.edit');
+        Route::put('/especies/{especie}', [EspecieFincaController::class, 'update'])->name('especies.update');
+        Route::post('/especies/{especie}/activo', [EspecieFincaController::class, 'cambiarActivo'])->name('especies.activo');
+        Route::delete('/especies/{especie}', [EspecieFincaController::class, 'destroy'])->name('especies.destroy');
         Route::put('/ajustes-pesaje', [AjustesPesajeController::class, 'update'])->name('ajustes-pesaje.update');
         Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
@@ -154,7 +162,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
-        Route::get('/especies/{slug}', [EspecieController::class, 'show'])->name('especies.show');
+        Route::get('/especies/{especie}', [EspecieController::class, 'show'])->whereNumber('especie')->name('especies.show');
     });
 
     // Asistente IA: un solo widget para todos los roles (el contexto se filtra por rol)

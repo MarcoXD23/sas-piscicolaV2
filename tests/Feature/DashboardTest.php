@@ -24,7 +24,7 @@ class DashboardTest extends TestCase
         $lago1 = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         Siembra::create([
             'lago_id' => $lago1->id,
-            'especie' => 'mojarra roja',
+            'especie_id' => $this->especie('mojarra roja'),
             'fecha' => now(),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10,
@@ -36,7 +36,7 @@ class DashboardTest extends TestCase
         $lago2 = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
         Siembra::create([
             'lago_id' => $lago2->id,
-            'especie' => 'cachama blanca',
+            'especie_id' => $this->especie('cachama blanca'),
             'fecha' => now(),
             'cantidad_alevinos' => 2000,
             'peso_promedio_inicial_g' => 5,

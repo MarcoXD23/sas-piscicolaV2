@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
-use App\Support\CatalogoEspecies;
 use App\Support\Formato;
+use App\Support\RangoAgua;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -48,10 +48,10 @@ class MedicionAgua extends Model
     }
 
     /**
-     * Compara la medición con los rangos de las especies sembradas en el lago.
+     * Compara la medición con el rango COMÚN de las especies sembradas en el lago (RangoAgua).
      * Única fuente de los rangos de agua: la usan el inicio, Seguridad & Noche, el asistente IA y las alertas.
      *
-     * @param  iterable<string>  $especies  Claves del catálogo de especies
+     * @param  iterable<Especie|null>  $especies  Especies de las siembras activas del lago
      * @return list<array{parametro: string, texto: string}> Problemas encontrados (vacío si todo está en rango)
      */
     public function problemas(iterable $especies): array
@@ -61,25 +61,23 @@ class MedicionAgua extends Model
             $problemas[] = ['parametro' => $parametro, 'texto' => $texto];
         };
         $numero = fn (float $valor) => rtrim(rtrim(Formato::numero($valor, 2), '0'), ',.');
+        $rango = RangoAgua::para($especies);
 
-        foreach ($especies as $clave) {
-            $ficha = CatalogoEspecies::ficha($clave);
-            if ($ficha === null) {
-                continue;
+        if ($rango['temperatura'] !== null && $this->temperatura_c !== null) {
+            [$tMin, $tMax] = $rango['temperatura'];
+            if ($this->temperatura_c < $tMin || $this->temperatura_c > $tMax) {
+                $agregar('temperatura', __('lagos.alertas.temperatura', ['valor' => $numero($this->temperatura_c), 'especie' => $rango['especies'], 'min' => $numero($tMin), 'max' => $numero($tMax)]));
             }
+        }
 
-            [$tMin, $tMax] = $ficha['temperatura'];
-            if ($this->temperatura_c !== null && ($this->temperatura_c < $tMin || $this->temperatura_c > $tMax)) {
-                $agregar('temperatura', __('lagos.alertas.temperatura', ['valor' => $numero($this->temperatura_c), 'especie' => $ficha['nombre'], 'min' => $tMin, 'max' => $tMax]));
-            }
+        if ($rango['oxigeno'] !== null && $this->oxigeno_mg_l !== null && $this->oxigeno_mg_l < $rango['oxigeno']) {
+            $agregar('oxigeno', __('lagos.alertas.oxigeno', ['valor' => $numero($this->oxigeno_mg_l), 'especie' => $rango['especies'], 'minimo' => $numero($rango['oxigeno'])]));
+        }
 
-            if ($this->oxigeno_mg_l !== null && $this->oxigeno_mg_l < $ficha['oxigeno_min']) {
-                $agregar('oxigeno', __('lagos.alertas.oxigeno', ['valor' => $numero($this->oxigeno_mg_l), 'especie' => $ficha['nombre'], 'minimo' => $numero($ficha['oxigeno_min'])]));
-            }
-
-            [$phMin, $phMax] = $ficha['ph'];
-            if ($this->ph !== null && ($this->ph < $phMin || $this->ph > $phMax)) {
-                $agregar('ph', __('lagos.alertas.ph', ['valor' => $numero($this->ph), 'especie' => $ficha['nombre'], 'min' => $numero($phMin), 'max' => $numero($phMax)]));
+        if ($rango['ph'] !== null && $this->ph !== null) {
+            [$phMin, $phMax] = $rango['ph'];
+            if ($this->ph < $phMin || $this->ph > $phMax) {
+                $agregar('ph', __('lagos.alertas.ph', ['valor' => $numero($this->ph), 'especie' => $rango['especies'], 'min' => $numero($phMin), 'max' => $numero($phMax)]));
             }
         }
 
@@ -95,7 +93,7 @@ class MedicionAgua extends Model
     }
 
     /**
-     * @param  iterable<string>  $especies  Claves del catálogo de especies
+     * @param  iterable<Especie|null>  $especies
      * @return list<string> Mensajes de alerta (vacío si todo está en rango)
      */
     public function alertas(iterable $especies): array

@@ -154,7 +154,7 @@ class RegionalizacionTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-16 03:00', 'UTC'));
         $this->en($this->bogota);
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-10-05',
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-10-05',
             'cantidad_alevinos' => 10, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 10, 'peso_actual_g' => 5, 'biomasa_kg' => 0.05]);
 
         $this->assertSame(10, $siembra->dias_cultivo); // del 5 al 15 de octubre en Bogotá

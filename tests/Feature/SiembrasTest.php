@@ -26,7 +26,7 @@ class SiembrasTest extends TestCase
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
 
         $this->actingAs($propietario)->post("/admin/lagos/{$lago->id}/siembras", [
-            'especie' => 'mojarra roja',
+            'especie_id' => $this->especie('mojarra roja'),
             'fecha' => now()->format('Y-m-d'),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,
@@ -40,7 +40,7 @@ class SiembrasTest extends TestCase
         ]);
     }
 
-    public function test_no_permite_dos_siembras_activas_de_la_misma_especie_en_un_lago(): void
+    public function test_la_misma_especie_solo_se_repite_en_un_lago_como_lote_de_otra_fecha(): void
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
@@ -52,7 +52,7 @@ class SiembrasTest extends TestCase
 
         Siembra::create([
             'lago_id' => $lago->id,
-            'especie' => 'cachama blanca',
+            'especie_id' => $this->especie('cachama blanca'),
             'fecha' => now(),
             'cantidad_alevinos' => 500,
             'peso_promedio_inicial_g' => 3,
@@ -62,12 +62,20 @@ class SiembrasTest extends TestCase
         ]);
 
         $this->actingAs($propietario)->post("/admin/lagos/{$lago->id}/siembras", [
-            'especie' => 'cachama blanca',
+            'especie_id' => $this->especie('cachama blanca'),
             'fecha' => now()->format('Y-m-d'),
             'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5,
-        ])->assertInvalid(['especie']);
-
+        ])->assertInvalid(['especie_id' => 'Este lago ya tiene un lote activo de Cachama blanca']);
         $this->assertSame(1, Siembra::count());
+
+        // Otro lote de la misma especie con fecha distinta sí se permite
+        $this->actingAs($propietario)->post("/admin/lagos/{$lago->id}/siembras", [
+            'especie_id' => $this->especie('cachama blanca'),
+            'fecha' => now()->subDays(3)->format('Y-m-d'),
+            'cantidad_alevinos' => 1000,
+            'peso_promedio_inicial_g' => 5,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame(2, $lago->siembrasActivas()->count());
     }
 }

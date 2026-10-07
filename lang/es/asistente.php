@@ -33,7 +33,11 @@ return [
         'seguridad' => 'novedades de seguridad nocturna',
     ],
 
-    'ficha' => '- :nombre (:cientifico): agua :clima, :temp_min a :temp_max °C, oxígeno mínimo :oxigeno mg/L, pH :ph_min a :ph_max, cosecha en :meses con :peso. Policultivo: :policultivo',
+    'ficha' => '- :nombre (nombre científico: :cientifico). Clima: :clima. Temperatura: :temperatura. Oxígeno mínimo: :oxigeno. pH: :ph. Tiempo a cosecha: :meses. Peso comercial: :peso. Policultivo: :policultivo',
+    'sin_dato' => 'sin dato',
+    'rango_temperatura' => ':min a :max °C',
+    'rango_ph' => ':min a :max',
+    'valor_oxigeno' => ':valor mg/L',
 
     // Instrucciones fijas del asistente (no cambian entre preguntas: el prefijo es cacheable)
     'instrucciones' => 'Eres el asistente de El SAS Piscícola, una aplicación para la gestión de fincas piscícolas.

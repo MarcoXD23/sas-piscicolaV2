@@ -271,7 +271,7 @@
                                     {{ __('lagos.ayuda_policultivo', ['especies' => $siembras->pluck('nombre_especie')->join(', ', ' '.__('comun.y').' ')]) }}
                                 </p>
                             @endif
-                            <x-seleccion nombre="especie" id="siembra-especie-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$especies" required />
+                            <x-seleccion nombre="especie_id" id="siembra-especie-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$especies" required />
                             <x-campo nombre="fecha" id="siembra-fecha-{{ $lago->id }}" :etiqueta="__('lagos.fecha_siembra')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
                             <div class="grid grid-cols-2 gap-4">
                                 <x-campo nombre="cantidad_alevinos" id="siembra-alevinos-{{ $lago->id }}" :etiqueta="__('lagos.alevinos')" tipo="number" min="1" inputmode="numeric" required />
@@ -279,6 +279,17 @@
                                 <x-campo nombre="proveedor_alevinos" id="siembra-proveedor-{{ $lago->id }}" :etiqueta="__('lagos.proveedor_opcional')" />
                                 <x-campo nombre="lote_alevinos" id="siembra-lote-{{ $lago->id }}" :etiqueta="__('lagos.lote_opcional')" />
                             </div>
+
+                            @if ($siembras->isNotEmpty())
+                                {{-- Agua fría con cálida: es una advertencia que se confirma, no un bloqueo --}}
+                                <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-base text-amber-900">
+                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-1 h-5 w-5 rounded border-amber-400" @checked(old('confirmar_clima'))>
+                                    <span>{{ __('lagos.confirmar_clima') }}</span>
+                                </label>
+                                @error('confirmar_clima')
+                                    <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+                                @enderror
+                            @endif
 
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

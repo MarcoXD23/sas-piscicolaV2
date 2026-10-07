@@ -38,7 +38,7 @@ class CosechasYVentasTest extends TestCase
         // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
         $this->propietario = tap($this->persona(Rol::PROPIETARIO))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-05-01',
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-05-01',
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 400, 'biomasa_kg' => 400]);
     }
 

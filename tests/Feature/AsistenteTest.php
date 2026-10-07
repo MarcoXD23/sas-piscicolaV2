@@ -12,7 +12,6 @@ use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\ContextoFinca;
-use App\Support\CatalogoEspecies;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -59,7 +58,7 @@ class AsistenteTest extends TestCase
         $this->tenant = Tenant::create(['nombre' => 'Finca El Lago', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(30),
+        Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(30),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 50, 'biomasa_kg' => 50]);
         StockAlimento::create(['tipo_concentrado' => 'Engorde secreto', 'cantidad_kg' => 80]);
     }
@@ -256,13 +255,12 @@ class AsistenteTest extends TestCase
 
     public function test_una_pregunta_cubierta_por_la_ficha_lleva_la_ficha_y_se_responde(): void
     {
-        $ficha = CatalogoEspecies::ficha('mojarra roja');
 
         $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Qué temperatura necesita la mojarra roja?')
             ->assertOk()->assertJson(['respuesta' => 'Respuesta 1']);
 
         $instrucciones = $this->falso->llamadas[0]['instrucciones'];
-        $this->assertStringContainsString("- {$ficha['nombre']} ({$ficha['cientifico']}): agua {$ficha['clima']}, {$ficha['temperatura'][0]} a {$ficha['temperatura'][1]} °C", $instrucciones);
+        $this->assertStringContainsString('- Mojarra roja (nombre científico: Oreochromis sp. (híbrido)). Clima: Agua cálida. Temperatura: 26 a 30 °C.', $instrucciones);
     }
 
     public function test_un_solo_widget_para_usuarios_con_sesion_y_ninguno_para_invitados(): void

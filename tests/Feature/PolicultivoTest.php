@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\Siembra;
@@ -32,10 +33,11 @@ class PolicultivoTest extends TestCase
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
     }
 
-    private function sembrar(string $especie, int $alevinos = 1000)
+    private function sembrar(string $especie, int $alevinos = 1000, array $extra = [])
     {
-        return $this->actingAs($this->propietario)->post(route('admin.siembras.store', $this->lago), [
-            'especie' => $especie,
+        return $this->actingAs($this->propietario)->post(route('admin.siembras.store', $this->lago), $extra + [
+            // Una especie que no está en el catálogo de la finca no tiene id: se envía uno que no existe
+            'especie_id' => Especie::query()->where('clave', $especie)->value('id') ?? 999999,
             'fecha' => now()->format('Y-m-d'),
             'cantidad_alevinos' => $alevinos,
             'peso_promedio_inicial_g' => 5,
@@ -51,17 +53,20 @@ class PolicultivoTest extends TestCase
         $this->assertSame(3, $this->lago->siembrasActivas()->count());
     }
 
-    public function test_no_mezcla_especies_de_agua_fria_y_calida(): void
+    public function test_mezclar_agua_fria_y_calida_es_una_advertencia_que_se_confirma(): void
     {
         $this->sembrar('mojarra roja')->assertSessionHasNoErrors();
-        $this->sembrar('trucha arcoiris')->assertInvalid(['especie']);
-
+        $this->sembrar('trucha arcoiris')->assertInvalid(['confirmar_clima' => 'Atención: Trucha arcoíris es de Agua fría']);
         $this->assertSame(1, $this->lago->siembrasActivas()->count());
+
+        // Con la confirmación sí se siembra
+        $this->sembrar('trucha arcoiris', 1000, ['confirmar_clima' => '1'])->assertSessionHasNoErrors();
+        $this->assertSame(2, $this->lago->siembrasActivas()->count());
     }
 
     public function test_rechaza_especies_fuera_del_catalogo(): void
     {
-        $this->sembrar('pez inventado')->assertInvalid(['especie']);
+        $this->sembrar('pez inventado')->assertInvalid(['especie_id']);
         $this->assertSame(0, Siembra::count());
     }
 
@@ -127,7 +132,7 @@ class PolicultivoTest extends TestCase
     {
         $this->sembrar('mojarra roja', 1000);
         $this->sembrar('cachama blanca', 200);
-        Siembra::where('especie', 'cachama blanca')->update(['finalizada_at' => now()]);
+        Siembra::where('especie_id', $this->especie('cachama blanca'))->update(['finalizada_at' => now()]);
 
         $this->actingAs($this->propietario)->get(route('inicio'))
             ->assertViewHas('pecesVivos', 1000)

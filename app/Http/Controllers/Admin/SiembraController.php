@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\Siembra;
-use App\Support\CatalogoEspecies;
 use App\Support\Region;
+use Carbon\CarbonImmutable;
 use App\Support\ReglasPolicultivo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,26 +20,27 @@ class SiembraController extends Controller
     public function store(Request $request, Lago $lago): RedirectResponse
     {
         $datos = $request->validate([
-            'especie' => ['required', 'string', Rule::in(CatalogoEspecies::claves())],
+            // Solo especies activas del catálogo de esta finca
+            'especie_id' => ['required', 'integer', Rule::exists('especies', 'id')->where('tenant_id', $request->user()->tenant_id)->where('activo', true)],
             'proveedor_alevinos' => ['nullable', 'string', 'max:255'],
             'lote_alevinos' => ['nullable', 'string', 'max:100'],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'cantidad_alevinos' => ['required', 'integer', 'min:1', 'max:10000000'],
             'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1', 'max:20000'],
+        ], [
+            'especie_id.exists' => __('mensajes.siembra.especie_no_disponible'),
         ]);
+        $especie = Especie::findOrFail($datos['especie_id']);
+        $confirmado = $request->boolean(ReglasPolicultivo::CAMPO_CONFIRMACION);
 
-        DB::transaction(function () use ($lago, $datos) {
+        DB::transaction(function () use ($lago, $datos, $especie, $confirmado) {
             // Bloquea el lago para que dos siembras simultáneas no se salten las reglas de policultivo
             Lago::whereKey($lago->id)->lockForUpdate()->first();
             $activas = $lago->siembrasActivas()->get();
 
-            if ($activas->contains('especie', $datos['especie'])) {
-                throw ValidationException::withMessages([
-                    'especie' => __('mensajes.siembra.especie_repetida', ['especie' => CatalogoEspecies::nombre($datos['especie'])]),
-                ]);
-            }
-
-            ReglasPolicultivo::verificarClima($activas, $datos['especie'], 'especie');
+            // La misma especie puede estar dos veces como lotes de fecha distinta; frío con cálido se confirma
+            ReglasPolicultivo::verificarLote($activas, $especie, CarbonImmutable::parse($datos['fecha'])->toDateString(), 'especie_id');
+            ReglasPolicultivo::verificarClima($activas, $especie, $confirmado);
 
             $peces = (int) $datos['cantidad_alevinos'];
             $peso = (float) $datos['peso_promedio_inicial_g'];
@@ -52,7 +54,7 @@ class SiembraController extends Controller
         });
 
         return redirect()->route('admin.lagos.index')
-            ->with('estado', __('mensajes.siembra.registrada', ['especie' => CatalogoEspecies::nombre($datos['especie']), 'lago' => $lago->nombre]));
+            ->with('estado', __('mensajes.siembra.registrada', ['especie' => $especie->nombre, 'lago' => $lago->nombre]));
     }
 
     /**

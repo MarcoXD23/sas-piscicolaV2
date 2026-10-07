@@ -144,7 +144,7 @@ class TurnosTest extends TestCase
     {
         $trabajador = $this->persona(Rol::TRABAJADOR);
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subDays(10),
+        $siembra = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(10),
             'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 100, 'peso_actual_g' => 5, 'biomasa_kg' => 0.5]);
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 50]);
 

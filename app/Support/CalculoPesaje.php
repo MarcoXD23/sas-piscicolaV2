@@ -94,10 +94,7 @@ final class CalculoPesaje
     /** Kg con los separadores de la finca y sin ceros de más (2; 35,5; 619,5; 1.234,25). */
     public static function kg(float $valor): string
     {
-        [$decimal] = Region::separadores();
-        $texto = Formato::numero($valor, 2);
-
-        return str_contains($texto, $decimal) ? rtrim(rtrim($texto, '0'), $decimal) : $texto;
+        return Formato::sinCeros($valor);
     }
 
     private static function fila(int $numero, string $tipo, int $cantidad, int $vaciaCent, int $pesadoCent): array

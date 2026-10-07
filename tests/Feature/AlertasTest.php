@@ -53,7 +53,7 @@ class AlertasTest extends TestCase
 
     private function sembrar(int $peces, string $especie = 'mojarra roja'): Siembra
     {
-        return Siembra::create(['lago_id' => $this->lago->id, 'especie' => $especie, 'fecha' => '2026-09-01',
+        return Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie($especie), 'fecha' => '2026-09-01',
             'cantidad_alevinos' => $peces, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => $peces, 'peso_actual_g' => 100, 'biomasa_kg' => $peces / 10]);
     }
 

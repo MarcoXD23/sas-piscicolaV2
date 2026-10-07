@@ -45,7 +45,7 @@ class BitacoraTest extends TestCase
         $this->propietario = $this->persona(Rol::PROPIETARIO, 'Dueña');
         $this->administrador = $this->persona(Rol::ADMINISTRADOR, 'Ana Admin');
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 200, 'biomasa_kg' => 200]);
     }
 

@@ -39,7 +39,7 @@ class PermisosPorRolTest extends TestCase
         $this->finca = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'pais' => 'CO']);
         app(TenantActual::class)->establecer($this->finca->id);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
+        $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 200, 'biomasa_kg' => 200]);
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 500]);
     }
@@ -65,7 +65,7 @@ class PermisosPorRolTest extends TestCase
 
         return [
             'crear lago' => ['post', route('admin.lagos.store'), ['nombre' => 'L02', 'tipo' => 'tierra']],
-            'sembrar' => ['post', route('admin.siembras.store', $this->lago), ['especie' => 'cachama blanca', 'fecha' => '2026-10-15', 'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 5]],
+            'sembrar' => ['post', route('admin.siembras.store', $this->lago), ['especie_id' => $this->especie('cachama blanca'), 'fecha' => '2026-10-15', 'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 5]],
             'muestreo' => ['post', route('admin.muestreos.store', $this->siembra), ['fecha' => '2026-10-15', 'peces_pesados' => 10, 'peso_total_g' => 2500]],
             'mortalidad' => ['post', route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 3]],
             'alimentar' => ['post', route('admin.raciones.store', $this->lago), ['fecha' => '2026-10-15', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 10]],

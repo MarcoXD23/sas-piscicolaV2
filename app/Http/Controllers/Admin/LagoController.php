@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\StockAlimento;
 use App\Models\Tratamiento;
 use App\Support\CalculadoraRacion;
-use App\Support\CatalogoEspecies;
 use App\Support\HistorialLago;
+use App\Support\RangoAgua;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,7 @@ class LagoController extends Controller
             'lago' => $lago,
             'racion' => CalculadoraRacion::paraLago($lago),
             'alertasAgua' => $lago->ultimaMedicion?->alertas($lago->siembrasActivas->pluck('especie')) ?? [],
+            'avisosRango' => RangoAgua::para($lago->siembrasActivas->pluck('especie'))['avisos'],
             'historial' => HistorialLago::eventos($lago, limitePorTipo: self::LIMITE_POR_TIPO)->take(60),
             'siembrasFinalizadas' => $lago->siembras()->whereNotNull('finalizada_at')->latest('finalizada_at')->get(),
             'otrosLagos' => Lago::query()->whereKeyNot($lago->id)->orderBy('nombre')->pluck('nombre', 'id')->all(),
@@ -75,9 +77,9 @@ class LagoController extends Controller
             ->with('estado', __('mensajes.lago.registrado', ['nombre' => $datos['nombre']]));
     }
 
-    /** @return array<string, string> clave => nombre de cada especie del catálogo */
+    /** @return array<int, string> id => nombre de las especies activas del catálogo de la finca (las que se pueden sembrar) */
     private function opcionesEspecies(): array
     {
-        return collect(CatalogoEspecies::todas())->map(fn ($ficha) => $ficha['nombre'])->all();
+        return Especie::query()->activas()->orderBy('nombre')->pluck('nombre', 'id')->all();
     }
 }

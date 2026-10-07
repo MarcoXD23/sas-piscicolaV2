@@ -3,6 +3,7 @@
 namespace App\Support\Asistente;
 
 use App\Models\DespachoAlimento;
+use App\Models\Especie;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -14,7 +15,6 @@ use App\Models\Turno;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\CalculadoraRacion;
-use App\Support\CatalogoEspecies;
 use App\Support\CoberturaBodega;
 use App\Support\Formato;
 use App\Support\Indicadores;
@@ -26,21 +26,38 @@ use App\Support\Region;
  */
 class ContextoFinca
 {
-    /** Instrucciones fijas: no cambian entre preguntas para que el prefijo sea cacheable. */
+    /**
+     * Instrucciones de la finca activa: no cambian entre preguntas (prefijo cacheable) mientras no cambie su catálogo.
+     * Las fichas son las de las especies de ESTA finca; lo que falta va como «sin dato» para que no se invente.
+     */
     public static function instrucciones(): string
     {
-        $especies = collect(CatalogoEspecies::todas())->map(fn ($ficha) => __('asistente.ficha', [
-            'nombre' => $ficha['nombre'], 'cientifico' => $ficha['cientifico'], 'clima' => $ficha['clima'],
-            'temp_min' => $ficha['temperatura'][0], 'temp_max' => $ficha['temperatura'][1], 'oxigeno' => $ficha['oxigeno_min'],
-            'ph_min' => $ficha['ph'][0], 'ph_max' => $ficha['ph'][1], 'meses' => $ficha['meses_cosecha'],
-            'peso' => $ficha['peso_comercial'], 'policultivo' => $ficha['policultivo'],
-        ]))->implode("\n");
+        $especies = Especie::query()->activas()->orderBy('nombre')->get()->map(fn (Especie $especie) => self::ficha($especie->ficha()))->implode("\n");
 
         // Solo fichas y datos de la finca; dos avisos distintos: dato ausente y dato oculto para el rol
         return __('asistente.instrucciones', [
             'dato_ausente' => __('asistente.avisos.dato_ausente'),
             'sin_acceso_rol' => __('asistente.avisos.sin_acceso_rol'),
             'especies' => $especies,
+        ]);
+    }
+
+    /** Una línea por especie con los datos de su ficha; cada dato ausente se escribe como «sin dato». */
+    private static function ficha(array $ficha): string
+    {
+        $sinDato = __('asistente.sin_dato');
+        $rango = fn (?array $r, string $clave) => $r ? __('asistente.'.$clave, ['min' => Formato::sinCeros($r[0]), 'max' => Formato::sinCeros($r[1])]) : $sinDato;
+
+        return __('asistente.ficha', [
+            'nombre' => $ficha['nombre'],
+            'cientifico' => $ficha['cientifico'] ?: $sinDato,
+            'clima' => __($ficha['clima'] === Especie::FRIO ? 'especies.agua_fria' : 'especies.agua_calida'),
+            'temperatura' => $rango($ficha['temperatura'], 'rango_temperatura'),
+            'oxigeno' => $ficha['oxigeno_min'] !== null ? __('asistente.valor_oxigeno', ['valor' => Formato::sinCeros($ficha['oxigeno_min'])]) : $sinDato,
+            'ph' => $rango($ficha['ph'], 'rango_ph'),
+            'meses' => $ficha['meses_cosecha'] ?? $sinDato,
+            'peso' => $ficha['peso_comercial'] ?? $sinDato,
+            'policultivo' => $ficha['policultivo'] ?? $sinDato,
         ]);
     }
 
