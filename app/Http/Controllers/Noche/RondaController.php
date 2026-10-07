@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Noche;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Rol;
 use App\Models\Ronda;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class RondaController extends Controller
@@ -24,11 +26,19 @@ class RondaController extends Controller
             'descripcion.required' => __('mensajes.ronda.describe_novedad'),
         ]);
 
-        $ronda = Ronda::create($datos + [
-            'user_id' => $request->user()->id,
-            'turno_id' => $request->user()->turnoEnCurso(Rol::CELADOR)?->id,
-            'registrada_at' => now(),
-        ]);
+        $ronda = DB::transaction(function () use ($datos, $request) {
+            $ronda = Ronda::create($datos + [
+                'user_id' => $request->user()->id,
+                'turno_id' => $request->user()->turnoEnCurso(Rol::CELADOR)?->id,
+                'registrada_at' => now(),
+            ]);
+
+            Bitacora::registrar($request->user(), $ronda->esNovedad() ? 'novedad' : 'ronda', $ronda->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::CELADOR], [
+                'tipo' => $ronda->textoTipo(), 'descripcion' => (string) $ronda->descripcion,
+            ]);
+
+            return $ronda;
+        });
 
         return redirect()->route('noche.index')->with('estado', $ronda->esNovedad()
             ? __('mensajes.ronda.novedad_registrada_propietario_vera_inicio')

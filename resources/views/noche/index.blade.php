@@ -128,7 +128,7 @@
     </div>
 
     <section class="mt-8">
-        <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('noche.bitacora_ultimas_horas', ['horas' => \App\Http\Controllers\Noche\NocheController::HORAS_BITACORA]) }}</h2>
+        <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('noche.ultimas_horas', ['horas' => \App\Http\Controllers\Noche\NocheController::HORAS_BITACORA]) }}</h2>
 
         @if ($bitacora->isEmpty())
             <x-vacio icono="luna" :mensaje="__('noche.todavia_no_hay_registros_esta')" />

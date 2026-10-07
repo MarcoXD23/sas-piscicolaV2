@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Lago;
 use App\Models\MovimientoAlimento;
+use App\Models\Rol;
 use App\Models\StockAlimento;
 use App\Support\Formato;
 use App\Support\Region;
@@ -47,6 +49,10 @@ class RacionController extends Controller
 
             $stock->cantidad_kg -= $datos['cantidad_kg'];
             $stock->save();
+
+            Bitacora::registrar($request->user(), 'racion', $lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
+                'kg' => (float) $datos['cantidad_kg'], 'concentrado' => $datos['tipo_concentrado'], 'fecha' => $datos['fecha'],
+            ]);
         });
 
         return back()->with('estado', __('mensajes.racion.registrada', ['kg' => Formato::numero($datos['cantidad_kg'], 1), 'lago' => $lago->nombre]));

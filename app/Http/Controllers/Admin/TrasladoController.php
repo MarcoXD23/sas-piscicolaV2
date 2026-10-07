@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Lago;
+use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Traslado;
 use App\Support\Formato;
@@ -89,6 +91,10 @@ class TrasladoController extends Controller
                 $origen->finalizada_at = now();
             }
             $origen->save();
+
+            Bitacora::registrar($request->user(), 'traslado', $origen->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+                'peces' => $cantidad, 'especie' => $origen->nombre_especie, 'destino' => $lagoDestino->nombre, 'fecha' => $datos['fecha'],
+            ]);
 
             return Traslado::create([
                 'siembra_origen_id' => $origen->id,

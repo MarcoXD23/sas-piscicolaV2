@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Abono;
+use App\Models\Bitacora;
 use App\Models\Cosecha;
+use App\Models\Rol;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\Formato;
@@ -76,7 +78,7 @@ class VentaController extends Controller
             $total = (int) round($kg * (int) $datos['precio_kg']);
             $comprador = empty($datos['comprador_id']) ? null : User::find($datos['comprador_id']);
 
-            return Venta::create([
+            $venta = Venta::create([
                 'cosecha_id' => $cosecha->id,
                 'user_id' => $request->user()->id,
                 'comprador_id' => $comprador?->id,
@@ -88,6 +90,13 @@ class VentaController extends Controller
                 'forma_pago' => $datos['forma_pago'],
                 'saldo' => $datos['forma_pago'] === 'credito' ? $total : 0,
             ]);
+
+            Bitacora::registrar($request->user(), 'venta', $cosecha->lago, [Rol::PROPIETARIO], [
+                'kg' => (float) $kg, 'cliente' => $venta->cliente, 'total' => Formato::dinero($total),
+                'forma_pago' => __('ventas.formas_pago.'.$venta->forma_pago), 'fecha' => $datos['fecha'],
+            ]);
+
+            return $venta;
         });
 
         return redirect()->route('admin.ventas.index')->with('estado', __($venta->esCredito() ? 'mensajes.venta.registrada_credito' : 'mensajes.venta.registrada_contado', ['cliente' => $venta->cliente]));

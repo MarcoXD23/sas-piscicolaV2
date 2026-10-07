@@ -8,7 +8,6 @@ return [
     'aireador_encendido_en' => 'Aireador encendido · :lago',
     'apagar' => 'Apagar',
     'aun_no_hay_lagos_registrados' => 'Aún no hay lagos registrados en la finca.',
-    'bitacora_ultimas_horas' => 'Bitácora de las últimas :horas horas',
     'como_estuvo_ronda' => '¿Cómo estuvo la ronda?',
     'descripcion' => 'Descripción',
     'encender' => 'Encender',
@@ -40,4 +39,5 @@ return [
     'toda_la_finca' => 'Toda la finca',
     'todavia_no_hay_registros_esta' => 'Todavía no hay registros esta noche.',
     'turno_hasta' => 'En turno hasta las',
+    'ultimas_horas' => 'Últimas :horas horas de la noche',
 ];

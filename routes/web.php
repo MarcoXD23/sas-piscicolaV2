@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\AjustesFincaController;
 use App\Http\Controllers\Admin\AlertaController;
+use App\Http\Controllers\Admin\BitacoraController;
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\CosechaController;
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/ventas/{venta}/abonos', [VentaController::class, 'abonar'])->name('ventas.abonar');
 
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
+        Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
         Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
     });
 

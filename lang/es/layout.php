@@ -6,6 +6,7 @@ return [
     'menu' => [
         'agenda' => 'Agenda',
         'alertas' => 'Alertas',
+        'bitacora' => 'Bitácora',
         'bodega' => 'Bodega',
         'conversion' => 'Conversión',
         'especies' => 'Especies',

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
+use App\Models\Rol;
 use App\Models\Siembra;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +43,10 @@ class MuestreoController extends Controller
             $siembraBloqueada->peso_actual_g = $pesoPromedio;
             $siembraBloqueada->biomasa_kg = ($siembraBloqueada->peces_vivos * $pesoPromedio) / 1000;
             $siembraBloqueada->save();
+
+            Bitacora::registrar($request->user(), 'muestreo', $siembraBloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+                'especie' => $siembraBloqueada->nombre_especie, 'gramos' => round((float) $pesoPromedio, 2), 'peces' => (int) $datos['peces_pesados'], 'fecha' => $datos['fecha'],
+            ]);
         });
 
         return back()->with('estado', __('mensajes.muestreo.muestreo_registrado_biomasa_recalculada'));

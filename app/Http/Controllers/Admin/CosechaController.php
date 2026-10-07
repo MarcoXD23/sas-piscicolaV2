@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Cosecha;
+use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tratamiento;
 use App\Support\Formato;
@@ -89,6 +91,10 @@ class CosechaController extends Controller
                 $bloqueada->finalizada_at = now();
             }
             $bloqueada->save();
+
+            Bitacora::registrar($request->user(), 'cosecha', $bloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+                'peces' => $peces, 'kg' => (float) $kg, 'especie' => $bloqueada->nombre_especie, 'fecha' => $datos['fecha'],
+            ]);
 
             return $cosecha;
         });

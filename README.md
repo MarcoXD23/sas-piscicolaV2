@@ -162,6 +162,18 @@ En **Conversión** (propietario y administrador) se ve el FCA = kg de alimento �
 - El peso sale de la siembra, los muestreos, las cosechas y los traslados, interpolado entre fechas; el FCA se calcula hasta el último peso conocido. Sin ganancia (cero o negativa) o sin muestreo no se calcula y se muestra el motivo.
 - El costo por lago no está incluido: requeriría guardar el precio por kg en las entradas de bodega.
 
+### Bitácora
+
+Registro de **solo inserción** de ración, mortalidad, traslado, muestreo, ronda, novedad, cosecha y venta: usuario, rol con el que actuó, acción, lago, detalle (copia de los datos de ese momento) y el instante exacto con la zona horaria que tenía la finca. Se escribe en la misma transacción que la acción. El propietario la consulta en **Bitácora** con filtros por persona, rol, fechas y lago.
+
+No se puede editar ni borrar:
+
+1. El modelo `Bitacora` lanza un error al actualizar o borrar.
+2. Un trigger de PostgreSQL rechaza `UPDATE`, `DELETE` y `TRUNCATE` sobre la tabla.
+3. La migración quita esos permisos al usuario de la base, y las llaves foráneas impiden borrar fincas, usuarios o lagos con registros.
+
+El paso 3 solo tiene efecto si la aplicación **no** se conecta como superusuario de PostgreSQL (un superusuario ignora los permisos y podría desactivar el trigger). En producción usa un usuario propio, sin superusuario, dueño de las tablas.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash

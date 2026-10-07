@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
+use App\Models\Rol;
 use App\Models\Siembra;
 use App\Support\Formato;
 use App\Support\Region;
@@ -42,6 +44,10 @@ class MortalidadController extends Controller
             $siembraBloqueada->peces_vivos -= $datos['cantidad'];
             $siembraBloqueada->biomasa_kg = ($siembraBloqueada->peces_vivos * $siembraBloqueada->peso_actual_g) / 1000;
             $siembraBloqueada->save();
+
+            Bitacora::registrar($request->user(), 'mortalidad', $siembraBloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
+                'peces' => (int) $datos['cantidad'], 'especie' => $siembraBloqueada->nombre_especie, 'fecha' => $datos['fecha'],
+            ]);
         });
 
         return back()->with('estado', __('mensajes.mortalidad.mortalidad_registrada_peces_descontados'));
