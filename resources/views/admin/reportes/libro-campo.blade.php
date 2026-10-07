@@ -6,7 +6,8 @@
     @php $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales); @endphp
 
     <x-encabezado-reporte :titulo="__('reportes.libro_campo_lago', ['lago' => $lago->nombre])"
-                          :periodo="__('reportes.periodo_libro', ['desde' => $desde->format('d/m/Y'), 'hasta' => $hasta->format('d/m/Y'), 'tipo' => __('lagos.tipos.'.$lago->tipo)])" />
+                          :periodo="__('reportes.periodo_libro', ['desde' => $desde->format('d/m/Y'), 'hasta' => $hasta->format('d/m/Y'), 'tipo' => __('lagos.tipos.'.$lago->tipo)])"
+                          :descargas="collect(['excel' => 'admin.reportes.libro-campo.excel', 'pdf' => 'admin.reportes.libro-campo.pdf'])->map(fn ($ruta) => route($ruta, ['lago_id' => $lago->id, 'desde' => $desde->toDateString(), 'hasta' => $hasta->toDateString()]))->all()" />
 
     <section class="mb-6 break-inside-avoid">
         <h2 class="mb-2 text-lg font-semibold text-slate-900">{{ __('reportes.siembras_periodo') }}</h2>

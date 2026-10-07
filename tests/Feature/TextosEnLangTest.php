@@ -32,7 +32,9 @@ class TextosEnLangTest extends TestCase
 
             return "\x01";
         };
-        $s = preg_replace_callback('/\{!!.*?!!\}|\{\{.*?\}\}|@php\b.*?@endphp|<script\b.*?<\/script>|<style\b.*?<\/style>/s', $proteger, $s);
+        // El CSS no es texto de la interfaz (por ejemplo, nombres de fuentes en la plantilla del PDF)
+        $s = preg_replace('/<style\b.*?<\/style>/s', ' ', $s);
+        $s = preg_replace_callback('/\{!!.*?!!\}|\{\{.*?\}\}|@php\b.*?@endphp|<script\b.*?<\/script>/s', $proteger, $s);
         $s = preg_replace_callback('/@\w+(?:\s*(\((?:[^()\'"]++|\'[^\']*\'|"[^"]*"|(?1))*\)))?/', $proteger, $s);
 
         if (preg_match_all('/(?<=\s)(?:'.self::ATRIBUTOS.')="([^"]*)"/u', $s, $m)) {

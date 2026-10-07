@@ -174,6 +174,10 @@ No se puede editar ni borrar:
 
 El paso 3 solo tiene efecto si la aplicación **no** se conecta como superusuario de PostgreSQL (un superusuario ignora los permisos y podría desactivar el trigger). En producción usa un usuario propio, sin superusuario, dueño de las tablas.
 
+### Exportar reportes
+
+El informe mensual y el libro de campo se descargan en **Excel** (`openspout/openspout`, una hoja por sección, con los números como números) y en **PDF** (`dompdf/dompdf`, plantilla `resources/views/pdf/reporte.blade.php`). Pantalla, Excel y PDF usan los mismos datos (`App\Support\Reportes`), siempre de la finca del usuario, con fechas en su zona horaria y textos y formatos de su idioma y país. Las ventas y las entradas de bodega solo van en los archivos del propietario.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash

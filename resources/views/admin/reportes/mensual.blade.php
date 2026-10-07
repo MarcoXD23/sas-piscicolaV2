@@ -9,7 +9,8 @@
         $totalAlimento = $lagos->sum('alimento_kg');
     @endphp
 
-    <x-encabezado-reporte :titulo="__('reportes.informe_mensual')" :periodo="ucfirst($mes->translatedFormat(__('comun.formatos.mes_anio')))" />
+    <x-encabezado-reporte :titulo="__('reportes.informe_mensual')" :periodo="ucfirst($mes->translatedFormat(__('comun.formatos.mes_anio')))"
+                          :descargas="['excel' => route('admin.reportes.mensual.excel', ['mes' => $mes->format('Y-m')]), 'pdf' => route('admin.reportes.mensual.pdf', ['mes' => $mes->format('Y-m')])]" />
 
     <section class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 print:grid-cols-4">
         <x-indicador :etiqueta="__('reportes.peces_sembrados')" :valor="$numero($siembrasNuevas->sum('cantidad_alevinos'))" />

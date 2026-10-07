@@ -110,6 +110,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
         Route::get('/reportes/libro-de-campo', [ReporteController::class, 'libroCampo'])->name('reportes.libro-campo');
+        Route::get('/reportes/mensual/excel', [ReporteController::class, 'mensualExcel'])->name('reportes.mensual.excel');
+        Route::get('/reportes/mensual/pdf', [ReporteController::class, 'mensualPdf'])->name('reportes.mensual.pdf');
+        Route::get('/reportes/libro-de-campo/excel', [ReporteController::class, 'libroCampoExcel'])->name('reportes.libro-campo.excel');
+        Route::get('/reportes/libro-de-campo/pdf', [ReporteController::class, 'libroCampoPdf'])->name('reportes.libro-campo.pdf');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {

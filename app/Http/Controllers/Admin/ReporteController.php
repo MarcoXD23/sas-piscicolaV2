@@ -3,30 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Abono;
-use App\Models\Cosecha;
-use App\Models\HoraExtra;
 use App\Models\Lago;
-use App\Models\MedicionAgua;
-use App\Models\Mortalidad;
-use App\Models\MovimientoAlimento;
-use App\Models\Muestreo;
-use App\Models\Rol;
-use App\Models\Ronda;
-use App\Models\Siembra;
-use App\Models\Tarea;
-use App\Models\Traslado;
-use App\Models\Tratamiento;
-use App\Models\Venta;
-use App\Support\HistorialLago;
 use App\Support\Region;
+use App\Support\Reportes\ExportadorExcel;
+use App\Support\Reportes\ExportadorPdf;
+use App\Support\Reportes\InformeMensual;
+use App\Support\Reportes\LibroCampo;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Reportes imprimibles (propietario y administrador): informe mensual y libro de campo por lago.
- * Se guardan como PDF desde el diálogo de impresión del navegador.
+ * Se ven en pantalla (imprimibles) y se descargan en Excel y PDF con los mismos datos (App\Support\Reportes).
  */
 class ReporteController extends Controller
 {
@@ -39,61 +31,49 @@ class ReporteController extends Controller
 
     public function mensual(Request $request): View
     {
-        $mes = $this->mes($request->query('mes'));
-        $desde = $mes->toDateString();
-        $hasta = $mes->endOfMonth()->toDateString();
-        $enMes = fn ($consulta, string $columna = 'fecha') => $consulta->whereBetween($columna, [$desde, $hasta]);
-        $enMesMomento = fn ($consulta, string $columna) => $consulta->whereBetween($columna, [$mes, $mes->endOfMonth()]);
+        return view('admin.reportes.mensual', InformeMensual::datos($request->user(), $this->mes($request->query('mes'))));
+    }
 
-        $mortalidadPorLago = $enMes(Mortalidad::query()->join('siembras', 'siembras.id', '=', 'mortalidades.siembra_id'), 'mortalidades.fecha')
-            ->groupBy('siembras.lago_id')->selectRaw('siembras.lago_id, SUM(mortalidades.cantidad) AS total')->pluck('total', 'lago_id');
-        $alimentoPorLago = $enMes(MovimientoAlimento::where('tipo_movimiento', 'salida'))
-            ->groupBy('lago_id')->selectRaw('lago_id, SUM(cantidad_kg) AS total')->pluck('total', 'lago_id');
-        $muestreosPorLago = $enMes(Muestreo::query()->join('siembras', 'siembras.id', '=', 'muestreos.siembra_id'), 'muestreos.fecha')
-            ->groupBy('siembras.lago_id')->selectRaw('siembras.lago_id, COUNT(*) AS total')->pluck('total', 'lago_id');
+    public function mensualExcel(Request $request): BinaryFileResponse
+    {
+        $datos = InformeMensual::datos($request->user(), $this->mes($request->query('mes')));
 
-        $lagos = Lago::query()->with('siembrasActivas')->orderBy('nombre')->get()->map(fn (Lago $lago) => [
-            'lago' => $lago,
-            'mortalidad' => (int) ($mortalidadPorLago[$lago->id] ?? 0),
-            'alimento_kg' => (float) ($alimentoPorLago[$lago->id] ?? 0),
-            'muestreos' => (int) ($muestreosPorLago[$lago->id] ?? 0),
-        ]);
+        return ExportadorExcel::descargar(InformeMensual::tablas($datos), $this->lineasEncabezado($request, $this->contextoMensual($request, $datos)),
+            $this->nombreArchivo($request, 'informe-mensual-'.$datos['mes']->format('Y-m'), 'xlsx'));
+    }
 
-        $mediciones = $enMesMomento(MedicionAgua::query()->with(['lago.siembrasActivas']), 'medido_at')->get();
-        $siembrasNuevas = $enMes(Siembra::query()->with('lago'))->orderBy('fecha')->get();
+    public function mensualPdf(Request $request): Response
+    {
+        $datos = InformeMensual::datos($request->user(), $this->mes($request->query('mes')));
 
-        return view('admin.reportes.mensual', [
-            'mes' => $mes,
-            'lagos' => $lagos,
-            'siembrasNuevas' => $siembrasNuevas,
-            'alimentoPorConcentrado' => $enMes(MovimientoAlimento::where('tipo_movimiento', 'salida'))
-                ->groupBy('tipo_concentrado')->selectRaw('tipo_concentrado, SUM(cantidad_kg) AS total')->orderBy('tipo_concentrado')
-                ->pluck('total', 'tipo_concentrado'),
-            // Las entradas a bodega son información del propietario
-            'entradasBodega' => $request->user()->tieneRol(Rol::PROPIETARIO)
-                ? $enMes(MovimientoAlimento::where('tipo_movimiento', 'entrada'))->orderBy('fecha')->get()
-                : null,
-            'cosechas' => $enMes(Cosecha::query()->with(['lago', 'siembra']))->orderBy('fecha')->get(),
-            // Las ventas (dinero) son información del propietario
-            'ventas' => $request->user()->tieneRol(Rol::PROPIETARIO)
-                ? [
-                    'total' => (int) $enMes(Venta::query())->sum('total'),
-                    'kg' => (float) $enMes(Venta::query())->sum('kg'),
-                    'a_credito' => (int) $enMes(Venta::where('forma_pago', 'credito'))->sum('total'),
-                    'abonos' => (int) $enMes(Abono::query())->sum('valor'),
-                ]
-                : null,
-            'traslados' => $enMes(Traslado::query()->with(['lagoOrigen', 'lagoDestino', 'siembraOrigen']))->orderBy('fecha')->get(),
-            'tratamientos' => $enMes(Tratamiento::query()->with('lago'), 'fecha_inicio')->orderBy('fecha_inicio')->get(),
-            'mediciones' => $mediciones->count(),
-            'medicionesConAlerta' => $mediciones->filter(fn (MedicionAgua $m) => $m->alertas($m->lago->siembrasActivas->pluck('especie')) !== [])->count(),
-            'novedades' => $enMesMomento(Ronda::novedades()->with('lago'), 'registrada_at')->orderBy('registrada_at')->get(),
-            'tareasCompletadas' => $enMesMomento(Tarea::query(), 'completada_at')->count(),
-            'horasExtraAprobadas' => (float) $enMes(HoraExtra::query()->aprobadas())->sum('horas'),
-        ]);
+        return ExportadorPdf::descargar(InformeMensual::tablas($datos), $this->contextoMensual($request, $datos),
+            $this->nombreArchivo($request, 'informe-mensual-'.$datos['mes']->format('Y-m'), 'pdf'));
     }
 
     public function libroCampo(Request $request): View
+    {
+        return view('admin.reportes.libro-campo', $this->datosLibroCampo($request));
+    }
+
+    public function libroCampoExcel(Request $request): BinaryFileResponse
+    {
+        $datos = $this->datosLibroCampo($request);
+
+        return ExportadorExcel::descargar(LibroCampo::tablas($datos), $this->lineasEncabezado($request, $this->contextoLibroCampo($request, $datos)),
+            $this->nombreArchivo($request, 'libro-de-campo-'.Str::slug($datos['lago']->nombre).'-'.$datos['desde']->format('Y-m-d').'-'.$datos['hasta']->format('Y-m-d'), 'xlsx'));
+    }
+
+    public function libroCampoPdf(Request $request): Response
+    {
+        $datos = $this->datosLibroCampo($request);
+
+        return ExportadorPdf::descargar(LibroCampo::tablas($datos), $this->contextoLibroCampo($request, $datos),
+            $this->nombreArchivo($request, 'libro-de-campo-'.Str::slug($datos['lago']->nombre).'-'.$datos['desde']->format('Y-m-d').'-'.$datos['hasta']->format('Y-m-d'), 'pdf'),
+            'landscape');
+    }
+
+    /** @return array<string, mixed> */
+    private function datosLibroCampo(Request $request): array
     {
         $datos = $request->validate([
             'lago_id' => ['required', 'integer'],
@@ -101,21 +81,52 @@ class ReporteController extends Controller
             'hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:desde'],
         ]);
 
+        // El global scope de la finca hace que un lago de otra finca no se encuentre (404)
         $lago = Lago::query()->findOrFail($datos['lago_id']);
         $hasta = CarbonImmutable::parse($datos['hasta'] ?? Region::hoy()->toDateString(), Region::zona());
         $desde = CarbonImmutable::parse($datos['desde'] ?? $hasta->subMonths(3)->toDateString(), Region::zona());
 
-        return view('admin.reportes.libro-campo', [
-            'lago' => $lago,
-            'desde' => $desde,
-            'hasta' => $hasta,
-            'siembras' => $lago->siembras()
-                ->where('fecha', '<=', $hasta->toDateString())
-                ->where(fn ($q) => $q->whereNull('finalizada_at')->orWhere('finalizada_at', '>=', $desde))
-                ->orderBy('fecha')->get(),
-            // El libro va en orden cronológico (del más antiguo al más reciente)
-            'registros' => HistorialLago::eventos($lago, $desde, $hasta)->reverse()->values(),
-        ]);
+        return LibroCampo::datos($lago, $desde, $hasta);
+    }
+
+    /** @return array{finca: string, titulo: string, periodo: string, generado: string, notas: list<string>} */
+    private function contextoMensual(Request $request, array $datos): array
+    {
+        return [
+            'finca' => $request->user()->tenant->nombre,
+            'titulo' => __('reportes.informe_mensual'),
+            'periodo' => ucfirst($datos['mes']->translatedFormat(__('comun.formatos.mes_anio'))),
+            'generado' => $this->generado($request),
+            'notas' => [__('region.aviso_trazabilidad')],
+        ];
+    }
+
+    /** @return array{finca: string, titulo: string, periodo: string, generado: string, notas: list<string>} */
+    private function contextoLibroCampo(Request $request, array $datos): array
+    {
+        return [
+            'finca' => $request->user()->tenant->nombre,
+            'titulo' => __('reportes.libro_campo_lago', ['lago' => $datos['lago']->nombre]),
+            'periodo' => __('reportes.periodo_libro', ['desde' => $datos['desde']->format('d/m/Y'), 'hasta' => $datos['hasta']->format('d/m/Y'), 'tipo' => __('lagos.tipos.'.$datos['lago']->tipo)]),
+            'generado' => $this->generado($request),
+            'notas' => [__('region.aviso_libro_campo')],
+        ];
+    }
+
+    private function generado(Request $request): string
+    {
+        return __('componentes.generado_el', ['momento' => Region::ahora()->format('d/m/Y H:i'), 'nombre' => $request->user()->name]);
+    }
+
+    /** @return list<string> */
+    private function lineasEncabezado(Request $request, array $contexto): array
+    {
+        return [$contexto['finca'], $contexto['titulo'], $contexto['periodo'], $contexto['generado']];
+    }
+
+    private function nombreArchivo(Request $request, string $base, string $extension): string
+    {
+        return $base.'-'.Str::slug($request->user()->tenant->codigo).'.'.$extension;
     }
 
     private function mes(?string $valor): CarbonImmutable
