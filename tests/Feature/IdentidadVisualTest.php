@@ -47,7 +47,8 @@ class IdentidadVisualTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('href="/manifest.webmanifest"', false)
-            ->assertSee('href="/icono.svg"', false)
+            ->assertSee('href="/favicon.ico"', false)
+            ->assertSee('href="/icons/icon-192.png"', false)
             ->assertSee('href="/icons/apple-touch-icon.png"', false)
             ->assertSee('/images/login-fondo.webp', false);
     }

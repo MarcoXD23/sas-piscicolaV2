@@ -1,9 +1,4 @@
-{{-- Ícono de la marca; mismas formas que public/icono.svg --}}
-<svg viewBox="0 0 512 512" aria-hidden="true" {{ $attributes }}>
-    <rect width="512" height="512" rx="128" fill="#11514d"/>
-    <ellipse cx="256" cy="268" rx="184" ry="128" fill="#0d7e75"/>
-    <path d="M176 262C226 196 326 186 396 262C326 338 226 328 176 262Z" fill="#effcf9"/>
-    <path d="M186 262L124 212L136 262L124 312Z" fill="#effcf9"/>
-    <circle cx="350" cy="250" r="13" fill="#11514d"/>
-    <path d="M178 104c26-14 52-14 78 0s52 14 78 0" fill="none" stroke="#57d5c3" stroke-width="18" stroke-linecap="round"/>
-</svg>
+@props(['alt' => null])
+
+{{-- Ícono de la marca (trucha arcoíris con corona). Archivo liviano de public/icons; el original queda en docs/marca. --}}
+<img src="/icons/icon-192.png" width="192" height="192" decoding="async" alt="{{ $alt ?? __('layout.logo_alt') }}" {{ $attributes->class('object-cover') }}>

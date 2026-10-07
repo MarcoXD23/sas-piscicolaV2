@@ -5,6 +5,7 @@ SaaS multi-tenant para la gestión de fincas piscícolas: lagos, siembras y poli
 - **Stack:** Laravel 13 · PostgreSQL · Blade + Tailwind 4 (compilado con Vite, sin CDN) · Alpine.js · Sanctum (API) · SDK oficial de Anthropic (asistente).
 - **Región por finca:** país, zona horaria e idioma se configuran en **Ajustes** (ver [Regionalización](#regionalización)). **Idioma:** español; todos los textos de la interfaz están en `lang/es`.
 - **Pensado primero para celular**, porque el personal la usa en la finca. Se instala como app (PWA) y muestra un aviso cuando no hay conexión.
+- **Marca:** trucha arcoíris con corona. Los archivos de la marca están en `docs/marca/`; la app usa solo las copias livianas de `public/` (`favicon.ico` y `public/icons/`, cada una de menos de 200 KB). `icono-original.png` nunca se carga. Pendiente: un favicon simplificado para 16 px.
 
 ## Roles
 

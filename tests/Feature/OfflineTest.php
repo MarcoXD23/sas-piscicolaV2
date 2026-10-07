@@ -54,7 +54,7 @@ class OfflineTest extends TestCase
 
     public function test_los_archivos_de_la_pwa_existen(): void
     {
-        foreach (['sw.js', 'offline.html', 'manifest.webmanifest', 'icono.svg', 'icons/icono-192.png'] as $archivo) {
+        foreach (['sw.js', 'offline.html', 'manifest.webmanifest', 'favicon.ico', 'icons/icon-192.png'] as $archivo) {
             $this->assertFileExists(public_path($archivo));
         }
         $this->assertStringContainsString("'/offline.html'", $this->serviceWorker());

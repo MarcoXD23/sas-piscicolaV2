@@ -7,11 +7,11 @@
  * - Al cerrar sesión la página pide borrar las copias ({tipo: 'limpiar'}); el servidor además envía Clear-Site-Data.
  * - Nada se registra sin conexión: los formularios verifican la señal antes de enviar (resources/js/app.js).
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;
-const PRECARGA = ['/offline.html', '/icono.svg', '/icons/icono-192.png', '/manifest.webmanifest'];
+const PRECARGA = ['/offline.html', '/favicon.ico', '/icons/icon-192.png', '/manifest.webmanifest'];
 const ESTATICOS = ['/build/', '/images/', '/icons/'];
 const NUNCA_GUARDAR = ['/login', '/registro', '/olvide-contrasena', '/restablecer-contrasena', '/plataforma', '/asistente', '/logout', '/api/', '/up'];
 const DESCARGAS = ['/excel', '/pdf'];

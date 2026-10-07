@@ -6,9 +6,9 @@
     <meta name="theme-color" content="#0f655f">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@hasSection('titulo')@yield('titulo') · @endif{{ config('app.name') }}</title>
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" href="/icono.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180">
     <link rel="manifest" href="/manifest.webmanifest">
     <script>window.textos = @json(__('js'));</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

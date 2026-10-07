@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'logo_alt' => 'El SAS Piscícola',
     'mas' => 'Más',
     'mas_secciones' => 'Más secciones',
     'menu' => [
