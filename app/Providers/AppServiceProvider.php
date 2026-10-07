@@ -65,5 +65,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Cada pregunta al asistente cuesta dinero: máximo 10 por minuto por persona
         RateLimiter::for('asistente', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id));
+
+        // Recuperar contraseña: 5 intentos por minuto por IP, con un contador aparte para pedir enlaces y para restablecer
+        RateLimiter::for('pedir-enlace-contrasena', fn (Request $request) => Limit::perMinute(5)->by('enlace|'.$request->ip()));
+        RateLimiter::for('restablecer-contrasena', fn (Request $request) => Limit::perMinute(5)->by('restablecer|'.$request->ip()));
     }
 }

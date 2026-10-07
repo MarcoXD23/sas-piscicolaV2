@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
+use App\Notifications\RestablecerContrasena;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -22,6 +23,12 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, PerteneceATenant;
+
+    /** Envía el correo de "olvidé mi contraseña" con los textos de lang/es. */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new RestablecerContrasena($token));
+    }
 
     /**
      * Get the attributes that should be cast.

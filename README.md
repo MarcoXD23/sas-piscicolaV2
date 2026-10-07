@@ -79,6 +79,7 @@ Edita `.env`:
 | `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5`. |
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash`. |
+| `MAIL_*` | Correo saliente (recuperar contraseña). Vacío = los correos se escriben en `storage/logs/laravel.log`. |
 
 ### Asistente IA: elegir proveedor
 
@@ -98,6 +99,24 @@ Luego:
 php artisan migrate
 npm run build      # o `npm run dev` durante el desarrollo
 ```
+
+### Correo y recuperar contraseña
+
+En **Ingresar → ¿Olvidaste tu contraseña?** la persona escribe su correo y recibe un mensaje con el botón **Restablecer contraseña**. El enlace sirve una sola vez y vence a los 30 minutos (`config/auth.php`). La pantalla responde lo mismo exista o no el correo, y hay un límite de 5 intentos por minuto para pedir enlaces y otros 5 para restablecer. Al cambiar la contraseña se cierran las sesiones recordadas y los accesos de la API.
+
+Para enviar con Gmail, crea una **contraseña de aplicación** (cuenta de Google → Seguridad → Verificación en 2 pasos → Contraseñas de aplicaciones) y ponla en `.env`:
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=tucorreo@gmail.com
+MAIL_PASSWORD=la-clave-de-aplicacion-de-16-letras
+MAIL_FROM_ADDRESS=tucorreo@gmail.com
+MAIL_FROM_NAME="El SAS Piscícola"
+```
+
+Luego `php artisan config:clear`. Mientras `MAIL_MAILER` esté vacío, el correo (con el enlace) queda en `storage/logs/laravel.log`.
 
 ### Primer propietario
 

@@ -21,6 +21,10 @@
 
             <x-boton class="w-full">{{ __('acceso.ingresar') }}</x-boton>
         </x-formulario>
+
+        <p class="mt-4 text-center">
+            <a href="{{ route('password.request') }}" class="inline-flex min-h-11 items-center text-base font-medium text-marca-700 hover:underline">{{ __('acceso.recuperar.enlace_login') }}</a>
+        </p>
     </x-tarjeta>
 
     <p class="mt-6 text-center text-base text-marca-50">

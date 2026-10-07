@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\AsistenteController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RecuperarContrasenaController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
 use App\Http\Controllers\InicioController;
@@ -36,6 +37,11 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/registro', [RegistroController::class, 'create'])->name('registro');
     Route::post('/registro', [RegistroController::class, 'store'])->middleware('throttle:10,1');
+
+    Route::get('/olvide-contrasena', [RecuperarContrasenaController::class, 'create'])->name('password.request');
+    Route::post('/olvide-contrasena', [RecuperarContrasenaController::class, 'store'])->middleware('throttle:pedir-enlace-contrasena')->name('password.email');
+    Route::get('/restablecer-contrasena/{token}', [RecuperarContrasenaController::class, 'edit'])->name('password.reset');
+    Route::post('/restablecer-contrasena', [RecuperarContrasenaController::class, 'update'])->middleware('throttle:restablecer-contrasena')->name('password.update');
 });
 
 Route::middleware(['auth', 'tenant'])->group(function () {

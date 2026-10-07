@@ -15,7 +15,7 @@ class CierreTest extends TestCase
     use RefreshDatabase;
 
     /** Rutas que no exigen sesión, a propósito. */
-    private const PUBLICAS = ['login', 'registro', 'api/login', 'sanctum/csrf-cookie', 'up'];
+    private const PUBLICAS = ['login', 'registro', 'olvide-contrasena', 'restablecer-contrasena', 'restablecer-contrasena/{token}', 'api/login', 'sanctum/csrf-cookie', 'up'];
 
     /** @return list<Route> */
     private function rutas(): array

@@ -14,7 +14,8 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    // Si MAIL_MAILER está vacío, los correos se escriben en storage/logs/laravel.log
+    'default' => env('MAIL_MAILER') ?: 'log',
 
     /*
     |--------------------------------------------------------------------------
@@ -39,10 +40,10 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
+            'scheme' => env('MAIL_SCHEME') ?: null,
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'host' => env('MAIL_HOST') ?: '127.0.0.1',
+            'port' => env('MAIL_PORT') ?: 2525,
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
@@ -111,8 +112,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS') ?: 'no-responder@'.(parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost'),
+        'name' => env('MAIL_FROM_NAME') ?: env('APP_NAME', 'Laravel'),
     ],
 
 ];
