@@ -118,7 +118,8 @@ class DashboardsYReportesTest extends TestCase
         MedicionAgua::create(['lago_id' => $this->lago->id, 'user_id' => $this->propietario->id, 'medido_at' => now()->subHour(), 'oxigeno_mg_l' => 2]);
 
         $this->actingAs($this->persona(Rol::CELADOR))->get(route('inicio'))->assertSee('Calidad del agua fuera de rango')->assertSee('Oxígeno de 2 mg/L');
-        $this->actingAs($this->persona(Rol::ADMINISTRADOR))->get(route('inicio'))->assertSee('Calidad del agua fuera de rango');
+        // Propietario y administrador la ven en la tarjeta de alertas (historial)
+        $this->actingAs($this->persona(Rol::ADMINISTRADOR))->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 1]))->assertSee('Oxígeno de 2 mg/L');
     }
 
     // --- Reportes ---

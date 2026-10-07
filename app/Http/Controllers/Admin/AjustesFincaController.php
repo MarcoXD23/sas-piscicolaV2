@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * País, zona horaria e idioma de la finca (exclusivo del propietario).
+ * País, zona horaria, idioma y umbrales de alerta de la finca (exclusivo del propietario).
  */
 class AjustesFincaController extends Controller
 {
@@ -41,12 +42,19 @@ class AjustesFincaController extends Controller
             }],
             'zona_horaria' => ['required', 'string', Rule::in(Region::zonasValidas())],
             'idioma' => ['required', 'string', Rule::in(Region::IDIOMAS)],
+            'alerta_stock_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:90'],
+            'alerta_mortalidad_porcentaje' => ['sometimes', 'required', 'numeric', 'min:0.1', 'max:100'],
+            'alerta_mortalidad_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:60'],
         ], [
             'zona_horaria.in' => __('region.ajustes.zona_invalida'),
             'idioma.in' => __('region.ajustes.idioma_invalido'),
         ]);
 
-        $request->user()->tenant->update($datos);
+        $finca = $request->user()->tenant;
+        $finca->update($datos);
+
+        // Con los umbrales nuevos las alertas abiertas pueden cerrarse o abrirse otras
+        EvaluadorAlertas::paraFinca($finca->id);
 
         return redirect()->route('admin.ajustes.edit')->with('estado', __('region.ajustes.guardados'));
     }

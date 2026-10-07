@@ -10,6 +10,7 @@ use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\TenantActual;
@@ -146,8 +147,12 @@ class AlimentacionYBodegaTest extends TestCase
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 0]);
         $administrador = tap(User::factory()->create(['tenant_id' => $this->propietario->tenant_id]))->asignarRoles([Rol::ADMINISTRADOR]);
 
-        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee('Revisa la bodega')->assertSee('Engorde:');
-        $this->actingAs($administrador)->get(route('inicio'))->assertDontSee('Revisa la bodega');
+        EvaluadorAlertas::paraFinca($this->propietario->tenant_id);
+        $aviso = __('alertas.mensajes.stock_agotado', ['concentrado' => 'Engorde']);
+
+        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee($aviso);
+        // La bodega es del propietario: el administrador no ve esa alerta
+        $this->actingAs($administrador)->get(route('inicio'))->assertDontSee($aviso);
     }
 
     public function test_la_bodega_muestra_y_filtra_los_movimientos(): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Alerta;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -12,7 +13,6 @@ use App\Models\Tarea;
 use App\Models\Turno;
 use App\Models\Venta;
 use App\Support\CalculadoraRacion;
-use App\Support\CoberturaBodega;
 use App\Support\Indicadores;
 use App\Support\Region;
 use Illuminate\Http\Request;
@@ -46,7 +46,11 @@ class InicioController extends Controller
             'racionesHoy' => $usuario->tieneRol(Rol::TRABAJADOR) ? $this->racionesHoy() : collect(),
 
             // Avisos
-            'alertasBodega' => $esPropietario ? CoberturaBodega::alertas() : collect(),
+            // Alertas abiertas (historial en Alertas): el administrador no ve las de bodega
+            'alertas' => $esTecnico
+                ? Alerta::query()->abiertas()->whereIn('tipo', Alerta::tiposVisiblesPara($usuario))
+                    ->orderByRaw('severidad = ? DESC', [Alerta::CRITICA])->latest('abierta_at')->get()
+                : collect(),
             'recordatorios' => $esPropietario
                 ? EventoAgenda::query()->with('lago')->paraRecordar()->orderBy('inicia_at')->limit(10)->get()
                 : collect(),
@@ -56,7 +60,8 @@ class InicioController extends Controller
             'novedadesNoche' => $esTecnico
                 ? Ronda::novedades()->with(['lago', 'usuario'])->where('registrada_at', '>=', now()->subDay())->latest('registrada_at')->get()
                 : collect(),
-            'lagosConAlertaAgua' => ($esTecnico || $usuario->tieneRol(Rol::CELADOR)) ? $this->lagosConAlertaAgua() : collect(),
+            // El celador ve el agua en vivo (propietario y administrador la ven en las alertas)
+            'lagosConAlertaAgua' => (! $esTecnico && $usuario->tieneRol(Rol::CELADOR)) ? $this->lagosConAlertaAgua() : collect(),
 
             // Producción (propietario y administrador)
             'lagosActivos' => $produccion['lagos_activos'] ?? 0,

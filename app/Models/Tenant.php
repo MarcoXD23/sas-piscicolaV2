@@ -12,11 +12,19 @@ class Tenant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'codigo', 'pais', 'zona_horaria', 'idioma'];
+    protected $fillable = [
+        'nombre', 'codigo', 'pais', 'zona_horaria', 'idioma',
+        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias',
+    ];
 
     protected function casts(): array
     {
-        return ['suspendida_at' => InstanteLocal::class];
+        return [
+            'suspendida_at' => InstanteLocal::class,
+            'alerta_stock_dias' => 'integer',
+            'alerta_mortalidad_porcentaje' => 'float',
+            'alerta_mortalidad_dias' => 'integer',
+        ];
     }
 
     protected static function booted(): void

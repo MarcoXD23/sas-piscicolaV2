@@ -43,6 +43,13 @@ return [
         'modelo' => env('GEMINI_MODEL') ?: 'gemini-3.8-flash',
     ],
 
+    // Canal de WhatsApp para alertas críticas. Sin proveedor implementado todavía: queda inactivo (CanalNulo).
+    'whatsapp' => [
+        'proveedor' => env('WHATSAPP_PROVEEDOR'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'numero_id' => env('WHATSAPP_NUMERO_ID'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

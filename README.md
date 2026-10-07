@@ -138,6 +138,21 @@ php artisan piscicola:crear-admin-plataforma
 
 El comando pide nombre, correo y contraseña (mínimo 12 caracteres). Al suspender una finca su personal no puede ingresar (web ni API) y ve un mensaje claro; las sesiones abiertas se cierran en el siguiente clic y los tokens de la API se revocan. Los datos de la finca no se borran.
 
+### Alertas
+
+Cada finca recibe alertas de **stock de alimento bajo o agotado**, **mortalidad anormal en un lago** y **agua fuera de rango**. Para el agua se usan los mismos rangos de las especies que ya usan el inicio, Seguridad & Noche y el asistente IA (`MedicionAgua::problemas()`). Los umbrales de stock (días mínimos) y de mortalidad (porcentaje y período) se editan en **Ajustes**.
+
+- Se guardan como historial (tabla `alertas`, página **Alertas**). Una alerta abierta no se repite: un índice único parcial de PostgreSQL lo garantiza. Se cierra sola cuando el problema se resuelve.
+- El propietario las ve todas en su inicio; el administrador ve las de mortalidad y agua (la bodega no es suya).
+- Las **críticas** (stock agotado, oxígeno bajo, mortalidad del doble del umbral) se envían **una vez** por correo a los propietarios.
+- Se revisan al guardar movimientos de bodega, mortalidad y mediciones de agua, y cada hora con `php artisan piscicola:evaluar-alertas`. Para lo segundo, el servidor necesita el cron de Laravel:
+
+```
+* * * * * cd /ruta/del/proyecto && php artisan schedule:run >> /dev/null 2>&1
+```
+
+**WhatsApp:** existe la interfaz `CanalNotificacion` (con `CanalCorreo` y `CanalNulo`) y las variables `WHATSAPP_*` vacías, pero todavía no hay proveedor. El recomendado es la **WhatsApp Cloud API de Meta** (oficial, sin intermediario); requiere una cuenta de WhatsApp Business verificada, plantillas aprobadas y el celular de cada usuario.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash

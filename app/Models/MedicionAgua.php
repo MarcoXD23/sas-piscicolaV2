@@ -49,13 +49,17 @@ class MedicionAgua extends Model
 
     /**
      * Compara la medición con los rangos de las especies sembradas en el lago.
+     * Única fuente de los rangos de agua: la usan el inicio, Seguridad & Noche, el asistente IA y las alertas.
      *
      * @param  iterable<string>  $especies  Claves del catálogo de especies
-     * @return list<string> Mensajes de alerta (vacío si todo está en rango)
+     * @return list<array{parametro: string, texto: string}> Problemas encontrados (vacío si todo está en rango)
      */
-    public function alertas(iterable $especies): array
+    public function problemas(iterable $especies): array
     {
-        $alertas = [];
+        $problemas = [];
+        $agregar = function (string $parametro, string $texto) use (&$problemas) {
+            $problemas[] = ['parametro' => $parametro, 'texto' => $texto];
+        };
         $numero = fn (float $valor) => rtrim(rtrim(Formato::numero($valor, 2), '0'), ',.');
 
         foreach ($especies as $clave) {
@@ -66,27 +70,36 @@ class MedicionAgua extends Model
 
             [$tMin, $tMax] = $ficha['temperatura'];
             if ($this->temperatura_c !== null && ($this->temperatura_c < $tMin || $this->temperatura_c > $tMax)) {
-                $alertas[] = __('lagos.alertas.temperatura', ['valor' => $numero($this->temperatura_c), 'especie' => $ficha['nombre'], 'min' => $tMin, 'max' => $tMax]);
+                $agregar('temperatura', __('lagos.alertas.temperatura', ['valor' => $numero($this->temperatura_c), 'especie' => $ficha['nombre'], 'min' => $tMin, 'max' => $tMax]));
             }
 
             if ($this->oxigeno_mg_l !== null && $this->oxigeno_mg_l < $ficha['oxigeno_min']) {
-                $alertas[] = __('lagos.alertas.oxigeno', ['valor' => $numero($this->oxigeno_mg_l), 'especie' => $ficha['nombre'], 'minimo' => $numero($ficha['oxigeno_min'])]);
+                $agregar('oxigeno', __('lagos.alertas.oxigeno', ['valor' => $numero($this->oxigeno_mg_l), 'especie' => $ficha['nombre'], 'minimo' => $numero($ficha['oxigeno_min'])]));
             }
 
             [$phMin, $phMax] = $ficha['ph'];
             if ($this->ph !== null && ($this->ph < $phMin || $this->ph > $phMax)) {
-                $alertas[] = __('lagos.alertas.ph', ['valor' => $numero($this->ph), 'especie' => $ficha['nombre'], 'min' => $numero($phMin), 'max' => $numero($phMax)]);
+                $agregar('ph', __('lagos.alertas.ph', ['valor' => $numero($this->ph), 'especie' => $ficha['nombre'], 'min' => $numero($phMin), 'max' => $numero($phMax)]));
             }
         }
 
         if ($this->amonio_mg_l !== null && $this->amonio_mg_l > self::AMONIO_MAX) {
-            $alertas[] = __('lagos.alertas.amonio', ['valor' => $numero($this->amonio_mg_l), 'maximo' => $numero(self::AMONIO_MAX)]);
+            $agregar('amonio', __('lagos.alertas.amonio', ['valor' => $numero($this->amonio_mg_l), 'maximo' => $numero(self::AMONIO_MAX)]));
         }
 
         if ($this->nitritos_mg_l !== null && $this->nitritos_mg_l > self::NITRITOS_MAX) {
-            $alertas[] = __('lagos.alertas.nitritos', ['valor' => $numero($this->nitritos_mg_l), 'maximo' => $numero(self::NITRITOS_MAX)]);
+            $agregar('nitritos', __('lagos.alertas.nitritos', ['valor' => $numero($this->nitritos_mg_l), 'maximo' => $numero(self::NITRITOS_MAX)]));
         }
 
-        return $alertas;
+        return $problemas;
+    }
+
+    /**
+     * @param  iterable<string>  $especies  Claves del catálogo de especies
+     * @return list<string> Mensajes de alerta (vacío si todo está en rango)
+     */
+    public function alertas(iterable $especies): array
+    {
+        return array_column($this->problemas($especies), 'texto');
     }
 }

@@ -116,25 +116,34 @@
         </a>
     @endif
 
-    @if ($alertasBodega->isNotEmpty())
-        <a href="{{ route('admin.bodega.index') }}" class="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 hover:bg-amber-100">
-            <x-icono nombre="bodega" class="mt-0.5" />
-            <div>
-                <p class="font-semibold">{{ __('inicio.revisa_bodega') }}</p>
-                <ul class="text-base">
-                    @foreach ($alertasBodega as $alerta)
-                        <li>
-                            {{ $alerta['stock']->tipo_concentrado }}:
-                            @if ($alerta['estado'] === \App\Support\CoberturaBodega::AGOTADO)
-                                {{ __('inicio.agotado') }}
-                            @else
-                                {{ __('inicio.alcanza_para', ['dias' => \App\Support\Formato::numero($alerta['dias'], 1)]) }}
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
+    @if ($alertas->isNotEmpty())
+        <section class="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-red-200" role="alert" aria-labelledby="alertas-titulo">
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <h2 id="alertas-titulo" class="flex items-center gap-2 text-lg font-semibold text-red-800">
+                    <x-icono nombre="alerta" class="h-5 w-5" /> {{ __('alertas.inicio.titulo', ['cantidad' => $alertas->count()]) }}
+                </h2>
+                <a href="{{ route('admin.alertas.index') }}" class="inline-flex min-h-11 shrink-0 items-center text-base font-medium text-marca-700 hover:underline">{{ __('alertas.inicio.historial') }}</a>
             </div>
-        </a>
+            <ul class="divide-y divide-slate-100">
+                @foreach ($alertas as $alerta)
+                    <li class="flex items-start gap-3 py-2.5">
+                        <span @class([
+                            'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                            'bg-red-100 text-red-800' => $alerta->esCritica(),
+                            'bg-amber-100 text-amber-900' => ! $alerta->esCritica(),
+                        ])>{{ __('alertas.severidades.'.$alerta->severidad) }}</span>
+                        <div class="min-w-0 flex-1 text-base text-slate-800">
+                            @if ($enlace = $alerta->enlace())
+                                <a href="{{ $enlace }}" class="hover:underline">{{ $alerta->mensaje() }}</a>
+                            @else
+                                {{ $alerta->mensaje() }}
+                            @endif
+                            <p class="text-sm text-slate-500">{{ __('alertas.desde', ['momento' => $alerta->abierta_at->format('d/m H:i')]) }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
     @endif
 
     @if ($lagosConAlertaAgua->isNotEmpty())
@@ -143,7 +152,7 @@
             <ul class="space-y-1 text-base">
                 @foreach ($lagosConAlertaAgua as $item)
                     <li>
-                        <a href="{{ $esTecnico ? route('admin.lagos.show', $item['lago']) : route('noche.index') }}" class="font-semibold underline-offset-2 hover:underline">{{ $item['lago']->nombre }}</a>:
+                        <a href="{{ route('noche.index') }}" class="font-semibold underline-offset-2 hover:underline">{{ $item['lago']->nombre }}</a>:
                         {{ $item['alertas'][0] }}@if (count($item['alertas']) > 1) {{ __('inicio.y_mas', ['cantidad' => count($item['alertas']) - 1]) }}@endif
                     </li>
                 @endforeach

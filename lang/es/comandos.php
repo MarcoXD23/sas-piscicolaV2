@@ -27,4 +27,8 @@ return [
         'pais_invalido' => 'El país no es un código válido de 2 letras.',
         'zona_invalida' => 'La zona horaria no es válida.',
     ],
+    'evaluar_alertas' => [
+        'descripcion' => 'Revisa las alertas de todas las fincas activas (se programa cada hora)',
+        'listo' => 'Alertas revisadas en :fincas finca(s).',
+    ],
 ];

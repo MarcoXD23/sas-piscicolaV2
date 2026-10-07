@@ -2,8 +2,6 @@
 
 return [
     'agenda_no_olvides' => 'Agenda: no olvides',
-    'agotado' => 'agotado.',
-    'alcanza_para' => 'alcanza para unos :dias días.',
     'alimento_30_dias' => 'Alimento 30 días',
     'alimento_suministrado' => 'Alimento suministrado',
     'biomasa_lago' => 'Biomasa por lago',
@@ -34,7 +32,6 @@ return [
     'proximo_turno' => 'Próximo turno:',
     'racion_sugerida_hoy' => 'Ración sugerida para hoy',
     'reducida_agua' => 'reducida por el agua',
-    'revisa_bodega' => 'Revisa la bodega',
     'rondas_oxigeno_aireadores' => 'Rondas, oxígeno y aireadores',
     'segun_biomasa_peso_promedio_cada' => 'Según biomasa y peso promedio de cada lago.',
     'seguridad_noche' => 'Seguridad & Noche',

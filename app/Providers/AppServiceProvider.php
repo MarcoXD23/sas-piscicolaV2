@@ -3,6 +3,12 @@
 namespace App\Providers;
 
 use App\Database\ConexionPostgresUtc;
+use App\Models\MedicionAgua;
+use App\Models\Mortalidad;
+use App\Models\MovimientoAlimento;
+use App\Support\Alertas\CanalCorreo;
+use App\Support\Alertas\CanalNulo;
+use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
@@ -10,7 +16,9 @@ use App\Support\Asistente\GeminiAsistente;
 use App\Support\TenantActual;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantActual::class);
+
+        // Canales para avisar alertas críticas. WhatsApp queda sin proveedor (CanalNulo) hasta elegir uno.
+        // Al elegir proveedor (WHATSAPP_PROVEEDOR) se agrega aquí su clase, que implementa CanalNotificacion.
+        $this->app->bind('canal.whatsapp', fn () => match (config('services.whatsapp.proveedor')) {
+            default => new CanalNulo,
+        });
+        $this->app->tag([CanalCorreo::class, 'canal.whatsapp'], 'canales_notificacion');
 
         // Las fechas con hora viajan siempre en UTC a PostgreSQL (ver ConexionPostgresUtc)
         Connection::resolverFor('pgsql', fn ($pdo, $base, $prefijo, $config) => new ConexionPostgresUtc($pdo, $base, $prefijo, $config));
@@ -63,6 +78,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Las alertas se revisan después de guardar los registros que las afectan (al confirmar la transacción)
+        $evaluar = fn (Model $registro) => $registro->tenant_id === null ? null
+            : DB::afterCommit(fn () => EvaluadorAlertas::paraFinca($registro->tenant_id));
+        foreach ([MovimientoAlimento::class, Mortalidad::class, MedicionAgua::class] as $modelo) {
+            $modelo::saved($evaluar);
+            $modelo::deleted($evaluar);
+        }
+
         // Cada pregunta al asistente cuesta dinero: máximo 10 por minuto por persona
         RateLimiter::for('asistente', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id));
 
