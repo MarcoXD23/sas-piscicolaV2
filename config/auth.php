@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AdministradorPlataforma;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Dueño del software (panel de plataforma). No es un rol de finca: sesión y tabla aparte.
+        'plataforma' => [
+            'driver' => 'session',
+            'provider' => 'administradores_plataforma',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'administradores_plataforma' => [
+            'driver' => 'eloquent',
+            'model' => AdministradorPlataforma::class,
         ],
 
         // 'users' => [

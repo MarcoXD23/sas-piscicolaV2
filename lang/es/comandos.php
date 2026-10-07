@@ -5,6 +5,14 @@
 */
 
 return [
+    'crear_admin_plataforma' => [
+        'descripcion' => 'Crea el acceso al panel de plataforma (dueño del software; pide la contraseña)',
+        'nombre' => 'Nombre',
+        'correo' => 'Correo',
+        'clave' => 'Contraseña (mínimo 12 caracteres)',
+        'confirmacion' => 'Confirma la contraseña',
+        'creado' => 'Acceso de plataforma creado para :correo. Ingresa en :url',
+    ],
     'crear_propietario' => [
         'descripcion' => 'Crea una finca y su usuario propietario (pide la contraseña)',
         'finca' => 'Nombre de la finca',

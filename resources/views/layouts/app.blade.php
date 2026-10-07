@@ -14,18 +14,49 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen">
+    @php
+        // El panel de plataforma usa su propio ingreso (guard «plataforma») y no muestra el menú de las fincas
+        $rutaPlataforma = request()->routeIs('plataforma.*');
+        $enFinca = auth()->check() && ! $rutaPlataforma;
+        $enPlataforma = $rutaPlataforma && auth('plataforma')->check();
+        $conSesion = $enFinca || $enPlataforma;
+        $conMenuInferior = false;
+    @endphp
+
     <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-marca-800 focus:shadow">
         {{ __('layout.saltar_contenido') }}
     </a>
 
-    @guest
+    @unless ($conSesion)
         <div class="fixed inset-0 -z-10" aria-hidden="true">
             <img src="/images/login-fondo.webp" alt="" class="h-full w-full object-cover" decoding="async">
             <div class="absolute inset-0 bg-gradient-to-b from-marca-950/80 via-marca-900/70 to-marca-950/90"></div>
         </div>
-    @endguest
+    @endunless
 
-    @auth
+    @if ($enPlataforma)
+        <header class="sticky top-0 z-30 print:hidden bg-slate-800 text-white shadow-md pt-[env(safe-area-inset-top)]">
+            <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+                <a href="{{ route('plataforma.fincas.index') }}" class="flex min-w-0 items-center gap-3">
+                    <x-logo class="h-10 w-10 shrink-0 rounded-xl ring-1 ring-white/20" />
+                    <span class="min-w-0 leading-tight">
+                        <span class="block truncate text-base font-bold">{{ config('app.name') }}</span>
+                        <span class="block truncate text-sm text-slate-300">{{ __('plataforma.panel') }}</span>
+                    </span>
+                </a>
+
+                <form method="POST" action="{{ route('plataforma.logout') }}" class="shrink-0">
+                    @csrf
+                    <button type="submit" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-slate-100 hover:bg-slate-700">
+                        <x-icono nombre="salir" class="h-5 w-5" />
+                        <span>{{ __('layout.salir') }}</span>
+                    </button>
+                </form>
+            </div>
+        </header>
+    @endif
+
+    @if ($enFinca)
         @php
             $usuarioActual = auth()->user()->loadMissing('roles', 'tenant');
             $enlaces = collect([
@@ -146,13 +177,13 @@
         @endif
 
         <x-asistente />
-    @endauth
+    @endif
 
     <main id="contenido" @class([
         'mx-auto w-full px-4 py-6',
-        'max-w-5xl sm:py-8' => auth()->check(),
-        'pb-28 md:pb-8' => auth()->check() && $conMenuInferior,
-        'flex min-h-screen max-w-md flex-col justify-center' => ! auth()->check(),
+        'max-w-5xl sm:py-8' => $conSesion,
+        'pb-28 md:pb-8' => $enFinca && $conMenuInferior,
+        'flex min-h-screen max-w-md flex-col justify-center' => ! $conSesion,
     ])>
         @if (session('estado'))
             <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-marca-200 bg-marca-50 px-4 py-3 text-base font-medium text-marca-800">
@@ -161,7 +192,7 @@
             </div>
         @endif
 
-        @if (auth()->check() && $errors->any() && ! old('_modal') && ! old('usuario_id'))
+        @if ($conSesion && $errors->any() && ! old('_modal') && ! old('usuario_id'))
             <div role="alert" class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base font-medium text-red-700">
                 <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
                 <span>{{ $errors->first() }}</span>

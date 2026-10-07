@@ -22,6 +22,10 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($usuario->tenant?->estaSuspendida()) {
+            throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
+        }
+
         if (! $usuario->estaAprobado()) {
             throw ValidationException::withMessages([
                 'email' => __('mensajes.auth.tu_cuenta_aun_no_ha'),

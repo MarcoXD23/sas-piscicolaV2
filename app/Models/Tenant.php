@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\InstanteLocal;
 use App\Support\Region;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,11 @@ class Tenant extends Model
 
     protected $fillable = ['nombre', 'codigo', 'pais', 'zona_horaria', 'idioma'];
 
+    protected function casts(): array
+    {
+        return ['suspendida_at' => InstanteLocal::class];
+    }
+
     protected static function booted(): void
     {
         // La región en memoria debe reflejar siempre los ajustes guardados
@@ -22,5 +28,10 @@ class Tenant extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function estaSuspendida(): bool
+    {
+        return $this->suspendida_at !== null;
     }
 }

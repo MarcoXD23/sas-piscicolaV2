@@ -26,12 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // El tenant debe fijarse antes del route model binding para que el scope aplique.
         $middleware->prependToPriorityList(SubstituteBindings::class, EstablecerTenant::class);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('inicio'));
+        // El panel de plataforma tiene su propio ingreso, separado del de las fincas
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('plataforma', 'plataforma/*') ? route('plataforma.login') : route('login'));
+        $middleware->redirectUsersTo(fn (Request $request) => $request->is('plataforma', 'plataforma/*') ? route('plataforma.fincas.index') : route('inicio'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();
-

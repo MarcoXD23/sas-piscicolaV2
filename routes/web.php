@@ -29,6 +29,8 @@ use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
 use App\Http\Controllers\Noche\RondaController;
+use App\Http\Controllers\Plataforma\FincaController as PlataformaFincaController;
+use App\Http\Controllers\Plataforma\LoginController as PlataformaLoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -143,5 +145,20 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('/aireaciones/{aireacion}/apagar', [AireacionController::class, 'apagar'])->name('aireador.apagar');
             Route::post('/lagos/{lago}/mediciones', [MedicionAguaController::class, 'store'])->name('mediciones.store');
         });
+    });
+});
+
+// Panel de plataforma (dueño del software): guard «plataforma», sin finca ni roles de finca
+Route::prefix('plataforma')->name('plataforma.')->group(function () {
+    Route::middleware('guest:plataforma')->group(function () {
+        Route::get('/login', [PlataformaLoginController::class, 'create'])->name('login');
+        Route::post('/login', [PlataformaLoginController::class, 'store'])->middleware('throttle:5,1');
+    });
+
+    Route::middleware('auth:plataforma')->group(function () {
+        Route::post('/logout', [PlataformaLoginController::class, 'destroy'])->name('logout');
+        Route::get('/', [PlataformaFincaController::class, 'index'])->name('fincas.index');
+        Route::post('/fincas/{finca}/suspender', [PlataformaFincaController::class, 'suspender'])->name('fincas.suspender');
+        Route::post('/fincas/{finca}/reactivar', [PlataformaFincaController::class, 'reactivar'])->name('fincas.reactivar');
     });
 });

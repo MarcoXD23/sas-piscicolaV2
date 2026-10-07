@@ -128,6 +128,16 @@ php artisan piscicola:crear-propietario
 
 El personal se registra en `/registro` con el código de la finca, y el propietario lo aprueba en **Personal**.
 
+### Panel de plataforma (dueño del software)
+
+En `/plataforma` el dueño del software ve todas las fincas (usuarios, estado y fecha de creación) y puede **suspender** o **reactivar** cada una. No es un rol de finca: usa una tabla (`administradores_plataforma`) y un ingreso (`guard` `plataforma`) aparte, sin `tenant_id`. Ningún usuario de finca puede entrar al panel y el acceso de plataforma no entra a los módulos de las fincas.
+
+```bash
+php artisan piscicola:crear-admin-plataforma
+```
+
+El comando pide nombre, correo y contraseña (mínimo 12 caracteres). Al suspender una finca su personal no puede ingresar (web ni API) y ve un mensaje claro; las sesiones abiertas se cierran en el siguiente clic y los tokens de la API se revocan. Los datos de la finca no se borran.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash

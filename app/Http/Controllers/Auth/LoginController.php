@@ -21,14 +21,23 @@ class LoginController extends Controller
     {
         $credenciales = $request->only('email', 'password');
 
-        if (! Auth::attempt($credenciales, $request->boolean('recordarme'))) {
+        // Guard «web» explícito: el panel de plataforma usa otro guard
+        $guard = Auth::guard('web');
+
+        if (! $guard->attempt($credenciales, $request->boolean('recordarme'))) {
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.correo_contrasena_no_son_correctos'),
             ]);
         }
 
-        if (! Auth::user()->estaAprobado()) {
-            Auth::logout();
+        if ($guard->user()->tenant()->first()?->estaSuspendida()) {
+            $guard->logout();
+
+            throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
+        }
+
+        if (! $guard->user()->estaAprobado()) {
+            $guard->logout();
 
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.tu_cuenta_aun_no_ha'),
