@@ -2,6 +2,7 @@
 
 return [
     'canasta_bruto' => 'Canasta :numero · bruto (kg)',
+    'gramos' => ':valor g',
     'muchas_preguntas' => 'Hiciste muchas preguntas seguidas. Espera un minuto.',
     'neto_canastas' => ':kg kg en :canastas canastas',
     'neto_una_canasta' => ':kg kg en 1 canasta',

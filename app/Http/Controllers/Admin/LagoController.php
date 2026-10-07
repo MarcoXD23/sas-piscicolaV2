@@ -23,7 +23,7 @@ class LagoController extends Controller
     public function index(Request $request): View
     {
         $lagos = Lago::query()
-            ->with(['siembrasActivas', 'ultimaMedicion'])
+            ->with(['siembrasActivas', 'ultimaMedicion', 'avisoPescaPendiente.siembra', 'avisoPescaPendiente.usuario'])
             ->withExists('tratamientosEnRetiro as en_retiro')
             ->orderBy('nombre')
             ->get();
@@ -37,6 +37,8 @@ class LagoController extends Controller
             'puedeRegistrar' => $request->user()->puedeTrabajarComo(Rol::TRABAJADOR),
             // El propietario sin rol de administrador solo consulta (sin botones de alimentar ni mortalidad)
             'soloLectura' => ! $request->user()->tieneRol(Rol::ADMINISTRADOR, Rol::TRABAJADOR),
+            // «Listo para pescar»: solo el trabajador, dentro de su turno
+            'puedeAvisarPesca' => $request->user()->tieneRol(Rol::TRABAJADOR) && $request->user()->turnoEnCurso(Rol::TRABAJADOR) !== null,
             'stocksDisponibles' => StockAlimento::query()->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get(),
         ]);
     }

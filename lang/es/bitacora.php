@@ -3,6 +3,8 @@
 return [
     'accion' => 'Acción',
     'acciones' => [
+        'aviso_atendido' => 'Aviso atendido',
+        'aviso_pesca' => 'Listo para pescar',
         'cosecha' => 'Cosecha',
         'despacho' => 'Despacho',
         'mortalidad' => 'Mortalidad',
@@ -16,6 +18,8 @@ return [
     ],
     'detalle' => 'Detalle',
     'detalles' => [
+        'aviso_atendido' => 'Aviso de pesca de :especie atendido',
+        'aviso_pesca' => ':especie lista para pescar. :nota',
         'cosecha' => ':peces peces de :especie, :kg kg (fecha :fecha)',
         'despacho' => ':kg kg de :concentrado en :bultos bultos, :proveedor (fecha :fecha)',
         'mortalidad' => ':peces peces de :especie (fecha :fecha)',

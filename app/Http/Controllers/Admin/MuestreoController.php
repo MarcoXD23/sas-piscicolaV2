@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
 use App\Models\Rol;
 use App\Models\Siembra;
+use App\Support\Formato;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class MuestreoController extends Controller
             'peso_total_g' => ['required', 'numeric', 'min:0.1'],
         ]);
 
-        DB::transaction(function () use ($datos, $siembra, $request) {
+        $resultado = DB::transaction(function () use ($datos, $siembra, $request) {
             // Bloquea la siembra antes de registrar para evitar condiciones de carrera
             $siembraBloqueada = Siembra::where('id', $siembra->id)->lockForUpdate()->first();
 
@@ -30,7 +31,9 @@ class MuestreoController extends Controller
                 throw ValidationException::withMessages(['peces_pesados' => __('mensajes.muestreo.esta_siembra_ya_esta_finalizada')]);
             }
 
-            $pesoPromedio = $datos['peso_total_g'] / $datos['peces_pesados'];
+            // El promedio lo calcula el servidor (nunca se confía en el que muestra el navegador)
+            $pesoPromedio = round((float) $datos['peso_total_g'] / (int) $datos['peces_pesados'], 2);
+            $anterior = (float) $siembraBloqueada->peso_actual_g;
 
             $siembraBloqueada->muestreos()->create([
                 'user_id' => $request->user()->id,
@@ -44,11 +47,17 @@ class MuestreoController extends Controller
             $siembraBloqueada->biomasa_kg = ($siembraBloqueada->peces_vivos * $pesoPromedio) / 1000;
             $siembraBloqueada->save();
 
-            Bitacora::registrar($request->user(), 'muestreo', $siembraBloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+            Bitacora::registrar($request->user(), 'muestreo', $siembraBloqueada->lago, [Rol::ADMINISTRADOR], [
                 'especie' => $siembraBloqueada->nombre_especie, 'gramos' => round((float) $pesoPromedio, 2), 'peces' => (int) $datos['peces_pesados'], 'fecha' => $datos['fecha'],
             ]);
+
+            return ['promedio' => $pesoPromedio, 'anterior' => $anterior];
         });
 
-        return back()->with('estado', __('mensajes.muestreo.muestreo_registrado_biomasa_recalculada'));
+        return back()->with('estado', __('mensajes.muestreo.registrado_con_promedio', [
+            'promedio' => Formato::numero($resultado['promedio'], 2),
+            'anterior' => Formato::numero($resultado['anterior'], 2),
+            'diferencia' => ($resultado['promedio'] >= $resultado['anterior'] ? '+' : '−').Formato::numero(abs($resultado['promedio'] - $resultado['anterior']), 2),
+        ]));
     }
 }

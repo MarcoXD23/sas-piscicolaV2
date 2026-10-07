@@ -107,6 +107,17 @@
             @endforeach
         </x-tarjeta>
 
+        <x-tarjeta :titulo="__('reportes.avisos_pesca')" class="break-inside-avoid">
+            @forelse ($avisosPesca as $aviso)
+                <p class="border-t border-slate-100 py-2 first:border-t-0">
+                    {{ __('reportes.detalle_aviso_pesca', ['fecha' => $aviso->reportado_at->format('d/m H:i'), 'lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie, 'nombre' => $aviso->usuario->name]) }}
+                    <span class="block text-sm text-slate-500">{{ $aviso->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $aviso->atendido_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                </p>
+            @empty
+                <p class="text-slate-500">{{ __('reportes.sin_avisos_pesca') }}</p>
+            @endforelse
+        </x-tarjeta>
+
         @if ($entradasBodega !== null)
             <x-tarjeta :titulo="__('reportes.entradas_bodega')" class="break-inside-avoid">
                 @forelse ($entradasBodega as $entrada)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alerta;
+use App\Models\AvisoPesca;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -46,6 +47,10 @@ class InicioController extends Controller
             'racionesHoy' => $usuario->tieneRol(Rol::TRABAJADOR) ? $this->racionesHoy() : collect(),
 
             // Avisos
+            // Avisos «listo para pescar» pendientes: los atiende el administrador
+            'avisosPesca' => $usuario->tieneRol(Rol::ADMINISTRADOR)
+                ? AvisoPesca::query()->pendientes()->with(['lago', 'siembra', 'usuario'])->latest('reportado_at')->get()
+                : collect(),
             // Alertas abiertas (historial en Alertas): el administrador no ve las de bodega
             'alertas' => $esTecnico
                 ? Alerta::query()->abiertas()->whereIn('tipo', Alerta::tiposVisiblesPara($usuario))

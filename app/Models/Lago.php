@@ -33,6 +33,12 @@ class Lago extends Model
         return $this->hasMany(Siembra::class)->whereNull('finalizada_at')->orderBy('fecha');
     }
 
+    /** Aviso «listo para pescar» pendiente (solo puede haber uno por lago). */
+    public function avisoPescaPendiente(): HasOne
+    {
+        return $this->hasOne(AvisoPesca::class)->where('estado', AvisoPesca::PENDIENTE);
+    }
+
     public function mediciones(): HasMany
     {
         return $this->hasMany(MedicionAgua::class);

@@ -32,6 +32,13 @@ return [
         'sesion_cerrada' => 'Sesión cerrada.',
         'tu_cuenta_aun_no_ha' => 'Tu cuenta aún no ha sido aprobada por el propietario de la finca.',
     ],
+    'aviso_pesca' => [
+        'siembra_no_activa' => 'Elige una siembra activa de este lago.',
+        'ya_hay_pendiente' => 'Este lago ya tiene un aviso «listo para pescar» pendiente.',
+        'reportado' => 'Aviso enviado: el administrador verá que el lago :lago está listo para pescar.',
+        'ya_atendido' => 'Este aviso ya fue atendido.',
+        'atendido' => 'Aviso de pesca marcado como atendido.',
+    ],
     'bodega' => [
         'despacho_no_existe' => 'El despacho no existe.',
         'despacho_registrado' => 'Despacho registrado. El administrador debe registrar la recepción cuando llegue a la finca.',
@@ -98,6 +105,7 @@ return [
     'muestreo' => [
         'esta_siembra_ya_esta_finalizada' => 'Esta siembra ya está finalizada.',
         'muestreo_registrado_biomasa_recalculada' => 'Muestreo registrado y biomasa recalculada.',
+        'registrado_con_promedio' => 'Muestreo registrado: promedio :promedio g (antes :anterior g, :diferencia g). Biomasa recalculada.',
     ],
     'nomina' => [
         'anulada' => 'Nómina de :nombre anulada.',

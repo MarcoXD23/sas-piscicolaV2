@@ -45,7 +45,7 @@ class MortalidadController extends Controller
             $siembraBloqueada->biomasa_kg = ($siembraBloqueada->peces_vivos * $siembraBloqueada->peso_actual_g) / 1000;
             $siembraBloqueada->save();
 
-            Bitacora::registrar($request->user(), 'mortalidad', $siembraBloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
+            Bitacora::registrar($request->user(), 'mortalidad', $siembraBloqueada->lago, [Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
                 'peces' => (int) $datos['cantidad'], 'especie' => $siembraBloqueada->nombre_especie, 'fecha' => $datos['fecha'],
             ]);
         });

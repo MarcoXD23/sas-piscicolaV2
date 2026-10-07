@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AvisoPesca;
 use App\Models\Bitacora;
 use App\Models\Cosecha;
 use App\Models\Rol;
@@ -92,7 +93,10 @@ class CosechaController extends Controller
             }
             $bloqueada->save();
 
-            Bitacora::registrar($request->user(), 'cosecha', $bloqueada->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+            // La cosecha atiende el aviso «listo para pescar» de esa siembra
+            AvisoPesca::atenderDeSiembra($bloqueada, $request->user());
+
+            Bitacora::registrar($request->user(), 'cosecha', $bloqueada->lago, [Rol::ADMINISTRADOR], [
                 'peces' => $peces, 'kg' => (float) $kg, 'especie' => $bloqueada->nombre_especie, 'fecha' => $datos['fecha'],
             ]);
 

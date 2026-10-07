@@ -7,11 +7,26 @@
 
     <x-encabezado :titulo="__('ventas.ventas_pescado')" :subtitulo="__('ventas.pescado_cosechado_disponible_ventas_creditos')">
         @if ($puedeVender)
-            <x-boton tipo="button" data-abrir-modal="modal-venta" :disabled="$disponibles->isEmpty()">
-                <x-icono nombre="mas" class="h-5 w-5" /> {{ __('ventas.nueva_venta') }}
-            </x-boton>
+            @if ($disponibles->isEmpty())
+                {{-- Desactivado a la vista y para lectores de pantalla, con el motivo enlazado --}}
+                <x-boton tipo="button" disabled aria-disabled="true" aria-describedby="motivo-sin-cosecha" data-nueva-venta>
+                    <x-icono nombre="mas" class="h-5 w-5" /> {{ __('ventas.nueva_venta') }}
+                </x-boton>
+            @else
+                <x-boton tipo="button" data-abrir-modal="modal-venta" data-nueva-venta>
+                    <x-icono nombre="mas" class="h-5 w-5" /> {{ __('ventas.nueva_venta') }}
+                </x-boton>
+            @endif
         @endif
     </x-encabezado>
+
+    @if ($puedeVender && $disponibles->isEmpty())
+        <p id="motivo-sin-cosecha" role="status" class="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
+            <x-icono nombre="alerta" class="h-5 w-5" />
+            <span>{{ __('ventas.sin_cosecha_disponible') }}</span>
+            <a href="{{ route('admin.lagos.index') }}" class="font-semibold underline underline-offset-2">{{ __('ventas.ir_a_lagos') }}</a>
+        </p>
+    @endif
 
     <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
         <x-indicador :etiqueta="__('ventas.vendido_este_mes')" :valor="Formato::dinero($vendidoMes)" />

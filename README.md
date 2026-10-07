@@ -22,7 +22,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Módulo | Dónde | Qué hace |
 |---|---|---|
 | Inicio | `/` | Un panel por rol: ejecutivo (gráficas, ventas, cartera), técnico, ración del día (trabajador) y alertas de agua (celador). |
-| Lagos | `/admin/lagos` | Siembras y **policultivo** (sin repetir especie ni mezclar agua fría y cálida), alimentación con ración sugerida, mortalidad, muestreos, traslados y desdobles, cosecha (total neto o pesaje por canastas). Detalle con historial completo. |
+| Lagos | `/admin/lagos` | Siembras y **policultivo** (sin repetir especie ni mezclar agua fría y cálida), alimentación con ración sugerida, mortalidad, muestreos (con el peso promedio en vivo y su diferencia con el anterior), traslados y desdobles, cosecha (total neto o pesaje por canastas) y el aviso **«listo para pescar»** del trabajador en su turno (uno pendiente por lago; lo atiende el administrador o la cosecha). Detalle con historial completo. |
 | Calidad del agua y sanidad | detalle del lago | Mediciones con alertas según las especies del lago; tratamientos con **retiro sanitario** que bloquea la cosecha. |
 | Especies | `/especies` | Guía con fichas de referencia de 6 especies. |
 | Bodega | `/admin/bodega` | Dos pasos: el propietario registra el **despacho** y el administrador la **recepción** (contra el despacho o sin despacho). Diferencia por despacho (faltante, sobrante, exacto), aviso de despachos sin recibir después de N días (Ajustes), stock = recibido − raciones (nunca negativo), días de cobertura y alertas de stock. |

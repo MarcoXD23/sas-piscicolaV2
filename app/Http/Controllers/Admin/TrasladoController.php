@@ -92,7 +92,7 @@ class TrasladoController extends Controller
             }
             $origen->save();
 
-            Bitacora::registrar($request->user(), 'traslado', $origen->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR], [
+            Bitacora::registrar($request->user(), 'traslado', $origen->lago, [Rol::ADMINISTRADOR], [
                 'peces' => $cantidad, 'especie' => $origen->nombre_especie, 'destino' => $lagoDestino->nombre, 'fecha' => $datos['fecha'],
             ]);
 

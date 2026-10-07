@@ -33,7 +33,7 @@ class RondaController extends Controller
                 'registrada_at' => now(),
             ]);
 
-            Bitacora::registrar($request->user(), $ronda->esNovedad() ? 'novedad' : 'ronda', $ronda->lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::CELADOR], [
+            Bitacora::registrar($request->user(), $ronda->esNovedad() ? 'novedad' : 'ronda', $ronda->lago, [Rol::CELADOR], [
                 'tipo' => $ronda->textoTipo(), 'descripcion' => (string) $ronda->descripcion,
             ]);
 

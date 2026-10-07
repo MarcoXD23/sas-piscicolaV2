@@ -40,6 +40,29 @@ document.addEventListener('submit', (evento) => {
 
 document.querySelectorAll('dialog[data-abrir-al-cargar]').forEach((ventana) => ventana.showModal());
 
+// Muestreo: peso promedio en vivo (peso total ÷ peces pesados). Solo informativo: lo que se guarda lo calcula el servidor.
+document.querySelectorAll('[data-muestreo]').forEach((muestreo) => {
+    const peces = muestreo.querySelector('[data-peces]');
+    const pesoTotal = muestreo.querySelector('[data-peso-total]');
+    const promedio = muestreo.querySelector('[data-promedio]');
+    const leer = (campo) => Number.parseFloat(String(campo.value).replace(',', '.'));
+
+    const calcular = () => {
+        const cantidad = leer(peces);
+        const total = leer(pesoTotal);
+        // Sin datos, con cero peces o valores no válidos no se divide
+        if (!Number.isFinite(cantidad) || !Number.isFinite(total) || cantidad <= 0 || total <= 0) {
+            promedio.textContent = '—';
+            return;
+        }
+        const valor = (total / cantidad).toLocaleString(document.documentElement.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        promedio.textContent = t('gramos', { valor });
+    };
+
+    [peces, pesoTotal].forEach((campo) => campo.addEventListener('input', calcular));
+    calcular();
+});
+
 // Sin conexión: franja de aviso (la página puede ser una copia guardada por el service worker; solo consulta)
 const franjaSinConexion = document.querySelector('[data-sin-conexion]');
 const mostrarConexion = () => { if (franjaSinConexion) franjaSinConexion.hidden = navigator.onLine; };

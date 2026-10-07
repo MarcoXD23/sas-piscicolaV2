@@ -116,6 +116,24 @@
         </a>
     @endif
 
+    @if ($avisosPesca->isNotEmpty())
+        <x-tarjeta :titulo="__('inicio.listos_para_pescar', ['cantidad' => $avisosPesca->count()])" class="mb-6">
+            <ul class="divide-y divide-slate-100">
+                @foreach ($avisosPesca as $aviso)
+                    <li class="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                        <div class="min-w-0">
+                            <a href="{{ route('admin.lagos.show', $aviso->lago) }}" class="font-semibold text-slate-900 hover:underline">{{ __('inicio.aviso_pesca', ['lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie]) }}</a>
+                            <p class="text-sm text-slate-500">{{ __('inicio.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</p>
+                        </div>
+                        <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
+                            <x-boton variante="secundario" class="!min-h-11 !py-2">{{ __('inicio.marcar_atendido') }}</x-boton>
+                        </x-formulario>
+                    </li>
+                @endforeach
+            </ul>
+        </x-tarjeta>
+    @endif
+
     @if ($alertas->isNotEmpty())
         <section class="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-red-200" role="alert" aria-labelledby="alertas-titulo">
             <div class="mb-2 flex items-center justify-between gap-3">

@@ -93,7 +93,7 @@ class VentaController extends Controller
                 'saldo' => $datos['forma_pago'] === 'credito' ? $total : 0,
             ]);
 
-            Bitacora::registrar($request->user(), 'venta', $cosecha->lago, [Rol::PROPIETARIO], [
+            Bitacora::registrar($request->user(), 'venta', $cosecha->lago, [Rol::ADMINISTRADOR], [
                 'kg' => (float) $kg, 'cliente' => $venta->cliente, 'total' => Formato::dinero($total),
                 'forma_pago' => __('ventas.formas_pago.'.$venta->forma_pago), 'fecha' => $datos['fecha'],
             ]);

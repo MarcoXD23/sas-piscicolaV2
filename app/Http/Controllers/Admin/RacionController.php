@@ -54,7 +54,7 @@ class RacionController extends Controller
             $stock->cantidad_kg -= $datos['cantidad_kg'];
             $stock->save();
 
-            Bitacora::registrar($request->user(), 'racion', $lago, [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
+            Bitacora::registrar($request->user(), 'racion', $lago, [Rol::ADMINISTRADOR, Rol::TRABAJADOR], [
                 'kg' => (float) $datos['cantidad_kg'], 'concentrado' => $datos['tipo_concentrado'], 'fecha' => $datos['fecha'],
             ]);
         });

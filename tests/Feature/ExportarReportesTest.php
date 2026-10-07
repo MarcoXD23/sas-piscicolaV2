@@ -84,7 +84,7 @@ class ExportarReportesTest extends TestCase
         $this->assertStringContainsString('informe-mensual-2026-10-norte.xlsx', $respuesta->headers->get('Content-Disposition'));
 
         $hojas = $this->leerExcel($respuesta);
-        $this->assertSame(['Resumen', 'Lagos', 'Alimento', 'Siembras', 'Cosechas', 'Traslados', 'Sanidad', 'Novedades', 'Entradas a bodega'], array_keys($hojas));
+        $this->assertSame(['Resumen', 'Lagos', 'Alimento', 'Siembras', 'Cosechas', 'Traslados', 'Sanidad', 'Avisos de pesca', 'Novedades', 'Entradas a bodega'], array_keys($hojas));
 
         // Encabezado con la finca y la hora de generación en la zona de la finca
         $this->assertSame('Finca Norte', $hojas['Resumen'][0][0]);

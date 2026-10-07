@@ -78,6 +78,41 @@
                     ])>{{ $siembras->isNotEmpty() ? __('lagos.activo') : __('lagos.libre') }}</span>
                 </div>
 
+                {{-- Aviso «listo para pescar»: lo ven todos; el administrador lo atiende --}}
+                @if ($aviso = $lago->avisoPescaPendiente)
+                    <div data-aviso-pesca class="flex flex-wrap items-center justify-between gap-2 border-b border-sky-100 bg-sky-50 px-5 py-3 text-sky-900">
+                        <p class="min-w-0 text-sm">
+                            <span class="font-semibold">{{ __('lagos.aviso_pesca_listo', ['especie' => $aviso->siembra->nombre_especie]) }}</span>
+                            <span class="block">{{ __('lagos.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                        </p>
+                        @if ($puedeOperar)
+                            <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
+                                <x-boton variante="secundario" class="!min-h-11 !py-2 !text-sm">{{ __('lagos.marcar_atendido') }}</x-boton>
+                            </x-formulario>
+                        @endif
+                    </div>
+                @elseif ($puedeAvisarPesca && $siembras->isNotEmpty())
+                    <div class="border-b border-slate-100 px-5 py-3">
+                        <x-boton tipo="button" variante="secundario" class="w-full" data-abrir-modal="modal-aviso-pesca-{{ $lago->id }}">
+                            <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.reportar_listo_pescar') }}
+                        </x-boton>
+                    </div>
+                    <x-modal id="modal-aviso-pesca-{{ $lago->id }}" :titulo="__('lagos.reportar_listo_pescar_en', ['lago' => $lago->nombre])">
+                        <x-formulario :action="route('admin.avisos-pesca.store', $lago)">
+                            @if ($siembras->count() > 1)
+                                <x-seleccion nombre="siembra_id" id="aviso-siembra-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$siembras->pluck('nombre_especie', 'id')->all()" required />
+                            @else
+                                <input type="hidden" name="siembra_id" value="{{ $siembras->first()->id }}">
+                            @endif
+                            <x-campo nombre="nota" id="aviso-nota-{{ $lago->id }}" :etiqueta="__('lagos.nota_opcional')" :placeholder="__('lagos.nota_aviso_ejemplo')" />
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                                <x-boton>{{ __('lagos.enviar_aviso') }}</x-boton>
+                            </div>
+                        </x-formulario>
+                    </x-modal>
+                @endif
+
                 @forelse ($siembras as $siembra)
                     <div class="border-b border-slate-100">
                         <div class="flex items-center justify-between gap-3 px-5 pt-4">
@@ -140,9 +175,16 @@
                         <x-modal id="modal-muestreo-{{ $siembra->id }}" :titulo="__('lagos.muestreo_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
                             <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
                                 <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
-                                <div class="grid grid-cols-2 gap-4">
-                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required />
-                                    <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
+                                <div class="grid grid-cols-2 gap-4" data-muestreo>
+                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required data-peces />
+                                    <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required data-peso-total />
+                                    {{-- Solo informativo: el servidor calcula el promedio que se guarda --}}
+                                    <div class="col-span-2">
+                                        <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-medium text-slate-700">{{ __('lagos.peso_promedio_calculado') }}</label>
+                                        <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
+                                                class="flex min-h-12 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-lg font-semibold tabular-nums text-slate-900">—</output>
+                                        <p class="mt-1 text-sm text-slate-500">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-3 pt-2">

@@ -3,6 +3,7 @@
 namespace App\Support\Reportes;
 
 use App\Models\Abono;
+use App\Models\AvisoPesca;
 use App\Models\Cosecha;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -75,6 +76,8 @@ class InformeMensual
             'mediciones' => $mediciones->count(),
             'medicionesConAlerta' => $mediciones->filter(fn (MedicionAgua $m) => $m->alertas($m->lago->siembrasActivas->pluck('especie')) !== [])->count(),
             'novedades' => $enMesMomento(Ronda::novedades()->with('lago'), 'registrada_at')->orderBy('registrada_at')->get(),
+            // Avisos «listo para pescar» del mes (el propietario los consulta aquí)
+            'avisosPesca' => $enMesMomento(AvisoPesca::query()->with(['lago', 'siembra', 'usuario']), 'reportado_at')->orderBy('reportado_at')->get(),
             'tareasCompletadas' => $enMesMomento(Tarea::query(), 'completada_at')->count(),
             'horasExtraAprobadas' => (float) $enMes(HoraExtra::query()->aprobadas())->sum('horas'),
         ];
@@ -130,6 +133,9 @@ class InformeMensual
                 $d['traslados']->map(fn ($tr) => [$fecha($tr->fecha), $tr->siembraOrigen->nombre_especie, (int) $tr->cantidad, $tr->lagoOrigen->nombre, $tr->lagoDestino->nombre])->all()),
             new Tabla($t('hoja_sanidad'), [[$t('fecha'), null], [$t('lago'), null], [$t('motivo'), null], [$t('producto'), null]],
                 $d['tratamientos']->map(fn ($tr) => [$fecha($tr->fecha_inicio), $tr->lago->nombre, $tr->motivo, $tr->producto])->all()),
+            new Tabla($t('hoja_avisos_pesca'), [[$t('momento'), null], [$t('lago'), null], [$t('especie'), null], [$t('reportado_por'), null], [$t('estado'), null], [$t('nota'), null]],
+                $d['avisosPesca']->map(fn ($a) => [$a->reportado_at->format('d/m/Y H:i'), $a->lago->nombre, $a->siembra->nombre_especie, $a->usuario->name,
+                    $a->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $a->atendido_at->format('d/m H:i')]), (string) $a->nota])->all()),
             new Tabla($t('hoja_novedades'), [[$t('momento'), null], [$t('tipo'), null], [$t('lago'), null], [$t('descripcion'), null]],
                 $d['novedades']->map(fn ($n) => [$n->registrada_at->format('d/m/Y H:i'), $n->textoTipo(), $n->lago?->nombre ?? '', (string) $n->descripcion])->all()),
         ];

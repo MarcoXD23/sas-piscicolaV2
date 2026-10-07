@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\AjustesFincaController;
 use App\Http\Controllers\Admin\AlertaController;
+use App\Http\Controllers\Admin\AvisoPescaController;
 use App\Http\Controllers\Admin\BitacoraController;
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
@@ -125,6 +126,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/ventas/{venta}/abonos', [VentaController::class, 'abonar'])->name('ventas.abonar');
 
         Route::post('/bodega/recepciones', [BodegaController::class, 'recibir'])->name('bodega.recepciones.store');
+
+        Route::post('/avisos-pesca/{aviso}/atender', [AvisoPescaController::class, 'atender'])->name('avisos-pesca.atender');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
@@ -136,6 +139,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware(['rol:administrador,trabajador', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
         Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
+    });
+
+    // Aviso «listo para pescar»: lo reporta el trabajador, solo en su turno
+    Route::middleware(['rol:trabajador', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/lagos/{lago}/avisos-pesca', [AvisoPescaController::class, 'store'])->name('avisos-pesca.store');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
