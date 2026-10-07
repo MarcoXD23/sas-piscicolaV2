@@ -33,7 +33,8 @@ class AlimentacionYBodegaTest extends TestCase
 
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($tenant->id);
-        $this->propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO]);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $this->propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
     }
 
@@ -142,7 +143,7 @@ class AlimentacionYBodegaTest extends TestCase
         $this->assertSame(CoberturaBodega::SUFICIENTE, $item['estado']);
     }
 
-    public function test_el_inicio_del_propietario_avisa_el_stock_bajo_y_el_del_administrador_no(): void
+    public function test_el_inicio_del_propietario_y_del_administrador_avisan_el_stock_agotado(): void
     {
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 0]);
         $administrador = tap(User::factory()->create(['tenant_id' => $this->propietario->tenant_id]))->asignarRoles([Rol::ADMINISTRADOR]);
@@ -151,8 +152,8 @@ class AlimentacionYBodegaTest extends TestCase
         $aviso = __('alertas.mensajes.stock_agotado', ['concentrado' => 'Engorde']);
 
         $this->actingAs($this->propietario)->get(route('inicio'))->assertSee($aviso);
-        // La bodega es del propietario: el administrador no ve esa alerta
-        $this->actingAs($administrador)->get(route('inicio'))->assertDontSee($aviso);
+        // El administrador recibe el concentrado: también ve la alerta de stock
+        $this->actingAs($administrador)->get(route('inicio'))->assertSee($aviso);
     }
 
     public function test_la_bodega_muestra_y_filtra_los_movimientos(): void

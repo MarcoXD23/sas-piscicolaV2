@@ -122,6 +122,7 @@ return [
     'siembras_activas' => 'Siembras activas',
     'siembras_finalizadas' => 'Siembras finalizadas',
     'sin_siembras_activas' => 'sin siembras activas',
+    'solo_lectura' => 'Consulta en solo lectura: el administrador registra lagos, siembras, muestreos, alimentación y mortalidad.',
     'tara_canasta_kg' => 'Tara por canasta (kg)',
     'temperatura' => 'Temperatura',
     'temperatura_c' => 'Temperatura (°C)',

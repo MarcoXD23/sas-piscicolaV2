@@ -64,7 +64,9 @@ class DisenoTest extends TestCase
 
     public function test_la_ventana_del_formulario_se_reabre_si_hay_errores(): void
     {
+        // Crear lagos es del administrador (aquí, el dueño que también administra)
         $propietario = $this->usuario(Rol::PROPIETARIO);
+        $propietario->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
 
         $this->actingAs($propietario)
             ->from(route('admin.lagos.index'))

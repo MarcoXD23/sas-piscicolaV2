@@ -21,7 +21,7 @@ class RacionController extends Controller
     {
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
-            'tipo_concentrado' => ['required', 'string', 'exists:stocks_alimento,tipo_concentrado'],
+            'tipo_concentrado' => ['required', 'string', 'max:255'],
             'cantidad_kg' => ['required', 'numeric', 'min:0.1'],
         ]);
 
@@ -32,9 +32,13 @@ class RacionController extends Controller
         DB::transaction(function () use ($datos, $lago, $request) {
             $stock = StockAlimento::where('tipo_concentrado', $datos['tipo_concentrado'])->lockForUpdate()->first();
 
-            if (! $stock || $stock->cantidad_kg < $datos['cantidad_kg']) {
+            // El stock es solo lo recibido en bodega: sin recepción no se puede alimentar con ese concentrado
+            if (! $stock || (float) $stock->cantidad_kg <= 0) {
+                throw ValidationException::withMessages(['cantidad_kg' => __('mensajes.racion.sin_concentrado_recibido')]);
+            }
+            if ((float) $stock->cantidad_kg < (float) $datos['cantidad_kg']) {
                 throw ValidationException::withMessages([
-                    'cantidad_kg' => __('mensajes.racion.stock_insuficiente', ['kg' => Formato::numero($stock ? $stock->cantidad_kg : 0, 2)]),
+                    'cantidad_kg' => __('mensajes.racion.stock_insuficiente', ['kg' => Formato::numero($stock->cantidad_kg, 2), 'concentrado' => $stock->tipo_concentrado]),
                 ]);
             }
 

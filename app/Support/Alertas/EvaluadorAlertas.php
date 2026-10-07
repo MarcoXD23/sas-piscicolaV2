@@ -3,6 +3,7 @@
 namespace App\Support\Alertas;
 
 use App\Models\Alerta;
+use App\Models\DespachoAlimento;
 use App\Models\Lago;
 use App\Models\Mortalidad;
 use App\Models\Rol;
@@ -45,7 +46,7 @@ class EvaluadorAlertas
             return;
         }
 
-        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua()])
+        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua(), ...self::despachos()])
             ->keyBy(fn ($condicion) => $condicion['tipo'].'|'.$condicion['referencia']);
 
         $porAvisar = DB::transaction(function () use ($tenantId, $condiciones) {
@@ -112,6 +113,45 @@ class EvaluadorAlertas
                 'minimo' => $minimo,
             ],
         ])->all();
+    }
+
+    /**
+     * Despachos de concentrado: sin recepción después de N días (propietario y administrador)
+     * y con diferencia entre lo despachado y lo recibido hasta que el propietario la marca revisada.
+     *
+     * @return list<array{tipo: string, referencia: string, severidad: string, datos: array<string, mixed>}>
+     */
+    private static function despachos(): array
+    {
+        $dias = (int) (Region::tenant()?->alerta_despacho_dias ?? 2);
+        $hoy = Region::hoy();
+        $condiciones = [];
+
+        $despachos = DespachoAlimento::query()->withCount('recepciones')->withSum('recepciones', 'cantidad_kg')
+            ->where(fn ($q) => $q->whereNull('revisado_at')->orWhereDoesntHave('recepciones'))
+            ->get();
+
+        foreach ($despachos as $despacho) {
+            $base = ['concentrado' => $despacho->tipo_concentrado, 'fecha' => $despacho->fecha->format('d/m/Y'), 'proveedor' => $despacho->proveedor];
+            $transcurridos = (int) $despacho->fecha->startOfDay()->diffInDays($hoy->toDateString());
+
+            if (! $despacho->tieneRecepciones()) {
+                if ($transcurridos > $dias) {
+                    $condiciones[] = ['tipo' => Alerta::DESPACHO_PENDIENTE, 'referencia' => (string) $despacho->id, 'severidad' => Alerta::ADVERTENCIA,
+                        'datos' => $base + ['kg' => (float) $despacho->cantidad_kg, 'dias' => $transcurridos]];
+                }
+
+                continue;
+            }
+
+            if ($despacho->revisado_at === null && $despacho->estado() !== DespachoAlimento::EXACTO) {
+                $condiciones[] = ['tipo' => Alerta::DESPACHO_DIFERENCIA, 'referencia' => (string) $despacho->id, 'severidad' => Alerta::ADVERTENCIA,
+                    'datos' => $base + ['estado' => $despacho->estado(), 'despachado' => (float) $despacho->cantidad_kg,
+                        'recibido' => $despacho->kgRecibidos(), 'diferencia' => $despacho->diferenciaKg()]];
+            }
+        }
+
+        return $condiciones;
     }
 
     /**

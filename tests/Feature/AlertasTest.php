@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Alerta;
+use App\Models\DespachoAlimento;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
 use App\Models\Mortalidad;
@@ -221,23 +222,30 @@ class AlertasTest extends TestCase
 
     // --- Pantallas ---
 
-    public function test_inicio_e_historial_muestran_las_alertas_y_el_administrador_no_ve_las_de_bodega(): void
+    public function test_inicio_e_historial_muestran_las_alertas_y_la_diferencia_de_despacho_es_solo_del_propietario(): void
     {
         $administrador = $this->persona(Rol::ADMINISTRADOR);
         $trabajador = $this->persona(Rol::TRABAJADOR);
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 0]);
         $this->sembrar(500);
         MedicionAgua::create(['lago_id' => $this->lago->id, 'user_id' => $this->propietario->id, 'medido_at' => now(), 'amonio_mg_l' => 1.5]);
+        // Despacho de 100 kg del que llegaron 80 kg: diferencia que solo ve el propietario
+        $despacho = DespachoAlimento::create(['user_id' => $this->propietario->id, 'fecha' => '2026-10-14', 'proveedor' => 'P', 'tipo_concentrado' => 'Levante',
+            'bultos' => 2, 'peso_bulto_kg' => 50, 'cantidad_kg' => 100, 'lote' => 'L']);
+        MovimientoAlimento::create(['user_id' => $administrador->id, 'despacho_id' => $despacho->id, 'fecha' => '2026-10-15', 'tipo_movimiento' => 'entrada',
+            'tipo_concentrado' => 'Levante', 'cantidad_kg' => 80, 'proveedor' => 'P', 'lote' => 'L', 'bultos' => 2, 'peso_bulto_kg' => 40]);
         $stock = 'Engorde está agotado.';
         $agua = 'Amonio de 1,5 mg/L por encima de 1 mg/L.';
+        $diferencia = 'faltan 20 kg';
 
-        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 2]))->assertSee($stock)->assertSee($agua);
-        $this->actingAs($administrador)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 1]))->assertDontSee($stock)->assertSee($agua);
+        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 3]))->assertSee($stock)->assertSee($agua)->assertSee($diferencia);
+        // El administrador recibe el concentrado: ve el stock, pero no la diferencia de lo que despachó el propietario
+        $this->actingAs($administrador)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 2]))->assertSee($stock)->assertSee($agua)->assertDontSee($diferencia);
 
-        $this->actingAs($this->propietario)->get(route('admin.alertas.index'))->assertOk()->assertSee($stock)->assertSee($agua);
+        $this->actingAs($this->propietario)->get(route('admin.alertas.index'))->assertOk()->assertSee($stock)->assertSee($agua)->assertSee($diferencia);
         $this->actingAs($this->propietario)->get(route('admin.alertas.index', ['tipo' => Alerta::AGUA]))->assertDontSee($stock)->assertSee($agua);
-        $this->actingAs($administrador)->get(route('admin.alertas.index'))->assertOk()->assertDontSee($stock)->assertSee($agua);
-        $this->actingAs($administrador)->get(route('admin.alertas.index', ['tipo' => Alerta::STOCK]))->assertSessionHasErrors('tipo');
+        $this->actingAs($administrador)->get(route('admin.alertas.index'))->assertOk()->assertSee($stock)->assertDontSee($diferencia);
+        $this->actingAs($administrador)->get(route('admin.alertas.index', ['tipo' => Alerta::DESPACHO_DIFERENCIA]))->assertSessionHasErrors('tipo');
         $this->actingAs($trabajador)->get(route('admin.alertas.index'))->assertForbidden();
     }
 

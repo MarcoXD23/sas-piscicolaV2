@@ -13,5 +13,5 @@ Las reglas del proyecto están en `AGENTS.md` y son obligatorias: trabajar por f
 ## Recordatorios
 
 - No leer ni modificar `.env`. No usar `migrate:fresh` ni `migrate:rollback` sobre `sas_piscicola_v2`.
-- Solo `tenant_id`; solo los 4 roles: propietario, administrador, trabajador, celador.
+- Solo `tenant_id`; solo los 4 roles: propietario, administrador, trabajador, celador. Permisos de cada rol: ver `AGENTS.md` (el administrador opera; el propietario consulta y conserva personal, nómina, agenda, ajustes, bitácora y despachos).
 - Solo PostgreSQL, sin `enum` de base de datos.

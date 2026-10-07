@@ -2,6 +2,7 @@
 
 namespace App\Support\Asistente;
 
+use App\Models\DespachoAlimento;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -86,6 +87,10 @@ class ContextoFinca
         if ($esTecnico || $esCelador) {
             $secciones[] = self::novedadesNoche();
         }
+        // Bodega y ventas: el propietario las consulta y el administrador las opera
+        if ($esTecnico) {
+            $secciones[] = self::bodegaYVentas();
+        }
         if ($esPropietario) {
             $secciones[] = self::soloPropietario();
         }
@@ -168,19 +173,29 @@ class ContextoFinca
     }
 
     /** Bodega, dinero, personal y agenda: exclusivos del propietario. */
-    private static function soloPropietario(): string
+    private static function bodegaYVentas(): string
     {
         $bodega = CoberturaBodega::calcular()->map(fn ($item) => "- {$item['stock']->tipo_concentrado}: "
             .Formato::numero($item['stock']->cantidad_kg, 1).' kg'.($item['dias'] !== null ? ', alcanza unos '.Formato::numero($item['dias'], 1).' días' : '')
             .($item['estado'] !== CoberturaBodega::SUFICIENTE ? " ({$item['estado']})" : ''))->implode("\n");
 
+        $sinRecibir = DespachoAlimento::query()->whereDoesntHave('recepciones')->orderBy('fecha')->get()
+            ->map(fn (DespachoAlimento $d) => "- {$d->tipo_concentrado}: ".Formato::numero($d->cantidad_kg, 1)." kg despachados el {$d->fecha->format('d/m')} ({$d->proveedor})")->implode("\n");
+
+        return implode("\n\n", array_filter([
+            'Bodega de alimento (lo recibido menos las raciones):'."\n".($bodega ?: '- vacía'),
+            $sinRecibir ? "Despachos de concentrado todavía sin recibir:\n{$sinRecibir}" : null,
+            'Ventas del mes: '.Formato::dinero((int) Venta::where('fecha', '>=', Region::hoy()->startOfMonth()->toDateString())->sum('total'))
+                .'. Por cobrar: '.Formato::dinero((int) Venta::conSaldo()->sum('saldo')).'.',
+        ]));
+    }
+
+    private static function soloPropietario(): string
+    {
         $recordatorios = EventoAgenda::query()->paraRecordar()->orderBy('inicia_at')->limit(10)->get()
             ->map(fn (EventoAgenda $e) => "- {$e->titulo} ({$e->textoTipo()}) el {$e->inicia_at->format('d/m')}".($e->estaVencido() ? ' VENCIDO' : ''))->implode("\n");
 
         return implode("\n\n", array_filter([
-            'Bodega de alimento:'."\n".($bodega ?: '- vacía'),
-            'Ventas del mes: '.Formato::dinero((int) Venta::where('fecha', '>=', Region::hoy()->startOfMonth()->toDateString())->sum('total'))
-                .'. Por cobrar: '.Formato::dinero((int) Venta::conSaldo()->sum('saldo')).'.',
             'Solicitudes de personal por revisar: '.Permiso::query()->pendientes()->count().' permisos y '
                 .HoraExtra::query()->pendientes()->count().' reportes de horas extra.',
             $recordatorios ? "Agenda pendiente:\n{$recordatorios}" : null,

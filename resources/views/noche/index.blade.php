@@ -13,15 +13,22 @@
     @endphp
 
     <x-encabezado :titulo="__('noche.seguridad_noche')" :subtitulo="__('noche.rondas_oxigeno_aireadores_finca')">
-        <x-boton tipo="button" data-abrir-modal="modal-ronda" :disabled="! $puedeRegistrar">
-            <x-icono nombre="ok" class="h-5 w-5" /> {{ __('noche.registrar_ronda') }}
-        </x-boton>
+        @unless ($soloLectura)
+            <x-boton tipo="button" data-abrir-modal="modal-ronda" :disabled="! $puedeRegistrar">
+                <x-icono nombre="ok" class="h-5 w-5" /> {{ __('noche.registrar_ronda') }}
+            </x-boton>
+        @endunless
     </x-encabezado>
 
     @if ($turno)
         <div role="status" class="mb-5 flex items-center gap-3 rounded-xl border border-marca-200 bg-marca-50 px-4 py-3 text-base text-marca-900">
             <x-icono nombre="luna" class="h-5 w-5" />
             <span>{{ __('noche.turno_hasta') }} <strong class="font-semibold">{{ $turno->termina_at->format('H:i') }}</strong>.</span>
+        </div>
+    @elseif ($soloLectura)
+        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-700">
+            <x-icono nombre="luna" class="mt-0.5 h-5 w-5" />
+            <span>{{ __('noche.solo_lectura') }}</span>
         </div>
     @elseif (! $puedeRegistrar)
         <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
@@ -86,6 +93,7 @@
                     @endif
                 </div>
 
+                @unless ($soloLectura)
                 <div class="mt-auto grid grid-cols-2 gap-2">
                     <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-oxigeno-{{ $lago->id }}" :disabled="! $puedeRegistrar">
                         <x-icono nombre="reloj" class="h-5 w-5" /> {{ __('noche.medir') }}
@@ -106,6 +114,7 @@
                         </x-formulario>
                     @endif
                 </div>
+                @endunless
             </section>
 
             @if ($puedeRegistrar)
@@ -133,26 +142,39 @@
         @if ($bitacora->isEmpty())
             <x-vacio icono="luna" :mensaje="__('noche.todavia_no_hay_registros_esta')" />
         @else
-            <ol class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-                @foreach ($bitacora as $evento)
-                    <li class="flex gap-4 border-t border-slate-100 p-4 first:border-t-0">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $tonos[$evento['tono']] }}">
-                            <x-icono :nombre="$evento['icono']" class="h-5 w-5" />
-                        </span>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                                <p class="font-semibold text-slate-900">{{ $evento['titulo'] }}</p>
-                                <time class="text-sm tabular-nums text-slate-500" datetime="{{ $evento['momento']->toIso8601String() }}">{{ $evento['momento']->format('H:i') }}</time>
-                            </div>
-                            @if ($evento['detalle'] !== '')
-                                <p class="text-sm text-slate-600">{{ $evento['detalle'] }}</p>
-                            @endif
-                        </div>
-                    </li>
-                @endforeach
-            </ol>
+            @include('noche._eventos', ['eventos' => $bitacora])
         @endif
     </section>
+
+    @if ($soloLectura)
+        <section class="mt-8">
+            <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('noche.reportes_por_turno') }}</h2>
+
+            @if ($turnosCelador->isEmpty())
+                <x-vacio icono="luna" :mensaje="__('noche.sin_turnos_celador')" />
+            @else
+                <nav class="mb-3 flex flex-wrap gap-1 rounded-xl bg-slate-200/70 p-1 text-sm font-semibold" aria-label="{{ __('noche.elegir_turno') }}">
+                    @foreach ($turnosCelador as $opcion)
+                        <a href="{{ route('noche.index', ['turno' => $opcion->id]) }}"
+                           @if ($opcion->is($turnoElegido)) aria-current="page" @endif
+                           @class([
+                               'flex min-h-10 items-center rounded-lg px-3',
+                               'bg-white text-marca-800 shadow-sm' => $opcion->is($turnoElegido),
+                               'text-slate-600' => ! $opcion->is($turnoElegido),
+                           ])>{{ __('noche.turno_opcion', ['fecha' => $opcion->inicia_at->format('d/m'), 'nombre' => $opcion->user->name]) }}</a>
+                    @endforeach
+                </nav>
+
+                <p class="mb-3 text-sm text-slate-500">{{ __('noche.turno_detalle', ['nombre' => $turnoElegido->user->name, 'desde' => $turnoElegido->inicia_at->format('d/m H:i'), 'hasta' => $turnoElegido->termina_at->format('d/m H:i')]) }}</p>
+
+                @if ($reporteTurno->isEmpty())
+                    <x-vacio icono="luna" :mensaje="__('noche.turno_sin_registros')" />
+                @else
+                    @include('noche._eventos', ['eventos' => $reporteTurno, 'con_fecha' => true])
+                @endif
+            @endif
+        </section>
+    @endif
 
     @if ($puedeRegistrar)
         <x-modal id="modal-ronda" :titulo="__('noche.registrar_ronda')">

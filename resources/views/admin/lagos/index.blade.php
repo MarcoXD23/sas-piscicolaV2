@@ -4,28 +4,34 @@
 
 @section('contenido')
     @php
-        $esTecnico = auth()->user()->tieneRol('propietario') || auth()->user()->tieneRol('administrador');
+        // Solo el administrador (o el propietario que también lo es) opera los lagos; el propietario consulta
+        $puedeOperar = auth()->user()->tieneRol('administrador');
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero($valor, $decimales);
     @endphp
 
     <x-encabezado :titulo="__('lagos.lagos_siembras')" :subtitulo="__('lagos.estanques_finca_ciclos_productivos')">
-        @if ($esTecnico)
+        @if ($puedeOperar)
             <x-boton tipo="button" data-abrir-modal="modal-lago">
                 <x-icono nombre="mas" class="h-5 w-5" /> {{ __('lagos.nuevo_lago') }}
             </x-boton>
         @endif
     </x-encabezado>
 
-    @unless ($puedeRegistrar)
+    @if ($soloLectura)
+        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-700">
+            <x-icono nombre="lagos" class="mt-0.5 h-5 w-5" />
+            <span>{{ __('lagos.solo_lectura') }}</span>
+        </div>
+    @elseif (! $puedeRegistrar)
         <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
             <x-icono nombre="reloj" class="mt-0.5 h-5 w-5" />
             <span>{{ __('lagos.estas_fuera_tu_turno_puedes') }}</span>
         </div>
-    @endunless
+    @endif
 
     @if ($lagos->isEmpty())
         <x-vacio icono="lagos" :mensaje="__('lagos.aun_no_hay_lagos_registrados')">
-            @if ($esTecnico)
+            @if ($puedeOperar)
                 <x-boton tipo="button" data-abrir-modal="modal-lago">
                     <x-icono nombre="mas" class="h-5 w-5" /> {{ __('lagos.registrar_primer_lago') }}
                 </x-boton>
@@ -98,11 +104,12 @@
                             </div>
                         </dl>
 
-                        <div @class(['grid gap-2 p-4', 'grid-cols-3' => $esTecnico, 'grid-cols-1' => ! $esTecnico])>
+                        @unless ($soloLectura)
+                        <div @class(['grid gap-2 p-4', 'grid-cols-3' => $puedeOperar, 'grid-cols-1' => ! $puedeOperar])>
                             <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}" :disabled="! $puedeRegistrar">
                                 <x-icono nombre="mortalidad" /> {{ __('lagos.mortalidad') }}
                             </x-boton>
-                            @if ($esTecnico)
+                            @if ($puedeOperar)
                                 <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
                                     <x-icono nombre="biomasa" /> {{ __('lagos.muestreo') }}
                                 </x-boton>
@@ -111,8 +118,10 @@
                                 </x-boton>
                             @endif
                         </div>
+                        @endunless
                     </div>
 
+                    @unless ($soloLectura)
                     <x-modal id="modal-mortalidad-{{ $siembra->id }}" :titulo="__('lagos.mortalidad_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.mortalidades.store', $siembra->id)">
                             <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
@@ -125,8 +134,9 @@
                             </div>
                         </x-formulario>
                     </x-modal>
+                    @endunless
 
-                    @if ($esTecnico)
+                    @if ($puedeOperar)
                         <x-modal id="modal-muestreo-{{ $siembra->id }}" :titulo="__('lagos.muestreo_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
                             <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
                                 <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
@@ -164,24 +174,24 @@
                     <p class="p-5 text-base text-slate-500">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
                 @endforelse
 
-                <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $esTecnico && $siembras->isNotEmpty()])>
-                    @if ($siembras->isNotEmpty())
+                <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $puedeOperar && $siembras->isNotEmpty()])>
+                    @if ($siembras->isNotEmpty() && ! $soloLectura)
                         <x-boton tipo="button" data-abrir-modal="modal-racion-{{ $lago->id }}" :disabled="! $puedeRegistrar">
                             <x-icono nombre="alimentar" class="h-5 w-5" /> {{ __('lagos.alimentar') }}
                         </x-boton>
                     @endif
-                    @if ($esTecnico)
+                    @if ($puedeOperar)
                         <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-siembra-{{ $lago->id }}">
                             <x-icono nombre="mas" class="h-5 w-5" /> {{ $siembras->isNotEmpty() ? __('lagos.especie') : __('lagos.registrar_siembra') }}
                         </x-boton>
                     @endif
                     <a href="{{ route('admin.lagos.show', $lago) }}" @class([
                         'flex min-h-11 items-center justify-center text-base font-semibold text-marca-700 hover:underline',
-                        'col-span-2' => $esTecnico && $siembras->isNotEmpty(),
+                        'col-span-2' => $puedeOperar && $siembras->isNotEmpty(),
                     ])>{{ __('lagos.ver_detalle_e_historial') }}</a>
                 </div>
 
-                @if ($siembras->isNotEmpty())
+                @if ($siembras->isNotEmpty() && ! $soloLectura)
                     <x-modal id="modal-racion-{{ $lago->id }}" :titulo="__('lagos.alimentar_lago', ['lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.raciones.store', $lago->id)">
                             <x-campo nombre="fecha" id="racion-fecha-{{ $lago->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
@@ -211,7 +221,7 @@
                     </x-modal>
                 @endif
 
-                @if ($esTecnico)
+                @if ($puedeOperar)
                     <x-modal id="modal-siembra-{{ $lago->id }}" :titulo="$siembras->isNotEmpty() ? __('lagos.agregar_especie_a', ['lago' => $lago->nombre]) : __('lagos.siembra_en', ['lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.siembras.store', $lago->id)">
                             @if ($siembras->isNotEmpty())
@@ -239,7 +249,7 @@
         @endforeach
     </div>
 
-    @if ($esTecnico)
+    @if ($puedeOperar)
         <x-modal id="modal-lago" :titulo="__('lagos.nuevo_lago')">
             <x-formulario :action="route('admin.lagos.store')">
                 <x-campo nombre="nombre" id="lago-nombre" :etiqueta="__('lagos.nombre_codigo')" required />

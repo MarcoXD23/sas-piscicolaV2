@@ -28,6 +28,8 @@ class BitacoraTest extends TestCase
 
     private User $propietario;
 
+    private User $administrador;
+
     private Lago $lago;
 
     private Siembra $siembra;
@@ -41,6 +43,7 @@ class BitacoraTest extends TestCase
         $this->finca = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'pais' => 'CO']);
         app(TenantActual::class)->establecer($this->finca->id);
         $this->propietario = $this->persona(Rol::PROPIETARIO, 'Dueña');
+        $this->administrador = $this->persona(Rol::ADMINISTRADOR, 'Ana Admin');
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-09-01', 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 10, 'peces_vivos' => 1000, 'peso_actual_g' => 200, 'biomasa_kg' => 200]);
@@ -76,14 +79,14 @@ class BitacoraTest extends TestCase
     {
         $otro = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
 
-        $this->actingAs($this->propietario)->post(route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 7])->assertSessionHasNoErrors();
-        $this->actingAs($this->propietario)->post(route('admin.muestreos.store', $this->siembra), ['fecha' => '2026-10-15', 'peces_pesados' => 10, 'peso_total_g' => 2500])->assertSessionHasNoErrors();
-        $this->actingAs($this->propietario)->post(route('admin.traslados.store', $this->siembra), ['lago_destino_id' => $otro->id, 'fecha' => '2026-10-15', 'cantidad' => 100, 'peso_promedio_g' => 250])->assertSessionHasNoErrors();
-        $this->actingAs($this->propietario)->post(route('admin.cosechas.store', $this->siembra), ['fecha' => '2026-10-15', 'peces' => 50, 'kg' => 12.5])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 7])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.muestreos.store', $this->siembra), ['fecha' => '2026-10-15', 'peces_pesados' => 10, 'peso_total_g' => 2500])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.traslados.store', $this->siembra), ['lago_destino_id' => $otro->id, 'fecha' => '2026-10-15', 'cantidad' => 100, 'peso_promedio_g' => 250])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.cosechas.store', $this->siembra), ['fecha' => '2026-10-15', 'peces' => 50, 'kg' => 12.5])->assertSessionHasNoErrors();
 
         $registros = Bitacora::query()->orderBy('id')->get();
         $this->assertSame(['mortalidad', 'muestreo', 'traslado', 'cosecha'], $registros->pluck('accion')->all());
-        $this->assertSame([Rol::PROPIETARIO], $registros->pluck('rol')->unique()->values()->all());
+        $this->assertSame([Rol::ADMINISTRADOR], $registros->pluck('rol')->unique()->values()->all());
         $this->assertSame([$this->lago->id], $registros->pluck('lago_id')->unique()->values()->all());
         $this->assertSame('100 peces de Mojarra roja hacia L02 (fecha 15/10/2026)', $registros[2]->textoDetalle());
     }
@@ -93,7 +96,7 @@ class BitacoraTest extends TestCase
         $cosecha = Cosecha::create(['siembra_id' => $this->siembra->id, 'lago_id' => $this->lago->id, 'user_id' => $this->propietario->id,
             'fecha' => '2026-10-14', 'peces' => 100, 'kg' => 30, 'peso_promedio_g' => 300]);
 
-        $this->actingAs($this->propietario)->post(route('admin.ventas.store'), [
+        $this->actingAs($this->administrador)->post(route('admin.ventas.store'), [
             'cosecha_id' => $cosecha->id, 'cliente' => 'Doña Rosa', 'fecha' => '2026-10-15', 'kg' => 10, 'precio_kg' => 12000, 'forma_pago' => 'contado',
         ])->assertSessionHasNoErrors();
 
@@ -120,10 +123,10 @@ class BitacoraTest extends TestCase
 
     public function test_una_accion_rechazada_no_deja_registro(): void
     {
-        $this->actingAs($this->propietario)->post(route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 5000])
+        $this->actingAs($this->administrador)->post(route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 5000])
             ->assertSessionHasErrors('cantidad');
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 1]);
-        $this->actingAs($this->propietario)->post(route('admin.raciones.store', $this->lago), ['fecha' => '2026-10-15', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 10])
+        $this->actingAs($this->administrador)->post(route('admin.raciones.store', $this->lago), ['fecha' => '2026-10-15', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 10])
             ->assertSessionHasErrors('cantidad_kg');
 
         $this->assertSame(0, Bitacora::query()->count());

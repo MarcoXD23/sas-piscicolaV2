@@ -10,10 +10,11 @@ SaaS multi-tenant para fincas piscícolas, sin atarse a una región. Stack: Lara
 - Multi-tenant desde el inicio: toda tabla de negocio lleva tenant_id y todo se filtra con un único global scope. Usa solo el nombre tenant_id en todo el proyecto.
 - Roles (solo estos 4, con estos nombres exactos): propietario, administrador, trabajador, celador. No inventes otros ni alias. Un usuario puede tener más de un rol (por ejemplo trabajador y celador, por la rotación de turnos): guárdalos en una tabla pivote, no en una columna enum.
 - Permisos por rol:
-  - propietario: control total. Exclusivo suyo: gestión de personal, recepción de alimento a bodega, agenda operativa y dashboard ejecutivo.
-  - administrador: área técnica (lagos, siembras, muestreos, mortalidad, traslados). Bloqueado de personal, bodega y agenda.
+  - propietario: dueño de la finca. Exclusivo suyo: personal, turnos, solicitudes, nómina, agenda, ajustes de la finca, bitácora y el despacho de concentrado a bodega. Ve en solo lectura lagos, muestreos, mortalidad, ventas, bodega (stock y cobertura), conversión, alertas, reportes y los reportes del celador. No registra operación técnica salvo que también tenga el rol administrador.
+  - administrador: opera la finca. Lagos, siembras, cosechas, traslados, muestreos, mortalidad, alimentación, calidad del agua, tratamientos, tareas, recepción de concentrado en bodega y ventas (créditos y abonos). Ve los reportes y los reportes del celador en solo lectura. Bloqueado de personal, nómina, agenda, ajustes y despachos.
   - trabajador: alimentación y mortalidad, solo en su turno.
   - celador: solo el módulo Seguridad & Noche, solo en su turno.
+  - Un usuario puede tener varios roles y opera con los permisos de todos. En una finca pequeña el propietario puede tener además el rol administrador.
   - trabajador y celador además tienen autogestión ("Mi trabajo"): marcar como hechas sus tareas (solo en su turno), pedir permisos, reportar horas extra y ver su saldo de pescado y sus pagos de nómina. Aprobar permisos y horas extra, y liquidar la nómina, es exclusivo del propietario.
 - Un solo modelo y una sola tabla por concepto, con nombres del dominio en español y consistentes (lagos, siembras, muestreos, mortalidades, traslados). Nunca dos nombres para lo mismo ni versiones en inglés y español.
 - Base de datos: solo PostgreSQL. No uses enum de base de datos: para valores fijos (tipo de lago, especie) usa string y valídalos en la aplicación. No uses sintaxis de otras bases (nada de CREATE VIEW IF NOT EXISTS ni SQL de MySQL o SQLite). No uses try/catch para esconder errores de SQL dentro de migraciones.

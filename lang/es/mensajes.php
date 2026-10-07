@@ -33,7 +33,11 @@ return [
         'tu_cuenta_aun_no_ha' => 'Tu cuenta aún no ha sido aprobada por el propietario de la finca.',
     ],
     'bodega' => [
+        'despacho_no_existe' => 'El despacho no existe.',
+        'despacho_registrado' => 'Despacho registrado. El administrador debe registrar la recepción cuando llegue a la finca.',
+        'despacho_revisado' => 'Diferencia del despacho marcada como revisada.',
         'recepcion_alimento_registrada' => 'Recepción de alimento registrada.',
+        'recepcion_antes_del_despacho' => 'La recepción no puede ser anterior al despacho.',
     ],
     'comun' => [
         'solo_hay_peces' => 'Solo hay :cantidad peces vivos en esta siembra.',
@@ -109,12 +113,15 @@ return [
         'ya_liquidada' => 'La semana de :nombre ya está liquidada.',
     ],
     'personal' => [
+        'ahora_eres_administrador' => 'Ahora también eres el administrador de la finca.',
         'roles_guardados' => 'Se guardaron los roles de :nombre.',
+        'ya_no_eres_administrador' => 'Ya no tienes el rol de administrador.',
     ],
     'racion' => [
         'este_lago_no_tiene_peces' => 'Este lago no tiene peces: no se puede registrar alimentación.',
         'registrada' => 'Ración de :kg kg registrada en el lago :lago.',
-        'stock_insuficiente' => 'No hay suficiente stock de este alimento en bodega. Disponible: :kg kg.',
+        'sin_concentrado_recibido' => 'No hay concentrado recibido. El administrador debe registrar la recepción.',
+        'stock_insuficiente' => 'Solo hay :kg kg de :concentrado recibidos. El administrador debe registrar la recepción.',
     ],
     'registro' => [
         'no_existe_finca_ese_codigo' => 'No existe una finca con ese código.',

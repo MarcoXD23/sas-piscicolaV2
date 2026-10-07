@@ -25,7 +25,8 @@ class PolicultivoTest extends TestCase
 
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $this->propietario = User::factory()->create(['tenant_id' => $tenant->id]);
-        $this->propietario->asignarRoles([Rol::PROPIETARIO]);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $this->propietario->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         app(TenantActual::class)->establecer($tenant->id);
 
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);

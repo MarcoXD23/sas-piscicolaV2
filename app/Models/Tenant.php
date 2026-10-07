@@ -14,7 +14,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'nombre', 'codigo', 'pais', 'zona_horaria', 'idioma',
-        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias',
+        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias',
     ];
 
     protected function casts(): array
@@ -24,6 +24,7 @@ class Tenant extends Model
             'alerta_stock_dias' => 'integer',
             'alerta_mortalidad_porcentaje' => 'float',
             'alerta_mortalidad_dias' => 'integer',
+            'alerta_despacho_dias' => 'integer',
         ];
     }
 

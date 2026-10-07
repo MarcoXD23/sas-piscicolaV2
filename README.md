@@ -12,8 +12,8 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 
 | Rol | Qué puede hacer |
 |---|---|
-| `propietario` | Todo. Exclusivo: personal (roles, turnos, solicitudes, nómina), bodega, ventas y créditos, agenda operativa y panel ejecutivo. |
-| `administrador` | Área técnica: lagos, siembras, muestreos, mortalidad, traslados, calidad del agua, sanidad, cosecha, tareas y reportes. |
+| `propietario` | Dueño. Exclusivo: personal (roles, turnos, solicitudes, nómina), agenda, ajustes, bitácora y **despachos** de concentrado. Ve en solo lectura lagos, ventas, bodega, conversión, alertas, reportes y los reportes del celador. Puede activarse también el rol administrador (finca pequeña) en **Personal → Tu cuenta**. |
+| `administrador` | Opera la finca: lagos, siembras, cosechas, traslados, muestreos, mortalidad, alimentación, agua, sanidad, tareas, **recepción** de concentrado y ventas (créditos y abonos). Ve reportes y los reportes del celador. |
 | `trabajador` | Alimentación y mortalidad **solo dentro de su turno**; sus tareas, permisos y horas extra. |
 | `celador` | Seguridad & Noche (rondas, oxígeno, aireadores) **solo dentro de su turno**; sus tareas, permisos y horas extra. |
 
@@ -25,12 +25,12 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Lagos | `/admin/lagos` | Siembras y **policultivo** (sin repetir especie ni mezclar agua fría y cálida), alimentación con ración sugerida, mortalidad, muestreos, traslados y desdobles, cosecha (total neto o pesaje por canastas). Detalle con historial completo. |
 | Calidad del agua y sanidad | detalle del lago | Mediciones con alertas según las especies del lago; tratamientos con **retiro sanitario** que bloquea la cosecha. |
 | Especies | `/especies` | Guía con fichas de referencia de 6 especies. |
-| Bodega | `/admin/bodega` | Entradas y salidas de concentrado, días de cobertura y alertas de stock bajo. |
+| Bodega | `/admin/bodega` | Dos pasos: el propietario registra el **despacho** y el administrador la **recepción** (contra el despacho o sin despacho). Diferencia por despacho (faltante, sobrante, exacto), aviso de despachos sin recibir después de N días (Ajustes), stock = recibido − raciones (nunca negativo), días de cobertura y alertas de stock. |
 | Ventas | `/admin/ventas` | Ventas de pescado cosechado (de contado o a crédito, también a empleados) y abonos. |
 | Personal | `/admin/personal` | Aprobación y roles, **turnos rotativos**, solicitudes (permisos y horas extra) y **nómina semanal**. |
 | Tareas | `/admin/tareas` | Tareas para el personal de campo; se marcan hechas solo en turno. |
 | Mi trabajo | `/mi-trabajo` | Para trabajador y celador: tareas, permisos, horas extra, saldo de pescado y pagos de nómina. |
-| Seguridad & Noche | `/noche` | Rondas con o sin novedad, encendido de aireadores y oxígeno nocturno. |
+| Seguridad & Noche | `/noche` | El celador, en su turno: rondas con o sin novedad, aireadores y oxígeno nocturno. Propietario y administrador lo consultan en solo lectura, con los reportes de cada turno. |
 | Agenda | `/admin/agenda` | Calendario de la finca con recordatorios; muestra retiros sanitarios y permisos aprobados. |
 | Reportes | `/admin/reportes` | Informe mensual y libro de campo por lago (imprimibles o PDF desde el navegador). |
 | Asistente IA | botón flotante | Preguntas sobre la finca con Claude o Gemini; solo usa los datos que el rol puede ver. |

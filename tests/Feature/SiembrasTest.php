@@ -7,6 +7,7 @@ use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,8 +19,9 @@ class SiembrasTest extends TestCase
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
-        $propietario->asignarRoles([Rol::PROPIETARIO]);
-        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $propietario->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
+        app(TenantActual::class)->establecer($tenant->id);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
 
@@ -42,11 +44,12 @@ class SiembrasTest extends TestCase
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
-        $propietario->asignarRoles([Rol::PROPIETARIO]);
-        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $propietario->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
+        app(TenantActual::class)->establecer($tenant->id);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
-        
+
         Siembra::create([
             'lago_id' => $lago->id,
             'especie' => 'cachama blanca',

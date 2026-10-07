@@ -140,7 +140,7 @@ class RegionalizacionTest extends TestCase
         $this->en($this->madrid);
         $this->assertSame('2026-10-16', Region::hoy()->toDateString());
 
-        $recibir = fn (Tenant $finca) => $this->actingAs($this->persona($finca, Rol::PROPIETARIO))->post(route('admin.bodega.store'), [
+        $recibir = fn (Tenant $finca) => $this->actingAs($this->persona($finca, Rol::ADMINISTRADOR))->post(route('admin.bodega.recepciones.store'), [
             'fecha' => '2026-10-16', 'proveedor' => 'P', 'tipo_concentrado' => 'Engorde', 'lote' => 'L1', 'bultos' => 1, 'peso_bulto_kg' => 40,
         ]);
 

@@ -4,7 +4,8 @@
 
 @section('contenido')
     @php
-        $esTecnico = auth()->user()->tieneRol('propietario') || auth()->user()->tieneRol('administrador');
+        // Solo el administrador (o el propietario que también lo es) opera los lagos; el propietario consulta
+        $puedeOperar = auth()->user()->tieneRol('administrador');
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
         $medicion = $lago->ultimaMedicion;
         $tonos = [
@@ -20,7 +21,7 @@
 
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
                   :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => $lago->siembrasActivas->count()]))">
-        @if ($esTecnico)
+        @if ($puedeOperar)
             <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
                 <x-icono nombre="reloj" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
             </x-boton>
@@ -72,7 +73,7 @@
                             </div>
                         </div>
 
-                        @if ($esTecnico)
+                        @if ($puedeOperar)
                             <div class="grid grid-cols-2 gap-2 px-5 pb-4">
                                 <x-boton tipo="button" class="!px-2" data-abrir-modal="modal-cosecha-{{ $siembra->id }}" :disabled="$lago->tratamientosEnRetiro->isNotEmpty()"
                                          :title="$lago->tratamientosEnRetiro->isNotEmpty() ? __('lagos.lago_en_retiro') : null">
@@ -100,7 +101,7 @@
                         </dl>
                     </x-tarjeta>
 
-                    @if ($esTecnico && $otrosLagos !== [])
+                    @if ($puedeOperar && $otrosLagos !== [])
                         <x-modal id="modal-traslado-{{ $siembra->id }}" :titulo="__('lagos.trasladar_especie', ['especie' => $siembra->nombre_especie])">
                             <x-formulario :action="route('admin.traslados.store', $siembra)">
                                 <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
@@ -124,7 +125,7 @@
                         </x-modal>
                     @endif
 
-                    @if ($esTecnico && $lago->tratamientosEnRetiro->isEmpty())
+                    @if ($puedeOperar && $lago->tratamientosEnRetiro->isEmpty())
                         <x-modal id="modal-cosecha-{{ $siembra->id }}" :titulo="__('lagos.cosechar_especie', ['especie' => $siembra->nombre_especie])">
                             <x-formulario :action="route('admin.cosechas.store', $siembra)">
                                 <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
@@ -308,7 +309,7 @@
         </aside>
     </div>
 
-    @if ($esTecnico)
+    @if ($puedeOperar)
         <x-modal id="modal-medicion" :titulo="__('lagos.calidad_agua_de', ['lago' => $lago->nombre])">
             <x-formulario :action="route('admin.mediciones-agua.store', $lago)">
                 <x-campo nombre="medido_at" :etiqueta="__('lagos.fecha_hora')" tipo="datetime-local" :valor="\App\Support\Region::ahora()->format('Y-m-d\TH:i')" required />

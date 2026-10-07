@@ -20,7 +20,8 @@ class LagoDetalleTest extends TestCase
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($tenant->id);
-        $propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO]);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $otro = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
@@ -49,7 +50,8 @@ class LagoDetalleTest extends TestCase
     {
         $finca = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $otra = Tenant::create(['nombre' => 'Otra', 'codigo' => 'F02']);
-        $propietario = tap(User::factory()->create(['tenant_id' => $finca->id]))->asignarRoles([Rol::PROPIETARIO]);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $propietario = tap(User::factory()->create(['tenant_id' => $finca->id]))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $ajeno = Lago::withoutGlobalScopes()->forceCreate(['tenant_id' => $otra->id, 'nombre' => 'X1', 'tipo' => 'tierra']);
 
         $this->actingAs($propietario)->get(route('admin.lagos.show', $ajeno))->assertNotFound();

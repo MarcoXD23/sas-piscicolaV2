@@ -30,7 +30,8 @@ class PesajesCosechaTest extends TestCase
 
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($tenant->id);
-        $this->propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO]);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $this->propietario = tap(User::factory()->create(['tenant_id' => $tenant->id]))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => now()->subMonths(5),
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 400, 'biomasa_kg' => 400]);

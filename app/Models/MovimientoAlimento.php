@@ -16,6 +16,7 @@ class MovimientoAlimento extends Model
     protected $fillable = [
         'user_id',
         'lago_id',
+        'despacho_id',
         'fecha',
         'tipo_movimiento',
         'tipo_concentrado',
@@ -39,5 +40,11 @@ class MovimientoAlimento extends Model
     public function lago(): BelongsTo
     {
         return $this->belongsTo(Lago::class);
+    }
+
+    /** Despacho contra el que se recibió (solo entradas; vacío = recepción sin despacho). */
+    public function despacho(): BelongsTo
+    {
+        return $this->belongsTo(DespachoAlimento::class, 'despacho_id');
     }
 }

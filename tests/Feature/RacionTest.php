@@ -8,6 +8,7 @@ use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,12 +21,12 @@ class RacionTest extends TestCase
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $trabajador = User::factory()->create(['tenant_id' => $tenant->id]);
         $trabajador->asignarRoles([Rol::TRABAJADOR]);
-        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        app(TenantActual::class)->establecer($tenant->id);
         $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->sembrar($lago);
-        
+
         StockAlimento::create([
             'tipo_concentrado' => 'Mojarra 32% Engorde',
             'cantidad_kg' => 100,
@@ -55,12 +56,12 @@ class RacionTest extends TestCase
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $trabajador = User::factory()->create(['tenant_id' => $tenant->id]);
         $trabajador->asignarRoles([Rol::TRABAJADOR]);
-        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        app(TenantActual::class)->establecer($tenant->id);
         $this->ponerEnTurno($trabajador, Rol::TRABAJADOR);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->sembrar($lago);
-        
+
         StockAlimento::create([
             'tipo_concentrado' => 'Cachama 24%',
             'cantidad_kg' => 50,
@@ -77,8 +78,9 @@ class RacionTest extends TestCase
     {
         $tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         $propietario = User::factory()->create(['tenant_id' => $tenant->id]);
-        $propietario->asignarRoles([Rol::PROPIETARIO]);
-        app(\App\Support\TenantActual::class)->establecer($tenant->id);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $propietario->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
+        app(TenantActual::class)->establecer($tenant->id);
 
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         StockAlimento::create(['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 50]);

@@ -7,6 +7,21 @@
 
     <x-pestanas-personal />
 
+    {{-- Finca pequeña: el dueño también puede ser el administrador --}}
+    <x-tarjeta :titulo="__('personal.tu_cuenta')" class="mb-6">
+        <x-formulario :action="route('admin.personal.mi-rol-administrador')" metodo="PUT" class="!space-y-3">
+            <input type="hidden" name="administrador" value="0">
+            <label class="flex min-h-11 cursor-pointer items-start gap-3 text-base text-slate-800">
+                <input type="checkbox" name="administrador" value="1" @checked($soyAdministrador) class="mt-1 h-5 w-5 rounded accent-marca-600">
+                <span>
+                    <span class="block font-semibold">{{ __('personal.tambien_administrador') }}</span>
+                    <span class="block text-sm text-slate-500">{{ __('personal.tambien_administrador_ayuda') }}</span>
+                </span>
+            </label>
+            <x-boton variante="secundario">{{ __('personal.guardar_mi_rol') }}</x-boton>
+        </x-formulario>
+    </x-tarjeta>
+
     <x-tabla :columnas="[__('personal.persona'), __('personal.estado'), __('personal.roles')]" :vacio="__('personal.aun_no_hay_personal_registrado')">
         @foreach ($personal as $persona)
             @php

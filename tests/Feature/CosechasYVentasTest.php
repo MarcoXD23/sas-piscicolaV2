@@ -35,7 +35,8 @@ class CosechasYVentasTest extends TestCase
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'pais' => 'CO']);
         app(TenantActual::class)->establecer($this->tenant->id);
-        $this->propietario = $this->persona(Rol::PROPIETARIO);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $this->propietario = tap($this->persona(Rol::PROPIETARIO))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'mojarra roja', 'fecha' => '2026-05-01',
             'cantidad_alevinos' => 1000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 400, 'biomasa_kg' => 400]);
@@ -203,11 +204,15 @@ class CosechasYVentasTest extends TestCase
         $this->assertSame(90000, (int) Abono::sum('valor'));
     }
 
-    public function test_las_ventas_son_exclusivas_del_propietario_y_aparecen_en_su_panel(): void
+    public function test_el_administrador_registra_ventas_y_el_propietario_las_consulta_en_su_panel(): void
     {
         $administrador = $this->persona(Rol::ADMINISTRADOR);
-        $this->actingAs($administrador)->get(route('admin.ventas.index'))->assertForbidden();
-        $this->actingAs($administrador)->post(route('admin.ventas.store'), [])->assertForbidden();
+        $soloDueno = $this->persona(Rol::PROPIETARIO);
+        $this->actingAs($administrador)->get(route('admin.ventas.index'))->assertOk()->assertSee(__('ventas.nueva_venta'));
+        // El propietario sin rol de administrador solo consulta: sin botón y con 403 al registrar
+        $this->actingAs($soloDueno)->get(route('admin.ventas.index'))->assertOk()->assertDontSee(__('ventas.nueva_venta'));
+        $this->actingAs($soloDueno)->post(route('admin.ventas.store'), [])->assertForbidden();
+        $this->actingAs($this->persona(Rol::TRABAJADOR))->get(route('admin.ventas.index'))->assertForbidden();
 
         $this->vender($this->cosecha(), ['forma_pago' => 'credito']);
 

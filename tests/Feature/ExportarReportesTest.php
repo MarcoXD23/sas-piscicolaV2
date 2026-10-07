@@ -103,15 +103,16 @@ class ExportarReportesTest extends TestCase
         $this->assertFalse($this->contiene($hojas, 'ConcentradoAjeno'));
     }
 
-    public function test_el_administrador_no_recibe_ventas_ni_bodega(): void
+    public function test_el_administrador_recibe_ventas_y_bodega_porque_las_opera(): void
     {
         $administrador = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::ADMINISTRADOR]);
 
         $hojas = $this->leerExcel($this->actingAs($administrador)->get(route('admin.reportes.mensual.excel', ['mes' => '2026-10']))->assertOk());
 
-        $this->assertArrayNotHasKey('Entradas a bodega', $hojas);
-        $this->assertFalse($this->contiene($hojas, __('reportes.exportar.ventas_total')));
-        $this->assertFalse($this->contiene($hojas, 'Proveedor Uno'));
+        $this->assertArrayHasKey('Entradas a bodega', $hojas);
+        $this->assertTrue($this->contiene($hojas, __('reportes.exportar.ventas_total')));
+        $this->assertTrue($this->contiene($hojas, 'Proveedor Uno'));
+        $this->assertFalse($this->contiene($hojas, 'LagoAjeno'));
     }
 
     public function test_el_pdf_mensual_se_genera_con_los_datos_de_la_finca(): void

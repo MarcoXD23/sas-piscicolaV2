@@ -13,17 +13,21 @@
     @endphp
 
     <x-encabezado :titulo="__('bodega.bodega_alimento')" :subtitulo="__('bodega.inventario_concentrados_movimientos_finca')">
-        <x-boton tipo="button" data-abrir-modal="modal-recepcion">
-            <x-icono nombre="mas" class="h-5 w-5" /> {{ __('bodega.recibir_alimento') }}
-        </x-boton>
-    </x-encabezado>
-
-    @if ($cobertura->isEmpty())
-        <x-vacio icono="bodega" :mensaje="__('bodega.bodega_esta_vacia_registra_primera')">
+        {{-- Dos pasos: el propietario despacha y el administrador recibe --}}
+        @if ($puedeDespachar)
+            <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-despacho">
+                <x-icono nombre="mas" class="h-5 w-5" /> {{ __('bodega.registrar_despacho') }}
+            </x-boton>
+        @endif
+        @if ($puedeRecibir)
             <x-boton tipo="button" data-abrir-modal="modal-recepcion">
                 <x-icono nombre="mas" class="h-5 w-5" /> {{ __('bodega.recibir_alimento') }}
             </x-boton>
-        </x-vacio>
+        @endif
+    </x-encabezado>
+
+    @if ($cobertura->isEmpty())
+        <x-vacio icono="bodega" :mensaje="__('bodega.bodega_esta_vacia_registra_primera')" />
     @endif
 
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -64,6 +68,44 @@
     </div>
 
     <section class="mt-8">
+        <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('bodega.despachos') }}</h2>
+        @php
+            $chipsDespacho = [
+                \App\Models\DespachoAlimento::SIN_RECEPCION => 'bg-slate-100 text-slate-700',
+                \App\Models\DespachoAlimento::EXACTO => 'bg-marca-100 text-marca-800',
+                \App\Models\DespachoAlimento::FALTANTE => 'bg-red-100 text-red-800',
+                \App\Models\DespachoAlimento::SOBRANTE => 'bg-amber-100 text-amber-900',
+            ];
+        @endphp
+        <x-tabla :columnas="[__('comun.fecha'), __('bodega.concentrado'), __('bodega.despachado'), __('bodega.recibido'), __('bodega.estado')]" :vacio="__('bodega.sin_despachos')">
+            @foreach ($despachos as $despacho)
+                @php $estado = $despacho->estado(); @endphp
+                <tr>
+                    <td data-label="{{ __('comun.fecha') }}">{{ $despacho->fecha->format('d/m/Y') }}</td>
+                    <td data-label="{{ __('bodega.concentrado') }}">
+                        <p class="font-medium text-slate-900">{{ $despacho->tipo_concentrado }}</p>
+                        <p class="text-sm text-slate-500">{{ __('bodega.detalle_entrada', ['proveedor' => $despacho->proveedor, 'lote' => $despacho->lote, 'bultos' => $despacho->bultos]) }}</p>
+                    </td>
+                    <td data-label="{{ __('bodega.despachado') }}" class="tabular-nums">{{ $numero($despacho->cantidad_kg, 1) }} kg</td>
+                    <td data-label="{{ __('bodega.recibido') }}" class="tabular-nums">{{ $despacho->tieneRecepciones() ? $numero($despacho->kgRecibidos(), 1).' kg' : '—' }}</td>
+                    <td data-label="{{ __('bodega.estado') }}">
+                        <span class="inline-block rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $chipsDespacho[$estado] }}">
+                            {{ __('bodega.estados_despacho.'.$estado, ['kg' => rtrim(rtrim($numero(abs($despacho->diferenciaKg()), 1), '0'), ',.')]) }}
+                        </span>
+                        @if ($despacho->revisado_at)
+                            <p class="mt-1 text-xs text-slate-500">{{ __('bodega.revisado_el', ['fecha' => $despacho->revisado_at->format('d/m/Y')]) }}</p>
+                        @elseif ($puedeDespachar && in_array($estado, [\App\Models\DespachoAlimento::FALTANTE, \App\Models\DespachoAlimento::SOBRANTE], true))
+                            <x-formulario :action="route('admin.bodega.despachos.revisado', $despacho)" class="mt-1 !space-y-0">
+                                <button class="min-h-11 text-sm font-semibold text-marca-700 hover:underline">{{ __('bodega.marcar_revisado') }}</button>
+                            </x-formulario>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </x-tabla>
+    </section>
+
+    <section class="mt-8">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-slate-900">{{ __('bodega.movimientos') }}</h2>
             <nav class="flex gap-1 rounded-xl bg-slate-200/70 p-1 text-sm font-semibold" aria-label="{{ __('bodega.filtrar_movimientos') }}">
@@ -96,6 +138,7 @@
                     <td data-label="{{ __('bodega.detalle') }}" class="text-sm text-slate-600">
                         @if ($entrada)
                             {{ __('bodega.detalle_entrada', ['proveedor' => $movimiento->proveedor, 'lote' => $movimiento->lote, 'bultos' => $movimiento->bultos]) }}
+                            · {{ $movimiento->despacho ? __('bodega.despacho_del', ['fecha' => $movimiento->despacho->fecha->format('d/m/Y'), 'proveedor' => $movimiento->despacho->proveedor]) : __('bodega.sin_despacho') }}
                         @else
                             {{ __('lagos.lago_nombre', ['lago' => $movimiento->lago?->nombre]) }}
                         @endif
@@ -122,28 +165,64 @@
         @endif
     </section>
 
-    <x-modal id="modal-recepcion" :titulo="__('bodega.recepcion_alimento')">
-        <x-formulario :action="route('admin.bodega.store')">
-            <x-campo nombre="fecha" :etiqueta="__('bodega.fecha_recepcion')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
-            <x-campo nombre="proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" required />
-            <x-campo nombre="tipo_concentrado" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados" required
-                     :ayuda="__('bodega.si_ya_existe_bodega_escribelo')" />
-            <datalist id="concentrados">
-                @foreach ($cobertura as $item)
-                    <option value="{{ $item['stock']->tipo_concentrado }}"></option>
-                @endforeach
-            </datalist>
-            <x-campo nombre="lote" :etiqueta="__('bodega.lote_produccion')" required />
+    @if ($puedeRecibir)
+        <x-modal id="modal-recepcion" :titulo="__('bodega.recepcion_alimento')">
+            <x-formulario :action="route('admin.bodega.recepciones.store')">
+                <x-seleccion nombre="despacho_id" :etiqueta="__('bodega.despacho')" :ayuda="__('bodega.despacho_ayuda')"
+                             :opciones="['' => __('bodega.sin_despacho')] + $despachosPorRecibir->mapWithKeys(fn ($d) => [$d->id => __('bodega.opcion_despacho', [
+                                 'fecha' => $d->fecha->format('d/m'), 'concentrado' => $d->tipo_concentrado, 'kg' => $numero($d->cantidad_kg, 1), 'proveedor' => $d->proveedor,
+                             ])])->all()" />
+                <x-campo nombre="fecha" id="recepcion-fecha" :etiqueta="__('bodega.fecha_recepcion')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
 
-            <div class="grid grid-cols-2 gap-4">
-                <x-campo nombre="bultos" :etiqueta="__('bodega.bultos')" tipo="number" min="1" inputmode="numeric" required />
-                <x-campo nombre="peso_bulto_kg" :etiqueta="__('bodega.kg_bulto')" tipo="number" step="0.1" min="1" inputmode="decimal" valor="40" required />
-            </div>
+                <fieldset class="space-y-4 rounded-xl border border-slate-200 p-4">
+                    <legend class="px-1 text-sm font-medium text-slate-600">{{ __('bodega.solo_sin_despacho') }}</legend>
+                    <x-campo nombre="proveedor" id="recepcion-proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" />
+                    <x-campo nombre="tipo_concentrado" id="recepcion-tipo" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados"
+                             :ayuda="__('bodega.si_ya_existe_bodega_escribelo')" />
+                    <x-campo nombre="lote" id="recepcion-lote" :etiqueta="__('bodega.lote_produccion')" />
+                </fieldset>
+                <datalist id="concentrados">
+                    @foreach ($cobertura as $item)
+                        <option value="{{ $item['stock']->tipo_concentrado }}"></option>
+                    @endforeach
+                </datalist>
 
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                <x-boton>{{ __('bodega.guardar_entrada') }}</x-boton>
-            </div>
-        </x-formulario>
-    </x-modal>
+                <div class="grid grid-cols-2 gap-4">
+                    <x-campo nombre="bultos" id="recepcion-bultos" :etiqueta="__('bodega.bultos_recibidos')" tipo="number" min="1" inputmode="numeric" required />
+                    <x-campo nombre="peso_bulto_kg" id="recepcion-peso" :etiqueta="__('bodega.kg_bulto')" tipo="number" step="0.1" min="1" inputmode="decimal" :valor="\App\Models\DespachoAlimento::PESO_BULTO_POR_DEFECTO" required />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ __('bodega.guardar_entrada') }}</x-boton>
+                </div>
+            </x-formulario>
+        </x-modal>
+    @endif
+
+    @if ($puedeDespachar)
+        <x-modal id="modal-despacho" :titulo="__('bodega.registrar_despacho')">
+            <x-formulario :action="route('admin.bodega.despachos.store')">
+                <p class="rounded-xl bg-marca-50 p-3 text-sm text-marca-900">{{ __('bodega.despacho_explicacion') }}</p>
+                <x-campo nombre="fecha" id="despacho-fecha" :etiqueta="__('bodega.fecha_despacho')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
+                <x-campo nombre="proveedor" id="despacho-proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" required />
+                <x-campo nombre="tipo_concentrado" id="despacho-tipo" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados-despacho" required />
+                <datalist id="concentrados-despacho">
+                    @foreach ($cobertura as $item)
+                        <option value="{{ $item['stock']->tipo_concentrado }}"></option>
+                    @endforeach
+                </datalist>
+                <x-campo nombre="lote" id="despacho-lote" :etiqueta="__('bodega.lote_produccion')" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-campo nombre="bultos" id="despacho-bultos" :etiqueta="__('bodega.bultos')" tipo="number" min="1" inputmode="numeric" required />
+                    <x-campo nombre="peso_bulto_kg" id="despacho-peso" :etiqueta="__('bodega.kg_bulto')" tipo="number" step="0.1" min="1" inputmode="decimal" :valor="\App\Models\DespachoAlimento::PESO_BULTO_POR_DEFECTO" required />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ __('bodega.guardar_despacho') }}</x-boton>
+                </div>
+            </x-formulario>
+        </x-modal>
+    @endif
 @endsection

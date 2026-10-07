@@ -53,11 +53,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/', InicioController::class)->name('inicio');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
+    // Exclusivo del propietario: personal, turnos, nómina, solicitudes, ajustes, agenda, bitácora y despachos de bodega
     Route::middleware('rol:propietario')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/personal', [PersonalController::class, 'index'])->name('personal.index');
         Route::put('/personal/{usuario}', [PersonalController::class, 'update'])
             ->whereNumber('usuario')
             ->name('personal.update');
+        Route::put('/personal/mi-rol-administrador', [PersonalController::class, 'miRolAdministrador'])->name('personal.mi-rol-administrador');
 
         Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
         Route::post('/turnos', [TurnoController::class, 'store'])->name('turnos.store');
@@ -82,18 +84,30 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/agenda/{evento}/completar', [AgendaController::class, 'completar'])->name('agenda.completar');
         Route::delete('/agenda/{evento}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 
-        Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
-        Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
-        Route::post('/ventas/{venta}/abonos', [VentaController::class, 'abonar'])->name('ventas.abonar');
-
-        Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
-        Route::post('/bodega', [BodegaController::class, 'store'])->name('bodega.store');
+
+        Route::post('/bodega/despachos', [BodegaController::class, 'despachar'])->name('bodega.despachos.store');
+        Route::post('/bodega/despachos/{despacho}/revisado', [BodegaController::class, 'marcarRevisado'])->name('bodega.despachos.revisado');
     });
 
+    // Consulta de propietario y administrador (el propietario solo lee)
     Route::middleware('rol:propietario,administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
         Route::get('/conversion', [ConversionController::class, 'index'])->name('conversion.index');
+        Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
+        Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
+        Route::get('/reportes/libro-de-campo', [ReporteController::class, 'libroCampo'])->name('reportes.libro-campo');
+        Route::get('/reportes/mensual/excel', [ReporteController::class, 'mensualExcel'])->name('reportes.mensual.excel');
+        Route::get('/reportes/mensual/pdf', [ReporteController::class, 'mensualPdf'])->name('reportes.mensual.pdf');
+        Route::get('/reportes/libro-de-campo/excel', [ReporteController::class, 'libroCampoExcel'])->name('reportes.libro-campo.excel');
+        Route::get('/reportes/libro-de-campo/pdf', [ReporteController::class, 'libroCampoPdf'])->name('reportes.libro-campo.pdf');
+    });
+
+    // Operación de la finca: solo el administrador (o el propietario que también es administrador)
+    Route::middleware('rol:administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
@@ -107,24 +121,21 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/tareas', [TareaController::class, 'store'])->name('tareas.store');
         Route::delete('/tareas/{tarea}', [TareaController::class, 'destroy'])->name('tareas.destroy');
 
-        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-        Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
-        Route::get('/reportes/libro-de-campo', [ReporteController::class, 'libroCampo'])->name('reportes.libro-campo');
-        Route::get('/reportes/mensual/excel', [ReporteController::class, 'mensualExcel'])->name('reportes.mensual.excel');
-        Route::get('/reportes/mensual/pdf', [ReporteController::class, 'mensualPdf'])->name('reportes.mensual.pdf');
-        Route::get('/reportes/libro-de-campo/excel', [ReporteController::class, 'libroCampoExcel'])->name('reportes.libro-campo.excel');
-        Route::get('/reportes/libro-de-campo/pdf', [ReporteController::class, 'libroCampoPdf'])->name('reportes.libro-campo.pdf');
+        Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
+        Route::post('/ventas/{venta}/abonos', [VentaController::class, 'abonar'])->name('ventas.abonar');
+
+        Route::post('/bodega/recepciones', [BodegaController::class, 'recibir'])->name('bodega.recepciones.store');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/lagos', [LagoController::class, 'index'])->name('lagos.index');
         Route::get('/lagos/{lago}', [LagoController::class, 'show'])->whereNumber('lago')->name('lagos.show');
+    });
 
-        // El trabajador solo registra alimentación y mortalidad dentro de su turno
-        Route::middleware('turno:trabajador')->group(function () {
-            Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
-            Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
-        });
+    // Alimentación y mortalidad: el administrador y el trabajador en su turno
+    Route::middleware(['rol:administrador,trabajador', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
+        Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
     });
 
     Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
@@ -145,11 +156,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/horas-extras', [MiTrabajoController::class, 'reportarHoras'])->name('horas-extras.store');
     });
 
-    // Seguridad & Noche: el celador solo registra dentro de su turno
+    // Seguridad & Noche: el celador registra solo en su turno; propietario y administrador consultan (solo lectura)
     Route::middleware('rol:propietario,administrador,celador')->prefix('noche')->name('noche.')->group(function () {
         Route::get('/', [NocheController::class, 'index'])->name('index');
 
-        Route::middleware('turno:celador')->group(function () {
+        Route::middleware(['rol:celador', 'turno:celador'])->group(function () {
             Route::post('/rondas', [RondaController::class, 'store'])->name('rondas.store');
             Route::post('/lagos/{lago}/aireador', [AireacionController::class, 'encender'])->name('aireador.encender');
             Route::post('/aireaciones/{aireacion}/apagar', [AireacionController::class, 'apagar'])->name('aireador.apagar');

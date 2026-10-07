@@ -23,11 +23,13 @@ use Illuminate\View\View;
  */
 class VentaController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $inicioMes = Region::hoy()->startOfMonth()->toDateString();
 
         return view('admin.ventas.index', [
+            // Registra ventas y abonos el administrador; el propietario consulta
+            'puedeVender' => $request->user()->tieneRol(Rol::ADMINISTRADOR),
             'disponibles' => Cosecha::query()->with(['lago', 'siembra'])->withSum('ventas', 'kg')->latest('fecha')->limit(50)->get()
                 ->filter(fn (Cosecha $cosecha) => $cosecha->kgDisponibles() > 0)->values(),
             'creditos' => Venta::query()->with('comprador')->conSaldo()->orderBy('fecha')->get(),

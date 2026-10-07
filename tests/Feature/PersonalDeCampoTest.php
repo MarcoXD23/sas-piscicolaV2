@@ -31,7 +31,8 @@ class PersonalDeCampoTest extends TestCase
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);
-        $this->propietario = $this->persona(Rol::PROPIETARIO);
+        // Las tareas las asigna el administrador; en esta finca el dueño también lo es
+        $this->propietario = $this->persona(Rol::PROPIETARIO, Rol::ADMINISTRADOR);
         $this->trabajador = $this->persona(Rol::TRABAJADOR);
     }
 

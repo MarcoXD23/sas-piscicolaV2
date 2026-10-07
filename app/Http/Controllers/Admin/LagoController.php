@@ -35,6 +35,8 @@ class LagoController extends Controller
             'especies' => $this->opcionesEspecies(),
             // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
             'puedeRegistrar' => $request->user()->puedeTrabajarComo(Rol::TRABAJADOR),
+            // El propietario sin rol de administrador solo consulta (sin botones de alimentar ni mortalidad)
+            'soloLectura' => ! $request->user()->tieneRol(Rol::ADMINISTRADOR, Rol::TRABAJADOR),
             'stocksDisponibles' => StockAlimento::query()->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get(),
         ]);
     }

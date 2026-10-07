@@ -45,6 +45,7 @@ class AjustesFincaController extends Controller
             'alerta_stock_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:90'],
             'alerta_mortalidad_porcentaje' => ['sometimes', 'required', 'numeric', 'min:0.1', 'max:100'],
             'alerta_mortalidad_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:60'],
+            'alerta_despacho_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:30'],
         ], [
             'zona_horaria.in' => __('region.ajustes.zona_invalida'),
             'idioma.in' => __('region.ajustes.idioma_invalido'),

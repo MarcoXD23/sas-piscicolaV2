@@ -22,7 +22,7 @@ use Carbon\CarbonImmutable;
 
 /**
  * Datos del informe mensual de la finca actual. Los usan la pantalla, el Excel y el PDF (misma consulta).
- * Las ventas y las entradas de bodega solo se incluyen para el propietario.
+ * Las ventas y las entradas de bodega se incluyen para el propietario (consulta) y el administrador (las opera).
  */
 class InformeMensual
 {
@@ -33,7 +33,7 @@ class InformeMensual
         $hasta = $mes->endOfMonth()->toDateString();
         $enMes = fn ($consulta, string $columna = 'fecha') => $consulta->whereBetween($columna, [$desde, $hasta]);
         $enMesMomento = fn ($consulta, string $columna) => $consulta->whereBetween($columna, [$mes, $mes->endOfMonth()]);
-        $esPropietario = $usuario->tieneRol(Rol::PROPIETARIO);
+        $veBodegaYVentas = $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR);
 
         $mortalidadPorLago = $enMes(Mortalidad::query()->join('siembras', 'siembras.id', '=', 'mortalidades.siembra_id'), 'mortalidades.fecha')
             ->groupBy('siembras.lago_id')->selectRaw('siembras.lago_id, SUM(mortalidades.cantidad) AS total')->pluck('total', 'lago_id');
@@ -58,11 +58,11 @@ class InformeMensual
             'alimentoPorConcentrado' => $enMes(MovimientoAlimento::where('tipo_movimiento', 'salida'))
                 ->groupBy('tipo_concentrado')->selectRaw('tipo_concentrado, SUM(cantidad_kg) AS total')->orderBy('tipo_concentrado')
                 ->pluck('total', 'tipo_concentrado'),
-            'entradasBodega' => $esPropietario
+            'entradasBodega' => $veBodegaYVentas
                 ? $enMes(MovimientoAlimento::where('tipo_movimiento', 'entrada'))->orderBy('fecha')->get()
                 : null,
             'cosechas' => $enMes(Cosecha::query()->with(['lago', 'siembra']))->orderBy('fecha')->get(),
-            'ventas' => $esPropietario
+            'ventas' => $veBodegaYVentas
                 ? [
                     'total' => (int) $enMes(Venta::query())->sum('total'),
                     'kg' => (float) $enMes(Venta::query())->sum('kg'),

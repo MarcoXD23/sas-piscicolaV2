@@ -104,8 +104,10 @@ class AsistenteTest extends TestCase
         $this->preguntar($this->persona(Rol::ADMINISTRADOR));
         $administrador = $this->falso->llamadas[1]['contexto'];
         $this->assertStringContainsString('Producción hoy', $administrador);
-        $this->assertStringNotContainsString('Engorde secreto', $administrador);
-        $this->assertStringNotContainsString('Ventas del mes', $administrador);
+        // El administrador opera la bodega y las ventas, pero no ve lo exclusivo del propietario (personal y agenda)
+        $this->assertStringContainsString('Engorde secreto', $administrador);
+        $this->assertStringContainsString('Ventas del mes', $administrador);
+        $this->assertStringNotContainsString('Solicitudes de personal', $administrador);
 
         $this->preguntar($this->persona(Rol::TRABAJADOR));
         $trabajador = $this->falso->llamadas[2]['contexto'];

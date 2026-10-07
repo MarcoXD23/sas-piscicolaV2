@@ -6,9 +6,11 @@
 @section('contenido')
 
     <x-encabezado :titulo="__('ventas.ventas_pescado')" :subtitulo="__('ventas.pescado_cosechado_disponible_ventas_creditos')">
-        <x-boton tipo="button" data-abrir-modal="modal-venta" :disabled="$disponibles->isEmpty()">
-            <x-icono nombre="mas" class="h-5 w-5" /> {{ __('ventas.nueva_venta') }}
-        </x-boton>
+        @if ($puedeVender)
+            <x-boton tipo="button" data-abrir-modal="modal-venta" :disabled="$disponibles->isEmpty()">
+                <x-icono nombre="mas" class="h-5 w-5" /> {{ __('ventas.nueva_venta') }}
+            </x-boton>
+        @endif
     </x-encabezado>
 
     <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -41,10 +43,13 @@
                     </div>
                     <div class="shrink-0 text-right">
                         <p class="font-bold tabular-nums text-slate-900">{{ Formato::dinero($credito->saldo) }}</p>
-                        <button type="button" data-abrir-modal="abono-{{ $credito->id }}" class="min-h-11 text-sm font-semibold text-marca-700 hover:underline">{{ __('ventas.registrar_abono') }}</button>
+                        @if ($puedeVender)
+                            <button type="button" data-abrir-modal="abono-{{ $credito->id }}" class="min-h-11 text-sm font-semibold text-marca-700 hover:underline">{{ __('ventas.registrar_abono') }}</button>
+                        @endif
                     </div>
                 </div>
 
+                @if ($puedeVender)
                 <x-modal id="abono-{{ $credito->id }}" :titulo="__('ventas.abono_de', ['cliente' => $credito->cliente])">
                     <p class="mb-4 text-base text-slate-600">{{ __('ventas.saldo_pendiente') }} <strong class="text-slate-900">{{ Formato::dinero($credito->saldo) }}</strong></p>
                     <x-formulario :action="route('admin.ventas.abonar', $credito)">
@@ -59,6 +64,7 @@
                         </div>
                     </x-formulario>
                 </x-modal>
+                @endif
             @empty
                 <p class="text-base text-slate-500">{{ __('ventas.no_hay_creditos_pendientes') }}</p>
             @endforelse
@@ -98,7 +104,7 @@
         @endif
     </section>
 
-    @if ($disponibles->isNotEmpty())
+    @if ($puedeVender && $disponibles->isNotEmpty())
         <x-modal id="modal-venta" :titulo="__('ventas.nueva_venta')">
             <x-formulario :action="route('admin.ventas.store')">
                 <x-seleccion nombre="cosecha_id" :etiqueta="__('ventas.pescado_de')" required

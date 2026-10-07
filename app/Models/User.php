@@ -107,12 +107,13 @@ class User extends Authenticatable
     }
 
     /**
-     * ¿Puede trabajar ahora como el rol indicado? Propietario y administrador no dependen de turnos;
-     * trabajador y celador solo dentro de un turno en curso de ese rol.
+     * ¿Puede registrar ahora lo que hace el rol indicado?
+     * - Lo del trabajador (alimentación y mortalidad): el administrador sin depender de turnos; el trabajador en su turno.
+     * - Lo del celador (Seguridad & Noche): solo el celador en su turno; propietario y administrador solo consultan.
      */
     public function puedeTrabajarComo(string $rol): bool
     {
-        if ($this->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR)) {
+        if ($rol === Rol::TRABAJADOR && $this->tieneRol(Rol::ADMINISTRADOR)) {
             return true;
         }
 

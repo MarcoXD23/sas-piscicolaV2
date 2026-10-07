@@ -36,7 +36,8 @@ class DashboardsYReportesTest extends TestCase
 
         $this->tenant = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(TenantActual::class)->establecer($this->tenant->id);
-        $this->propietario = $this->persona(Rol::PROPIETARIO);
+        // Finca pequeña: el dueño también es el administrador (opera lagos, bodega y ventas)
+        $this->propietario = tap($this->persona(Rol::PROPIETARIO))->asignarRoles([Rol::PROPIETARIO, Rol::ADMINISTRADOR]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie' => 'cachama blanca', 'fecha' => '2026-08-01',
             'proveedor_alevinos' => 'Estación piscícola X', 'lote_alevinos' => 'A-17',
@@ -131,7 +132,7 @@ class DashboardsYReportesTest extends TestCase
         $this->actingAs($this->persona(Rol::CELADOR))->get(route('admin.reportes.libro-campo', ['lago_id' => $this->lago->id]))->assertForbidden();
     }
 
-    public function test_el_informe_mensual_suma_solo_el_mes_y_las_entradas_son_del_propietario(): void
+    public function test_el_informe_mensual_suma_solo_el_mes_y_muestra_las_entradas_de_bodega(): void
     {
         $this->mortalidad('2026-10-03', 7);
         $this->mortalidad('2026-09-30', 50);
@@ -146,8 +147,9 @@ class DashboardsYReportesTest extends TestCase
         $this->assertSame(20.0, $fila['alimento_kg']);
         $respuesta->assertSee('Octubre de 2026')->assertSee('Proveedor A, lote Z-9');
 
+        // El administrador recibe el concentrado: también ve las entradas de bodega en el informe
         $this->actingAs($this->persona(Rol::ADMINISTRADOR))->get(route('admin.reportes.mensual', ['mes' => '2026-10']))
-            ->assertOk()->assertDontSee('Entradas a bodega')->assertDontSee('Proveedor A');
+            ->assertOk()->assertSee('Proveedor A, lote Z-9');
     }
 
     public function test_el_libro_de_campo_es_cronologico_con_trazabilidad_y_solo_del_periodo(): void

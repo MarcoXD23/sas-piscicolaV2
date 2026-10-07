@@ -27,6 +27,8 @@
                              :valor="$finca->alerta_mortalidad_dias" required />
                 </div>
                 <p class="text-sm text-slate-500">{{ __('alertas.ajustes.mortalidad_ayuda') }}</p>
+                <x-campo nombre="alerta_despacho_dias" :etiqueta="__('alertas.ajustes.despacho_dias')" tipo="number" min="1" max="30" inputmode="numeric"
+                         :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
             </fieldset>
 
             <x-boton>{{ __('region.ajustes.guardar') }}</x-boton>

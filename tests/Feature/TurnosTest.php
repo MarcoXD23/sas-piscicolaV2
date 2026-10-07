@@ -179,10 +179,17 @@ class TurnosTest extends TestCase
         $this->assertTrue($persona->puedeTrabajarComo(Rol::CELADOR));
     }
 
-    public function test_propietario_y_administrador_no_dependen_de_turnos(): void
+    public function test_el_administrador_alimenta_sin_turno_y_nadie_salta_el_turno_del_celador(): void
     {
-        $this->assertTrue($this->propietario->puedeTrabajarComo(Rol::TRABAJADOR));
+        // Alimentación y mortalidad: el administrador no depende de turnos
         $this->assertTrue($this->persona(Rol::ADMINISTRADOR)->puedeTrabajarComo(Rol::TRABAJADOR));
+        $this->assertTrue($this->persona(Rol::PROPIETARIO, Rol::ADMINISTRADOR)->puedeTrabajarComo(Rol::TRABAJADOR));
+        // El propietario sin rol de administrador no registra operación
+        $this->assertFalse($this->propietario->puedeTrabajarComo(Rol::TRABAJADOR));
+        // Seguridad & Noche: solo el celador en su turno (propietario y administrador consultan)
+        $this->assertFalse($this->propietario->puedeTrabajarComo(Rol::CELADOR));
+        $this->assertFalse($this->persona(Rol::ADMINISTRADOR)->puedeTrabajarComo(Rol::CELADOR));
+        $this->assertFalse($this->persona(Rol::ADMINISTRADOR, Rol::CELADOR)->puedeTrabajarComo(Rol::CELADOR));
     }
 
     public function test_el_inicio_y_los_lagos_muestran_el_estado_del_turno(): void
