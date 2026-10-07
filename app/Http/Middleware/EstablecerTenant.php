@@ -60,6 +60,7 @@ class EstablecerTenant
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->withErrors(['email' => $mensaje]);
+        return redirect()->route('login')->withErrors(['email' => $mensaje])
+            ->withHeaders(['Clear-Site-Data' => '"cache", "storage"']);
     }
 }

@@ -42,6 +42,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('plataforma.login');
+        // Borra en el navegador cualquier copia guardada para consulta sin conexión
+        return redirect()->route('plataforma.login')->withHeaders(['Clear-Site-Data' => '"cache", "storage"']);
     }
 }

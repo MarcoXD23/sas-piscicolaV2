@@ -8,4 +8,5 @@ return [
     'no_se_pudo_enviar' => 'No se pudo enviar la pregunta.',
     'pensando' => 'Pensando…',
     'sin_conexion' => 'Sin conexión. Intenta de nuevo.',
+    'sin_conexion_guardar' => 'No hay conexión: no se guardó. Lo que escribiste sigue aquí; inténtalo cuando vuelva la señal.',
 ];

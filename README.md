@@ -178,6 +178,17 @@ El paso 3 solo tiene efecto si la aplicación **no** se conecta como superusuari
 
 El informe mensual y el libro de campo se descargan en **Excel** (`openspout/openspout`, una hoja por sección, con los números como números) y en **PDF** (`dompdf/dompdf`, plantilla `resources/views/pdf/reporte.blade.php`). Pantalla, Excel y PDF usan los mismos datos (`App\Support\Reportes`), siempre de la finca del usuario, con fechas en su zona horaria y textos y formatos de su idioma y país. Las ventas y las entradas de bodega solo van en los archivos del propietario.
 
+### Sin conexión
+
+La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guarda las últimas 40 pantallas de consulta: con señal se piden a la red; sin señal se muestra la última copia con una franja que dice de cuándo son los datos. **Nada se registra sin conexión**: antes de enviar, cada formulario verifica la señal (`/up`); si no hay, no se envía y lo escrito queda en el formulario. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
+
+Revisión manual (Chrome → DevTools → Network → «Offline»; `Clear-Site-Data` solo funciona con HTTPS o en localhost):
+
+1. Con señal, abrir Inicio, Lagos y el detalle de un lago. Pasar a «Offline» y volver a abrirlos: se ven con la franja amarilla y la hora de esos datos.
+2. Sin señal, abrir una pantalla nunca visitada: aparece la página «Sin conexión».
+3. Sin señal, llenar un formulario (por ejemplo, una ración) y guardar: aparece el aviso y lo escrito sigue ahí. Volver a «Online» y guardar: se registra.
+4. Cerrar sesión, pasar a «Offline» y abrir Inicio: ya no se ven datos de la finca.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash

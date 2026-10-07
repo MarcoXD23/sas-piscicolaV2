@@ -23,4 +23,5 @@ return [
     'principal_movil' => 'Principal (móvil)',
     'salir' => 'Salir',
     'saltar_contenido' => 'Saltar al contenido',
+    'sin_conexion' => 'Sin conexión. Estás viendo los datos guardados del :momento. No se puede registrar nada hasta que vuelva la señal.',
 ];

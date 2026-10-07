@@ -56,6 +56,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        // Borra en el navegador las pantallas guardadas para consulta sin conexión (y el service worker)
+        return redirect()->route('login')->withHeaders(['Clear-Site-Data' => '"cache", "storage"']);
     }
 }

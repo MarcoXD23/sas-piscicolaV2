@@ -40,6 +40,67 @@ document.addEventListener('submit', (evento) => {
 
 document.querySelectorAll('dialog[data-abrir-al-cargar]').forEach((ventana) => ventana.showModal());
 
+// Sin conexión: franja de aviso (la página puede ser una copia guardada por el service worker; solo consulta)
+const franjaSinConexion = document.querySelector('[data-sin-conexion]');
+const mostrarConexion = () => { if (franjaSinConexion) franjaSinConexion.hidden = navigator.onLine; };
+window.addEventListener('online', mostrarConexion);
+window.addEventListener('offline', mostrarConexion);
+mostrarConexion();
+
+// Nada se registra sin conexión: antes de enviar un formulario se verifica la señal.
+// Si no hay, no se envía y lo escrito queda en el formulario.
+const hayConexion = async () => {
+    if (!navigator.onLine) return false;
+    try {
+        const respuesta = await fetch('/up', { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(4000) });
+        return respuesta.ok;
+    } catch {
+        return false;
+    }
+};
+
+const avisarSinConexion = (formulario) => {
+    let aviso = formulario.querySelector('[data-aviso-conexion]');
+    if (!aviso) {
+        aviso = document.createElement('p');
+        aviso.setAttribute('data-aviso-conexion', '');
+        aviso.setAttribute('role', 'alert');
+        aviso.className = 'mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-base font-medium text-amber-900';
+        formulario.prepend(aviso);
+    }
+    aviso.textContent = t('sin_conexion_guardar');
+    aviso.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+};
+
+document.addEventListener('submit', async (evento) => {
+    const formulario = evento.target;
+    // Los formularios de consulta (GET) y los que ya manejan su envío (asistente) no se tocan
+    if (evento.defaultPrevented || (formulario.getAttribute('method') ?? 'get').toLowerCase() !== 'post') return;
+    if (formulario.dataset.conexionVerificada) {
+        delete formulario.dataset.conexionVerificada;
+        return;
+    }
+
+    evento.preventDefault();
+    const boton = evento.submitter;
+    if (boton) boton.disabled = true;
+    const conectado = await hayConexion();
+    if (boton) boton.disabled = false;
+
+    if (!conectado) {
+        avisarSinConexion(formulario);
+        return;
+    }
+
+    formulario.querySelector('[data-aviso-conexion]')?.remove();
+    // Al cerrar sesión se borran las pantallas guardadas en este teléfono
+    if (formulario.action.endsWith('/logout')) {
+        navigator.serviceWorker?.controller?.postMessage({ tipo: 'limpiar' });
+    }
+    formulario.dataset.conexionVerificada = '1';
+    formulario.requestSubmit(boton ?? undefined);
+});
+
 // Tooltip de las gráficas: cualquier elemento con data-tip muestra su texto al pasar el puntero o al enfocarlo
 const tooltip = document.createElement('div');
 tooltip.className = 'tooltip-grafica';
