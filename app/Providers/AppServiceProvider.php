@@ -15,6 +15,7 @@ use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\GeminiAsistente;
+use App\Support\MomentoRegistro;
 use App\Support\TenantActual;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
@@ -36,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantActual::class);
+        // Hora real del registro de la petición (la del teléfono si se hizo sin conexión)
+        $this->app->scoped(MomentoRegistro::class);
 
         // Canales para avisar alertas críticas. WhatsApp queda sin proveedor (CanalNulo) hasta elegir uno.
         // Al elegir proveedor (WHATSAPP_PROVEEDOR) se agrega aquí su clase, que implementa CanalNotificacion.

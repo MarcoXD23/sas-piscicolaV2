@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
 use App\Notifications\RestablecerContrasena;
+use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -95,9 +96,10 @@ class User extends Authenticatable
     }
 
     /** Turno en curso para el rol indicado, si lo hay. */
-    public function turnoEnCurso(string $rol): ?Turno
+    /** Turno del rol que estaba en curso en ese momento (por defecto, ahora). */
+    public function turnoEnCurso(string $rol, ?CarbonInterface $momento = null): ?Turno
     {
-        return $this->turnos()->where('rol', $rol)->enCurso()->first();
+        return $this->turnos()->where('rol', $rol)->enCurso($momento)->first();
     }
 
     /** Próximo turno (de cualquier rol) que aún no ha empezado. */
@@ -107,16 +109,16 @@ class User extends Authenticatable
     }
 
     /**
-     * ¿Puede registrar ahora lo que hace el rol indicado?
+     * ¿Puede registrar lo que hace el rol indicado, ahora o en el momento dado (registro hecho sin conexión)?
      * - Lo del trabajador (alimentación y mortalidad): el administrador sin depender de turnos; el trabajador en su turno.
      * - Lo del celador (Seguridad & Noche): solo el celador en su turno; propietario y administrador solo consultan.
      */
-    public function puedeTrabajarComo(string $rol): bool
+    public function puedeTrabajarComo(string $rol, ?CarbonInterface $momento = null): bool
     {
         if ($rol === Rol::TRABAJADOR && $this->tieneRol(Rol::ADMINISTRADOR)) {
             return true;
         }
 
-        return $this->tieneRol($rol) && $this->turnoEnCurso($rol) !== null;
+        return $this->tieneRol($rol) && $this->turnoEnCurso($rol, $momento) !== null;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\PerteneceATenant;
 use App\Support\Formato;
+use App\Support\MomentoRegistro;
 use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +55,12 @@ class Bitacora extends Model
         $rol = collect(self::NIVEL_ROLES)->first(fn ($nivel) => in_array($nivel, $rolesPermitidos, true) && in_array($nivel, $roles, true))
             ?? collect(self::NIVEL_ROLES)->first(fn ($nivel) => in_array($nivel, $roles, true));
 
+        // Un registro hecho sin conexión guarda la hora real en que ocurrió y cuándo llegó
+        $momento = app(MomentoRegistro::class);
+        if ($momento->sinConexion()) {
+            $detalle += ['sin_conexion' => true, 'recibido_at' => now()->utc()->toIso8601String()];
+        }
+
         return self::create([
             'user_id' => $usuario->id,
             'persona_id' => $persona?->id,
@@ -61,7 +68,7 @@ class Bitacora extends Model
             'accion' => $accion,
             'lago_id' => $lago?->id,
             'detalle' => ($lago ? ['lago' => $lago->nombre] : []) + $detalle,
-            'ocurrido_at' => now(),
+            'ocurrido_at' => $momento->ahora(),
             'zona_horaria' => Region::zona(),
         ]);
     }
@@ -97,6 +104,13 @@ class Bitacora extends Model
             default => (string) $valor,
         })->all();
 
-        return __('bitacora.detalles.'.$this->accion, $datos);
+        $texto = __('bitacora.detalles.'.$this->accion, $datos);
+
+        if (! empty($this->detalle['sin_conexion']) && isset($this->detalle['recibido_at'])) {
+            $llegada = CarbonImmutable::parse($this->detalle['recibido_at'])->setTimezone($this->zona_horaria)->format('d/m/Y H:i');
+            $texto .= ' · '.__('bitacora.sin_conexion', ['llegada' => $llegada]);
+        }
+
+        return $texto;
     }
 }

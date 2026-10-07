@@ -48,6 +48,7 @@ return [
         'trabajador' => 'Trabajador',
         'celador' => 'Celador',
     ],
+    'sin_conexion' => 'registrado sin conexión, recibido el :llegada',
     'solo_insercion' => 'La bitácora es de solo inserción: sus registros no se editan ni se borran.',
     'subtitulo' => 'Quién hizo qué, en qué lago y cuándo. Los registros no se pueden editar ni borrar.',
     'titulo' => 'Bitácora',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
 use App\Models\Rol;
 use App\Models\Ronda;
+use App\Support\MomentoRegistro;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,10 +28,12 @@ class RondaController extends Controller
         ]);
 
         $ronda = DB::transaction(function () use ($datos, $request) {
+            // Hora real de la ronda (si se hizo sin conexión, la del teléfono) y el turno de esa hora
+            $momento = MomentoRegistro::actual();
             $ronda = Ronda::create($datos + [
                 'user_id' => $request->user()->id,
-                'turno_id' => $request->user()->turnoEnCurso(Rol::CELADOR)?->id,
-                'registrada_at' => now(),
+                'turno_id' => $request->user()->turnoEnCurso(Rol::CELADOR, $momento)?->id,
+                'registrada_at' => $momento,
             ]);
 
             Bitacora::registrar($request->user(), $ronda->esNovedad() ? 'novedad' : 'ronda', $ronda->lago, [Rol::CELADOR], [

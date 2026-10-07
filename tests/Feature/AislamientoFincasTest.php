@@ -21,6 +21,7 @@ use App\Models\Muestreo;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
 use App\Models\Rol;
+use App\Models\RegistroSinConexion;
 use App\Models\Ronda;
 use App\Models\Siembra;
 use App\Models\StockAlimento;
@@ -38,6 +39,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route as Rutas;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -134,6 +136,7 @@ class AislamientoFincasTest extends TestCase
             Muestreo::class => Muestreo::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'peces_pesados' => 1, 'peso_total_g' => 200, 'peso_promedio_g' => 200]),
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
+            RegistroSinConexion::class => RegistroSinConexion::create(['user_id' => $persona->id, 'uuid' => (string) Str::uuid(), 'ruta' => 'noche.rondas.store', 'registrado_at' => now()]),
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
             StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),
             Tarea::class => Tarea::create(['asignada_a' => $persona->id, 'creada_por' => $persona->id, 'titulo' => "Tarea {$sufijo}", 'fecha' => '2026-10-20']),

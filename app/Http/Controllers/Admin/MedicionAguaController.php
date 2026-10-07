@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lago;
+use App\Support\MomentoRegistro;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,9 +15,9 @@ class MedicionAguaController extends Controller
 
     public function store(Request $request, Lago $lago): RedirectResponse
     {
-        // Desde Seguridad & Noche no se envía la hora: se usa la del momento de guardar
+        // Desde Seguridad & Noche no se envía la hora: se usa la del registro (ahora, o la del teléfono si fue sin conexión)
         // La hora del formulario es de la zona de la finca; el cast de MedicionAgua la guarda en UTC
-        $request->mergeIfMissing(['medido_at' => Region::ahora()->format('Y-m-d H:i:s')]);
+        $request->mergeIfMissing(['medido_at' => MomentoRegistro::actual()->setTimezone(Region::zona())->format('Y-m-d H:i:s')]);
         $alMenosUno = 'required_without_all:'.implode(',', self::PARAMETROS);
 
         $datos = $request->validate([

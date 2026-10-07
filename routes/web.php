@@ -135,14 +135,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/lagos/{lago}', [LagoController::class, 'show'])->whereNumber('lago')->name('lagos.show');
     });
 
-    // Alimentación y mortalidad: el administrador y el trabajador en su turno
-    Route::middleware(['rol:administrador,trabajador', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
+    // Alimentación y mortalidad: el administrador y el trabajador en su turno (también enviadas después de registrarse sin conexión)
+    Route::middleware(['rol:administrador,trabajador', 'sin_conexion', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
         Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
     });
 
     // Aviso «listo para pescar»: lo reporta el trabajador, solo en su turno
-    Route::middleware(['rol:trabajador', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['rol:trabajador', 'sin_conexion', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/lagos/{lago}/avisos-pesca', [AvisoPescaController::class, 'store'])->name('avisos-pesca.store');
     });
 
@@ -168,11 +168,16 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware('rol:propietario,administrador,celador')->prefix('noche')->name('noche.')->group(function () {
         Route::get('/', [NocheController::class, 'index'])->name('index');
 
-        Route::middleware(['rol:celador', 'turno:celador'])->group(function () {
+        // Ronda y medición: también enviadas después de registrarse sin conexión (con la hora real del teléfono)
+        Route::middleware(['rol:celador', 'sin_conexion', 'turno:celador'])->group(function () {
             Route::post('/rondas', [RondaController::class, 'store'])->name('rondas.store');
+            Route::post('/lagos/{lago}/mediciones', [MedicionAguaController::class, 'store'])->name('mediciones.store');
+        });
+
+        // El aireador depende de su estado actual: solo con conexión
+        Route::middleware(['rol:celador', 'turno:celador'])->group(function () {
             Route::post('/lagos/{lago}/aireador', [AireacionController::class, 'encender'])->name('aireador.encender');
             Route::post('/aireaciones/{aireacion}/apagar', [AireacionController::class, 'apagar'])->name('aireador.apagar');
-            Route::post('/lagos/{lago}/mediciones', [MedicionAguaController::class, 'store'])->name('mediciones.store');
         });
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MomentoRegistro;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +16,8 @@ class VerificarTurno
 {
     public function handle(Request $request, Closure $next, string $rol): Response
     {
-        if (! $request->user()?->puedeTrabajarComo($rol)) {
+        // Un registro hecho sin conexión se revisa a la hora en que se hizo (MomentoRegistro), no a la de llegada
+        if (! $request->user()?->puedeTrabajarComo($rol, MomentoRegistro::actual())) {
             abort(403, __('mensajes.verificar_turno.estas_fuera_tu_turno_solo'));
         }
 

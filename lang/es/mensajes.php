@@ -147,6 +147,12 @@ return [
         'novedad_registrada_propietario_vera_inicio' => 'Novedad registrada. El propietario la verá en su inicio.',
         'ronda_sin_novedad_registrada' => 'Ronda sin novedad registrada.',
     ],
+    'sin_conexion' => [
+        'datos_invalidos' => 'El registro guardado en el teléfono llegó incompleto. Vuelve a hacerlo.',
+        'duplicado' => 'Este registro ya se había recibido.',
+        'hora_futura' => 'La hora del registro está en el futuro. Revisa la fecha y la hora del teléfono.',
+        'muy_viejo' => 'El registro tiene más de :horas horas sin enviarse y ya no se acepta. Avísale al administrador.',
+    ],
     'siembra' => [
         'especie_repetida' => 'Este lago ya tiene una siembra activa de :especie.',
         'esta_siembra_ya_estaba_finalizada' => 'Esta siembra ya estaba finalizada.',

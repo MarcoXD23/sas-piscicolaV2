@@ -7,6 +7,7 @@ use App\Models\AvisoPesca;
 use App\Models\Bitacora;
 use App\Models\Lago;
 use App\Models\Rol;
+use App\Support\MomentoRegistro;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class AvisoPescaController extends Controller
                 'lago_id' => $lago->id,
                 'user_id' => $request->user()->id,
                 'estado' => AvisoPesca::PENDIENTE,
-                'reportado_at' => now(),
+                'reportado_at' => MomentoRegistro::actual(),   // si se hizo sin conexión, la hora del teléfono
             ]);
 
             Bitacora::registrar($request->user(), 'aviso_pesca', $lago, [Rol::TRABAJADOR], [
