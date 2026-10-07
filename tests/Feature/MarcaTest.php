@@ -75,6 +75,48 @@ class MarcaTest extends TestCase
         $this->assertLessThan(self::LIMITE, strlen($ico));
     }
 
+    /**
+     * A 16 y 32 px la trucha debe separarse del fondo: un fondo oscuro (al menos 30 % de los píxeles)
+     * y la figura clara de la trucha y la corona (al menos 15 %). El favicon reducido sin procesar
+     * quedaba como una mancha turquesa (10 % de fondo oscuro).
+     */
+    public function test_a_16_y_32_px_la_trucha_se_separa_del_fondo(): void
+    {
+        $ico = file_get_contents(public_path('favicon.ico'));
+        $cantidad = unpack('v', substr($ico, 4, 2))[1];
+        $revisadas = 0;
+
+        for ($i = 0; $i < $cantidad; $i++) {
+            $entrada = unpack('Cancho/Calto/Ccolores/Creservado/vplanos/vbits/Vtamano/Vinicio', substr($ico, 6 + 16 * $i, 16));
+            if (! in_array($entrada['ancho'], [16, 32], true)) {
+                continue;
+            }
+            $imagen = imagecreatefromstring(substr($ico, $entrada['inicio'], $entrada['tamano']));
+            $this->assertNotFalse($imagen, "La imagen de {$entrada['ancho']} px del favicon no se puede leer");
+
+            [$oscuros, $claros, $total] = [0, 0, 0];
+            for ($y = 0; $y < $entrada['ancho']; $y++) {
+                for ($x = 0; $x < $entrada['ancho']; $x++) {
+                    $v = imagecolorat($imagen, $x, $y);
+                    $luz = 0.2126 * (($v >> 16) & 255) + 0.7152 * (($v >> 8) & 255) + 0.0722 * ($v & 255);
+                    $total++;
+                    $oscuros += $luz < 70 ? 1 : 0;
+                    $claros += $luz > 150 ? 1 : 0;
+                }
+            }
+
+            $this->assertGreaterThanOrEqual(0.30, $oscuros / $total, "A {$entrada['ancho']} px falta fondo oscuro");
+            $this->assertGreaterThanOrEqual(0.15, $claros / $total, "A {$entrada['ancho']} px falta la figura clara");
+            $revisadas++;
+        }
+
+        $this->assertSame(2, $revisadas);
+        // Las fuentes derivadas quedan en docs/marca junto al arte original
+        foreach ([16, 32, 48] as $tam) {
+            $this->assertSame([$tam, $tam], array_slice(getimagesize(base_path("docs/marca/favicon-{$tam}.png")), 0, 2));
+        }
+    }
+
     public function test_el_original_se_queda_en_docs_y_la_app_nunca_lo_carga(): void
     {
         $this->assertFileExists(base_path('docs/marca/icono-original.png'));
