@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CabecerasSeguridad;
+use App\Http\Middleware\CookieSeguraConHttps;
 use App\Http\Middleware\EstablecerTenant;
 use App\Http\Middleware\VerificarRol;
 use App\Http\Middleware\VerificarTurno;
@@ -20,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Cabeceras de seguridad en toda la app (web y API)
         $middleware->append(CabecerasSeguridad::class);
+        // Cookie de sesión segura con HTTPS (directo o vía proxy de confianza); corre antes de abrir la sesión
+        $middleware->append(CookieSeguraConHttps::class);
 
         $middleware->alias([
             'tenant' => EstablecerTenant::class,

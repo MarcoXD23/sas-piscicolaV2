@@ -12,7 +12,6 @@ use App\Support\Asistente\ClienteAsistente;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Middleware\TrustProxies;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -131,17 +130,38 @@ class SeguridadTest extends TestCase
 
     // #5 Cookie de sesión segura con HTTPS
 
+    private function cookieDeSesionSegura($respuesta): bool
+    {
+        return $respuesta->getCookie(config('session.cookie'), false)->isSecure();
+    }
+
     public function test_con_https_la_cookie_de_sesion_es_segura(): void
     {
         config(['session.secure' => null]);
-        $this->app->instance('request', Request::create('https://localhost/login'));
-        (new AppServiceProvider($this->app))->boot();
-        $this->assertTrue(config('session.secure'));
+        $this->assertTrue($this->cookieDeSesionSegura($this->get('https://localhost/login')->assertOk()));
 
         config(['session.secure' => null]);
-        $this->app->instance('request', Request::create('http://localhost/login'));
-        (new AppServiceProvider($this->app))->boot();
-        $this->assertNull(config('session.secure'));
+        $this->assertFalse($this->cookieDeSesionSegura($this->get('http://localhost/login')->assertOk()));
+    }
+
+    public function test_detras_de_un_proxy_de_confianza_la_cookie_tambien_es_segura(): void
+    {
+        // Un proxy falso no logra marcarla (y tampoco hace creer que hay HTTPS)
+        config(['session.secure' => null]);
+        $this->assertFalse($this->cookieDeSesionSegura($this->withHeader('X-Forwarded-Proto', 'https')->get(route('login'))));
+
+        try {
+            config(['session.secure' => null, 'app.proxies_confianza' => ['127.0.0.1']]);
+            (new AppServiceProvider($this->app))->boot();
+
+            $this->assertTrue($this->cookieDeSesionSegura($this->withHeader('X-Forwarded-Proto', 'https')->get(route('login'))));
+        } finally {
+            TrustProxies::flushState();
+        }
+
+        // Un valor explícito en SESSION_SECURE_COOKIE se respeta
+        config(['session.secure' => false]);
+        $this->assertFalse($this->cookieDeSesionSegura($this->get('https://localhost/login')));
     }
 
     public function test_solo_se_cree_el_https_de_un_proxy_de_confianza(): void

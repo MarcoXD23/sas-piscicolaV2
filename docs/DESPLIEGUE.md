@@ -111,7 +111,7 @@ RESPALDOS_DIAS=14
 ```
 
 - **`APP_DEBUG`:** debe quedar en `false`. Con `true`, cada error muestra el SQL y la configuración, y la app deja una alerta crítica en el log.
-- **`SESSION_SECURE_COOKIE=true`:** la cookie de sesión solo viaja por HTTPS.
+- **`SESSION_SECURE_COOKIE=true`:** obliga a que la cookie de sesión solo viaje por HTTPS. Es opcional: con HTTPS, directo o a través de un proxy de confianza, la app ya la marca segura sola. Dejarla en `true` es una protección más.
 - **`TRUSTED_PROXIES`:** pon las IPs del proxy que está delante de la app. Con Nginx en el mismo servidor no hace falta. Con Cloudflare, pon sus rangos (https://www.cloudflare.com/ips/).
 - **Correo:** es obligatorio en producción, porque por ahí llegan los enlaces de "¿Olvidaste tu contraseña?". Si un valor tiene espacios o símbolos, ponlo entre comillas.
 - **Asistente:** configura `ASISTENTE_PROVEEDOR` y su clave (`ANTHROPIC_API_KEY` o `GEMINI_API_KEY`), como explica el README. Las claves nunca llegan al navegador.
@@ -375,7 +375,7 @@ La prueba automática `RespaldoTest` hace este mismo recorrido de verdad:
 
 - [ ] `APP_ENV=production`, `APP_DEBUG=false` y `APP_URL` con `https://`.
 - [ ] La app se conecta como `sas_piscicola_app`, no como `postgres`.
-- [ ] HTTPS activo y `SESSION_SECURE_COOKIE=true`.
+- [ ] HTTPS activo; en el navegador, la cookie de sesión aparece como `Secure`.
 - [ ] El correo funciona (probado con "¿Olvidaste tu contraseña?").
 - [ ] El cron (`schedule:run`) y la cola (`sas-piscicola-cola`) están activos.
 - [ ] La primera copia está hecha y probada con `piscicola:restaurar`, y existe una copia fuera del servidor.

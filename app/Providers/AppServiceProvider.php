@@ -106,11 +106,6 @@ class AppServiceProvider extends ServiceProvider
             TrustProxies::at(config('app.proxies_confianza'));
         }
 
-        // Con HTTPS (directo o detrás de un proxy de confianza) la cookie de sesión se marca segura sola
-        if (! is_bool(config('session.secure')) && $this->app->bound('request') && request()->isSecure()) {
-            config(['session.secure' => true]);
-        }
-
         $this->limitesDeIntentos();
     }
 
