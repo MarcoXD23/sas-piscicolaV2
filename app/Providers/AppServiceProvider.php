@@ -19,6 +19,7 @@ use App\Support\TenantActual;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -98,6 +99,11 @@ class AppServiceProvider extends ServiceProvider
         // Publicar con APP_DEBUG activo mostraría SQL, rutas y configuración en cada error
         if ($this->app->isProduction() && config('app.debug')) {
             Log::critical('Seguridad: APP_DEBUG está activo en producción. Ponlo en false en el .env.');
+        }
+
+        // Solo se confía en el proxy de TRUSTED_PROXIES: así Laravel sabe que la petición llegó por HTTPS y la IP real
+        if (config('app.proxies_confianza') !== []) {
+            TrustProxies::at(config('app.proxies_confianza'));
         }
 
         // Con HTTPS (directo o detrás de un proxy de confianza) la cookie de sesión se marca segura sola

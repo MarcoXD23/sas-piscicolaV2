@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Proxies de confianza (Nginx o Cloudflare delante de la app), separados por coma. Vacío = ninguno.
+    'proxies_confianza' => array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

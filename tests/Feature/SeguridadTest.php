@@ -11,6 +11,7 @@ use App\Providers\AppServiceProvider;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -141,6 +142,22 @@ class SeguridadTest extends TestCase
         $this->app->instance('request', Request::create('http://localhost/login'));
         (new AppServiceProvider($this->app))->boot();
         $this->assertNull(config('session.secure'));
+    }
+
+    public function test_solo_se_cree_el_https_de_un_proxy_de_confianza(): void
+    {
+        // Sin TRUSTED_PROXIES, una cabecera X-Forwarded-Proto falsa no convierte la petición en HTTPS
+        $this->withHeader('X-Forwarded-Proto', 'https')->get(route('login'))->assertHeaderMissing('Strict-Transport-Security');
+
+        try {
+            config(['app.proxies_confianza' => ['127.0.0.1']]);   // el cliente de pruebas llega desde 127.0.0.1
+            (new AppServiceProvider($this->app))->boot();
+
+            $this->withHeader('X-Forwarded-Proto', 'https')->get(route('login'))
+                ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        } finally {
+            TrustProxies::flushState();
+        }
     }
 
     // #6 Topes numéricos

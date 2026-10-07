@@ -42,6 +42,12 @@ Todo movimiento de stock, peces, biomasa o dinero se hace en una transacción y 
 
 Cada finca es un `tenant`. Toda tabla de negocio lleva `tenant_id` y se filtra con un único global scope ([`TenantScope`](app/Models/Scopes/TenantScope.php), aplicado con el trait [`PerteneceATenant`](app/Models/Concerns/PerteneceATenant.php)). Los middlewares `tenant`, `rol` y `turno` fijan la finca activa, restringen por rol y exigen turno en curso. Una prueba (`CierreTest`) verifica que toda ruta privada exija sesión, finca y, en los módulos restringidos, rol.
 
+El filtro **falla cerrado**: sin finca activa, consultar o crear un modelo de finca lanza `SinFincaActiva` en vez de devolver datos de todas.
+
+- **Para ver varias fincas a propósito:** se usa `TenantActual::sinFiltro(fn () => ...)`, como hace el panel de plataforma.
+- **Identidad:** el login, la sesión, la recuperación de contraseña y los tokens de la API buscan a la persona sin filtro (`ProveedorUsuarios` y `TokenAcceso`).
+- **Pruebas:** `AislamientoFincasTest` recorre todos los modelos de finca y todas las rutas con ids. `FiltroFincaCerradoTest` prueba el cierre.
+
 ## Regionalización
 
 Nada está atado a un país. Cada finca define en **Ajustes** (solo el propietario):
@@ -52,7 +58,7 @@ Nada está atado a un país. Cada finca define en **Ajustes** (solo el propietar
 
 La lógica de zona, "hoy" y formatos está en [`App\Support\Region`](app/Support/Region.php); el cast [`InstanteLocal`](app/Casts/InstanteLocal.php) y la conexión [`ConexionPostgresUtc`](app/Database/ConexionPostgresUtc.php) garantizan que todo instante llegue a la base en UTC.
 
-**Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca un respaldo: `pg_dump -Fc sas_piscicola_v2 > respaldo.dump`.
+**Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca una copia con `php artisan piscicola:respaldar`, que guarda fuera del proyecto (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)).
 
 ## Requisitos
 
@@ -199,7 +205,7 @@ php artisan db:seed --class=DemoPiscicolaSeeder
 
 Las contraseñas de los usuarios demo se generan al azar y se muestran una sola vez en la consola.
 
-## Seguridad y notas para el despliegue (Fase 25)
+## Seguridad
 
 Resultado de la auditoría de la Fase 24 (ya aplicado):
 
@@ -210,12 +216,24 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Tokens de la API** que vencen (`SANCTUM_TOKEN_MINUTOS`, 30 días por defecto) y **topes diarios del asistente** (`ASISTENTE_LIMITE_DIARIO_PERSONA` y `ASISTENTE_LIMITE_DIARIO_FINCA`).
 - Pruebas generales de aislamiento: todos los modelos de finca y todas las rutas con ids (`AislamientoFincasTest`).
 
-Pendiente para publicar (Fase 25):
+## Despliegue y copias de seguridad
 
-1. **`.env` de producción**: `APP_ENV=production`, `APP_DEBUG=false`, `LOG_LEVEL=warning` (así viene `.env.example`). Si se publica con `APP_DEBUG=true`, la app lo registra como alerta crítica en el log.
-2. **Usuario de base de datos sin superusuario**: `php artisan piscicola:usuario-base` imprime el SQL (no lo ejecuta) para dos roles: `sas_piscicola_dueno`, dueño de las tablas y solo para migraciones, y `sas_piscicola_app`, con el que se conecta la app, con solo `SELECT, INSERT, UPDATE, DELETE`, sin cambiar la estructura y sin `UPDATE, DELETE, TRUNCATE` sobre la bitácora. Las contraseñas se pasan a `psql` como variables (`-v clave_dueno=... -v clave_app=...`). Las migraciones se corren con el dueño y el `.env` de la app usa el rol de la app.
-3. **HTTPS detrás de Nginx o Cloudflare**: configurar los **proxies de confianza** (`$middleware->trustProxies(at: [...])` en `bootstrap/app.php`, con las IPs del proxy o los rangos de Cloudflare) para que Laravel sepa que la petición llegó por HTTPS. Así se activan la cookie segura (o `SESSION_SECURE_COOKIE=true`), HSTS y las URLs `https`.
-4. **Correo**: en producción configura `MAIL_*`. Con `MAIL_MAILER` vacío los correos, incluidos los enlaces de recuperación de contraseña, quedan escritos en `storage/logs/laravel.log`.
+La guía paso a paso está en **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**:
+
+- **El servidor:** Linux con PHP, PostgreSQL, Nginx y HTTPS.
+- **Configuración:** permisos, los dos roles de base de datos y el `.env` de producción.
+- **Procesos:** el cron y la cola.
+- **Mantenimiento:** cómo actualizar sin perder datos y cómo restaurar.
+
+Hosting compartido como InfinityFree **no sirve**: solo ofrece MySQL, sin SSH ni cron.
+
+| Comando | Qué hace |
+|---|---|
+| `php artisan piscicola:respaldar` | Saca una copia con `pg_dump` y la verifica. Guarda **fuera del proyecto** (`RESPALDOS_CARPETA`) y borra las copias de más de `RESPALDOS_DIAS` días. Corre a diario si hay carpeta configurada. |
+| `php artisan piscicola:restaurar archivo.dump --base=nueva` | Restaura una copia en una base nueva o vacía. Nunca escribe sobre la base que usa la app. |
+| `php artisan piscicola:usuario-base` | Imprime el SQL de los dos roles de base de datos, uno dueño y otro de la app. No ejecuta nada. |
+
+Variables: `RESPALDOS_CARPETA`, `RESPALDOS_DIAS`, `RESPALDOS_HORA`, `PG_BIN` (carpeta de `pg_dump` si no está en el PATH; en Windows, entre comillas simples) y `TRUSTED_PROXIES` (IPs del proxy de confianza).
 
 ## Pruebas
 

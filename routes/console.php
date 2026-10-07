@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 
 // Alertas que dependen del paso del tiempo (requiere el cron de Laravel en el servidor: schedule:run cada minuto)
 Schedule::command('piscicola:evaluar-alertas')->hourly()->withoutOverlapping();
+
+// Copia de seguridad diaria, solo si hay carpeta configurada (RESPALDOS_CARPETA, fuera del proyecto)
+Schedule::command('piscicola:respaldar')->dailyAt(config('respaldos.hora'))->withoutOverlapping()
+    ->when(fn () => filled(config('respaldos.carpeta')));
