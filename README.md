@@ -34,7 +34,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Seguridad & Noche | `/noche` | El celador, en su turno: rondas con o sin novedad, aireadores y oxígeno nocturno. Propietario y administrador lo consultan en solo lectura, con los reportes de cada turno. |
 | Agenda | `/admin/agenda` | Calendario de la finca con recordatorios; muestra retiros sanitarios y permisos aprobados. |
 | Reportes | `/admin/reportes` | Informe mensual y libro de campo por lago (imprimibles o PDF desde el navegador). |
-| Asistente IA | botón flotante | Preguntas sobre la finca con Claude o Gemini; solo usa los datos que el rol puede ver. |
+| Asistente IA | botón flotante | Preguntas sobre la finca con Claude o Gemini. Responde solo con las fichas de especies y los datos que el rol puede ver, sin conocimiento general. Si el dato no está, lo dice ("No tengo ese dato…"). Si existe pero el rol no lo ve, responde "No tengo esa información para tu rol". |
 
 Todo movimiento de stock, peces, biomasa o dinero se hace en una transacción y queda como registro histórico (nunca se sobrescribe solo un saldo).
 
@@ -85,8 +85,8 @@ Edita `.env`:
 | `ANTHROPIC_API_KEY` | Clave de Claude, en [console.anthropic.com](https://console.anthropic.com). |
 | `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5`. |
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
-| `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash`. |
-| `GEMINI_MODEL_RESPALDO` | Opcional. Modelo que se prueba una vez si el principal sigue respondiendo 500 o 503 después de 2 reintentos (1 s y 3 s). Vacío = sin respaldo. |
+| `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.5-flash-lite` (el anterior, `gemini-3.8-flash`, se saturaba con errores 503). |
+| `GEMINI_MODEL_RESPALDO` | Opcional. Modelo que se prueba una vez si el principal sigue respondiendo 500 o 503 después de 2 reintentos (1 s y 3 s). Vacío = sin respaldo. Sugerido: `gemini-flash-lite-latest`. |
 | `MAIL_*` | Correo saliente (recuperar contraseña). Vacío = los correos se escriben en `storage/logs/laravel.log`. |
 
 ### Asistente IA: elegir proveedor

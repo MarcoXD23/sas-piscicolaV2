@@ -38,7 +38,7 @@ class GeminiAsistenteTest extends TestCase
         config([
             'services.asistente.proveedor' => 'gemini',
             'services.gemini.key' => self::CLAVE,
-            'services.gemini.modelo' => 'gemini-3.8-flash',
+            'services.gemini.modelo' => 'gemini-3.5-flash-lite',
         ]);
 
         $tenant = Tenant::create(['nombre' => 'Finca Prueba', 'codigo' => 'F01']);
@@ -78,7 +78,7 @@ class GeminiAsistenteTest extends TestCase
         Http::assertSent(function (Request $peticion) {
             $cuerpo = $peticion->data();
 
-            return $peticion->url() === 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent'
+            return $peticion->url() === 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent'
                 && $peticion->hasHeader('x-goog-api-key', self::CLAVE)
                 && ! str_contains($peticion->url(), self::CLAVE)
                 // Mismas instrucciones (con la regla de no asumir país) y mismo contexto de la finca
@@ -195,7 +195,7 @@ class GeminiAsistenteTest extends TestCase
         Sleep::assertSequence([Sleep::for(1)->seconds(), Sleep::for(3)->seconds()]);
         // Todos los intentos fueron al modelo principal
         foreach (Http::recorded() as [$peticion]) {
-            $this->assertSame($this->urlModelo('gemini-3.8-flash'), $peticion->url());
+            $this->assertSame($this->urlModelo('gemini-3.5-flash-lite'), $peticion->url());
         }
     }
 
@@ -203,7 +203,7 @@ class GeminiAsistenteTest extends TestCase
     {
         config(['services.gemini.modelo_respaldo' => 'gemini-respaldo-lite']);
         Http::fake([
-            $this->urlModelo('gemini-3.8-flash') => Http::sequence()
+            $this->urlModelo('gemini-3.5-flash-lite') => Http::sequence()
                 ->pushResponse($this->errorGemini(503))
                 ->pushResponse($this->errorGemini(503))
                 ->pushResponse($this->errorGemini(500)),
@@ -214,9 +214,9 @@ class GeminiAsistenteTest extends TestCase
 
         $urls = array_map(fn ($par) => $par[0]->url(), Http::recorded()->all());
         $this->assertSame([
-            $this->urlModelo('gemini-3.8-flash'),
-            $this->urlModelo('gemini-3.8-flash'),
-            $this->urlModelo('gemini-3.8-flash'),
+            $this->urlModelo('gemini-3.5-flash-lite'),
+            $this->urlModelo('gemini-3.5-flash-lite'),
+            $this->urlModelo('gemini-3.5-flash-lite'),
             $this->urlModelo('gemini-respaldo-lite'),
         ], $urls);
         // El respaldo también lleva la clave en la cabecera, nunca en la URL
@@ -294,6 +294,35 @@ class GeminiAsistenteTest extends TestCase
         }
         // Tres avisos de saturación (2 reintentos y el paso al respaldo) y el error final
         $this->assertSame(4, $registros);
+    }
+
+    public function test_el_modelo_por_defecto_es_gemini_3_5_flash_lite(): void
+    {
+        // Sin GEMINI_MODEL (vacío) la configuración usa el modelo nuevo, sea cual sea el .env local
+        $antes = [getenv('GEMINI_MODEL'), $_ENV['GEMINI_MODEL'] ?? null, $_SERVER['GEMINI_MODEL'] ?? null];
+        putenv('GEMINI_MODEL=');
+        $_ENV['GEMINI_MODEL'] = $_SERVER['GEMINI_MODEL'] = '';
+
+        try {
+            $modelo = (require config_path('services.php'))['gemini']['modelo'];
+        } finally {
+            $antes[0] === false ? putenv('GEMINI_MODEL') : putenv('GEMINI_MODEL='.$antes[0]);
+            foreach (['_ENV' => $antes[1], '_SERVER' => $antes[2]] as $global => $valor) {
+                if ($valor === null) {
+                    unset($GLOBALS[$global]['GEMINI_MODEL']);
+                } else {
+                    $GLOBALS[$global]['GEMINI_MODEL'] = $valor;
+                }
+            }
+        }
+
+        $this->assertSame('gemini-3.5-flash-lite', $modelo);
+
+        // Y la llamada va a ese modelo
+        config(['services.gemini.modelo' => $modelo]);
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response($this->respuestaGemini('Listo.'))]);
+        $this->preguntar()->assertOk();
+        Http::assertSent(fn (Request $peticion) => $peticion->url() === $this->urlModelo('gemini-3.5-flash-lite'));
     }
 
     public function test_el_proveedor_se_elige_con_asistente_proveedor(): void

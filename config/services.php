@@ -43,7 +43,7 @@ return [
 
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
-        'modelo' => env('GEMINI_MODEL') ?: 'gemini-3.8-flash',
+        'modelo' => env('GEMINI_MODEL') ?: 'gemini-3.5-flash-lite',
         // Se prueba una vez si el principal sigue saturado (500 o 503) tras los reintentos. Vacío = sin respaldo.
         'modelo_respaldo' => env('GEMINI_MODEL_RESPALDO') ?: null,
     ],

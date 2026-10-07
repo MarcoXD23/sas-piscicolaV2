@@ -12,8 +12,10 @@ use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\ContextoFinca;
+use App\Support\CatalogoEspecies;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AsistenteTest extends TestCase
@@ -185,7 +187,7 @@ class AsistenteTest extends TestCase
     {
         $instrucciones = ContextoFinca::instrucciones();
 
-        $this->assertStringContainsString('no lo inventes', $instrucciones);
+        $this->assertStringContainsString('No lo inventes', $instrucciones);
         $this->assertStringContainsString('Pseudoplatystoma magdaleniatum', $instrucciones);
         // No asume país ni normativa: remite a la autoridad del país del usuario
         $this->assertStringNotContainsString('Tolima', $instrucciones);
@@ -194,6 +196,73 @@ class AsistenteTest extends TestCase
         $this->assertStringContainsString('autoridad sanitaria o agropecuaria de su país', $instrucciones);
         // Las instrucciones no cambian entre preguntas (prefijo cacheable)
         $this->assertSame($instrucciones, ContextoFinca::instrucciones());
+    }
+
+    public function test_las_instrucciones_prohiben_el_conocimiento_general_y_separan_los_dos_avisos(): void
+    {
+        $instrucciones = ContextoFinca::instrucciones();
+
+        $this->assertStringContainsString('No uses conocimiento general', $instrucciones);
+        $this->assertStringContainsString('color, aspecto, alimentación, dosis', $instrucciones);
+        // Dato ausente: aviso propio y sugerencia de consultar al técnico o al veterinario
+        $this->assertStringContainsString('responde exactamente: «'.__('asistente.avisos.dato_ausente').'» y sugiere consultar al asistente técnico o al veterinario', $instrucciones);
+        // Aviso de rol: solo para los temas que existen pero el rol no ve, nunca para un dato ausente
+        $this->assertStringContainsString('Solo si la pregunta es sobre uno de esos temas, responde exactamente: «'.__('asistente.avisos.sin_acceso_rol').'»', $instrucciones);
+        $this->assertStringContainsString('No uses ese aviso para un dato que simplemente no está', $instrucciones);
+        $this->assertNotSame(__('asistente.avisos.dato_ausente'), __('asistente.avisos.sin_acceso_rol'));
+        $this->assertStringContainsString('No tengo ese dato en la ficha de esa especie', __('asistente.avisos.dato_ausente'));
+    }
+
+    public function test_una_pregunta_de_dinero_de_un_rol_sin_acceso_lleva_el_tema_como_oculto_para_su_rol(): void
+    {
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Cuánto vendimos este mes?')->assertOk();
+        $trabajador = $this->falso->llamadas[0]['contexto'];
+
+        // Las ventas no van en sus datos, pero se nombran como tema existente que su rol no ve: corresponde el aviso de rol
+        $this->assertStringNotContainsString('Ventas del mes', $trabajador);
+        $this->assertStringContainsString('Datos que existen en la finca pero tu rol no puede ver:', $trabajador);
+        $this->assertStringContainsString(__('asistente.temas.dinero'), $trabajador);
+        $this->assertStringContainsString(__('asistente.temas.bodega'), $trabajador);
+        $this->assertStringContainsString(__('asistente.temas.nomina'), $trabajador);
+
+        // El propietario ve todo: no hay temas ocultos
+        $this->preguntar($this->persona(Rol::PROPIETARIO), '¿Cuánto vendimos este mes?')->assertOk();
+        $propietario = $this->falso->llamadas[1]['contexto'];
+        $this->assertStringContainsString('Ventas del mes', $propietario);
+        $this->assertStringNotContainsString('tu rol no puede ver', $propietario);
+
+        // El administrador ve el dinero, pero no lo exclusivo del propietario
+        $this->assertSame(['personal', 'nomina', 'agenda'], ContextoFinca::temasOcultos($this->persona(Rol::ADMINISTRADOR)));
+        // El celador no ve raciones ni dinero, pero sí la seguridad nocturna
+        $celador = ContextoFinca::temasOcultos($this->persona(Rol::CELADOR));
+        $this->assertContains('raciones', $celador);
+        $this->assertContains('dinero', $celador);
+        $this->assertNotContains('seguridad', $celador);
+    }
+
+    public function test_un_dato_que_no_esta_en_la_ficha_no_se_confunde_con_un_dato_oculto_por_rol(): void
+    {
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿De qué color es la mojarra roja cuando está enferma?')->assertOk();
+        $enviado = $this->falso->llamadas[0];
+
+        // Ni las fichas ni los datos traen el color, y el color no está entre los temas ocultos: corresponde el aviso de dato ausente
+        // (las reglas sí nombran el color, como algo que no se debe responder con conocimiento general)
+        $fichas = Str::after($enviado['instrucciones'], 'Fichas de referencia de las especies');
+        $this->assertNotSame($enviado['instrucciones'], $fichas);
+        $this->assertStringNotContainsStringIgnoringCase('color', $fichas);
+        $this->assertStringNotContainsStringIgnoringCase('color', $enviado['contexto']);
+        $this->assertStringContainsString(__('asistente.avisos.dato_ausente'), $enviado['instrucciones']);
+    }
+
+    public function test_una_pregunta_cubierta_por_la_ficha_lleva_la_ficha_y_se_responde(): void
+    {
+        $ficha = CatalogoEspecies::ficha('mojarra roja');
+
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Qué temperatura necesita la mojarra roja?')
+            ->assertOk()->assertJson(['respuesta' => 'Respuesta 1']);
+
+        $instrucciones = $this->falso->llamadas[0]['instrucciones'];
+        $this->assertStringContainsString("- {$ficha['nombre']} ({$ficha['cientifico']}): agua {$ficha['clima']}, {$ficha['temperatura'][0]} a {$ficha['temperatura'][1]} °C", $instrucciones);
     }
 
     public function test_un_solo_widget_para_usuarios_con_sesion_y_ninguno_para_invitados(): void

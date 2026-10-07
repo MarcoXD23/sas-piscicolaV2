@@ -29,31 +29,44 @@ class ContextoFinca
     /** Instrucciones fijas: no cambian entre preguntas para que el prefijo sea cacheable. */
     public static function instrucciones(): string
     {
-        $especies = collect(CatalogoEspecies::todas())->map(fn ($ficha) => sprintf(
-            '- %s (%s): agua %s, %d a %d °C, oxígeno mínimo %s mg/L, pH %s a %s, cosecha en %s con %s. Policultivo: %s',
-            $ficha['nombre'], $ficha['cientifico'], $ficha['clima'], $ficha['temperatura'][0], $ficha['temperatura'][1],
-            $ficha['oxigeno_min'], $ficha['ph'][0], $ficha['ph'][1], $ficha['meses_cosecha'], $ficha['peso_comercial'], $ficha['policultivo'],
-        ))->implode("\n");
+        $especies = collect(CatalogoEspecies::todas())->map(fn ($ficha) => __('asistente.ficha', [
+            'nombre' => $ficha['nombre'], 'cientifico' => $ficha['cientifico'], 'clima' => $ficha['clima'],
+            'temp_min' => $ficha['temperatura'][0], 'temp_max' => $ficha['temperatura'][1], 'oxigeno' => $ficha['oxigeno_min'],
+            'ph_min' => $ficha['ph'][0], 'ph_max' => $ficha['ph'][1], 'meses' => $ficha['meses_cosecha'],
+            'peso' => $ficha['peso_comercial'], 'policultivo' => $ficha['policultivo'],
+        ]))->implode("\n");
 
-        return <<<TEXTO
-        Eres el asistente de El SAS Piscícola, una aplicación para la gestión de fincas piscícolas.
-        Te escribe una persona de la finca desde el celular, muchas veces mientras trabaja.
+        // Solo fichas y datos de la finca; dos avisos distintos: dato ausente y dato oculto para el rol
+        return __('asistente.instrucciones', [
+            'dato_ausente' => __('asistente.avisos.dato_ausente'),
+            'sin_acceso_rol' => __('asistente.avisos.sin_acceso_rol'),
+            'especies' => $especies,
+        ]);
+    }
 
-        Cómo responder:
-        - En español sencillo, claro y breve. Ve al grano; si piden un cálculo, muestra el resultado primero.
-        - Usa solo los datos de la finca que vienen después de estas instrucciones. Si un dato no está, dilo; no lo inventes.
-        - No asumas el país de la finca ni leyes, normas o trámites que no aparezcan en los datos. Si preguntan por normas
-          o trámites, di que no tienes esa información y sugiere consultar a la autoridad sanitaria o agropecuaria de su país.
-        - Esos datos solo incluyen lo que esta persona puede ver según su rol. Si pregunta por algo que no aparece
-          (por ejemplo dinero, bodega o nómina), explica que no tienes esa información para su rol.
-        - Los rangos y raciones son valores de referencia. Para enfermedades, tratamientos o mortalidad alta, recomienda
-          consultar al asistente técnico o al veterinario, además de lo que puedas orientar.
-        - No uses tablas ni Markdown con almohadillas o asteriscos. Usa frases cortas y, si hace falta, listas con guiones.
-        - No registras nada en la aplicación: si quieren guardar un dato, indícales en qué pantalla hacerlo.
+    /**
+     * Temas que existen en la finca pero el rol de quien pregunta no puede ver. Se nombran en el contexto para que el
+     * asistente responda «no tengo esa información para tu rol» solo en esos casos, y «no tengo ese dato» en los demás.
+     *
+     * @return list<string> claves de asistente.temas
+     */
+    public static function temasOcultos(User $usuario): array
+    {
+        $esPropietario = $usuario->tieneRol(Rol::PROPIETARIO);
+        $esTecnico = $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR);
+        $veLagos = $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR);
+        $esCelador = $usuario->tieneRol(Rol::CELADOR);
 
-        Fichas de referencia de las especies:
-        {$especies}
-        TEXTO;
+        return array_keys(array_filter([
+            'produccion' => ! $esTecnico,
+            'bodega' => ! $esTecnico,
+            'dinero' => ! $esTecnico,
+            'raciones' => ! $veLagos,
+            'seguridad' => ! ($esTecnico || $esCelador),
+            'personal' => ! $esPropietario,
+            'nomina' => ! $esPropietario,
+            'agenda' => ! $esPropietario,
+        ]));
     }
 
     /** Estado actual de la finca, filtrado por el rol. */
@@ -93,6 +106,13 @@ class ContextoFinca
         }
         if ($esPropietario) {
             $secciones[] = self::soloPropietario();
+        }
+
+        $ocultos = self::temasOcultos($usuario);
+        if ($ocultos !== []) {
+            $secciones[] = __('asistente.ocultos_por_rol', [
+                'temas' => collect($ocultos)->map(fn (string $tema) => __('asistente.temas.'.$tema))->join(', '),
+            ]);
         }
 
         return "DATOS ACTUALES DE LA FINCA\n\n".implode("\n\n", array_filter($secciones));
