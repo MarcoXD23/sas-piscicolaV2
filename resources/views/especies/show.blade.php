@@ -58,6 +58,32 @@
         </div>
     </section>
 
+    {{-- Galería de fotos reales (versión ligera), con su autor o fuente y su licencia --}}
+    @if ($fotos->isNotEmpty())
+        <section class="mb-6">
+            <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('especies.fotos.galeria') }}</h2>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                @foreach ($fotos as $foto)
+                    <figure class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                        <img src="{{ $foto->url() }}" alt="{{ $especie['nombre'] }}" loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover">
+                        <figcaption class="space-y-0.5 p-3 text-sm text-slate-600">
+                            @if ($foto->autor)
+                                <p>{{ __('especies.fotos.por', ['autor' => $foto->autor]) }}</p>
+                            @endif
+                            @if ($foto->licencia)
+                                <p class="text-slate-500">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
+                            @endif
+                            <p class="text-slate-400">{{ __('especies.fotos.subida_el', ['fecha' => \App\Support\Region::local($foto->created_at)->format('d/m/Y')]) }}</p>
+                            @if ($veOriginal)
+                                <a href="{{ $foto->urlOriginal() }}" class="text-marca-700 underline">{{ __('especies.fotos.original') }}</a>
+                            @endif
+                        </figcaption>
+                    </figure>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @if ($especie['orientativa'])
         <p class="mb-5 rounded-xl bg-amber-50 p-4 text-base text-amber-900">{{ __('especies.ficha.orientativa') }}</p>
     @endif

@@ -11,6 +11,7 @@ use App\Models\Concerns\PerteneceATenant;
 use App\Models\Cosecha;
 use App\Models\DespachoAlimento;
 use App\Models\Especie;
+use App\Models\EspecieFoto;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Lago;
@@ -58,7 +59,7 @@ class AislamientoFincasTest extends TestCase
         'lago' => Lago::class, 'siembra' => Siembra::class, 'aviso' => AvisoPesca::class, 'despacho' => DespachoAlimento::class,
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
-        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class,
+        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -68,6 +69,9 @@ class AislamientoFincasTest extends TestCase
 
     /** Parámetros que no son registros de una finca (token de contraseña, ficha de especie, panel de plataforma). */
     private const NO_SON_DE_FINCA = ['token', 'slug', 'finca'];
+
+    /** Parámetros que no son registros (van junto a un id de otra finca, que es lo que se prueba). */
+    private const VALORES_FIJOS = ['version' => 'ligera'];
 
     protected function setUp(): void
     {
@@ -137,7 +141,9 @@ class AislamientoFincasTest extends TestCase
             Muestreo::class => Muestreo::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'peces_pesados' => 1, 'peso_total_g' => 200, 'peso_promedio_g' => 200]),
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
-            Especie::class => Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
+            Especie::class => $especie = Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
+            EspecieFoto::class => EspecieFoto::create(['especie_id' => $especie->id, 'user_id' => $persona->id, 'ruta_original' => "x/{$sufijo}.jpg", 'ruta_ligera' => "x/{$sufijo}.webp",
+                'tipo_original' => 'image/jpeg', 'bytes_original' => 10, 'bytes_ligera' => 5, 'ancho' => 1, 'alto' => 1, 'orden' => 1]),
             RegistroSinConexion::class => RegistroSinConexion::create(['user_id' => $persona->id, 'uuid' => (string) Str::uuid(), 'ruta' => 'noche.rondas.store', 'registrado_at' => now()]),
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
             StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),
@@ -201,6 +207,11 @@ class AislamientoFincasTest extends TestCase
 
             $valores = [];
             foreach ($parametros as $parametro) {
+                if (isset(self::VALORES_FIJOS[$parametro])) {
+                    $valores[$parametro] = self::VALORES_FIJOS[$parametro];
+
+                    continue;
+                }
                 $this->assertArrayHasKey($parametro, self::PARAMETROS, "La ruta {$ruta->uri()} usa {{$parametro}}: agrégalo a PARAMETROS");
                 $valores[$parametro] = $ajenos[self::PARAMETROS[$parametro]]->getKey();
             }

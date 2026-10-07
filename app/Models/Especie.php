@@ -68,6 +68,12 @@ class Especie extends Model
         return self::query()->where('clave', $clave)->firstOrFail();
     }
 
+    /** Fotos reales de la especie (máximo 5), en su orden; la primera es la portada. */
+    public function fotos(): HasMany
+    {
+        return $this->hasMany(EspecieFoto::class)->orderBy('orden');
+    }
+
     public function siembras(): HasMany
     {
         return $this->hasMany(Siembra::class);
@@ -107,9 +113,10 @@ class Especie extends Model
         return CatalogoEspecies::referencia($this->clave);
     }
 
+    /** Portada: la primera foto propia (versión ligera); sin fotos propias, la imagen de referencia (si tiene). */
     public function foto(): ?string
     {
-        return $this->referencia()['foto'] ?? null;
+        return $this->fotos->first()?->url() ?? $this->referencia()['foto'] ?? null;
     }
 
     /** @return array<string, ?string> cada campo con su texto o null si está vacío */
@@ -152,7 +159,7 @@ class Especie extends Model
             'orientativa' => $this->ficha_orientativa,
             // Solo de referencia (especies por defecto): familia, foto, proteína por etapa, tiempo a cosecha y peso comercial
             'familia' => $referencia['familia'] ?? null,
-            'foto' => $referencia['foto'] ?? null,
+            'foto' => $this->foto(),
             'proteina' => $referencia['proteina'] ?? null,
             'meses_cosecha' => $referencia['meses_cosecha'] ?? null,
             'peso_comercial' => $referencia['peso_comercial'] ?? null,

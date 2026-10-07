@@ -39,6 +39,15 @@ return [
             'report' => false,
         ],
 
+        // Fotos de especies: privadas, una carpeta por finca; solo se entregan por la ruta que valida sesión y finca
+        'fotos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/fotos'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

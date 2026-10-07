@@ -18,6 +18,8 @@
         </include>
     </source>
     <php>
+        <!-- Fotos de especies: igual que lo recomendado para el servidor (README, «Fotos de especies») -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_KEY" value="base64:c2FzLXBpc2NpY29sYS1jbGF2ZS1zb2xvLXBydWViYXM=" force="true"/>
         <env name="APP_ENV" value="testing" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

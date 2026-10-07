@@ -15,4 +15,6 @@
             </div>
         </x-formulario>
     </x-tarjeta>
+
+    @include('admin.especies._fotos')
 @endsection

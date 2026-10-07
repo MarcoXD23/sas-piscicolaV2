@@ -23,3 +23,17 @@ Sin dibujar nada nuevo, solo a partir de `icon-512.png`:
 Resultado medido (lo verifica `tests/Feature/MarcaTest.php`): a 16 px, 34 % de fondo oscuro y 17 % de figura clara; el favicon entregado tenía 10 % de fondo oscuro y se veía como una mancha turquesa.
 
 Si el diseñador entrega un favicon simplificado (silueta de la trucha con la corona, pocos colores, revisado a 16 px), basta con reemplazar `favicon-16.png`, `favicon-32.png` y `favicon-48.png` y volver a armar `public/favicon.ico`.
+
+## Imágenes de referencia de especies (`public/images/especies/`)
+
+Se muestran como portada de una especie por defecto mientras la finca no suba fotos propias (Especies → Editar → Fotos).
+
+| Archivo | Peso | Origen | Licencia |
+|---|---|---|---|
+| `bagre-rayado.webp` | 48 KB | Desconocido | Desconocida |
+| `bocachico.webp` | 122 KB | Desconocido | Desconocida |
+| `cachama-blanca.webp` | 175 KB | Desconocido | Desconocida |
+| `mojarra-negra.webp` | 23 KB | Desconocido | Desconocida |
+| `trucha-arcoiris.webp` | 77 KB | Desconocido | Desconocida |
+
+Entraron al repositorio en la «Fase 1» (commit `0aa3ad2`, 5 de octubre de 2026) ya convertidas a WebP, sin registro de su fuente y sin metadatos de autor ni licencia. **No se puede saber de dónde salieron: hay que reemplazarlas por fotos propias** (o por fotos con licencia libre, anotando aquí el autor, la fuente y la licencia). La mojarra roja no tiene imagen: queda sin foto hasta que se suba una real.

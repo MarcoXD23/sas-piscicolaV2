@@ -76,7 +76,11 @@ class EspeciesFincaTest extends TestCase
 
     public function test_la_migracion_carga_el_catalogo_en_fincas_existentes_y_pasa_las_siembras_sin_perder_historial(): void
     {
+        // Se deshacen también las migraciones posteriores que dependen de la tabla especies
         $migracion = require database_path('migrations/2026_10_24_000001_create_especies_por_finca.php');
+        $ficha = require database_path('migrations/2026_10_25_000001_add_ficha_to_especies.php');
+        $fotos = require database_path('migrations/2026_10_26_000001_create_especie_fotos_table.php');
+        $fotos->down();
         $migracion->down();
         $this->assertTrue(Schema::hasColumn('siembras', 'especie'));
 
@@ -86,6 +90,8 @@ class EspeciesFincaTest extends TestCase
         DB::table('siembras')->insert([$fila('mojarra roja'), $fila('cachama blanca'), $fila('sábalo del río')]);
 
         $migracion->up();
+        $ficha->up();
+        $fotos->up();
 
         $this->assertFalse(Schema::hasColumn('siembras', 'especie'));   // el texto viejo ya no queda en uso
         $this->assertSame(7, Especie::count());                         // 6 por defecto + la que no estaba en el catálogo

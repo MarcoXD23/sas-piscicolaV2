@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Especie;
+use App\Models\EspecieFoto;
 use App\Models\Rol;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -61,13 +63,19 @@ class EspecieController extends Controller
 
     public function destroy(Especie $especie): RedirectResponse
     {
-        DB::transaction(function () use ($especie) {
+        $archivos = DB::transaction(function () use ($especie) {
             // Con siembras (activas o históricas) no se borra; la clave foránea también lo impide
             if ($especie->siembras()->lockForUpdate()->exists()) {
                 throw ValidationException::withMessages(['especie' => __('mensajes.especie.con_siembras', ['nombre' => $especie->nombre])]);
             }
+            // Sus fotos se van con ella: primero las filas y, ya confirmado, los dos archivos de cada una
+            $fotos = $especie->fotos()->get();
+            $especie->fotos()->delete();
             $especie->delete();
+
+            return $fotos->flatMap(fn (EspecieFoto $foto) => [$foto->ruta_original, $foto->ruta_ligera])->all();
         });
+        Storage::disk('fotos')->delete($archivos);
 
         return redirect()->route('admin.especies.index')->with('estado', __('mensajes.especie.eliminada', ['nombre' => $especie->nombre]));
     }

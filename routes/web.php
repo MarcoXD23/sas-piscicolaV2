@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
+use App\Http\Controllers\Admin\EspecieFotoController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarContrasenaController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
+use App\Http\Controllers\FotoEspecieController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
@@ -128,6 +130,12 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::put('/especies/{especie}', [EspecieFincaController::class, 'update'])->name('especies.update');
         Route::post('/especies/{especie}/activo', [EspecieFincaController::class, 'cambiarActivo'])->name('especies.activo');
         Route::delete('/especies/{especie}', [EspecieFincaController::class, 'destroy'])->name('especies.destroy');
+        // Fotos de una especie: la foto debe ser de esa especie (scopeBindings)
+        Route::scopeBindings()->group(function () {
+            Route::post('/especies/{especie}/fotos', [EspecieFotoController::class, 'store'])->name('especies.fotos.store');
+            Route::post('/especies/{especie}/fotos/{foto}/orden', [EspecieFotoController::class, 'ordenar'])->name('especies.fotos.orden');
+            Route::delete('/especies/{especie}/fotos/{foto}', [EspecieFotoController::class, 'destroy'])->name('especies.fotos.destroy');
+        });
         Route::put('/ajustes-pesaje', [AjustesPesajeController::class, 'update'])->name('ajustes-pesaje.update');
         Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
@@ -164,6 +172,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware('rol:propietario,administrador,trabajador,celador')->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
         Route::get('/especies/{especie}', [EspecieController::class, 'show'])->whereNumber('especie')->name('especies.show');
+        // Fotos del disco privado: ligera para todos los roles de la finca; el original lo limita el controlador
+        Route::get('/especies/fotos/{foto}/{version}', [FotoEspecieController::class, 'ver'])->whereNumber('foto')->whereIn('version', ['ligera', 'original'])->name('especies.fotos.ver');
     });
 
     // Asistente IA: un solo widget para todos los roles (el contexto se filtra por rol)

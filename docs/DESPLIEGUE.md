@@ -29,6 +29,8 @@ sudo apt install -y nginx postgresql git unzip curl ufw \
 - **Composer:** sigue las instrucciones de https://getcomposer.org/download/.
 - **Node.js 22 LTS:** solo hace falta para compilar los estilos. Instálalo desde https://nodejs.org o con `nvm`.
 
+**PHP para las fotos de especies** (originales de hasta 30 MB): en `/etc/php/8.4/fpm/php.ini` pon `upload_max_filesize = 32M`, `post_max_size = 40M` y `memory_limit = 512M`, y reinicia con `sudo systemctl restart php8.4-fpm`. Con 512 MB se aceptan fotos de hasta 50 megapíxeles; con 128 MB, unos 13.
+
 Cortafuegos: deja abiertos solo SSH y la web. PostgreSQL **no** se abre a internet.
 
 ```bash
@@ -170,7 +172,7 @@ server {
 
     index index.php;
     charset utf-8;
-    client_max_body_size 10M;
+    client_max_body_size 40M;   # fotos de especies de hasta 30 MB
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -310,6 +312,14 @@ sudo -u www-data php /var/www/sas-piscicola/artisan piscicola:respaldar   # prim
 - `RESPALDOS_CARPETA=C:\respaldos`.
 - Si `pg_dump` no está en el PATH: `PG_BIN='C:\Program Files\PostgreSQL\17\bin'`, con comillas simples.
 - Para programarlo, usa el Programador de tareas de Windows con `php C:\wamp64\www\sas-piscicola\artisan piscicola:respaldar`.
+
+**Fotos de especies:** `piscicola:respaldar` copia solo la base. Las fotos viven en `storage/app/private/fotos` y se respaldan aparte, el mismo día y al mismo lugar externo, por ejemplo:
+
+```cron
+0 3 * * * tar -czf /var/respaldos/sas-piscicola/fotos_$(date +\%Y\%m\%d).tar.gz -C /var/www/sas-piscicola/storage/app/private fotos && find /var/respaldos/sas-piscicola -name 'fotos_*.tar.gz' -mtime +14 -delete
+```
+
+Para restaurar: descomprime el `.tar.gz` en `storage/app/private/` de la base restaurada (la base guarda las rutas; los archivos deben coincidir con la copia de la misma fecha).
 
 **Nunca** subas una copia (`*.dump`) ni el `.env` a git; el `.gitignore` ya los excluye.
 
