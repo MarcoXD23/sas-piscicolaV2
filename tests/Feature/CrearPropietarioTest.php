@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Rol;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -31,7 +32,7 @@ class CrearPropietarioTest extends TestCase
         $this->comando('mx', 'America/Mexico_City')->assertSuccessful();
 
         $tenant = Tenant::query()->where('codigo', 'finca-prueba')->firstOrFail();
-        $usuario = User::query()->where('email', 'propietario@example.test')->firstOrFail();
+        $usuario = TenantActual::sinFiltro(fn () => User::query()->where('email', 'propietario@example.test')->firstOrFail());
 
         $this->assertSame('MX', $tenant->pais);
         $this->assertSame('America/Mexico_City', $tenant->zona_horaria);

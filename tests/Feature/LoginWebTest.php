@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Rol;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -64,7 +65,7 @@ class LoginWebTest extends TestCase
             'password_confirmation' => 'clave-segura-123',
         ])->assertRedirect(route('login'));
 
-        $usuario = User::query()->where('email', 'nueva@example.test')->firstOrFail();
+        $usuario = TenantActual::sinFiltro(fn () => User::query()->where('email', 'nueva@example.test')->firstOrFail());
         $this->assertSame($finca->id, $usuario->tenant_id);
         $this->assertNull($usuario->aprobado_at);
         $this->assertCount(0, $usuario->roles);

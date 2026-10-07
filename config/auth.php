@@ -69,8 +69,9 @@ return [
     */
 
     'providers' => [
+        // Busca la identidad sin el filtro de finca (App\Auth\ProveedorUsuarios); se registra en AppServiceProvider
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'usuarios_finca',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

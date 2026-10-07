@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Plataforma;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,14 +14,14 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Panel de plataforma: todas las fincas, su personal y su estado. Suspender o reactivar una finca.
- * Sin finca activa, el global scope de tenant no filtra: aquí se ven todas a propósito.
+ * Aquí se ven todas las fincas a propósito: el personal se cuenta dentro de TenantActual::sinFiltro().
  */
 class FincaController extends Controller
 {
     public function index(): View
     {
         return view('plataforma.fincas', [
-            'fincas' => Tenant::query()->withCount('users')->orderBy('nombre')->get(),
+            'fincas' => TenantActual::sinFiltro(fn () => Tenant::query()->withCount('users')->orderBy('nombre')->get()),
         ]);
     }
 

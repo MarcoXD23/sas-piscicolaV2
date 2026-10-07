@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Rules\NoIgualAlCorreo;
+use App\Support\TenantActual;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -34,7 +35,8 @@ class RegistroController extends Controller
 
         // Un solo mensaje para «código inexistente» y «correo ya registrado»: no revela qué fincas ni qué correos existen
         $tenant = Tenant::query()->where('codigo', $datos['codigo_finca'])->first();
-        $correoUsado = User::withoutGlobalScopes()->whereRaw('LOWER(email) = ?', [mb_strtolower($datos['email'])])->exists();
+        // El correo es único en todo el sistema: se revisa en todas las fincas
+        $correoUsado = TenantActual::sinFiltro(fn () => User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower($datos['email'])])->exists());
         if ($tenant === null || $correoUsado) {
             throw ValidationException::withMessages(['registro' => __('mensajes.registro.no_se_pudo')]);
         }

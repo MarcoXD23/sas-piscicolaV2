@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
+use App\Support\TenantActual;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,8 @@ class AuthController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-        $usuario = User::query()->where('email', $request->input('email'))->first();
+        // Búsqueda de identidad: todavía no hay finca activa (el correo es único en todo el sistema)
+        $usuario = TenantActual::sinFiltro(fn () => User::query()->where('email', $request->input('email'))->first());
 
         if ($usuario === null || ! Hash::check($request->input('password'), $usuario->password)) {
             throw ValidationException::withMessages([
