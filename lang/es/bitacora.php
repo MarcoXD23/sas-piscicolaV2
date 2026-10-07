@@ -23,7 +23,7 @@ return [
         'aprobacion' => ':persona aprobado como :roles',
         'aviso_atendido' => 'Aviso de pesca de :especie atendido',
         'aviso_pesca' => ':especie lista para pescar. :nota',
-        'cosecha' => ':peces peces de :especie, :kg kg (fecha :fecha)',
+        'cosecha' => ':peces peces de :especie, :kg kg limpios, destino: :destino (fecha :fecha)',
         'despacho' => ':kg kg de :concentrado en :bultos bultos, :proveedor (fecha :fecha)',
         'mortalidad' => ':peces peces de :especie (fecha :fecha)',
         'muestreo' => ':especie: :peces peces pesados, promedio :gramos g (fecha :fecha)',

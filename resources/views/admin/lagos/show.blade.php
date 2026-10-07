@@ -75,10 +75,16 @@
 
                         @if ($puedeOperar)
                             <div class="grid grid-cols-2 gap-2 px-5 pb-4">
-                                <x-boton tipo="button" class="!px-2" data-abrir-modal="modal-cosecha-{{ $siembra->id }}" :disabled="$lago->tratamientosEnRetiro->isNotEmpty()"
-                                         :title="$lago->tratamientosEnRetiro->isNotEmpty() ? __('lagos.lago_en_retiro') : null">
-                                    <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
-                                </x-boton>
+                                @if ($lago->tratamientosEnRetiro->isNotEmpty())
+                                    <x-boton tipo="button" class="!px-2" disabled :title="__('lagos.lago_en_retiro')">
+                                        <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
+                                    </x-boton>
+                                @else
+                                    {{-- Página de pesaje, con este lago y esta especie ya elegidos --}}
+                                    <x-boton class="!px-2" :href="route('admin.cosechas.create', ['siembra' => $siembra->id])">
+                                        <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
+                                    </x-boton>
+                                @endif
                                 <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-traslado-{{ $siembra->id }}" :disabled="$otrosLagos === []">
                                     <x-icono nombre="lagos" class="h-5 w-5" /> {{ __('lagos.trasladar') }}
                                 </x-boton>
@@ -125,81 +131,6 @@
                         </x-modal>
                     @endif
 
-                    @if ($puedeOperar && $lago->tratamientosEnRetiro->isEmpty())
-                        <x-modal id="modal-cosecha-{{ $siembra->id }}" :titulo="__('lagos.cosechar_especie', ['especie' => $siembra->nombre_especie])">
-                            <x-formulario :action="route('admin.cosechas.store', $siembra)">
-                                <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
-                                    {{ __('lagos.si_cosechas_todos_peces_siembra') }}
-                                </p>
-                                <x-campo nombre="fecha" id="cosecha-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" required />
-                                <x-campo nombre="peces" id="cosecha-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
-                                         :ayuda="__('lagos.hay', ['cantidad' => $numero($siembra->peces_vivos)])" />
-
-                                @php
-                                    // Si el formulario volvió con errores, se reabre en el modo y con las canastas que se escribieron
-                                    $porCanastas = old('_modal') === 'modal-cosecha-'.$siembra->id && is_array(old('pesajes'));
-                                    $brutos = $porCanastas ? array_values(old('pesajes')) : [''];
-                                @endphp
-                                <div data-pesaje class="space-y-4">
-                                    <fieldset>
-                                        <legend class="mb-1.5 text-base font-medium text-slate-700">{{ __('lagos.peso') }}</legend>
-                                        <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
-                                            @foreach (['total' => __('lagos.total_neto'), 'canastas' => __('lagos.por_canastas')] as $modo => $texto)
-                                                <label class="flex min-h-11 cursor-pointer items-center justify-center rounded-lg text-base font-semibold text-slate-600 has-checked:bg-white has-checked:text-marca-800 has-checked:shadow-sm">
-                                                    <input type="radio" name="modo_pesaje_{{ $siembra->id }}" value="{{ $modo }}" class="sr-only" data-modo-pesaje
-                                                           @checked(($modo === 'canastas') === $porCanastas)>
-                                                    {{ $texto }}
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </fieldset>
-
-                                    <div data-seccion="total" @if ($porCanastas) hidden @endif>
-                                        <x-campo nombre="kg" id="cosecha-kg-{{ $siembra->id }}" :etiqueta="__('lagos.kg_netos')" tipo="number" step="0.01" min="0.1" inputmode="decimal"
-                                                 required :disabled="$porCanastas" :ayuda="__('lagos.peso_total_sin_tara_canastas')" />
-                                    </div>
-
-                                    <div data-seccion="canastas" class="space-y-3" @unless ($porCanastas) hidden @endunless>
-                                        <x-campo nombre="tara_kg" id="cosecha-tara-{{ $siembra->id }}" :etiqueta="__('lagos.tara_canasta_kg')" tipo="number" step="0.01" min="0" inputmode="decimal"
-                                                 required :disabled="! $porCanastas" data-tara :ayuda="__('lagos.peso_canasta_vacia')" />
-
-                                        <ol data-canastas class="space-y-2">
-                                            @foreach ($brutos as $indice => $bruto)
-                                                <li data-canasta class="flex items-end gap-2">
-                                                    <div class="min-w-0 flex-1">
-                                                        <label class="mb-1 block text-sm font-medium text-slate-600" data-etiqueta-canasta>{{ __('lagos.canasta_bruto', ['numero' => $indice + 1]) }}</label>
-                                                        <input type="number" name="pesajes[]" value="{{ $bruto }}" step="0.01" min="0.1" inputmode="decimal" required
-                                                               @disabled(! $porCanastas) data-bruto
-                                                               @class([
-                                                                   'block min-h-12 w-full rounded-xl border bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:outline-none focus:ring-2',
-                                                                   'border-slate-300 focus:border-marca-500 focus:ring-marca-200' => ! $errors->has("pesajes.{$indice}"),
-                                                                   'border-red-400 focus:ring-red-200' => $errors->has("pesajes.{$indice}"),
-                                                               ])>
-                                                    </div>
-                                                    <button type="button" data-quitar-canasta class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="{{ __('lagos.quitar_canasta') }}">
-                                                        <x-icono nombre="basura" class="h-5 w-5" />
-                                                    </button>
-                                                </li>
-                                            @endforeach
-                                        </ol>
-
-                                        <div class="flex items-center justify-between gap-3">
-                                            <x-boton tipo="button" variante="secundario" class="!px-3" data-agregar-canasta>
-                                                <x-icono nombre="mas" class="h-5 w-5" /> {{ __('lagos.canasta') }}
-                                            </x-boton>
-                                            <p class="text-right text-base text-slate-700" aria-live="polite">{{ __('lagos.neto') }} <strong data-total-neto class="tabular-nums">{{ __('js.neto_una_canasta', ['kg' => \App\Support\Formato::numero(0, 2)]) }}</strong></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <x-campo nombre="observaciones" id="cosecha-obs-{{ $siembra->id }}" :etiqueta="__('lagos.observaciones_opcional')" />
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                    <x-boton>{{ __('lagos.registrar_cosecha') }}</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
-                    @endif
                 @empty
                     <x-vacio icono="lagos" :mensaje="__('lagos.este_lago_no_tiene_siembras')" />
                 @endforelse
@@ -224,6 +155,9 @@
                                     </div>
                                     @if ($evento['detalle'] !== '' || $evento['responsable'])
                                         <p class="text-sm text-slate-600">{{ collect([$evento['detalle'], $evento['responsable']])->filter()->join(' · ') }}</p>
+                                    @endif
+                                    @if ($evento['enlace'] && auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR))
+                                        <a href="{{ $evento['enlace'] }}" class="mt-1 inline-block text-sm font-semibold text-marca-700 underline">{{ __('cosechas.ver_detalle') }}</a>
                                     @endif
                                 </div>
                             </li>

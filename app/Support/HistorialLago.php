@@ -33,8 +33,9 @@ class HistorialLago
         $siembras = $lago->siembras()->get()->keyBy('id');
         $ids = $siembras->keys();
         $eventos = collect();
-        $agregar = function ($fecha, $orden, string $icono, string $actividad, string $titulo, string $detalle, ?string $responsable, string $tono = 'neutro') use ($eventos) {
-            $eventos->push(compact('fecha', 'icono', 'actividad', 'titulo', 'detalle', 'responsable', 'tono') + ['orden' => (string) $orden]);
+        // $enlace: página de detalle del evento, si la tiene (por ejemplo, una cosecha con sus pesadas)
+        $agregar = function ($fecha, $orden, string $icono, string $actividad, string $titulo, string $detalle, ?string $responsable, string $tono = 'neutro', ?string $enlace = null) use ($eventos) {
+            $eventos->push(compact('fecha', 'icono', 'actividad', 'titulo', 'detalle', 'responsable', 'tono', 'enlace') + ['orden' => (string) $orden]);
         };
         // Filtra por período y limita por tipo. Las columnas de solo fecha se comparan con texto Y-m-d;
         // las de fecha y hora (con $conHora) con el inicio del día en la zona de la finca (se pasa a UTC al consultar).
@@ -93,8 +94,9 @@ class HistorialLago
 
         $filtrar(Cosecha::where('lago_id', $lago->id)->with('usuario')->withCount('pesajes'), 'fecha')
             ->each(fn (Cosecha $c) => $agregar($c->fecha, $c->created_at, 'pez', $t('actividades.cosecha'), $t('cosecha', ['especie' => $siembras[$c->siembra_id]->nombre_especie]),
-                $t($c->pesajes_count > 0 ? 'detalle_cosecha_canastas' : 'detalle_cosecha', ['peces' => $numero($c->peces), 'kg' => $numero($c->kg, 2), 'gramos' => $numero($c->peso_promedio_g), 'canastas' => $c->pesajes_count]),
-                $c->usuario?->name, 'positivo'));
+                $t($c->pesajes_count > 0 ? 'detalle_cosecha_pesadas' : 'detalle_cosecha', ['peces' => $numero($c->peces), 'kg' => $numero($c->kg, 2), 'gramos' => $numero($c->peso_promedio_g),
+                    'pesadas' => $c->pesajes_count, 'destino' => $c->destino ?: __('cosechas.sin_dato')]),
+                $c->usuario?->name, 'positivo', route('admin.cosechas.show', $c)));
 
         $filtrar(MedicionAgua::where('lago_id', $lago->id)->with('usuario'), 'medido_at', conHora: true)
             ->each(fn (MedicionAgua $m) => $agregar($m->medido_at, $m->medido_at, 'reloj', $t('actividades.calidad_agua'), $t('calidad_agua', ['hora' => $m->medido_at->format('H:i')]),

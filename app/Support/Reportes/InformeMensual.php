@@ -62,7 +62,7 @@ class InformeMensual
             'entradasBodega' => $veBodegaYVentas
                 ? $enMes(MovimientoAlimento::where('tipo_movimiento', 'entrada'))->orderBy('fecha')->get()
                 : null,
-            'cosechas' => $enMes(Cosecha::query()->with(['lago', 'siembra']))->orderBy('fecha')->get(),
+            'cosechas' => $enMes(Cosecha::query()->with(['lago', 'siembra', 'despachadoPor', 'pesajes']))->orderBy('fecha')->get(),
             'ventas' => $veBodegaYVentas
                 ? [
                     'total' => (int) $enMes(Venta::query())->sum('total'),
@@ -127,8 +127,9 @@ class InformeMensual
                 $d['alimentoPorConcentrado']->map(fn ($kg, $concentrado) => [$concentrado, (float) $kg])->values()->all()),
             new Tabla($t('hoja_siembras'), [[$t('fecha'), null], [$t('lago'), null], [$t('especie'), null], [$t('peces'), 0], [$t('peso_g'), 2]],
                 $d['siembrasNuevas']->map(fn ($s) => [$fecha($s->fecha), $s->lago->nombre, $s->nombre_especie, (int) $s->cantidad_alevinos, (float) $s->peso_promedio_inicial_g])->all()),
-            new Tabla($t('hoja_cosechas'), [[$t('fecha'), null], [$t('lago'), null], [$t('especie'), null], [$t('peces'), 0], [$t('kg'), 1]],
-                $d['cosechas']->map(fn ($c) => [$fecha($c->fecha), $c->lago->nombre, $c->siembra->nombre_especie, (int) $c->peces, (float) $c->kg])->all()),
+            // Cosechas con su encabezado (destino, despachó) y totales, y cada pesada con su cuenta
+            TablasCosecha::cosechas($d['cosechas']),
+            TablasCosecha::pesadas($d['cosechas']),
             new Tabla($t('hoja_traslados'), [[$t('fecha'), null], [$t('especie'), null], [$t('peces'), 0], [$t('origen'), null], [$t('destino'), null]],
                 $d['traslados']->map(fn ($tr) => [$fecha($tr->fecha), $tr->siembraOrigen->nombre_especie, (int) $tr->cantidad, $tr->lagoOrigen->nombre, $tr->lagoDestino->nombre])->all()),
             new Tabla($t('hoja_sanidad'), [[$t('fecha'), null], [$t('lago'), null], [$t('motivo'), null], [$t('producto'), null]],

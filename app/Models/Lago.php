@@ -27,6 +27,11 @@ class Lago extends Model
         return $this->hasMany(Siembra::class);
     }
 
+    public function cosechas(): HasMany
+    {
+        return $this->hasMany(Cosecha::class);
+    }
+
     /** Siembras que siguen en el agua. Con policultivo puede haber varias (de distinta especie). */
     public function siembrasActivas(): HasMany
     {

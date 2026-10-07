@@ -49,8 +49,8 @@ class CosechasYVentasTest extends TestCase
 
     private function cosechar(array $datos = [], ?User $quien = null)
     {
-        return $this->actingAs($quien ?? $this->propietario)->post(route('admin.cosechas.store', $this->siembra),
-            $datos + ['fecha' => '2026-10-20', 'peces' => 300, 'kg' => 126]);
+        return $this->actingAs($quien ?? $this->propietario)->post(route('admin.cosechas.store'),
+            $datos + ['siembra_id' => $this->siembra->id, 'destino' => 'Restaurante El Río', 'fecha' => '2026-10-20', 'peces' => 300, 'kg' => 126]);
     }
 
     private function cosecha(float $kg = 100): Cosecha
@@ -96,8 +96,9 @@ class CosechasYVentasTest extends TestCase
     {
         $this->cosechar(['peces' => 1001])->assertInvalid(['peces']);
 
+        // Una siembra finalizada ya no es un lago con siembra activa para cosechar
         $this->siembra->update(['finalizada_at' => now()]);
-        $this->cosechar()->assertInvalid(['peces']);
+        $this->cosechar()->assertInvalid(['siembra_id' => __('mensajes.cosecha.lago_sin_siembra')]);
 
         $this->assertSame(0, Cosecha::count());
     }
@@ -131,7 +132,7 @@ class CosechasYVentasTest extends TestCase
         $this->cosechar();
 
         $this->actingAs($this->propietario)->get(route('admin.lagos.show', $this->lago))
-            ->assertSee('Cosecha · Mojarra roja')->assertSee('300 peces, 126,00 kg');
+            ->assertSee('Cosecha · Mojarra roja')->assertSee('300 peces, 126,00 kg limpios')->assertSee('destino: Restaurante El Río');
     }
 
     // --- Ventas ---

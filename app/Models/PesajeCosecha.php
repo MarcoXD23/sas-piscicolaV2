@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Peso de una canasta en una cosecha: bruto, tara de la canasta y neto.
+ * Una PESADA de la cosecha: un montón de pescado en varias canastas o canastillas (ver CalculoPesaje).
+ * En la base: canastas = Cantidad, tara_unitaria_kg = peso de una vacía, bruto_kg = peso pesado,
+ * tara_kg = descuento (canastas × tara_unitaria_kg) y neto_kg = peso limpio. En pantalla nunca se usan bruto, tara ni neto.
  */
 class PesajeCosecha extends Model
 {
@@ -15,11 +17,13 @@ class PesajeCosecha extends Model
 
     protected $table = 'pesajes_cosecha';
 
-    protected $fillable = ['cosecha_id', 'numero', 'bruto_kg', 'tara_kg', 'neto_kg'];
+    protected $fillable = ['cosecha_id', 'numero', 'tipo', 'canastas', 'tara_unitaria_kg', 'bruto_kg', 'tara_kg', 'neto_kg'];
 
     protected function casts(): array
     {
         return [
+            'canastas' => 'integer',
+            'tara_unitaria_kg' => 'float',
             'bruto_kg' => 'float',
             'tara_kg' => 'float',
             'neto_kg' => 'float',

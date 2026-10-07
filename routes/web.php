@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AvisoPescaController;
 use App\Http\Controllers\Admin\BitacoraController;
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
+use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
@@ -97,6 +98,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/conversion', [ConversionController::class, 'index'])->name('conversion.index');
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        // Detalle de una cosecha (encabezado, pesadas y totales): el administrador y el propietario en solo lectura
+        Route::get('/cosechas/{cosecha}', [CosechaController::class, 'show'])->whereNumber('cosecha')->name('cosechas.show');
 
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
@@ -114,7 +117,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
-        Route::post('/siembras/{siembra}/cosechas', [CosechaController::class, 'store'])->name('cosechas.store');
+        Route::get('/cosechas/crear', [CosechaController::class, 'create'])->name('cosechas.create');
+        Route::post('/cosechas', [CosechaController::class, 'store'])->name('cosechas.store');
+        Route::get('/ajustes-pesaje', [AjustesPesajeController::class, 'edit'])->name('ajustes-pesaje.edit');
+        Route::put('/ajustes-pesaje', [AjustesPesajeController::class, 'update'])->name('ajustes-pesaje.update');
         Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
 

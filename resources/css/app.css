@@ -7,6 +7,11 @@
 @custom-variant movil (@media screen and (width < 48rem));
 @custom-variant ancho (@media print, (width >= 48rem));
 
+/* Alpine: lo que depende de un estado no se ve hasta que Alpine arranca */
+[x-cloak] {
+    display: none !important;
+}
+
 @theme {
     --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 

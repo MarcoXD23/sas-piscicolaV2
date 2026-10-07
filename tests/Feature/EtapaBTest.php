@@ -166,7 +166,7 @@ class EtapaBTest extends TestCase
         $this->ponerEnTurno($this->trabajador, Rol::TRABAJADOR);
         $this->avisar();
 
-        $this->actingAs($this->administrador)->post(route('admin.cosechas.store', $this->siembra), ['fecha' => '2026-10-15', 'peces' => 100, 'kg' => 25])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.cosechas.store'), ['siembra_id' => $this->siembra->id, 'destino' => 'Plaza', 'fecha' => '2026-10-15', 'peces' => 100, 'kg' => 25])->assertSessionHasNoErrors();
 
         $aviso = AvisoPesca::sole();
         $this->assertSame(AvisoPesca::ATENDIDO, $aviso->estado);

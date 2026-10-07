@@ -15,6 +15,7 @@ class Tenant extends Model
     protected $fillable = [
         'nombre', 'codigo', 'pais', 'zona_horaria', 'idioma',
         'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias',
+        'peso_canasta_kg', 'peso_canastilla_kg',
     ];
 
     protected function casts(): array
@@ -22,6 +23,8 @@ class Tenant extends Model
         return [
             'suspendida_at' => InstanteLocal::class,
             'alerta_stock_dias' => 'integer',
+            'peso_canasta_kg' => 'float',
+            'peso_canastilla_kg' => 'float',
             'alerta_mortalidad_porcentaje' => 'float',
             'alerta_mortalidad_dias' => 'integer',
             'alerta_despacho_dias' => 'integer',

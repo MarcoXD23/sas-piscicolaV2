@@ -39,6 +39,28 @@
         </x-tabla>
     </section>
 
+    {{-- Cosechas del período: encabezado, pesadas y totales --}}
+    <section class="mt-6">
+        <h2 class="mb-2 text-lg font-semibold text-slate-900">{{ __('reportes.cosechas_periodo') }}</h2>
+        @forelse ($cosechas as $cosecha)
+            <div class="mb-6 break-inside-avoid">
+                <p class="mb-2 text-base text-slate-800">
+                    <strong>{{ $cosecha->fecha->format('d/m/Y') }}</strong> · {{ $cosecha->siembra->nombre_especie }}
+                    · {{ __('reportes.destino_cosecha', ['destino' => $cosecha->destino ?: __('cosechas.sin_dato')]) }}
+                    · {{ __('cosechas.despacho') }}: {{ $cosecha->despachadoPor?->name ?? __('cosechas.sin_dato') }}
+                    · {{ __('reportes.kg_y_peces', ['kg' => \App\Support\CalculoPesaje::kg($cosecha->kg), 'peces' => \App\Support\Formato::numero($cosecha->peces)]) }}
+                </p>
+                @if ($cosecha->pesajes->isNotEmpty())
+                    @include('admin.cosechas._pesadas', ['pesaje' => \App\Support\CalculoPesaje::deCosecha($cosecha)])
+                @else
+                    <p class="text-sm text-slate-500">{{ __('cosechas.sin_pesadas') }}</p>
+                @endif
+            </div>
+        @empty
+            <p class="text-slate-500">{{ __('reportes.sin_cosechas') }}</p>
+        @endforelse
+    </section>
+
     <p class="mt-6 text-sm text-slate-500">
         {{ __('region.aviso_libro_campo') }}
     </p>

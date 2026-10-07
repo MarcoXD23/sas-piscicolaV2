@@ -197,7 +197,7 @@ class SeguridadTest extends TestCase
             [route('admin.bodega.recepciones.store'), ['fecha' => $hoy, 'proveedor' => 'P', 'tipo_concentrado' => 'E', 'lote' => 'L', 'bultos' => 999999999, 'peso_bulto_kg' => 40], 'bultos'],
             [route('admin.muestreos.store', $siembra), ['fecha' => $hoy, 'peces_pesados' => 10, 'peso_total_g' => 99999999], 'peso_total_g'],
             [route('admin.raciones.store', $lago), ['fecha' => $hoy, 'tipo_concentrado' => 'E', 'cantidad_kg' => 99999999], 'cantidad_kg'],
-            [route('admin.cosechas.store', $siembra), ['fecha' => $hoy, 'peces' => 1, 'kg' => 9999999], 'kg'],
+            [route('admin.cosechas.store'), ['siembra_id' => $siembra->id, 'destino' => 'Plaza', 'fecha' => $hoy, 'peces' => 1, 'kg' => 9999999], 'kg'],
         ];
 
         foreach ($casos as [$url, $datos, $campo]) {

@@ -22,6 +22,9 @@ class LibroCampo
                 ->where('fecha', '<=', $hasta->toDateString())
                 ->where(fn ($q) => $q->whereNull('finalizada_at')->orWhere('finalizada_at', '>=', $desde))
                 ->orderBy('fecha')->get(),
+            // Cosechas del lago en el período, con sus pesadas
+            'cosechas' => $lago->cosechas()->with(['lago', 'siembra', 'despachadoPor', 'pesajes'])
+                ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])->orderBy('fecha')->get(),
             // El libro va en orden cronológico (del más antiguo al más reciente)
             'registros' => HistorialLago::eventos($lago, $desde, $hasta)->reverse()->values(),
         ];
@@ -46,6 +49,8 @@ class LibroCampo
             new Tabla($t('hoja_registro'),
                 [[$t('fecha'), null], [$t('actividad'), null], [$t('detalle'), null], [$t('responsable'), null]],
                 $d['registros']->map(fn ($r) => [$r['fecha']->format('d/m/Y'), $r['titulo'], $r['detalle'], $r['responsable'] ?? ''])->all()),
+            TablasCosecha::cosechas($d['cosechas']),
+            TablasCosecha::pesadas($d['cosechas']),
         ];
     }
 }

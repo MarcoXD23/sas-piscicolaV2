@@ -24,6 +24,9 @@ class Bitacora extends Model
     /** Roles de mayor a menor nivel: se guarda el más alto que tenga la persona entre los que permite la acción. */
     private const NIVEL_ROLES = [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR];
 
+    /** Datos que se agregaron después a una acción: los registros viejos no los tienen. */
+    private const DATOS_NUEVOS = ['cosecha' => ['destino']];
+
     protected $table = 'bitacora';
 
     public const UPDATED_AT = null;
@@ -104,6 +107,8 @@ class Bitacora extends Model
             default => (string) $valor,
         })->all();
 
+        // Registros anteriores a un dato nuevo (por ejemplo, cosechas sin destino) se muestran con "—"
+        $datos += collect(self::DATOS_NUEVOS[$this->accion] ?? [])->mapWithKeys(fn ($clave) => [$clave => __('cosechas.sin_dato')])->all();
         $texto = __('bitacora.detalles.'.$this->accion, $datos);
 
         if (! empty($this->detalle['sin_conexion']) && isset($this->detalle['recibido_at'])) {

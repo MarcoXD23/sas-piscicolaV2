@@ -63,6 +63,11 @@
                 <p class="border-t border-slate-100 py-2 first:border-t-0">
                     {{ __('reportes.fecha_lago_especie', ['fecha' => $cosecha->fecha->format('d/m'), 'lago' => $cosecha->lago->nombre, 'especie' => $cosecha->siembra->nombre_especie]) }}:
                     {{ __('reportes.kg_y_peces', ['kg' => $numero($cosecha->kg, 1), 'peces' => $numero($cosecha->peces)]) }}
+                    · {{ __('reportes.destino_cosecha', ['destino' => $cosecha->destino ?: __('cosechas.sin_dato')]) }}
+                    @if ($cosecha->pesajes->isNotEmpty())
+                        · {{ \App\Support\CalculoPesaje::lineaCuenta(\App\Support\CalculoPesaje::deCosecha($cosecha)['totales']) }}
+                    @endif
+                    <a href="{{ route('admin.cosechas.show', $cosecha) }}" class="text-marca-700 underline print:hidden">{{ __('cosechas.ver_detalle') }}</a>
                 </p>
             @empty
                 <p class="text-slate-500">{{ __('reportes.sin_cosechas') }}</p>

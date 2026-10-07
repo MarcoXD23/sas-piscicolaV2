@@ -84,7 +84,7 @@ class ExportarReportesTest extends TestCase
         $this->assertStringContainsString('informe-mensual-2026-10-norte.xlsx', $respuesta->headers->get('Content-Disposition'));
 
         $hojas = $this->leerExcel($respuesta);
-        $this->assertSame(['Resumen', 'Lagos', 'Alimento', 'Siembras', 'Cosechas', 'Traslados', 'Sanidad', 'Avisos de pesca', 'Novedades', 'Entradas a bodega'], array_keys($hojas));
+        $this->assertSame(['Resumen', 'Lagos', 'Alimento', 'Siembras', 'Cosechas', 'Pesadas', 'Traslados', 'Sanidad', 'Avisos de pesca', 'Novedades', 'Entradas a bodega'], array_keys($hojas));
 
         // Encabezado con la finca y la hora de generación en la zona de la finca
         $this->assertSame('Finca Norte', $hojas['Resumen'][0][0]);
@@ -137,7 +137,7 @@ class ExportarReportesTest extends TestCase
         $parametros = ['lago_id' => $this->lago->id, 'desde' => '2026-10-01', 'hasta' => '2026-10-20'];
 
         $hojas = $this->leerExcel($this->actingAs($this->propietario)->get(route('admin.reportes.libro-campo.excel', $parametros))->assertOk());
-        $this->assertSame(['Siembras', 'Registro'], array_keys($hojas));
+        $this->assertSame(['Siembras', 'Registro', 'Cosechas', 'Pesadas'], array_keys($hojas));
         $this->assertSame('Mojarra roja', $hojas['Siembras'][5][0]);
         $this->assertTrue($this->contiene($hojas, '12,5 kg de Engorde'));
 

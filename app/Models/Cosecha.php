@@ -11,7 +11,7 @@ class Cosecha extends Model
 {
     use PerteneceATenant;
 
-    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones'];
+    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'despachado_por_id', 'destino', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones'];
 
     protected function casts(): array
     {
@@ -37,12 +37,18 @@ class Cosecha extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /** Quién despachó el pedido (por defecto, quien registró la cosecha). */
+    public function despachadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'despachado_por_id');
+    }
+
     public function ventas(): HasMany
     {
         return $this->hasMany(Venta::class);
     }
 
-    /** Canastas pesadas (vacío si la cosecha se registró con el total neto). */
+    /** Pesadas de la cosecha (vacío si se registró con el total limpio). */
     public function pesajes(): HasMany
     {
         return $this->hasMany(PesajeCosecha::class)->orderBy('numero');

@@ -34,4 +34,23 @@
             <x-boton>{{ __('region.ajustes.guardar') }}</x-boton>
         </x-formulario>
     </x-tarjeta>
+
+    {{-- Pesos de las vacías: los cambia el administrador; aquí solo se consultan --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('cosechas.ajustes.titulo')" :subtitulo="__('cosechas.ajustes.subtitulo')">
+        <dl class="grid grid-cols-2 gap-4 text-base">
+            <div>
+                <dt class="text-sm text-slate-500">{{ __('cosechas.peso_canasta_vacia') }}</dt>
+                <dd class="font-semibold tabular-nums text-slate-900">{{ \App\Support\CalculoPesaje::kg($finca->peso_canasta_kg) }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm text-slate-500">{{ __('cosechas.peso_canastilla_vacia') }}</dt>
+                <dd class="font-semibold tabular-nums text-slate-900">{{ \App\Support\CalculoPesaje::kg($finca->peso_canastilla_kg) }}</dd>
+            </div>
+        </dl>
+        @if (auth()->user()->tieneRol(\App\Models\Rol::ADMINISTRADOR))
+            <x-boton variante="secundario" class="mt-4" :href="route('admin.ajustes-pesaje.edit')">{{ __('cosechas.ajustes.enlace') }}</x-boton>
+        @else
+            <p class="mt-4 text-sm text-slate-500">{{ __('cosechas.ajustes.solo_lectura') }}</p>
+        @endif
+    </x-tarjeta>
 @endsection
