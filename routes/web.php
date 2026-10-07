@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\AjustesFincaController;
 use App\Http\Controllers\Admin\AlertaController;
 use App\Http\Controllers\Admin\BodegaController;
+use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
@@ -90,6 +91,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     Route::middleware('rol:propietario,administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
+        Route::get('/conversion', [ConversionController::class, 'index'])->name('conversion.index');
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');

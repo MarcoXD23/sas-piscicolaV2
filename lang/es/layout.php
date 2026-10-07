@@ -7,6 +7,7 @@ return [
         'agenda' => 'Agenda',
         'alertas' => 'Alertas',
         'bodega' => 'Bodega',
+        'conversion' => 'Conversión',
         'especies' => 'Especies',
         'inicio' => 'Inicio',
         'lagos' => 'Lagos',

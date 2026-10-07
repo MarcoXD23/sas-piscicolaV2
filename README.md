@@ -153,6 +153,15 @@ Cada finca recibe alertas de **stock de alimento bajo o agotado**, **mortalidad 
 
 **WhatsApp:** existe la interfaz `CanalNotificacion` (con `CanalCorreo` y `CanalNulo`) y las variables `WHATSAPP_*` vacías, pero todavía no hay proveedor. El recomendado es la **WhatsApp Cloud API de Meta** (oficial, sin intermediario); requiere una cuenta de WhatsApp Business verificada, plantillas aprobadas y el celular de cada usuario.
 
+### Conversión alimenticia
+
+En **Conversión** (propietario y administrador) se ve el FCA = kg de alimento ÷ kg de biomasa ganada, por lago y siembra (ciclo actual), por especie (todas las siembras) y la tendencia de las últimas 12 semanas de cada lago. El cálculo está en [`App\Support\ConversionAlimenticia`](app/Support/ConversionAlimenticia.php):
+
+- Alimento: salidas de bodega al lago. En policultivo se reparte entre las especies según su biomasa de ese día (estimado).
+- Biomasa ganada: biomasa final − inicial + kg cosechados + biomasa trasladada − biomasa recibida. Los peces muertos no cuentan.
+- El peso sale de la siembra, los muestreos, las cosechas y los traslados, interpolado entre fechas; el FCA se calcula hasta el último peso conocido. Sin ganancia (cero o negativa) o sin muestreo no se calcula y se muestra el motivo.
+- El costo por lago no está incluido: requeriría guardar el precio por kg en las entradas de bodega.
+
 ### Datos de demostración (opcional, nunca en producción)
 
 ```bash
