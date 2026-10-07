@@ -3,6 +3,7 @@
 return [
     'accion' => 'Acción',
     'acciones' => [
+        'aprobacion' => 'Aprobación',
         'aviso_atendido' => 'Aviso atendido',
         'aviso_pesca' => 'Listo para pescar',
         'cosecha' => 'Cosecha',
@@ -12,12 +13,14 @@ return [
         'novedad' => 'Novedad',
         'racion' => 'Ración',
         'recepcion' => 'Recepción',
+        'roles' => 'Cambio de roles',
         'ronda' => 'Ronda',
         'traslado' => 'Traslado',
         'venta' => 'Venta',
     ],
     'detalle' => 'Detalle',
     'detalles' => [
+        'aprobacion' => ':persona aprobado como :roles',
         'aviso_atendido' => 'Aviso de pesca de :especie atendido',
         'aviso_pesca' => ':especie lista para pescar. :nota',
         'cosecha' => ':peces peces de :especie, :kg kg (fecha :fecha)',
@@ -27,6 +30,7 @@ return [
         'novedad' => ':tipo: :descripcion',
         'racion' => ':kg kg de :concentrado (fecha :fecha)',
         'recepcion' => ':kg kg de :concentrado · :despacho (fecha :fecha)',
+        'roles' => 'Roles de :persona: :antes → :despues',
         'ronda' => ':tipo',
         'traslado' => ':peces peces de :especie hacia :destino (fecha :fecha)',
         'venta' => ':kg kg a :cliente por :total, :forma_pago (fecha :fecha)',

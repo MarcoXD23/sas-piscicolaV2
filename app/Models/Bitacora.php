@@ -18,7 +18,7 @@ class Bitacora extends Model
 {
     use PerteneceATenant;
 
-    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido'];
+    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'aprobacion', 'roles'];
 
     /** Roles de mayor a menor nivel: se guarda el más alto que tenga la persona entre los que permite la acción. */
     private const NIVEL_ROLES = [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR];
@@ -27,7 +27,7 @@ class Bitacora extends Model
 
     public const UPDATED_AT = null;
 
-    protected $fillable = ['user_id', 'rol', 'accion', 'lago_id', 'detalle', 'ocurrido_at', 'zona_horaria'];
+    protected $fillable = ['user_id', 'persona_id', 'rol', 'accion', 'lago_id', 'detalle', 'ocurrido_at', 'zona_horaria'];
 
     protected function casts(): array
     {
@@ -46,8 +46,9 @@ class Bitacora extends Model
     /**
      * @param  list<string>  $rolesPermitidos  Roles con los que se puede hacer la acción (los de la ruta)
      * @param  array<string, mixed>  $detalle  Datos de ese momento para mostrar después
+     * @param  ?User  $persona  Persona afectada (por ejemplo, a quién se le cambiaron los roles)
      */
-    public static function registrar(User $usuario, string $accion, ?Lago $lago, array $rolesPermitidos, array $detalle = []): self
+    public static function registrar(User $usuario, string $accion, ?Lago $lago, array $rolesPermitidos, array $detalle = [], ?User $persona = null): self
     {
         $roles = $usuario->roles()->pluck('nombre')->all();
         $rol = collect(self::NIVEL_ROLES)->first(fn ($nivel) => in_array($nivel, $rolesPermitidos, true) && in_array($nivel, $roles, true))
@@ -55,6 +56,7 @@ class Bitacora extends Model
 
         return self::create([
             'user_id' => $usuario->id,
+            'persona_id' => $persona?->id,
             'rol' => $rol,
             'accion' => $accion,
             'lago_id' => $lago?->id,
@@ -67,6 +69,11 @@ class Bitacora extends Model
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function persona(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'persona_id');
     }
 
     public function lago(): BelongsTo

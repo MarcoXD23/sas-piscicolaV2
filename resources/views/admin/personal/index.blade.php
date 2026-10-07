@@ -20,6 +20,7 @@
             </label>
             <x-boton variante="secundario">{{ __('personal.guardar_mi_rol') }}</x-boton>
         </x-formulario>
+        @include('admin.personal._historial', ['registros' => $historial->get(auth()->id(), collect())])
     </x-tarjeta>
 
     <x-tabla :columnas="[__('personal.persona'), __('personal.estado'), __('personal.roles')]" :vacio="__('personal.aun_no_hay_personal_registrado')">
@@ -27,11 +28,13 @@
             @php
                 $rolesActuales = $persona->roles->pluck('nombre')->all();
                 $conErrores = (int) old('usuario_id') === $persona->id;
+                $idVentana = 'roles-'.$persona->id;
             @endphp
             <tr>
                 <td data-label="{{ __('personal.persona') }}">
                     <p class="font-semibold text-slate-900">{{ $persona->name }}</p>
                     <p class="break-all text-sm text-slate-500">{{ $persona->email }}</p>
+                    @include('admin.personal._historial', ['registros' => $historial->get($persona->id, collect())])
                 </td>
                 <td data-label="{{ __('personal.estado') }}">
                     @if ($persona->estaAprobado())
@@ -41,34 +44,28 @@
                     @endif
                 </td>
                 <td data-label="{{ __('personal.roles') }}">
-                    <x-formulario :action="route('admin.personal.update', $persona->id)" metodo="PUT" class="space-y-3">
-                        <input type="hidden" name="usuario_id" value="{{ $persona->id }}">
+                    @if ($persona->estaAprobado())
+                        {{-- Aprobada: los roles quedan en solo lectura; se cambian en una ventana aparte --}}
+                        <ul class="mb-3 flex flex-wrap gap-2" aria-label="{{ __('personal.roles_de', ['nombre' => $persona->name]) }}" data-roles-actuales>
+                            @forelse (array_values(array_filter(\App\Models\Rol::TODOS, fn ($rol) => in_array($rol, $rolesActuales, true))) as $rol)
+                                <li class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">{{ __('bitacora.roles.'.$rol) }}</li>
+                            @empty
+                                <li class="text-sm text-slate-500">{{ __('personal.sin_roles') }}</li>
+                            @endforelse
+                        </ul>
+                        <x-boton tipo="button" variante="secundario" class="!min-h-11 !py-2" data-abrir-modal="{{ $idVentana }}">{{ __('personal.cambiar_roles') }}</x-boton>
 
-                        <fieldset class="flex flex-wrap gap-2">
-                            <legend class="sr-only">{{ __('personal.roles_de', ['nombre' => $persona->name]) }}</legend>
-                            @foreach ($rolesAsignables as $rol)
-                                @php
-                                    $marcado = $conErrores ? in_array($rol, old('roles', []), true) : in_array($rol, $rolesActuales, true);
-                                @endphp
-                                <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-base capitalize has-checked:border-marca-500 has-checked:bg-marca-50">
-                                    <input type="checkbox" name="roles[]" value="{{ $rol }}" @checked($marcado)
-                                           class="h-5 w-5 rounded accent-marca-600">
-                                    {{ $rol }}
-                                </label>
-                            @endforeach
-                        </fieldset>
-
+                        <x-modal :id="$idVentana" :titulo="__('personal.roles_de', ['nombre' => $persona->name])">
+                            @include('admin.personal._formulario_roles', ['marcados' => $conErrores ? old('roles', []) : $rolesActuales, 'boton' => __('personal.guardar_roles')])
+                        </x-modal>
+                    @else
+                        @include('admin.personal._formulario_roles', ['marcados' => $conErrores ? old('roles', []) : $rolesActuales, 'boton' => __('personal.aprobar_asignar')])
                         @if ($conErrores && $errors->any())
-                            <p class="text-sm font-medium text-red-600">{{ $errors->first() }}</p>
+                            <p class="mt-2 text-sm font-medium text-red-600">{{ $errors->first() }}</p>
                         @endif
-
-                        <x-boton class="w-full sm:w-auto">
-                            {{ $persona->estaAprobado() ? __('personal.guardar_roles') : __('personal.aprobar_asignar') }}
-                        </x-boton>
-                    </x-formulario>
+                    @endif
                 </td>
             </tr>
         @endforeach
     </x-tabla>
 @endsection
-
