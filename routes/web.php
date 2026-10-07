@@ -160,7 +160,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/lagos/{lago}/avisos-pesca', [AvisoPescaController::class, 'store'])->name('avisos-pesca.store');
     });
 
-    Route::middleware('rol:propietario,administrador,trabajador')->group(function () {
+    // Guía de especies: todos los roles de la finca (solo lectura)
+    Route::middleware('rol:propietario,administrador,trabajador,celador')->group(function () {
         Route::get('/especies', [EspecieController::class, 'index'])->name('especies.index');
         Route::get('/especies/{especie}', [EspecieController::class, 'show'])->whereNumber('especie')->name('especies.show');
     });

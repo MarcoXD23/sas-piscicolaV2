@@ -58,57 +58,51 @@
         </div>
     </section>
 
-    @if ($especie['densidad_tierra'] || $especie['proteina'] || $especie['manejo'])
-        <div class="grid gap-5 lg:grid-cols-3">
-            <div class="space-y-5">
-                @if ($especie['densidad_tierra'])
-                    <x-tarjeta :titulo="__('especies.densidad_siembra')">
-                        <dl class="space-y-3 text-base">
-                            <div>
-                                <dt class="text-sm text-slate-500">{{ __('especies.estanque_tierra') }}</dt>
-                                <dd class="font-semibold text-slate-900">{{ $especie['densidad_tierra'] }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-slate-500">{{ __('especies.geomembrana_concreto') }}</dt>
-                                <dd class="font-semibold text-slate-900">{{ $especie['densidad_tanque'] }}</dd>
-                            </div>
-                        </dl>
-                    </x-tarjeta>
-                @endif
+    @if ($especie['orientativa'])
+        <p class="mb-5 rounded-xl bg-amber-50 p-4 text-base text-amber-900">{{ __('especies.ficha.orientativa') }}</p>
+    @endif
 
-                @if ($especie['proteina'])
-                    <x-tarjeta :titulo="__('especies.proteina_alimento')">
-                        <dl class="space-y-3 text-base">
-                            @foreach (__('especies.etapas') as $etapa => $texto)
-                                <div class="flex items-center justify-between gap-3">
-                                    <dt class="text-slate-600">{{ $texto }}</dt>
-                                    <dd class="font-semibold text-slate-900">{{ $especie['proteina'][$etapa] ?? __('especies.sin_dato') }}</dd>
-                                </div>
-                            @endforeach
-                        </dl>
-                    </x-tarjeta>
-                @endif
-            </div>
+    {{-- Ficha de la finca: cada parte vacía se muestra como «sin dato» (nunca se inventa) --}}
+    <div class="grid gap-5 lg:grid-cols-2">
+        @foreach (['cultivo' => __('especies.ficha.campos_cultivo'), 'procesamiento' => __('especies.ficha.campos_procesamiento')] as $bloque => $etiquetas)
+            <x-tarjeta :titulo="__('especies.ficha.'.$bloque)">
+                <dl class="space-y-4">
+                    @foreach ($especie[$bloque] as $campo => $texto)
+                        <div>
+                            <dt class="font-semibold text-slate-900">{{ $etiquetas[$campo] }}</dt>
+                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $texto, 'text-slate-400' => ! $texto])>{{ $texto ?? __('especies.sin_dato') }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </x-tarjeta>
+        @endforeach
 
-            @if ($especie['manejo'])
-                <x-tarjeta :titulo="__('especies.guia_manejo')" class="lg:col-span-2">
-                    <ol class="space-y-4">
-                        @foreach ($especie['manejo'] as $titulo => $texto)
-                            <li class="flex gap-4">
-                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-marca-600 text-sm font-bold text-white">{{ $loop->iteration }}</span>
-                                <div>
-                                    <h3 class="font-semibold text-slate-900">{{ $titulo }}</h3>
-                                    <p class="mt-0.5 text-base text-slate-600">{{ $texto }}</p>
-                                </div>
-                            </li>
+        <div class="space-y-5">
+            <x-tarjeta :titulo="__('especies.ficha.descripcion')">
+                <dl class="space-y-4">
+                    @foreach (['color', 'aspecto'] as $campo)
+                        <div>
+                            <dt class="font-semibold text-slate-900">{{ __('especies.ficha.'.$campo) }}</dt>
+                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $especie[$campo], 'text-slate-400' => ! $especie[$campo]])>{{ $especie[$campo] ?? __('especies.sin_dato') }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </x-tarjeta>
+
+            @if ($especie['proteina'])
+                <x-tarjeta :titulo="__('especies.proteina_alimento')">
+                    <dl class="space-y-3 text-base">
+                        @foreach (__('especies.etapas') as $etapa => $texto)
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-slate-600">{{ $texto }}</dt>
+                                <dd class="font-semibold text-slate-900">{{ $especie['proteina'][$etapa] ?? __('especies.sin_dato') }}</dd>
+                            </div>
                         @endforeach
-                    </ol>
+                    </dl>
                 </x-tarjeta>
             @endif
         </div>
-    @else
-        <x-vacio icono="pez" :mensaje="__('especies.catalogo_finca.sin_ficha')" />
-    @endif
+    </div>
 
     <p class="mt-6 text-sm text-slate-500">
         {{ __('especies.valores_referencia_ajustalos_asistente_tecnico') }}

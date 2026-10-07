@@ -37,13 +37,13 @@ class DisenoTest extends TestCase
             ->assertDontSee(route('admin.personal.index'));
     }
 
-    public function test_el_celador_solo_ve_inicio_y_seguridad_noche(): void
+    public function test_el_celador_solo_ve_inicio_seguridad_noche_y_la_guia_de_especies(): void
     {
         $this->actingAs($this->usuario(Rol::CELADOR))->get(route('inicio'))
             ->assertOk()
             ->assertSee(route('noche.index'))
+            ->assertSee(route('especies.index'))
             ->assertDontSee(route('admin.lagos.index'))
-            ->assertDontSee(route('especies.index'))
             ->assertDontSee('Más secciones');
     }
 

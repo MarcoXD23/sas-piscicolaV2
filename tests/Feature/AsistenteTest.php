@@ -241,15 +241,14 @@ class AsistenteTest extends TestCase
 
     public function test_un_dato_que_no_esta_en_la_ficha_no_se_confunde_con_un_dato_oculto_por_rol(): void
     {
-        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿De qué color es la mojarra roja cuando está enferma?')->assertOk();
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Qué vacuna necesita la mojarra roja?')->assertOk();
         $enviado = $this->falso->llamadas[0];
 
-        // Ni las fichas ni los datos traen el color, y el color no está entre los temas ocultos: corresponde el aviso de dato ausente
-        // (las reglas sí nombran el color, como algo que no se debe responder con conocimiento general)
+        // Ni las fichas ni los datos hablan de vacunas, y no es un tema oculto para el rol: corresponde el aviso de dato ausente
         $fichas = Str::after($enviado['instrucciones'], 'Fichas de referencia de las especies');
         $this->assertNotSame($enviado['instrucciones'], $fichas);
-        $this->assertStringNotContainsStringIgnoringCase('color', $fichas);
-        $this->assertStringNotContainsStringIgnoringCase('color', $enviado['contexto']);
+        $this->assertStringNotContainsStringIgnoringCase('vacuna', $fichas);
+        $this->assertStringNotContainsStringIgnoringCase('vacuna', $enviado['contexto']);
         $this->assertStringContainsString(__('asistente.avisos.dato_ausente'), $enviado['instrucciones']);
     }
 

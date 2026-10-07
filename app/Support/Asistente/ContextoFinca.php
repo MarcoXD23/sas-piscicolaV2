@@ -58,7 +58,17 @@ class ContextoFinca
             'meses' => $ficha['meses_cosecha'] ?? $sinDato,
             'peso' => $ficha['peso_comercial'] ?? $sinDato,
             'policultivo' => $ficha['policultivo'] ?? $sinDato,
+            'color' => $ficha['color'] ?? $sinDato,
+            'aspecto' => $ficha['aspecto'] ?? $sinDato,
+            'cultivo' => self::partesFicha($ficha['cultivo'], 'campos_cultivo', $sinDato),
+            'procesamiento' => self::partesFicha($ficha['procesamiento'], 'campos_procesamiento', $sinDato),
         ]);
+    }
+
+    /** «Preparación del estanque: …; Siembra: sin dato; …» */
+    private static function partesFicha(array $partes, string $etiquetas, string $sinDato): string
+    {
+        return collect($partes)->map(fn (?string $texto, string $campo) => __('especies.ficha.'.$etiquetas.'.'.$campo).': '.($texto ?? $sinDato))->implode('; ');
     }
 
     /**

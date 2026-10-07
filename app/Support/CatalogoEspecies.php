@@ -107,6 +107,25 @@ class CatalogoEspecies
     }
 
     /**
+     * Ficha editable de referencia (cultivo, procesamiento, color y aspecto) de una especie por defecto, marcada como
+     * orientativa. Va aparte de porDefecto() porque la agrega una migración posterior a la del catálogo.
+     *
+     * @return array{cultivo: array<string, string>, procesamiento: array<string, string>, color: ?string, aspecto: ?string, ficha_orientativa: bool}
+     */
+    public static function fichaPorDefecto(string $clave): array
+    {
+        $textos = self::textos($clave);
+
+        return [
+            'cultivo' => $textos['cultivo'] ?? [],
+            'procesamiento' => $textos['procesamiento'] ?? [],
+            'color' => $textos['color'] ?? null,
+            'aspecto' => $textos['aspecto'] ?? null,
+            'ficha_orientativa' => true,
+        ];
+    }
+
+    /**
      * Textos y foto de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
      *
      * @return array<string, mixed>

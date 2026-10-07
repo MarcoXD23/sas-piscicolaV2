@@ -23,12 +23,21 @@ class Especie extends Model
 
     public const CLIMAS = [self::CALIDO, self::FRIO];
 
+    /** Partes de la ficha de cultivo y de procesamiento (texto libre, todas opcionales). */
+    public const CAMPOS_CULTIVO = ['preparacion', 'siembra', 'alimentacion', 'calidad_agua', 'cosecha', 'densidades', 'tipo_estanque'];
+
+    public const CAMPOS_PROCESAMIENTO = ['ayuno', 'sacrificio', 'eviscerado', 'fileteado', 'frio', 'empaque'];
+
     /** Perfiles de las tablas de ración (CalculadoraRacion). */
     public const ALIMENTACIONES = ['calido', 'frio', 'detritivoro'];
 
     protected $fillable = [
         'clave', 'nombre', 'nombre_cientifico', 'clima', 'temp_min', 'temp_max', 'oxigeno_min', 'ph_min', 'ph_max', 'alimentacion', 'activo',
+        'cultivo', 'procesamiento', 'color', 'aspecto', 'ficha_orientativa',
     ];
+
+    /** Valores por defecto (los mismos de la base) también en el modelo recién creado. */
+    protected $attributes = ['activo' => true, 'ficha_orientativa' => false];
 
     protected function casts(): array
     {
@@ -39,6 +48,9 @@ class Especie extends Model
             'ph_min' => 'float',
             'ph_max' => 'float',
             'activo' => 'boolean',
+            'cultivo' => 'array',
+            'procesamiento' => 'array',
+            'ficha_orientativa' => 'boolean',
         ];
     }
 
@@ -46,7 +58,7 @@ class Especie extends Model
     public static function cargarPorDefecto(int $tenantId): void
     {
         foreach (CatalogoEspecies::porDefecto() as $fila) {
-            (new self($fila))->forceFill(['tenant_id' => $tenantId, 'activo' => true])->save();
+            (new self($fila + CatalogoEspecies::fichaPorDefecto($fila['clave'])))->forceFill(['tenant_id' => $tenantId, 'activo' => true])->save();
         }
     }
 
@@ -100,6 +112,19 @@ class Especie extends Model
         return $this->referencia()['foto'] ?? null;
     }
 
+    /** @return array<string, ?string> cada campo con su texto o null si está vacío */
+    private static function partes(?array $valores, array $campos): array
+    {
+        return collect($campos)->mapWithKeys(fn (string $campo) => [$campo => filled($valores[$campo] ?? null) ? trim($valores[$campo]) : null])->all();
+    }
+
+    /** ¿La ficha de cultivo o de procesamiento tiene algún dato? */
+    public function tieneFicha(): bool
+    {
+        return collect([$this->cultivo, $this->procesamiento])->flatten()->filter(fn ($texto) => filled($texto))->isNotEmpty()
+            || filled($this->color) || filled($this->aspecto);
+    }
+
     /**
      * Ficha para la guía, el asistente y la ración: datos de la finca + textos de referencia si los tiene.
      *
@@ -119,15 +144,19 @@ class Especie extends Model
             'ph' => $this->rangoPh(),
             'alimentacion' => $this->alimentacion,
             'activo' => $this->activo,
+            // Ficha editable de la finca: cada parte vacía queda en null (se muestra como «sin dato»)
+            'cultivo' => self::partes($this->cultivo, self::CAMPOS_CULTIVO),
+            'procesamiento' => self::partes($this->procesamiento, self::CAMPOS_PROCESAMIENTO),
+            'color' => $this->color ?: null,
+            'aspecto' => $this->aspecto ?: null,
+            'orientativa' => $this->ficha_orientativa,
+            // Solo de referencia (especies por defecto): familia, foto, proteína por etapa, tiempo a cosecha y peso comercial
             'familia' => $referencia['familia'] ?? null,
             'foto' => $referencia['foto'] ?? null,
-            'densidad_tierra' => $referencia['densidad_tierra'] ?? null,
-            'densidad_tanque' => $referencia['densidad_tanque'] ?? null,
             'proteina' => $referencia['proteina'] ?? null,
             'meses_cosecha' => $referencia['meses_cosecha'] ?? null,
             'peso_comercial' => $referencia['peso_comercial'] ?? null,
             'policultivo' => $referencia['policultivo'] ?? null,
-            'manejo' => $referencia['manejo'] ?? null,
         ];
     }
 }

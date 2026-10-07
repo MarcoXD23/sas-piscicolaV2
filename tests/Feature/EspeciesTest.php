@@ -54,16 +54,20 @@ class EspeciesTest extends TestCase
         $this->actingAs($this->usuario(Rol::PROPIETARIO))->get(route('especies.show', 999999))->assertNotFound();
     }
 
-    public function test_el_celador_no_accede_a_la_guia(): void
+    public function test_todos_los_roles_de_la_finca_ven_la_guia(): void
     {
-        $this->actingAs($this->usuario(Rol::CELADOR))->get(route('especies.index'))->assertForbidden();
+        foreach ([Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR] as $rol) {
+            $usuario = $this->usuario($rol);
+            $this->actingAs($usuario)->get(route('especies.index'))->assertOk();
+            $this->actingAs($usuario)->get(route('especies.show', Especie::deClave('trucha arcoiris')))->assertOk()->assertSee(__('especies.ficha.procesamiento'));
+        }
     }
 
     public function test_las_especies_por_defecto_traen_su_ficha_de_referencia_y_su_foto_existe(): void
     {
         $this->usuario(Rol::PROPIETARIO);
-        $campos = ['nombre', 'cientifico', 'clima', 'temperatura', 'oxigeno_min', 'ph', 'alimentacion', 'densidad_tierra',
-            'densidad_tanque', 'proteina', 'meses_cosecha', 'peso_comercial', 'policultivo', 'manejo'];
+        $campos = ['nombre', 'cientifico', 'clima', 'temperatura', 'oxigeno_min', 'ph', 'alimentacion', 'color', 'aspecto',
+            'proteina', 'meses_cosecha', 'peso_comercial', 'policultivo'];
 
         $especies = Especie::query()->get();
         $this->assertCount(6, $especies);
@@ -73,6 +77,11 @@ class EspeciesTest extends TestCase
                 $this->assertNotEmpty($ficha[$campo], "Falta {$campo} en {$especie->clave}.");
             }
             $this->assertContains($ficha['clima'], Especie::CLIMAS);
+            // Cultivo y procesamiento completos y marcados como orientativos
+            $this->assertTrue($ficha['orientativa']);
+            foreach ([...array_values($ficha['cultivo']), ...array_values($ficha['procesamiento'])] as $texto) {
+                $this->assertNotEmpty($texto, "Falta una parte de la ficha en {$especie->clave}.");
+            }
             if ($ficha['foto'] !== null) {
                 $this->assertFileExists(public_path(ltrim($ficha['foto'], '/')));
             }

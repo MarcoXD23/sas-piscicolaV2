@@ -176,6 +176,7 @@ return [
         'con_siembras' => 'No se puede eliminar «:nombre» porque tiene siembras registradas. Desactívala para que no se siembre más.',
         'nombre_repetido' => 'Ya hay una especie con ese nombre en la finca.',
         'rango_invertido' => 'El mínimo no puede ser mayor que el máximo.',
+        'texto_largo' => 'Cada parte de la ficha puede tener máximo :maximo caracteres.',
     ],
     'solicitud' => [
         'elige_aprobar_rechazar' => 'Elige aprobar o rechazar.',

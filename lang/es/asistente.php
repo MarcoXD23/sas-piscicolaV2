@@ -33,7 +33,9 @@ return [
         'seguridad' => 'novedades de seguridad nocturna',
     ],
 
-    'ficha' => '- :nombre (nombre científico: :cientifico). Clima: :clima. Temperatura: :temperatura. Oxígeno mínimo: :oxigeno. pH: :ph. Tiempo a cosecha: :meses. Peso comercial: :peso. Policultivo: :policultivo',
+    'ficha' => '- :nombre (nombre científico: :cientifico). Clima: :clima. Temperatura: :temperatura. Oxígeno mínimo: :oxigeno. pH: :ph. Tiempo a cosecha: :meses. Peso comercial: :peso. Policultivo: :policultivo. Color: :color. Aspecto: :aspecto.
+  Cultivo — :cultivo.
+  Procesamiento — :procesamiento.',
     'sin_dato' => 'sin dato',
     'rango_temperatura' => ':min a :max °C',
     'rango_ph' => ':min a :max',

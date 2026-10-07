@@ -95,7 +95,19 @@ class EspecieController extends Controller
             'ph_min' => [...$rango(0, 14), 'required_with:ph_max'],
             'ph_max' => [...$rango(0, 14), 'required_with:ph_min'],
             'alimentacion' => ['nullable', 'string', Rule::in(Especie::ALIMENTACIONES)],
+            // Ficha de cultivo y de procesamiento: texto libre opcional, solo las partes conocidas
+            'cultivo' => ['nullable', 'array:'.implode(',', Especie::CAMPOS_CULTIVO)],
+            'cultivo.*' => ['nullable', 'string', 'max:2000'],
+            'procesamiento' => ['nullable', 'array:'.implode(',', Especie::CAMPOS_PROCESAMIENTO)],
+            'procesamiento.*' => ['nullable', 'string', 'max:2000'],
+            'color' => ['nullable', 'string', 'max:200'],
+            'aspecto' => ['nullable', 'string', 'max:500'],
+            'ficha_orientativa' => ['nullable', 'boolean'],
+        ], [
+            'cultivo.*.max' => __('mensajes.especie.texto_largo', ['maximo' => 2000]),
+            'procesamiento.*.max' => __('mensajes.especie.texto_largo', ['maximo' => 2000]),
         ]);
+        $datos['ficha_orientativa'] = $request->boolean('ficha_orientativa');
 
         foreach ([['temp_min', 'temp_max'], ['ph_min', 'ph_max']] as [$minimo, $maximo]) {
             if (isset($datos[$minimo], $datos[$maximo]) && (float) $datos[$minimo] > (float) $datos[$maximo]) {
