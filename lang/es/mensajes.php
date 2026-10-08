@@ -157,6 +157,7 @@ return [
         'datos_invalidos' => 'El registro guardado en el teléfono llegó incompleto. Vuelve a hacerlo.',
         'duplicado' => 'Este registro ya se había recibido.',
         'hora_futura' => 'La hora del registro está en el futuro. Revisa la fecha y la hora del teléfono.',
+        'sin_hora_telefono' => 'El envío no trae la hora del teléfono. Actualiza la app y vuelve a intentarlo.',
         'muy_viejo' => 'El registro tiene más de :horas horas sin enviarse y ya no se acepta. Avísale al administrador.',
     ],
     'siembra' => [

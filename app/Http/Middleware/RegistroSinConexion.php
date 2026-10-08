@@ -16,8 +16,11 @@ use Throwable;
  * Uso: ->middleware('sin_conexion'), antes de 'turno'. Sin las cabeceras de abajo no hace nada (envío normal).
  * Recibe un registro hecho sin conexión y enviado al volver la señal (resources/js/sin-conexion.js):
  * - X-Registro-Sin-Conexion: id único (uuid) que generó el teléfono. Si ya se recibió, no se procesa otra vez.
- * - X-Registrado-En: hora real del registro (ISO 8601). No puede ser futura ni más vieja que SIN_CONEXION_HORAS;
- *   el turno y las horas guardadas se evalúan a esa hora (MomentoRegistro).
+ * - X-Registrado-En: hora del registro según el reloj del teléfono (ISO 8601).
+ * - X-Hora-Telefono: hora del teléfono en el momento del envío. Obligatoria: con ella se corrige un reloj mal puesto.
+ *   Desfase = hora del servidor − hora del teléfono; hora real = X-Registrado-En + desfase. La hora real no puede ser
+ *   futura ni más vieja que SIN_CONEXION_HORAS; el turno, la bitácora y las horas guardadas se evalúan a esa hora
+ *   (MomentoRegistro). Un desfase de más de 5 minutos queda anotado en la bitácora.
  * Las reglas de siempre (stock, peces vivos, finca, rol) se aplican al llegar. La respuesta es JSON:
  * 201 guardado, 200 duplicado, 403/422 rechazado con su motivo.
  */
@@ -26,6 +29,11 @@ class RegistroSinConexion
     public const CABECERA_ID = 'X-Registro-Sin-Conexion';
 
     public const CABECERA_MOMENTO = 'X-Registrado-En';
+
+    public const CABECERA_HORA_TELEFONO = 'X-Hora-Telefono';
+
+    /** Desde este desfase (en minutos) la corrección del reloj se anota en la bitácora. */
+    public const MINUTOS_PARA_ANOTAR = 5;
 
     public function __construct(private MomentoRegistro $momentoRegistro) {}
 
@@ -39,12 +47,14 @@ class RegistroSinConexion
         // El teléfono siempre recibe JSON (nunca una redirección que parezca éxito)
         $request->headers->set('Accept', 'application/json');
 
-        $momento = $this->momentoValido($id, $request->header(self::CABECERA_MOMENTO));
+        $momento = $this->momentoValido($id, $request->header(self::CABECERA_MOMENTO), $request->header(self::CABECERA_HORA_TELEFONO));
         if ($momento instanceof Response) {
             return $momento;
         }
+        [$momento, $desfaseSegundos] = $momento;
 
-        $this->momentoRegistro->fijar($momento);
+        $minutosCorregidos = intdiv(abs($desfaseSegundos), 60);
+        $this->momentoRegistro->fijar($momento, $minutosCorregidos > self::MINUTOS_PARA_ANOTAR ? $minutosCorregidos : null);
 
         try {
             return $this->procesar($request, $next, $id, $momento);
@@ -86,7 +96,8 @@ class RegistroSinConexion
         });
     }
 
-    private function momentoValido(string $id, ?string $hora): CarbonImmutable|Response
+    /** @return array{0: CarbonImmutable, 1: int}|Response  Hora real corregida y desfase del reloj en segundos */
+    private function momentoValido(string $id, ?string $hora, ?string $horaTelefono): array|Response
     {
         $validador = Validator::make(['id' => $id, 'hora' => $hora], [
             'id' => ['required', 'uuid'],
@@ -97,8 +108,15 @@ class RegistroSinConexion
             return $this->rechazo(__('mensajes.sin_conexion.datos_invalidos'));
         }
 
+        // Sin la hora del teléfono no se puede corregir su reloj: no se acepta
+        if (Validator::make(['hora' => $horaTelefono], ['hora' => ['required', 'date']])->fails()) {
+            return $this->rechazo(__('mensajes.sin_conexion.sin_hora_telefono'));
+        }
+
         try {
-            $momento = CarbonImmutable::parse($hora)->utc();
+            $ahora = CarbonImmutable::now();
+            $desfase = (int) round($ahora->getTimestamp() - CarbonImmutable::parse($horaTelefono)->getTimestamp());
+            $momento = CarbonImmutable::parse($hora)->utc()->addSeconds($desfase);
         } catch (Throwable) {
             return $this->rechazo(__('mensajes.sin_conexion.datos_invalidos'));
         }
@@ -111,7 +129,7 @@ class RegistroSinConexion
             return $this->rechazo(__('mensajes.sin_conexion.muy_viejo', ['horas' => config('sin_conexion.horas')]));
         }
 
-        return $momento;
+        return [$momento, $desfase];
     }
 
     private function rechazo(string $mensaje): Response

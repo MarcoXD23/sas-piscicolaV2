@@ -66,15 +66,20 @@ class SinConexionTest extends TestCase
             'inicia_at' => Carbon::parse($inicio, 'America/Bogota'), 'termina_at' => Carbon::parse($fin, 'America/Bogota')]);
     }
 
-    /** Envío como lo hace el teléfono al volver la señal: hora local de Bogotá con su desfase, en ISO 8601. */
-    private function enviar(User $usuario, string $url, array $datos, string $horaLocal, ?string $id = null): TestResponse
+    /**
+     * Envío como lo hace el teléfono al volver la señal: hora local de Bogotá con su desfase, en ISO 8601.
+     * $horaLocal es la hora real del registro; $relojTelefono, cuántos minutos va adelantado (+) o atrasado (−) el
+     * reloj del teléfono: así lo verían la hora del registro y la hora del envío que manda el teléfono.
+     */
+    private function enviar(User $usuario, string $url, array $datos, string $horaLocal, ?string $id = null, int $relojTelefono = 0): TestResponse
     {
         // Cada envío lleva solo sus cabeceras (withHeaders las acumula entre peticiones)
         $this->flushHeaders();
 
         return $this->actingAs($usuario)->withHeaders([
             Middleware::CABECERA_ID => $id ?? (string) Str::uuid(),
-            Middleware::CABECERA_MOMENTO => Carbon::parse($horaLocal, 'America/Bogota')->toIso8601String(),
+            Middleware::CABECERA_MOMENTO => Carbon::parse($horaLocal, 'America/Bogota')->addMinutes($relojTelefono)->toIso8601String(),
+            Middleware::CABECERA_HORA_TELEFONO => now()->addMinutes($relojTelefono)->toIso8601String(),
         ])->post($url, $datos);
     }
 
@@ -202,5 +207,99 @@ class SinConexionTest extends TestCase
         app(TenantActual::class)->establecer($this->finca->id);
         $this->assertSame(1, Ronda::count());   // cada finca solo ve la suya
         $this->assertSame(2, TenantActual::sinFiltro(fn () => RegistroSinConexion::count()));
+    }
+
+    public function test_reloj_atrasado_y_adelantado_se_corrigen_a_la_hora_real(): void
+    {
+        // Atrasado 90 minutos: el teléfono dice 01:30, en realidad fue a las 03:00
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 03:00', relojTelefono: -90)->assertCreated();
+        // Adelantado 45 minutos: el teléfono dice 04:45, en realidad fue a las 04:00
+        $this->enviar($this->celador, route('noche.mediciones.store', $this->lago), ['temperatura_c' => 26.5], '2026-10-08 04:00', relojTelefono: 45)->assertCreated();
+
+        $this->assertSame('2026-10-08 03:00', Ronda::sole()->registrada_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-08 04:00', MedicionAgua::sole()->medido_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-08 03:00', Bitacora::sole()->momentoLocal()->format('Y-m-d H:i'));
+        $this->assertStringContainsString(__('bitacora.reloj_corregido', ['minutos' => 90]), Bitacora::sole()->textoDetalle());
+    }
+
+    public function test_el_limite_de_48_horas_se_mide_con_la_hora_corregida(): void
+    {
+        // En realidad fue hace 49,5 horas; el reloj adelantado 3 horas lo haría parecer de hace 46,5
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-06 06:00', relojTelefono: 180)
+            ->assertUnprocessable()->assertJsonPath('errors.registro.0', __('mensajes.sin_conexion.muy_viejo', ['horas' => 48]));
+
+        $this->assertSame(0, Ronda::count());
+    }
+
+    public function test_registro_legitimo_con_el_reloj_mal_puesto_se_acepta_y_el_propietario_lo_ve_anotado(): void
+    {
+        // Ronda real a las 05:00, en turno. El teléfono va 2 horas adelantado y dice 07:00 (fuera de turno):
+        // sin la corrección se rechazaría
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 05:00', relojTelefono: 120)
+            ->assertCreated();
+
+        $this->assertSame('2026-10-08 05:00', Ronda::sole()->registrada_at->format('Y-m-d H:i'));
+        $this->assertSame(120, Bitacora::sole()->detalle['reloj_corregido_min']);
+
+        $propietario = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::PROPIETARIO]);
+        $this->actingAs($propietario)->get(route('admin.bitacora.index'))->assertOk()
+            ->assertSee(__('bitacora.reloj_corregido', ['minutos' => 120]));
+    }
+
+    public function test_un_desfase_de_pocos_minutos_se_corrige_sin_anotarse(): void
+    {
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 03:00', relojTelefono: -4)->assertCreated();
+
+        $this->assertSame('2026-10-08 03:00', Ronda::sole()->registrada_at->format('Y-m-d H:i'));
+        $this->assertArrayNotHasKey('reloj_corregido_min', Bitacora::sole()->detalle);
+    }
+
+    public function test_el_reloj_atrasado_a_proposito_para_entrar_en_turno_no_entra(): void
+    {
+        // A las 07:00 el turno ya había terminado. El celador atrasa el reloj 2 horas: el teléfono dice 05:00, en turno
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 07:00', relojTelefono: -120)
+            ->assertForbidden()->assertJson(['message' => __('mensajes.verificar_turno.estas_fuera_tu_turno_solo')]);
+
+        $this->assertSame(0, Ronda::count());
+        $this->assertSame(0, Bitacora::count());
+        $this->assertSame(0, RegistroSinConexion::count());
+    }
+
+    public function test_el_envio_sin_la_hora_del_telefono_se_rechaza(): void
+    {
+        foreach ([null, 'no-es-una-hora'] as $horaTelefono) {
+            $this->flushHeaders();
+            $this->actingAs($this->celador)->withHeaders(array_filter([
+                Middleware::CABECERA_ID => (string) Str::uuid(),
+                Middleware::CABECERA_MOMENTO => Carbon::parse('2026-10-08 03:00', 'America/Bogota')->toIso8601String(),
+                Middleware::CABECERA_HORA_TELEFONO => $horaTelefono,
+            ]))->post(route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD])
+                ->assertUnprocessable()->assertJsonPath('errors.registro.0', __('mensajes.sin_conexion.sin_hora_telefono'));
+        }
+
+        $this->assertSame(0, Ronda::count());
+        $this->assertSame(0, RegistroSinConexion::count());
+    }
+
+    public function test_la_correccion_de_una_finca_no_pasa_a_otra(): void
+    {
+        $this->enviar($this->celador, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 03:00', relojTelefono: 120)->assertCreated();
+
+        $otra = Tenant::create(['nombre' => 'Otra', 'codigo' => 'F02', 'zona_horaria' => 'America/Bogota']);
+        app(TenantActual::class)->establecer($otra->id);
+        $celadorOtra = tap(User::factory()->create(['tenant_id' => $otra->id]))->asignarRoles([Rol::CELADOR]);
+        $propietarioOtra = tap(User::factory()->create(['tenant_id' => $otra->id]))->asignarRoles([Rol::PROPIETARIO]);
+        $this->turno($celadorOtra, Rol::CELADOR, '2026-10-07 22:00', '2026-10-08 06:00');
+
+        // En la otra finca el reloj está bien: no hereda la corrección de la petición anterior
+        $this->enviar($celadorOtra, route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD], '2026-10-08 03:00')->assertCreated();
+        $this->assertArrayNotHasKey('reloj_corregido_min', Bitacora::sole()->detalle);
+
+        // Su propietario no ve la anotación de la primera finca
+        $this->actingAs($propietarioOtra)->get(route('admin.bitacora.index'))->assertOk()
+            ->assertDontSee(__('bitacora.reloj_corregido', ['minutos' => 120]));
+
+        app(TenantActual::class)->establecer($this->finca->id);
+        $this->assertSame(120, Bitacora::sole()->detalle['reloj_corregido_min']);
     }
 }

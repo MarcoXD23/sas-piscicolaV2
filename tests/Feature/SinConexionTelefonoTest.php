@@ -128,6 +128,7 @@ class SinConexionTelefonoTest extends TestCase
             'X-Requested-With' => 'XMLHttpRequest',
             Middleware::CABECERA_ID => $uuid,
             Middleware::CABECERA_MOMENTO => $hora,
+            Middleware::CABECERA_HORA_TELEFONO => now()->utc()->format('Y-m-d\TH:i:s.v\Z'),
         ])->post(route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD, 'lago_id' => '', 'descripcion' => ''])
             ->assertCreated()->assertJson(['estado' => 'guardado']);
 
@@ -140,6 +141,7 @@ class SinConexionTelefonoTest extends TestCase
             'Accept' => 'application/json',
             Middleware::CABECERA_ID => (string) Str::uuid(),
             Middleware::CABECERA_MOMENTO => now()->toIso8601String(),
+            Middleware::CABECERA_HORA_TELEFONO => now()->toIso8601String(),
         ])->post(route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD])->assertUnauthorized();
     }
 
@@ -152,6 +154,7 @@ class SinConexionTelefonoTest extends TestCase
         $this->assertStringContainsString("getElementById('salir-con-pendientes')", $app);
         $this->assertStringContainsString("'X-Registro-Sin-Conexion': registro.uuid", $cola);
         $this->assertStringContainsString("'X-Registrado-En': registro.registradoEn", $cola);
+        $this->assertStringContainsString("'X-Hora-Telefono': new Date().toISOString()", $cola);
         $this->assertStringContainsString("index('clave').getAll(clave)", $cola);
         $this->assertStringContainsString("const VERSION = 'v6'", file_get_contents(public_path('sw.js')));
     }

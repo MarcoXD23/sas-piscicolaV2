@@ -3,7 +3,8 @@
  * - Solo los formularios con data-guardar-sin-conexion (su valor es el resumen que se muestra en la lista).
  * - Se guardan en el IndexedDB del teléfono, separados por finca y persona (data-cola-clave del <body>).
  * - Se envían en orden al volver la señal, al abrir cualquier pantalla y con «Enviar ahora», con las cabeceras
- *   X-Registro-Sin-Conexion (uuid) y X-Registrado-En (hora real). El servidor aplica sus reglas al llegar
+ *   X-Registro-Sin-Conexion (uuid), X-Registrado-En (hora del registro) y X-Hora-Telefono (hora del envío, con la que
+ *   el servidor corrige un reloj mal puesto). El servidor aplica sus reglas al llegar
  *   (app/Http/Middleware/RegistroSinConexion.php).
  * - Lo que el servidor rechaza queda en «Rechazados» con su motivo y sus datos, hasta que la persona lo descarta.
  */
@@ -196,6 +197,7 @@ export const iniciarCola = (t) => {
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-Registro-Sin-Conexion': registro.uuid,
                             'X-Registrado-En': registro.registradoEn,
+                            'X-Hora-Telefono': new Date().toISOString(),
                         },
                     });
                     estado = respuesta.status;

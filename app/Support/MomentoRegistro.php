@@ -14,14 +14,24 @@ class MomentoRegistro
 {
     private ?CarbonImmutable $momento = null;
 
-    public function fijar(CarbonImmutable $momento): void
+    /** Minutos que se corrigió el reloj del teléfono, si pasan del margen (se anotan en la bitácora). */
+    private ?int $minutosCorregidos = null;
+
+    public function fijar(CarbonImmutable $momento, ?int $minutosCorregidos = null): void
     {
         $this->momento = $momento->utc();
+        $this->minutosCorregidos = $minutosCorregidos;
     }
 
     public function olvidar(): void
     {
         $this->momento = null;
+        $this->minutosCorregidos = null;
+    }
+
+    public function minutosCorregidos(): ?int
+    {
+        return $this->minutosCorregidos;
     }
 
     public function ahora(): CarbonImmutable

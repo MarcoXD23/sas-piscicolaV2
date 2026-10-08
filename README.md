@@ -194,6 +194,8 @@ La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guar
 - **Se guardan en el teléfono:** ración, mortalidad, aviso «listo para pescar», ronda y medición del agua. Se guardan en IndexedDB, separados por finca y persona (`resources/js/sin-conexion.js`).
   Se envían solos, en orden y con su hora real, al volver la señal o al abrir cualquier pantalla.
   El servidor los revisa al llegar con las reglas de siempre: turno a esa hora, bodega y peces vivos. No acepta los de más de `SIN_CONEXION_HORAS` horas.
+  **Reloj del teléfono:** cada envío trae también la hora del teléfono en ese instante (`X-Hora-Telefono`; sin ella se rechaza). El servidor calcula el desfase (su hora menos la del teléfono) y lo suma a la hora del registro antes de revisar el turno, el límite de horas y la bitácora. Si el desfase pasa de 5 minutos, la bitácora anota «hora del teléfono corregida en X minutos» y el propietario lo ve.
+  Límite conocido: quien atrase el reloj para caer en el turno y lo vuelva a poner bien antes de enviar no queda corregido (ver «Pendiente»).
   Un botón con el número de registros sin enviar abre la lista de pendientes y rechazados; cada rechazado muestra su motivo y sus datos.
   Al cerrar sesión con registros sin enviar, la app avisa: si sales, se borran del teléfono.
 - **Los demás formularios no se envían:** lo escrito queda en el formulario. Por ejemplo el aireador, que depende de su estado en ese momento. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
@@ -313,6 +315,8 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 
 ## Pendiente
 
+- Registrar la medición del agua en la bitácora. Hoy su hora se corrige igual que las demás, pero la anotación del reloj corregido no queda en ningún lado.
+- Guardar en el teléfono la última hora que dio el servidor y adjuntarla a cada registro sin conexión. Así el servidor rechazaría los que dicen haber ocurrido antes de ese momento: cerraría el truco de atrasar el reloj y volverlo a poner bien antes de enviar.
 - Foto real de la mojarra roja (`public/images/especies/mojarra-roja.webp`, menos de 200 KB).
 - Superadmin y planes de suscripción para varias fincas.
 

@@ -62,6 +62,10 @@ class Bitacora extends Model
         $momento = app(MomentoRegistro::class);
         if ($momento->sinConexion()) {
             $detalle += ['sin_conexion' => true, 'recibido_at' => now()->utc()->toIso8601String()];
+            // El reloj del teléfono estaba mal puesto: la hora ya viene corregida y se deja constancia
+            if ($momento->minutosCorregidos() !== null) {
+                $detalle += ['reloj_corregido_min' => $momento->minutosCorregidos()];
+            }
         }
 
         return self::create([
@@ -114,6 +118,10 @@ class Bitacora extends Model
         if (! empty($this->detalle['sin_conexion']) && isset($this->detalle['recibido_at'])) {
             $llegada = CarbonImmutable::parse($this->detalle['recibido_at'])->setTimezone($this->zona_horaria)->format('d/m/Y H:i');
             $texto .= ' · '.__('bitacora.sin_conexion', ['llegada' => $llegada]);
+        }
+
+        if (isset($this->detalle['reloj_corregido_min'])) {
+            $texto .= ' · '.__('bitacora.reloj_corregido', ['minutos' => Formato::numero((int) $this->detalle['reloj_corregido_min'])]);
         }
 
         return $texto;
