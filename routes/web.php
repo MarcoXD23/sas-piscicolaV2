@@ -27,10 +27,12 @@ use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\AsistenteController;
+use App\Http\Controllers\Auth\DosPasosController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarContrasenaController;
 use App\Http\Controllers\Auth\RegistroController;
 use App\Http\Controllers\EspecieController;
+use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\FotoEspecieController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\MiTrabajoController;
@@ -52,11 +54,25 @@ Route::middleware('guest')->group(function () {
     Route::post('/olvide-contrasena', [RecuperarContrasenaController::class, 'store'])->middleware('throttle:pedir-enlace-contrasena')->name('password.email');
     Route::get('/restablecer-contrasena/{token}', [RecuperarContrasenaController::class, 'edit'])->name('password.reset');
     Route::post('/restablecer-contrasena', [RecuperarContrasenaController::class, 'update'])->middleware('throttle:restablecer-contrasena')->name('password.update');
+
+    // Segundo paso del ingreso: la contraseña ya se revisó; falta el código de la app o uno de recuperación
+    Route::get('/ingreso/dos-pasos', [DosPasosController::class, 'create'])->name('dos-pasos.create');
+    Route::post('/ingreso/dos-pasos', [DosPasosController::class, 'store'])->middleware('throttle:dos-pasos')->name('dos-pasos.store');
 });
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/', InicioController::class)->name('inicio');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // Mi cuenta: todos los roles de la finca, siempre sobre la persona con sesión
+    Route::prefix('mi-cuenta')->name('mi-cuenta.')->group(function () {
+        Route::get('/', [MiCuentaController::class, 'index'])->name('index');
+        Route::put('/contrasena', [MiCuentaController::class, 'cambiarContrasena'])->middleware('throttle:cambiar-contrasena')->name('contrasena');
+        Route::get('/dos-pasos/activar', [MiCuentaController::class, 'activar'])->name('dos-pasos.activar');
+        Route::post('/dos-pasos/activar', [MiCuentaController::class, 'confirmar'])->middleware('throttle:cambiar-contrasena')->name('dos-pasos.confirmar');
+        Route::get('/dos-pasos/codigos', [MiCuentaController::class, 'codigos'])->name('dos-pasos.codigos');
+        Route::delete('/dos-pasos', [MiCuentaController::class, 'desactivar'])->middleware('throttle:cambiar-contrasena')->name('dos-pasos.desactivar');
+    });
 
     // Exclusivo del propietario: personal, turnos, nómina, solicitudes, ajustes, agenda, bitácora y despachos de bodega
     Route::middleware('rol:propietario')->prefix('admin')->name('admin.')->group(function () {
@@ -65,6 +81,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             ->whereNumber('usuario')
             ->name('personal.update');
         Route::put('/personal/mi-rol-administrador', [PersonalController::class, 'miRolAdministrador'])->name('personal.mi-rol-administrador');
+        Route::post('/personal/{usuario}/quitar-dos-pasos', [PersonalController::class, 'quitarDosPasos'])->whereNumber('usuario')->name('personal.quitar-dos-pasos');
 
         Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
         Route::post('/turnos', [TurnoController::class, 'store'])->name('turnos.store');

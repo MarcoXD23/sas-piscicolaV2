@@ -19,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'dos_pasos_clave', 'dos_pasos_recuperacion', 'dos_pasos_ultimo_paso'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -44,7 +44,18 @@ class User extends Authenticatable
             'valor_hora' => 'integer',
             'valor_hora_extra' => 'integer',
             'password' => 'hashed',
+            // Verificación en dos pasos: clave cifrada con APP_KEY; códigos de recuperación solo como hashes
+            'dos_pasos_clave' => 'encrypted',
+            'dos_pasos_activado_at' => InstanteLocal::class,
+            'dos_pasos_ultimo_paso' => 'integer',
+            'dos_pasos_recuperacion' => 'array',
         ];
+    }
+
+    /** ¿Tiene activa la verificación en dos pasos? */
+    public function tieneDosPasos(): bool
+    {
+        return $this->dos_pasos_activado_at !== null && filled($this->dos_pasos_clave);
     }
 
     public function roles(): BelongsToMany

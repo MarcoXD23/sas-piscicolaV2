@@ -7,6 +7,7 @@ use App\Http\Requests\AsignarRolesRequest;
 use App\Models\Bitacora;
 use App\Models\Rol;
 use App\Models\User;
+use App\Support\DosPasos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class PersonalController extends Controller
             'soyAdministrador' => $request->user()->tieneRol(Rol::ADMINISTRADOR),
             // Historial de aprobaciones y cambios de roles de cada persona (de la bitácora, solo inserción)
             'historial' => Bitacora::query()->with('usuario')
-                ->whereIn('accion', ['aprobacion', 'roles'])
+                ->whereIn('accion', ['aprobacion', 'roles', 'dos_pasos'])
                 ->whereIn('persona_id', $personal->pluck('id')->push($request->user()->id))
                 ->latest('ocurrido_at')->latest('id')
                 ->get()
@@ -62,6 +63,26 @@ class PersonalController extends Controller
 
         return redirect()->route('admin.personal.index')
             ->with('estado', __('mensajes.personal.roles_guardados', ['nombre' => $persona->name]));
+    }
+
+    /**
+     * Quien perdió su teléfono y sus códigos de recuperación: el propietario le quita la verificación en dos pasos
+     * (después la vuelve a activar en Mi cuenta). Queda en la bitácora. Para el propio propietario hay un comando.
+     */
+    public function quitarDosPasos(Request $request, int $usuario): RedirectResponse
+    {
+        /** @var User $persona */
+        $persona = $this->personalQuery()->findOrFail($usuario);
+        abort_if($persona->is($request->user()), 403);
+
+        if ($persona->tieneDosPasos()) {
+            DB::transaction(function () use ($persona, $request): void {
+                DosPasos::desactivar($persona);
+                Bitacora::registrar($request->user(), 'dos_pasos', null, [Rol::PROPIETARIO], ['persona' => $persona->name], $persona);
+            });
+        }
+
+        return redirect()->route('admin.personal.index')->with('estado', __('cuenta.dos_pasos.quitada_a', ['nombre' => $persona->name]));
     }
 
     /**

@@ -140,5 +140,10 @@ class AppServiceProvider extends ServiceProvider
         // Recuperar contraseña: 5 intentos por minuto por IP, con un contador aparte para pedir enlaces y para restablecer
         RateLimiter::for('pedir-enlace-contrasena', fn (Request $request) => Limit::perMinute(5)->by('enlace|'.$request->ip()));
         RateLimiter::for('restablecer-contrasena', fn (Request $request) => Limit::perMinute(5)->by('restablecer|'.$request->ip()));
+
+        // Segundo paso (web y API): 20 por minuto por IP; además, 5 por minuto por persona (DosPasosController y API)
+        RateLimiter::for('dos-pasos', fn (Request $request) => Limit::perMinute(20)->by('dos-pasos-ip|'.$request->ip()));
+        // Cambiar la contraseña desde Mi cuenta: 5 por minuto por persona (la contraseña actual no se adivina)
+        RateLimiter::for('cambiar-contrasena', fn (Request $request) => Limit::perMinute(5)->by('cambiar-contrasena|'.$request->user()?->id));
     }
 }

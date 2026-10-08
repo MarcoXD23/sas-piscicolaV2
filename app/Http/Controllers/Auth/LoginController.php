@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,30 +22,42 @@ class LoginController extends Controller
     {
         $credenciales = $request->only('email', 'password');
 
-        // Guard «web» explícito: el panel de plataforma usa otro guard
+        // Guard «web» explícito: el panel de plataforma usa otro guard. La persona se busca con ProveedorUsuarios.
         $guard = Auth::guard('web');
 
-        if (! $guard->attempt($credenciales, $request->boolean('recordarme'))) {
+        if (! $guard->validate($credenciales)) {
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.correo_contrasena_no_son_correctos'),
             ]);
         }
 
-        if ($guard->user()->tenant()->first()?->estaSuspendida()) {
-            $guard->logout();
+        /** @var User $usuario */
+        $usuario = $guard->getProvider()->retrieveByCredentials(['email' => $credenciales['email']]);
 
+        if ($usuario->tenant()->first()?->estaSuspendida()) {
             throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
         }
 
-        if (! $guard->user()->estaAprobado()) {
-            $guard->logout();
-
+        if (! $usuario->estaAprobado()) {
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.tu_cuenta_aun_no_ha'),
             ]);
         }
 
         $request->session()->regenerate();
+
+        // Con verificación en dos pasos todavía no entra: queda pendiente del código (DosPasosController)
+        if ($usuario->tieneDosPasos()) {
+            $request->session()->put(DosPasosController::SESION, [
+                'usuario' => $usuario->id,
+                'recordar' => $request->boolean('recordarme'),
+                'vence' => now()->addMinutes(DosPasosController::MINUTOS)->getTimestamp(),
+            ]);
+
+            return redirect()->route('dos-pasos.create');
+        }
+
+        $guard->login($usuario, $request->boolean('recordarme'));
 
         return redirect()->intended(route('inicio'));
     }

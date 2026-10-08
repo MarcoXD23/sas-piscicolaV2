@@ -3,6 +3,14 @@
 @section('titulo', __('inicio.inicio'))
 
 @section('contenido')
+    {{-- Propietario y administrador manejan datos sensibles: se les pide activar la verificación en dos pasos --}}
+    @if (auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR) && ! auth()->user()->tieneDosPasos())
+        <p class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 p-4 text-base text-amber-900 ring-1 ring-amber-200" role="status">
+            <span>{{ __('cuenta.dos_pasos.aviso_panel') }}</span>
+            <a href="{{ route('mi-cuenta.dos-pasos.activar') }}" class="font-semibold underline">{{ __('cuenta.dos_pasos.aviso_enlace') }}</a>
+        </p>
+    @endif
+
     <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-md">
         <img src="/images/estanque.webp" alt="" aria-hidden="true" decoding="async"
              class="absolute inset-0 h-full w-full object-cover opacity-35">

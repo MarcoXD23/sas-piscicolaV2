@@ -101,13 +101,20 @@
                     </span>
                 </a>
 
-                <form method="POST" action="{{ route('logout') }}" class="shrink-0">
-                    @csrf
-                    <button type="submit" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600">
-                        <x-icono nombre="salir" class="h-5 w-5" />
-                        <span>{{ __('layout.salir') }}</span>
-                    </button>
-                </form>
+                <div class="flex shrink-0 items-center gap-1">
+                    {{-- Mi cuenta: contraseña y verificación en dos pasos (todos los roles) --}}
+                    <a href="{{ route('mi-cuenta.index') }}" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600" aria-label="{{ __('cuenta.enlace') }}">
+                        <x-icono nombre="personal" class="h-5 w-5" />
+                        <span class="hidden sm:inline">{{ __('cuenta.enlace') }}</span>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="shrink-0">
+                        @csrf
+                        <button type="submit" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600">
+                            <x-icono nombre="salir" class="h-5 w-5" />
+                            <span>{{ __('layout.salir') }}</span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {{-- Escritorio: segunda fila con todas las secciones (en celular va el menú inferior) --}}

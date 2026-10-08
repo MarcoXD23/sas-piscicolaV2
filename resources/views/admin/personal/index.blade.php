@@ -42,6 +42,15 @@
                     @else
                         <span class="inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">{{ __('personal.pendiente') }}</span>
                     @endif
+                    @if ($persona->tieneDosPasos())
+                        {{-- Si perdió su teléfono y sus códigos de recuperación, el propietario le quita los dos pasos --}}
+                        <span class="mt-2 inline-block rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-800">{{ __('cuenta.dos_pasos.activa_corto') }}</span>
+                        <form method="POST" action="{{ route('admin.personal.quitar-dos-pasos', $persona->id) }}" class="mt-2"
+                              onsubmit="return confirm(@js(__('cuenta.dos_pasos.confirmar_quitar', ['nombre' => $persona->name])))">
+                            @csrf
+                            <button class="text-sm font-semibold text-red-700 underline">{{ __('cuenta.dos_pasos.quitar') }}</button>
+                        </form>
+                    @endif
                 </td>
                 <td data-label="{{ __('personal.roles') }}">
                     @if ($persona->estaAprobado())

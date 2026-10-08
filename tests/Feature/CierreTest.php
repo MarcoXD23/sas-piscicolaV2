@@ -15,7 +15,7 @@ class CierreTest extends TestCase
     use RefreshDatabase;
 
     /** Rutas que no exigen sesión, a propósito. */
-    private const PUBLICAS = ['login', 'registro', 'olvide-contrasena', 'restablecer-contrasena', 'restablecer-contrasena/{token}', 'api/login', 'sanctum/csrf-cookie', 'up', 'plataforma/login'];
+    private const PUBLICAS = ['login', 'registro', 'olvide-contrasena', 'restablecer-contrasena', 'restablecer-contrasena/{token}', 'ingreso/dos-pasos', 'api/login', 'sanctum/csrf-cookie', 'up', 'plataforma/login'];
 
     /** @return list<Route> Rutas privadas de las fincas (el panel de plataforma se revisa aparte) */
     private function rutas(): array

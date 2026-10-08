@@ -23,6 +23,12 @@ return [
         'pais_invalido' => 'El país no es un código válido de 2 letras.',
         'zona_invalida' => 'La zona horaria no es válida.',
     ],
+    'quitar_dos_pasos' => [
+        'descripcion' => 'Quita la verificación en dos pasos de una persona que perdió su teléfono y sus códigos de recuperación',
+        'no_existe' => 'No hay ninguna persona con el correo :correo.',
+        'no_tenia' => ':correo no tenía la verificación en dos pasos activa.',
+        'listo' => 'Se quitó la verificación en dos pasos de :correo. Puede volver a activarla en Mi cuenta.',
+    ],
     'evaluar_alertas' => [
         'descripcion' => 'Revisa las alertas de todas las fincas activas (se programa cada hora)',
         'listo' => 'Alertas revisadas en :fincas finca(s).',

@@ -217,6 +217,15 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Tokens de la API** que vencen (`SANCTUM_TOKEN_MINUTOS`, 30 días por defecto) y **topes diarios del asistente** (`ASISTENTE_LIMITE_DIARIO_PERSONA` y `ASISTENTE_LIMITE_DIARIO_FINCA`).
 - Pruebas generales de aislamiento: todos los modelos de finca y todas las rutas con ids (`AislamientoFincasTest`).
 
+## Mi cuenta y verificación en dos pasos
+
+- **Mi cuenta** (`/mi-cuenta`, todos los roles): cambiar la contraseña pidiendo la actual (mínimo 8, distinta del correo). Al cambiarla se cierran las demás sesiones, deja de servir «recordarme» en otros equipos y se revocan los tokens de la API.
+- **Verificación en dos pasos (TOTP)** opcional, sin servicios externos: códigos de 6 números de una app de autenticación (Google Authenticator, Microsoft Authenticator, Authy…). Se activa con un código QR (paquete `chillerlan/php-qrcode`, generado en el servidor) o escribiendo la clave a mano. La clave se guarda **cifrada** con `APP_KEY`; se entregan 10 códigos de recuperación de un solo uso, guardados solo como hashes. Un código no se acepta dos veces.
+- **Ingreso:** web, en `/ingreso/dos-pasos` después de la contraseña (vence a los 5 minutos); API, `POST /api/login` con el campo `codigo` (sin él responde 422 con `dos_pasos_requerido: true`). Límite propio: 5 intentos por minuto por persona y 20 por IP.
+- **Teléfono perdido:** el propietario quita los dos pasos a una persona de su personal desde **Personal** (queda en la bitácora); para el propietario: `php artisan piscicola:quitar-dos-pasos correo@…`.
+- El inicio de propietario y administrador avisa mientras no la tengan activa. El panel de plataforma todavía no la tiene.
+- **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
+
 ## Fotos de especies
 
 Las sube una persona; la app nunca genera ni inventa imágenes. Por cada foto se guardan **dos archivos** en el disco privado `fotos` (`storage/app/private/fotos/{finca}/{especie}/`, nombres aleatorios):

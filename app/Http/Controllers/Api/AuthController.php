@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Auth\DosPasosController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
+use App\Support\DosPasos;
 use App\Support\TenantActual;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -34,6 +38,11 @@ class AuthController extends Controller
             ]);
         }
 
+        // Con verificación en dos pasos, el token solo se entrega con un código válido (de la app o de recuperación)
+        if ($usuario->tieneDosPasos()) {
+            $this->segundoPaso($request, $usuario);
+        }
+
         $token = $usuario->createToken($request->input('dispositivo', 'api'))->plainTextToken;
 
         return response()->json([
@@ -52,6 +61,33 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['mensaje' => __('mensajes.auth.sesion_cerrada')]);
+    }
+
+    /** Exige y revisa el código del segundo paso, con su propio límite de intentos por persona. */
+    private function segundoPaso(Request $request, User $usuario): void
+    {
+        $codigo = (string) $request->input('codigo', '');
+        if (trim($codigo) === '') {
+            // La app móvil sabe así que debe pedir el código y volver a enviar el ingreso
+            throw new HttpResponseException(response()->json([
+                'message' => __('cuenta.dos_pasos.requerido'),
+                'errors' => ['codigo' => [__('cuenta.dos_pasos.requerido')]],
+                'dos_pasos_requerido' => true,
+            ], 422));
+        }
+
+        $clave = 'dos-pasos|'.$usuario->id;
+        if (RateLimiter::tooManyAttempts($clave, DosPasosController::INTENTOS)) {
+            throw ValidationException::withMessages(['codigo' => __('cuenta.dos_pasos.demasiados', ['segundos' => RateLimiter::availableIn($clave)])]);
+        }
+
+        if (! DosPasos::verificar($usuario, $codigo)) {
+            RateLimiter::hit($clave);
+
+            throw ValidationException::withMessages(['codigo' => __('cuenta.dos_pasos.codigo_invalido')]);
+        }
+
+        RateLimiter::clear($clave);
     }
 
     /**
