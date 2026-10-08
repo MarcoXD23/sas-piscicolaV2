@@ -51,8 +51,38 @@ class EspeciesTest extends TestCase
             ->assertSee('/images/especies/bagre-rayado.webp', false)
             // Crédito de la foto de referencia: nota, autor, licencia y enlace a la fuente
             ->assertSee(__('especies.foto_credito.notas.mismo_genero'))
-            ->assertSee(__('especies.foto_credito.texto', ['autor' => 'Whaldener Endo', 'licencia' => 'CC0']))
+            ->assertSee(__('especies.foto_credito.autor', ['tipo' => 'Foto', 'autor' => 'Whaldener Endo']))
+            ->assertSee('href="https://creativecommons.org/publicdomain/zero/1.0/"', false)
             ->assertSee('href="https://commons.wikimedia.org/wiki/File:Pseudoplaystoma_duo.jpg"', false);
+    }
+
+
+    public function test_el_pie_de_cada_imagen_de_referencia_dice_lo_que_es(): void
+    {
+        $administrador = $this->usuario(Rol::ADMINISTRADOR);
+        $ficha = fn (string $clave) => $this->actingAs($administrador)->get(route('especies.show', Especie::deClave($clave)))->assertOk();
+
+        // Mojarra negra: es una ilustración, no una foto
+        $ficha('mojarra negra')
+            ->assertSee(__('especies.foto_credito.autor', ['tipo' => 'Ilustración', 'autor' => 'Duane Raver, U.S. Fish and Wildlife Service']))
+            ->assertSee(__('especies.foto_credito.dominio_publico'))
+            ->assertDontSee(__('especies.foto_credito.modificada'));
+
+        // CC BY-SA y CC BY: autor, licencia con enlace a su texto, enlace a la fuente y aviso de imagen modificada
+        $ficha('mojarra roja')
+            ->assertSee(__('especies.foto_credito.autor', ['tipo' => 'Foto', 'autor' => 'Takeaway']))
+            ->assertSee('href="https://creativecommons.org/licenses/by-sa/3.0/"', false)->assertSee('CC BY-SA 3.0')
+            ->assertSee('href="https://commons.wikimedia.org/wiki/File:Pla_thapthim.jpg"', false)
+            ->assertSee(__('especies.foto_credito.modificada'));
+        $ficha('bocachico')
+            ->assertSee('Zuluaga-Gómez A., Ictiología Universidad Católica de Oriente')
+            ->assertSee('href="https://creativecommons.org/licenses/by/2.0/"', false)->assertSee('CC BY 2.0')
+            ->assertSee('href="https://commons.wikimedia.org/wiki/File:Prochilodus_magdalenae_(16197296986).jpg"', false)
+            ->assertSee(__('especies.foto_credito.modificada'));
+
+        // Notas: el bagre no es la especie exacta; la trucha es un ejemplar juvenil
+        $ficha('bagre rayado')->assertSee(__('especies.foto_credito.notas.mismo_genero'));
+        $ficha('trucha arcoiris')->assertSee(__('especies.foto_credito.notas.juvenil'));
     }
 
     public function test_cada_foto_de_referencia_existe_es_liviana_y_tiene_autor_licencia_y_fuente(): void

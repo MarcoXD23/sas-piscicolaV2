@@ -15,10 +15,10 @@
         @include('inicio._primer_uso', ['pasos' => $primerUso])
     @endif
 
-    {{-- Saludo: ilustración propia en SVG con los colores de la marca (ver docs/marca/LEEME.md); el velo de la izquierda da contraste al texto --}}
+    {{-- Saludo: foto del agua de un criadero llena de peces (dominio público, ver docs/marca/LEEME.md) con un velo oscuro para el contraste --}}
     <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-md">
-        <img src="/images/fondo-estanque.svg" alt="" aria-hidden="true" decoding="async" class="absolute inset-0 h-full w-full object-cover">
-        <div class="absolute inset-0 bg-gradient-to-r from-marca-950/70 via-marca-900/35 to-transparent" aria-hidden="true"></div>
+        <img src="/images/fondo-estanque.webp" alt="" aria-hidden="true" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-35">
+        <div class="absolute inset-0 bg-gradient-to-r from-marca-900/90 to-marca-800/40" aria-hidden="true"></div>
 
         <div class="relative px-5 py-7 sm:px-8 sm:py-10">
             <p class="text-base text-marca-100">{{ $usuario->tenant->nombre }}</p>

@@ -296,11 +296,17 @@ return [
     'foto_pendiente' => 'Sin foto todavía',
     // Crédito de las fotos de referencia (licencia libre; detalle en docs/marca/LEEME.md)
     'foto_credito' => [
-        'texto' => 'Foto: :autor · :licencia',
+        'autor' => ':tipo: :autor',
         'fuente' => 'Ver fuente',
+        'modificada' => 'imagen recortada y reducida',
         'dominio_publico' => 'Dominio público',
+        'tipos' => [
+            'foto' => 'Foto',
+            'ilustracion' => 'Ilustración',
+        ],
         'notas' => [
-            'mismo_genero' => 'Bagres del mismo género (Pseudoplatystoma), parecidos al bagre rayado',
+            'mismo_genero' => 'Otro bagre del mismo género (Pseudoplatystoma), no la especie exacta',
+            'juvenil' => 'Ejemplar juvenil',
         ],
     ],
     'guia_especies' => 'Guía de especies',

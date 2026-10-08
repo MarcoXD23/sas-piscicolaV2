@@ -34,10 +34,10 @@
     </a>
 
     @unless ($conSesion)
-        {{-- Fondo del ingreso: ilustración propia en SVG con los colores de la marca (ver docs/marca/LEEME.md) y un velo para el contraste --}}
+        {{-- Fondo del ingreso: foto de un estanque piscícola (CC0, ver docs/marca/LEEME.md) con un velo oscuro para el contraste --}}
         <div class="fixed inset-0 -z-10 bg-marca-900" aria-hidden="true">
-            <img src="/images/fondo-login.svg" alt="" class="h-full w-full object-cover" decoding="async">
-            <div class="absolute inset-0 bg-gradient-to-b from-marca-950/55 via-marca-950/35 to-marca-950/70"></div>
+            <img src="/images/fondo-login.webp" alt="" class="h-full w-full object-cover" decoding="async">
+            <div class="absolute inset-0 bg-gradient-to-b from-marca-950/80 via-marca-900/70 to-marca-950/90"></div>
         </div>
     @endunless
 

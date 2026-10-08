@@ -156,6 +156,6 @@ class SinConexionTelefonoTest extends TestCase
         $this->assertStringContainsString("'X-Registrado-En': registro.registradoEn", $cola);
         $this->assertStringContainsString("'X-Hora-Telefono': new Date().toISOString()", $cola);
         $this->assertStringContainsString("index('clave').getAll(clave)", $cola);
-        $this->assertStringContainsString("const VERSION = 'v8'", file_get_contents(public_path('sw.js')));
+        $this->assertStringContainsString("const VERSION = 'v9'", file_get_contents(public_path('sw.js')));
     }
 }

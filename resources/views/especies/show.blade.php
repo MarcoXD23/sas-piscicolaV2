@@ -22,8 +22,17 @@
                         @if (isset($credito['nota']))
                             <span class="block">{{ $credito['nota'] }}</span>
                         @endif
-                        {{ __('especies.foto_credito.texto', ['autor' => $credito['autor'], 'licencia' => $credito['licencia']]) }}
+                        {{ __('especies.foto_credito.autor', ['tipo' => $credito['tipo'], 'autor' => $credito['autor']]) }}
+                        ·
+                        @if (isset($credito['licencia_url']))
+                            <a href="{{ $credito['licencia_url'] }}" target="_blank" rel="noopener noreferrer license" class="underline underline-offset-2 hover:text-marca-200">{{ $credito['licencia'] }}</a>
+                        @else
+                            {{ $credito['licencia'] }}
+                        @endif
                         · <a href="{{ $credito['fuente'] }}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-marca-200">{{ __('especies.foto_credito.fuente') }}</a>
+                        @if ($credito['modificada'])
+                            · {{ __('especies.foto_credito.modificada') }}
+                        @endif
                     </p>
                 @endif
             @else

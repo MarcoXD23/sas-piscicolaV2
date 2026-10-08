@@ -54,33 +54,40 @@ class IdentidadVisualTest extends TestCase
 
     public function test_el_login_y_el_inicio_no_nombran_imagenes_inexistentes(): void
     {
-        // Fondos: ilustraciones SVG propias (ver docs/marca/LEEME.md)
-        $this->assertSinImagenesInexistentes($this->get(route('login'))->assertOk()->assertSee('/images/fondo-login.svg', false)->getContent());
+        // Fondos: fotos CC0 y de dominio público (ver docs/marca/LEEME.md)
+        $this->assertSinImagenesInexistentes($this->get(route('login'))->assertOk()->assertSee('/images/fondo-login.webp', false)->getContent());
 
         $finca = \App\Models\Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01']);
         app(\App\Support\TenantActual::class)->establecer($finca->id);
         $propietario = tap(\App\Models\User::factory()->create(['tenant_id' => $finca->id]))->asignarRoles([\App\Models\Rol::PROPIETARIO]);
-        $this->assertSinImagenesInexistentes($this->actingAs($propietario)->get(route('inicio'))->assertOk()->assertSee('/images/fondo-estanque.svg', false)->getContent());
+        $this->assertSinImagenesInexistentes($this->actingAs($propietario)->get(route('inicio'))->assertOk()->assertSee('/images/fondo-estanque.webp', false)->getContent());
     }
 
     public function test_el_service_worker_guarda_las_imagenes_y_estrena_version(): void
     {
         $sw = file_get_contents(public_path('sw.js'));
 
-        // v8: las copias de la v7 (sin /images/) se borran y los fondos y fotos nuevos se guardan
-        $this->assertStringContainsString("const VERSION = 'v8'", $sw);
+        // v9: se borran las copias anteriores (incluidos los fondos SVG retirados) y se guardan los fondos nuevos
+        $this->assertStringContainsString("const VERSION = 'v9'", $sw);
         $this->assertStringContainsString("const ESTATICOS = ['/build/', '/images/', '/icons/'];", $sw);
     }
 
-    public function test_los_fondos_son_svg_propios_sin_recursos_externos(): void
+    public function test_los_fondos_son_fotos_libres_livianas_y_anotadas(): void
     {
-        foreach (['fondo-login.svg', 'fondo-estanque.svg'] as $fondo) {
-            $svg = (string) file_get_contents(public_path('images/'.$fondo));
-            $this->assertStringStartsWith('<svg', $svg);
-            $this->assertStringContainsString('Ilustración propia del proyecto', $svg);
-            // Nada que cargar de afuera ni código: solo formas
-            $this->assertDoesNotMatchRegularExpression('/<(script|image|foreignObject)\b|href="(https?:)?\/\//i', $svg);
+        $leeme = (string) file_get_contents(base_path('docs/marca/LEEME.md'));
+
+        foreach (['fondo-login.webp' => 'CC0', 'fondo-estanque.webp' => 'Dominio público'] as $fondo => $licencia) {
+            $ruta = public_path('images/'.$fondo);
+            $this->assertFileExists($ruta);
+            $this->assertLessThan(200 * 1024, filesize($ruta), $fondo);
+            $this->assertSame('image/webp', getimagesize($ruta)['mime']);
+            // En el LEEME, en su fila: con licencia que no exige crédito (CC0 o dominio público) y fuente en Commons
+            $this->assertMatchesRegularExpression('/\| `'.preg_quote($fondo, '/').'` \|[^
+]*commons\.wikimedia\.org[^
+]*'.preg_quote($licencia, '/').'/u', $leeme);
         }
+        $this->assertFileDoesNotExist(public_path('images/fondo-login.svg'));
+        $this->assertFileDoesNotExist(public_path('images/fondo-estanque.svg'));
     }
 
     /** Ninguna imagen local (img, ícono o CSS url()) que no exista en public/. */

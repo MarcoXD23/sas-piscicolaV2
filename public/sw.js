@@ -1,6 +1,6 @@
 /*
  * Service worker de El SAS Piscícola.
- * - Archivos estáticos (estilos, scripts, íconos, fondos SVG y fotos de referencia de especies): primero la caché.
+ * - Archivos estáticos (estilos, scripts, íconos, fondos y fotos de referencia de especies): primero la caché.
  *   Cada versión nueva borra del teléfono las copias de la anterior (por ejemplo, las imágenes retiradas en la v7).
  * - Pantallas de consulta: primero la red; si no hay señal, la última copia guardada (solo lectura).
  *   Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas.
@@ -9,7 +9,7 @@
  * - Los formularios verifican la señal antes de enviar (resources/js/app.js). Sin señal, solo raciones, mortalidad,
  *   avisos de pesca, rondas y mediciones se guardan en el teléfono (IndexedDB) y se envían al volver (resources/js/sin-conexion.js).
  */
-const VERSION = 'v8';
+const VERSION = 'v9';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;

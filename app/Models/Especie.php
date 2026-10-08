@@ -123,7 +123,7 @@ class Especie extends Model
      * Crédito de la foto de referencia (autor, licencia, fuente y nota), solo cuando es la que se muestra: las fotos
      * que sube la finca muestran su propio autor y licencia.
      *
-     * @return array{ruta: string, autor: string, licencia: string, fuente: string, nota?: string}|null
+     * @return array{ruta: string, autor: string, licencia: string, licencia_url?: string, fuente: string, tipo?: string, nota?: string, modificada?: bool}|null
      */
     public function creditoFoto(): ?array
     {
@@ -132,8 +132,10 @@ class Especie extends Model
             return null;
         }
 
-        // «dominio_publico» y las notas se traducen; las licencias CC se muestran con su nombre corto
+        // «dominio_publico», el tipo y las notas se traducen; las licencias CC se muestran con su nombre corto
         $foto['licencia'] = $foto['licencia'] === 'dominio_publico' ? __('especies.foto_credito.dominio_publico') : $foto['licencia'];
+        $foto['tipo'] = __('especies.foto_credito.tipos.'.($foto['tipo'] ?? 'foto'));
+        $foto['modificada'] = (bool) ($foto['modificada'] ?? false);
         if (isset($foto['nota'])) {
             $foto['nota'] = __('especies.foto_credito.notas.'.$foto['nota']);
         }
