@@ -22,6 +22,10 @@
         <ini name="memory_limit" value="512M"/>
         <env name="APP_KEY" value="base64:c2FzLXBpc2NpY29sYS1jbGF2ZS1zb2xvLXBydWViYXM=" force="true"/>
         <env name="APP_ENV" value="testing" force="true"/>
+        <!-- Las pruebas no dependen del .env local: con APP_URL en https o un proxy de confianza, las peticiones
+             de prueba (desde 127.0.0.1) parecerían HTTPS. Las pruebas de proxies lo configuran ellas mismas. -->
+        <env name="APP_URL" value="http://localhost" force="true"/>
+        <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

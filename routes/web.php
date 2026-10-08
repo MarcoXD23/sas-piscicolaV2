@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AgendaController;
+use App\Http\Controllers\CampoController;
 use App\Http\Controllers\Admin\AjustesFincaController;
 use App\Http\Controllers\Admin\AlertaController;
 use App\Http\Controllers\Admin\AvisoPescaController;
@@ -47,6 +48,9 @@ use App\Http\Controllers\Plataforma\DosPasosController as PlataformaDosPasosCont
 use App\Http\Controllers\Plataforma\FincaController as PlataformaFincaController;
 use App\Http\Controllers\Plataforma\LoginController as PlataformaLoginController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -68,6 +72,12 @@ Route::middleware('guest')->group(function () {
 // Estado del sistema para el monitoreo externo: solo «ok» o «falla», sin detalles
 Route::get('/salud', SaludController::class)->middleware('throttle:salud')->name('salud');
 
+// Registro rápido (modo de campo): cascarón público y sin datos, que el teléfono guarda para registrar sin conexión.
+// Sin sesión: nunca lleva el token ni datos de nadie (CampoController)
+Route::get('/campo', [CampoController::class, 'index'])
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+    ->name('campo');
+
 // Términos de uso y política de privacidad: públicos (con o sin sesión)
 Route::get('/terminos', [LegalController::class, 'terminos'])->name('legal.terminos');
 Route::get('/privacidad', [LegalController::class, 'privacidad'])->name('legal.privacidad');
@@ -78,6 +88,12 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     Route::post('/aceptar-terminos', [LegalController::class, 'guardarAceptacion'])->name('legal.aceptar.store');
 
     Route::get('/', InicioController::class)->name('inicio');
+
+    // Modo de campo: paquete de trabajo (datos mínimos del rol) y token vigente para enviar lo registrado sin conexión
+    Route::middleware('throttle:campo')->prefix('campo')->name('campo.')->group(function () {
+        Route::get('/paquete', [CampoController::class, 'paquete'])->name('paquete');
+        Route::get('/token', [CampoController::class, 'token'])->name('token');
+    });
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     // Mi cuenta: todos los roles de la finca, siempre sobre la persona con sesión

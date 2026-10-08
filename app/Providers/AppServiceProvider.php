@@ -145,6 +145,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('dos-pasos', fn (Request $request) => Limit::perMinute(20)->by('dos-pasos-ip|'.$request->ip()));
         // /salud es pública: 60 consultas por minuto por IP (de sobra para un servicio de monitoreo)
         RateLimiter::for('salud', fn (Request $request) => Limit::perMinute(60)->by('salud|'.$request->ip()));
+        // Modo de campo: paquete y token, 30 por minuto por persona (el teléfono los pide cada 15 minutos o al enviar)
+        RateLimiter::for('campo', fn (Request $request) => Limit::perMinute(30)->by('campo|'.$request->user()?->id));
         // Cambiar la contraseña desde Mi cuenta: 5 por minuto por persona (la contraseña actual no se adivina)
         RateLimiter::for('cambiar-contrasena', fn (Request $request) => Limit::perMinute(5)->by('cambiar-contrasena|'.$request->user()?->id));
     }
