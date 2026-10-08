@@ -144,7 +144,7 @@ cd /var/www/sas-piscicola
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
 cp .env.example .env
-php artisan key:generate
+php artisan key:generate   # único artisan que corre como deploy: .env todavía es suyo
 ```
 
 ## 3. Permisos de carpetas
@@ -159,6 +159,8 @@ sudo find . -type d -not -path './node_modules/*' -exec chmod 755 {} +
 sudo setfacl -R  -m u:www-data:rwX -m u:deploy:rwX storage bootstrap/cache
 sudo setfacl -dR -m u:www-data:rwX -m u:deploy:rwX storage bootstrap/cache
 chmod 640 .env
+# Que Git no marque como modificados los archivos a los que solo les cambiaron los permisos
+git config core.fileMode false
 ```
 
 ## 4. `.env` de producción
@@ -507,7 +509,7 @@ sudo -u www-data php artisan config:clear
     --base=sas_piscicola_v2_restaurada
 
 # 3. Permisos de la app en la base restaurada (el mismo SQL del paso 5, sin el bloque "1. Roles")
-sudo -u www-data php artisan piscicola:usuario-base | sed -n '/^-- 2\./,/bitacora FROM/p' | sed 's/sas_piscicola_v2/sas_piscicola_v2_restaurada/g' > /tmp/permisos.sql
+sudo -u www-data php artisan piscicola:usuario-base | sed -n '/^-- 2\./,/borrar_bitacora_finca/p' | sed 's/sas_piscicola_v2/sas_piscicola_v2_restaurada/g' > /tmp/permisos.sql
 sudo -u postgres psql -d sas_piscicola_v2_restaurada -f /tmp/permisos.sql && rm /tmp/permisos.sql
 
 # 4. Revisar los datos (por ejemplo, contar fincas y lagos)
