@@ -17,15 +17,19 @@
         p { font-size: 1rem; line-height: 1.5; color: var(--suave); margin: 0 0 1.5rem; }
         button { min-height: 48px; padding: 0 1.5rem; border: 0; border-radius: 12px; background: var(--marca); color: #fff;
                  font-size: 1rem; font-weight: 600; cursor: pointer; }
-        button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+        button:focus-visible, a:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+        .principal { display: flex; align-items: center; justify-content: center; min-height: 56px; margin-bottom: 1rem; padding: 0 1.5rem;
+                     border-radius: 12px; background: var(--marca); color: #fff; font-size: 1.125rem; font-weight: 700; text-decoration: none; }
+        .secundario { background: #fff; color: var(--marca); box-shadow: inset 0 0 0 1px #94e9da; }
     </style>
 </head>
 <body>
     <main>
         <img src="/icons/icon-192.png" width="96" height="96" alt="">
         <h1>Sin conexión</h1>
-        <p>No hay internet en este momento. Lo que registres necesita conexión para guardarse; cuando vuelva la señal, intenta de nuevo.</p>
-        <button type="button" onclick="location.reload()">Reintentar</button>
+        <p>No hay internet en este momento. Esta pantalla no está guardada en el teléfono, pero puedes registrar raciones, mortalidad, avisos de pesca, rondas y mediciones en Registro rápido: se envían solos cuando vuelva la señal.</p>
+        <a class="principal" href="/campo">Abrir Registro rápido</a>
+        <button type="button" class="secundario" onclick="location.reload()">Reintentar</button>
     </main>
 </body>
 </html>

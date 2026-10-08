@@ -94,6 +94,8 @@ final class PaqueteTrabajo
             'sin_novedad' => Ronda::SIN_NOVEDAD,
             'medicion' => $tiene(self::MEDICION) ? self::medicion() : [],
             'turnos' => self::turnos($usuario, $secciones),
+            // Secciones que exigen turno a esta persona (el administrador registra ración y mortalidad sin turno)
+            'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! (in_array($seccion, [self::RACION, self::MORTALIDAD], true) && $usuario->tieneRol(Rol::ADMINISTRADOR))])->all(),
             'urls' => $secciones === [] ? [] : array_filter([
                 'ronda' => $tiene(self::RONDA) ? route('noche.rondas.store', absolute: false) : null,
             ]),

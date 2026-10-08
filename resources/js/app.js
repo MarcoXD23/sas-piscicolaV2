@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import pesaje from './pesaje';
+import { iniciarCampo } from './campo';
 import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
 
@@ -79,6 +80,8 @@ mostrarConexion();
 const cola = iniciarCola(t);
 // Paquete de trabajo para Registro rápido (/campo): se descarga solo en segundo plano (resources/js/paquete.js)
 const paquete = iniciarPaquete();
+// Pantalla Registro rápido (/campo): solo si la página la trae (resources/js/campo.js)
+iniciarCampo(t, cola);
 
 const hayConexion = async () => {
     if (!navigator.onLine) return false;

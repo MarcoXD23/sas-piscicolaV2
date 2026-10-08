@@ -37,6 +37,7 @@ return [
         'mi_trabajo' => 'Mi trabajo',
         'noche' => 'Noche',
         'personal' => 'Personal',
+        'registro_rapido' => 'Registro rápido',
         'reportes' => 'Reportes',
         'tareas' => 'Tareas',
         'ventas' => 'Ventas',
@@ -44,6 +45,7 @@ return [
     'principal' => 'Principal',
     'principal_movil' => 'Principal (móvil)',
     'salir' => 'Salir',
+    'abrir_registro_rapido' => 'Abrir Registro rápido',
     'saltar_contenido' => 'Saltar al contenido',
     'sin_conexion' => 'Sin conexión. Estás viendo los datos guardados del :momento. Puedes registrar raciones, mortalidad, avisos de pesca, rondas y mediciones: se guardan en el teléfono y se envían al volver la señal.',
 ];
