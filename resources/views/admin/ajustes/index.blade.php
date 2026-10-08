@@ -35,6 +35,11 @@
         </x-formulario>
     </x-tarjeta>
 
+    {{-- Exportar o eliminar los datos de la finca --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('datos.titulo')" :subtitulo="__('datos.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.datos.index')">{{ __('datos.enlace') }}</x-boton>
+    </x-tarjeta>
+
     {{-- Pesos de las vacías: los cambia el administrador; aquí solo se consultan --}}
     <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('cosechas.ajustes.titulo')" :subtitulo="__('cosechas.ajustes.subtitulo')">
         <dl class="grid grid-cols-2 gap-4 text-base">

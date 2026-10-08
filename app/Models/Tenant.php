@@ -28,6 +28,10 @@ class Tenant extends Model
             'pesos_definidos_at' => InstanteLocal::class,
             'primer_uso_oculto_at' => InstanteLocal::class,
             'primer_uso_completado_at' => InstanteLocal::class,
+            // Eliminación de la finca (App\Support\Datos\EliminadorFinca)
+            'eliminacion_solicitada_at' => InstanteLocal::class,
+            'eliminacion_programada_at' => InstanteLocal::class,
+            'suspendida_por_eliminacion' => 'boolean',
             'alerta_stock_dias' => 'integer',
             'peso_canasta_kg' => 'float',
             'peso_canastilla_kg' => 'float',
@@ -53,5 +57,11 @@ class Tenant extends Model
     public function estaSuspendida(): bool
     {
         return $this->suspendida_at !== null;
+    }
+
+    /** Pidió su eliminación y está en el periodo de gracia (suspendida; solo el propietario entra a cancelarla). */
+    public function enEliminacion(): bool
+    {
+        return $this->eliminacion_programada_at !== null;
     }
 }

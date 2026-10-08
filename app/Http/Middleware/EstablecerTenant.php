@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Rol;
 use App\Models\User;
 use App\Support\Region;
 use App\Support\TenantActual;
@@ -16,6 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EstablecerTenant
 {
+    /** Rutas que el propietario puede usar mientras su finca está en eliminación. */
+    private const DURANTE_ELIMINACION = ['admin.datos.eliminacion', 'admin.datos.cancelar', 'logout', 'legal.aceptar', 'legal.aceptar.store'];
+
     public function __construct(private TenantActual $tenantActual) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -27,8 +31,16 @@ class EstablecerTenant
 
         // Finca suspendida desde el panel de plataforma: se cierra la sesión (o el token) con un mensaje claro
         // Se consulta en la base (no la relación en memoria) para que la suspensión aplique de inmediato
-        if ($usuario->tenant()->first()?->estaSuspendida()) {
-            return $this->rechazarSuspendida($request, $usuario);
+        $finca = $usuario->tenant()->first();
+        if ($finca?->estaSuspendida()) {
+            // Finca en eliminación: el propietario (solo en la web) entra únicamente a la pantalla para cancelarla
+            $puedeCancelar = $finca->enEliminacion() && $usuario->tieneRol(Rol::PROPIETARIO) && ! $request->is('api/*') && $request->bearerToken() === null;
+            if (! $puedeCancelar) {
+                return $this->rechazarSuspendida($request, $usuario);
+            }
+            if (! in_array($request->route()?->getName(), self::DURANTE_ELIMINACION, true)) {
+                return redirect()->route('admin.datos.eliminacion');
+            }
         }
 
         $anterior = $this->tenantActual->id();

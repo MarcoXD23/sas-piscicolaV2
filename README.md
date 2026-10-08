@@ -226,6 +226,13 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. El panel de plataforma todavía no la tiene.
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Exportar y eliminar los datos de una finca
+
+- **Exportar** (propietario, en Ajustes → Datos de la finca): un ZIP con un CSV por tabla (UTF-8 con BOM), las fotos originales y un `LEEME.txt`; sin contraseñas, tokens, claves de dos pasos ni datos de otras fincas. Se genera en segundo plano (trabajador de la cola), una vez por hora, y se descarga durante 24 horas (`piscicola:limpiar-exportaciones`, cada hora). Queda en la bitácora.
+- **Eliminar** (propietario o administrador de plataforma): exige escribir el código de la finca y la contraseña. La finca queda suspendida y «en eliminación» `FINCA_DIAS_GRACIA` días (14 por defecto); en ese plazo solo el propietario entra, a una pantalla para cancelarla, y se le avisa por correo. Al vencer, `piscicola:eliminar-fincas` (a diario) borra en una transacción todos sus datos, en el orden de las claves foráneas leído de la base, las cuentas de su personal y sus archivos, y comprueba que no quede nada.
+- **Bitácora:** sigue siendo de solo inserción. Solo la función `borrar_bitacora_finca()` (SECURITY DEFINER) borra, y únicamente filas de una finca con el plazo vencido; la app solo puede ejecutarla.
+- **Copias de seguridad:** guardan los datos hasta que vence su retención. Si se restaura una copia vieja, la finca eliminada reaparece y el mismo comando la vuelve a borrar (la lista está en `storage/app/private/fincas-eliminadas.json`, fuera de la base).
+
 ## Primeros pasos de una finca nueva
 
 El inicio del propietario y del administrador muestra una lista de 6 pasos con el código de la finca: revisar la zona horaria y el idioma (al guardar Ajustes), revisar o agregar especies, definir los pesos de canasta y canastilla, crear el primer lago, invitar al personal (se marca con la primera persona registrada) y aprobar al primer trabajador. Cada paso se marca solo; los que hace otro rol se indican sin enlace. Se puede ocultar para toda la finca y no vuelve a aparecer al ocultarse ni al completarse. Las fincas que ya tenían lagos la tienen completada.

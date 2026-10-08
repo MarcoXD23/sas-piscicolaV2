@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Plataforma;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Datos\EliminadorFinca;
 use App\Support\TenantActual;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,8 +43,39 @@ class FincaController extends Controller
         return back()->with('estado', __('plataforma.fincas.suspendida', ['finca' => $finca->nombre]));
     }
 
+    /** El administrador de plataforma también puede pedir la eliminación: código de la finca y su propia contraseña. */
+    public function eliminar(Request $request, Tenant $finca): RedirectResponse
+    {
+        $request->validate([
+            'codigo' => ['required', 'string', function ($atributo, $valor, $falla) use ($finca) {
+                if (trim((string) $valor) !== $finca->codigo) {
+                    $falla(__('datos.eliminar.codigo_incorrecto'));
+                }
+            }],
+            'actual' => ['required', 'string', 'current_password:plataforma'],
+        ], ['actual.current_password' => __('cuenta.contrasena.actual_incorrecta')]);
+
+        EliminadorFinca::solicitar($finca);
+
+        return back()->with('estado', __('datos.eliminar.programada_plataforma', [
+            'finca' => $finca->nombre, 'fecha' => $finca->fresh()->eliminacion_programada_at->format('d/m/Y'),
+        ]));
+    }
+
+    public function cancelarEliminacion(Tenant $finca): RedirectResponse
+    {
+        abort_unless($finca->enEliminacion(), 404);
+        EliminadorFinca::cancelar($finca);
+
+        return back()->with('estado', __('datos.eliminar.cancelada'));
+    }
+
     public function reactivar(Tenant $finca): RedirectResponse
     {
+        // Reactivar una finca en eliminación también cancela su borrado
+        if ($finca->enEliminacion()) {
+            EliminadorFinca::cancelar($finca);
+        }
         $finca->forceFill(['suspendida_at' => null, 'motivo_suspension' => null])->save();
 
         return back()->with('estado', __('plataforma.fincas.reactivada', ['finca' => $finca->nombre]));

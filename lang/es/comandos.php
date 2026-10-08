@@ -23,6 +23,17 @@ return [
         'pais_invalido' => 'El país no es un código válido de 2 letras.',
         'zona_invalida' => 'La zona horaria no es válida.',
     ],
+    'eliminar_fincas' => [
+        'descripcion' => 'Borra definitivamente las fincas cuyo plazo de eliminación venció (y las que reaparezcan al restaurar una copia)',
+        'reaparecida' => 'La finca :id ya estaba eliminada y reapareció (copia restaurada): se borra de nuevo.',
+        'eliminada' => 'Finca :id eliminada (:filas filas).',
+        'fallo' => 'No se pudo eliminar la finca :id: :error',
+        'ninguna' => 'No hay fincas con el plazo de eliminación vencido.',
+    ],
+    'limpiar_exportaciones' => [
+        'descripcion' => 'Borra los paquetes de exportación vencidos (24 horas)',
+        'listo' => ':cantidad paquetes de exportación borrados.',
+    ],
     'quitar_dos_pasos' => [
         'descripcion' => 'Quita la verificación en dos pasos de una persona que perdió su teléfono y sus códigos de recuperación',
         'no_existe' => 'No hay ninguna persona con el correo :correo.',

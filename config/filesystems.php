@@ -48,6 +48,15 @@ return [
             'report' => false,
         ],
 
+        // Paquetes ZIP de exportación de una finca: privados, vencen a las 24 horas
+        'exportaciones' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/exportaciones'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

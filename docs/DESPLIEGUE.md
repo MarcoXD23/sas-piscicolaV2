@@ -131,6 +131,7 @@ Solo la primera vez, cuando ya existe la tabla de la bitácora, quítale a la ap
 
 ```bash
 sudo -u postgres psql -d sas_piscicola_v2 -c 'REVOKE UPDATE, DELETE, TRUNCATE ON public.bitacora FROM sas_piscicola_app;'
+sudo -u postgres psql -d sas_piscicola_v2 -c 'GRANT EXECUTE ON FUNCTION public.borrar_bitacora_finca(bigint) TO sas_piscicola_app;'
 ```
 
 > **Nunca uses `migrate:fresh` ni `migrate:rollback` en producción:** borran datos.
@@ -235,7 +236,7 @@ sudo crontab -u www-data -e
 * * * * * cd /var/www/sas-piscicola && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-**Cola:** hoy los correos salen al momento. Aun así, deja un trabajador de la cola para lo que se agregue después. Crea `/etc/systemd/system/sas-piscicola-cola.service`:
+**Cola:** el trabajador de la cola prepara las exportaciones de datos de las fincas (sin él, quedan «en preparación»). Crea `/etc/systemd/system/sas-piscicola-cola.service`:
 
 ```ini
 [Unit]
@@ -320,6 +321,8 @@ sudo -u www-data php /var/www/sas-piscicola/artisan piscicola:respaldar   # prim
 ```
 
 Para restaurar: descomprime el `.tar.gz` en `storage/app/private/` de la base restaurada (la base guarda las rutas; los archivos deben coincidir con la copia de la misma fecha).
+
+**Fincas eliminadas y copias:** si restauras una copia anterior al borrado de una finca, esa finca reaparece. `piscicola:eliminar-fincas` (en el cron diario) la vuelve a borrar porque la lista de fincas eliminadas vive fuera de la base, en `storage/app/private/fincas-eliminadas.json`: no la borres y respáldala junto con las fotos.
 
 **Nunca** subas una copia (`*.dump`) ni el `.env` a git; el `.gitignore` ya los excluye.
 

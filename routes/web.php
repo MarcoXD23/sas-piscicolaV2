@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\CosechaController;
+use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\EspecieFotoController;
 use App\Http\Controllers\Admin\LagoController;
@@ -91,6 +92,13 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
             ->whereNumber('usuario')
             ->name('personal.update');
         Route::put('/personal/mi-rol-administrador', [PersonalController::class, 'miRolAdministrador'])->name('personal.mi-rol-administrador');
+        // Datos de la finca: exportar (ZIP) y pedir o cancelar la eliminación
+        Route::get('/datos', [DatosFincaController::class, 'index'])->name('datos.index');
+        Route::post('/datos/exportar', [DatosFincaController::class, 'exportar'])->name('datos.exportar');
+        Route::get('/datos/exportaciones/{exportacion}/descargar', [DatosFincaController::class, 'descargar'])->name('datos.descargar');
+        Route::post('/datos/eliminar', [DatosFincaController::class, 'solicitarEliminacion'])->name('datos.eliminar');
+        Route::get('/datos/eliminacion', [DatosFincaController::class, 'eliminacion'])->name('datos.eliminacion');
+        Route::post('/datos/cancelar-eliminacion', [DatosFincaController::class, 'cancelarEliminacion'])->name('datos.cancelar');
         Route::post('/personal/{usuario}/quitar-dos-pasos', [PersonalController::class, 'quitarDosPasos'])->whereNumber('usuario')->name('personal.quitar-dos-pasos');
 
         Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
@@ -248,5 +256,7 @@ Route::prefix('plataforma')->name('plataforma.')->group(function () {
         Route::get('/', [PlataformaFincaController::class, 'index'])->name('fincas.index');
         Route::post('/fincas/{finca}/suspender', [PlataformaFincaController::class, 'suspender'])->name('fincas.suspender');
         Route::post('/fincas/{finca}/reactivar', [PlataformaFincaController::class, 'reactivar'])->name('fincas.reactivar');
+        Route::post('/fincas/{finca}/eliminar', [PlataformaFincaController::class, 'eliminar'])->name('fincas.eliminar');
+        Route::post('/fincas/{finca}/cancelar-eliminacion', [PlataformaFincaController::class, 'cancelarEliminacion'])->name('fincas.cancelar-eliminacion');
     });
 });

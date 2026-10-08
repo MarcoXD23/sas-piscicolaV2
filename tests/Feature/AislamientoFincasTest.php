@@ -14,6 +14,7 @@ use App\Models\DespachoAlimento;
 use App\Models\Especie;
 use App\Models\EspecieFoto;
 use App\Models\EventoAgenda;
+use App\Models\Exportacion;
 use App\Models\HoraExtra;
 use App\Models\Lago;
 use App\Models\Liquidacion;
@@ -60,7 +61,7 @@ class AislamientoFincasTest extends TestCase
         'lago' => Lago::class, 'siembra' => Siembra::class, 'aviso' => AvisoPesca::class, 'despacho' => DespachoAlimento::class,
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
-        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class,
+        'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -143,6 +144,7 @@ class AislamientoFincasTest extends TestCase
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
             AceptacionLegal::class => AceptacionLegal::registrar($persona),
+            Exportacion::class => Exportacion::create(['user_id' => $persona->id, 'estado' => Exportacion::LISTA, 'ruta' => "x/{$sufijo}.zip", 'bytes' => 1, 'vence_at' => now()->addDay()]),
             Especie::class => $especie = Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
             EspecieFoto::class => EspecieFoto::create(['especie_id' => $especie->id, 'user_id' => $persona->id, 'ruta_original' => "x/{$sufijo}.jpg", 'ruta_ligera' => "x/{$sufijo}.webp",
                 'tipo_original' => 'image/jpeg', 'bytes_original' => 10, 'bytes_ligera' => 5, 'ancho' => 1, 'alto' => 1, 'orden' => 1]),

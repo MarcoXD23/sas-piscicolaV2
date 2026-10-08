@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,9 @@ class LoginController extends Controller
         /** @var User $usuario */
         $usuario = $guard->getProvider()->retrieveByCredentials(['email' => $credenciales['email']]);
 
-        if ($usuario->tenant()->first()?->estaSuspendida()) {
+        // Suspendida: nadie entra, salvo el propietario de una finca en eliminación (para poder cancelarla)
+        $finca = $usuario->tenant()->first();
+        if ($finca?->estaSuspendida() && ! ($finca->enEliminacion() && $usuario->tieneRol(Rol::PROPIETARIO))) {
             throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
         }
 

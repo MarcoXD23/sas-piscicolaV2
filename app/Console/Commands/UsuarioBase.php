@@ -94,6 +94,8 @@ class UsuarioBase extends Command
 
             -- 4. Bitácora: solo inserción también por permisos (además del trigger)
             REVOKE UPDATE, DELETE, TRUNCATE ON public.bitacora FROM {$app};
+            -- Al eliminar una finca (plazo vencido) su bitácora se borra SOLO con esta función
+            GRANT EXECUTE ON FUNCTION public.borrar_bitacora_finca(bigint) TO {$app};
             SQL;
     }
 }
