@@ -1,6 +1,7 @@
 /*
  * Service worker de El SAS Piscícola.
- * - Archivos estáticos (estilos, scripts, íconos, imágenes): primero la caché.
+ * - Archivos estáticos (estilos, scripts e íconos): primero la caché. La app no trae fotos de fondo ni de especies;
+ *   la v7 borra del teléfono las copias de /images/ que guardaron las versiones anteriores.
  * - Pantallas de consulta: primero la red; si no hay señal, la última copia guardada (solo lectura).
  *   Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas.
  * - Sin copia guardada: /offline.html.
@@ -8,12 +9,12 @@
  * - Los formularios verifican la señal antes de enviar (resources/js/app.js). Sin señal, solo raciones, mortalidad,
  *   avisos de pesca, rondas y mediciones se guardan en el teléfono (IndexedDB) y se envían al volver (resources/js/sin-conexion.js).
  */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;
 const PRECARGA = ['/offline.html', '/favicon.ico', '/icons/icon-192.png', '/manifest.webmanifest'];
-const ESTATICOS = ['/build/', '/images/', '/icons/'];
+const ESTATICOS = ['/build/', '/icons/'];
 const NUNCA_GUARDAR = ['/login', '/registro', '/olvide-contrasena', '/restablecer-contrasena', '/ingreso', '/mi-cuenta', '/plataforma', '/asistente', '/logout', '/api/', '/up', '/salud'];
 const DESCARGAS = ['/excel', '/pdf'];
 

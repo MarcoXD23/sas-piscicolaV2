@@ -24,6 +24,8 @@ Resultado medido (lo verifica `tests/Feature/MarcaTest.php`): a 16 px, 34 % de f
 
 Si el diseñador entrega un favicon simplificado (silueta de la trucha con la corona, pocos colores, revisado a 16 px), basta con reemplazar `favicon-16.png`, `favicon-32.png` y `favicon-48.png` y volver a armar `public/favicon.ico`.
 
-## Fotos de especies
+## Fotos
 
-La app no trae fotos de especies por defecto, porque no se pudo documentar su origen. Cada finca sube las suyas con autor y licencia. Si en el futuro se agrega una foto por defecto, debe tener licencia clara y anotarse aquí (archivo, peso, autor, fuente, licencia).
+La app no trae fotos de fondo ni de especies por defecto: no se pudo documentar su origen. Si se agrega una foto, debe tener licencia clara y anotarse aquí (archivo, peso, autor, fuente, licencia).
+
+Las fotos de especies las sube cada finca (Especies → Fotos), con su autor y su licencia. Los fondos del ingreso y del saludo de inicio son degradados de CSS con los colores de la marca.

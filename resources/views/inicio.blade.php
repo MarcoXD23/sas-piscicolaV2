@@ -15,10 +15,9 @@
         @include('inicio._primer_uso', ['pasos' => $primerUso])
     @endif
 
-    <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-md">
-        <img src="/images/estanque.webp" alt="" aria-hidden="true" decoding="async"
-             class="absolute inset-0 h-full w-full object-cover opacity-35">
-        <div class="absolute inset-0 bg-gradient-to-r from-marca-900/90 to-marca-800/40"></div>
+    {{-- Saludo: fondo solo CSS con los colores de la marca (la app no trae fotos de fondo, ver docs/marca/LEEME.md) --}}
+    <section class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-marca-900 to-marca-700 text-white shadow-md">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--color-marca-400)_25%,transparent),transparent_60%)]" aria-hidden="true"></div>
 
         <div class="relative px-5 py-7 sm:px-8 sm:py-10">
             <p class="text-base text-marca-100">{{ $usuario->tenant->nombre }}</p>
