@@ -217,6 +217,14 @@
         @endif
 
         @yield('contenido')
+
+        @if ($enFinca)
+            <footer class="mt-10 border-t border-slate-200 pt-4 text-center text-sm text-slate-500 print:hidden">
+                <a href="{{ route('legal.terminos') }}" class="underline underline-offset-2 hover:text-marca-700">{{ __('legal.terminos') }}</a>
+                ·
+                <a href="{{ route('legal.privacidad') }}" class="underline underline-offset-2 hover:text-marca-700">{{ __('legal.privacidad') }}</a>
+            </footer>
+        @endif
     </main>
 </body>
 </html>

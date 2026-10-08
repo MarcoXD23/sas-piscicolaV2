@@ -31,5 +31,10 @@
         {{ __('acceso.eres_nuevo_finca') }}
         <a href="{{ route('registro') }}" class="font-semibold text-white underline underline-offset-2">{{ __('acceso.solicita_acceso') }}</a>
     </p>
+    <p class="mt-4 text-center text-sm text-marca-100">
+        <a href="{{ route('legal.terminos') }}" class="underline underline-offset-2">{{ __('legal.terminos') }}</a>
+        ·
+        <a href="{{ route('legal.privacidad') }}" class="underline underline-offset-2">{{ __('legal.privacidad') }}</a>
+    </p>
 @endsection
 

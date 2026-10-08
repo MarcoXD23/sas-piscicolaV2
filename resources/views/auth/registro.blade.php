@@ -25,6 +25,18 @@
                      :ayuda="__('acceso.minimo_8_caracteres')" />
             <x-campo nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" tipo="password" autocomplete="new-password" required />
 
+            {{-- Aceptar los términos y la privacidad es obligatorio para registrarse --}}
+            <label class="flex items-start gap-3 text-base text-slate-700">
+                <input type="checkbox" name="acepto" value="1" required @checked(old('acepto')) class="mt-1 h-5 w-5 rounded border-slate-300 accent-marca-600">
+                <span>{!! __('legal.aceptar.registro_casilla', [
+                    'terminos' => '<a href="'.e(route('legal.terminos')).'" target="_blank" rel="noopener" class="font-semibold text-marca-700 underline">'.e(__('legal.terminos')).'</a>',
+                    'privacidad' => '<a href="'.e(route('legal.privacidad')).'" target="_blank" rel="noopener" class="font-semibold text-marca-700 underline">'.e(__('legal.privacidad')).'</a>',
+                ]) !!}</span>
+            </label>
+            @error('acepto')
+                <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+            @enderror
+
             <x-boton class="w-full">{{ __('acceso.enviar_solicitud') }}</x-boton>
         </x-formulario>
     </x-tarjeta>
@@ -32,6 +44,11 @@
     <p class="mt-6 text-center text-base text-marca-50">
         {{ __('acceso.ya_tienes_cuenta') }}
         <a href="{{ route('login') }}" class="font-semibold text-white underline underline-offset-2">{{ __('acceso.ingresar') }}</a>
+    </p>
+    <p class="mt-4 text-center text-sm text-marca-100">
+        <a href="{{ route('legal.terminos') }}" class="underline underline-offset-2">{{ __('legal.terminos') }}</a>
+        ·
+        <a href="{{ route('legal.privacidad') }}" class="underline underline-offset-2">{{ __('legal.privacidad') }}</a>
     </p>
 @endsection
 

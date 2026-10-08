@@ -63,6 +63,7 @@ class LoginWebTest extends TestCase
             'email' => 'nueva@example.test',
             'password' => 'clave-segura-123',
             'password_confirmation' => 'clave-segura-123',
+            'acepto' => '1',
         ])->assertRedirect(route('login'));
 
         $usuario = TenantActual::sinFiltro(fn () => User::query()->where('email', 'nueva@example.test')->firstOrFail());
@@ -80,6 +81,7 @@ class LoginWebTest extends TestCase
             'email' => 'persona@example.test',
             'password' => 'clave-segura-123',
             'password_confirmation' => 'clave-segura-123',
+            'acepto' => '1',
         ])->assertSessionHasErrors(['registro' => __('mensajes.registro.no_se_pudo')]);   // mensaje genérico: no revela qué códigos existen
 
         $this->assertDatabaseCount('users', 0);

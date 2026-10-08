@@ -226,6 +226,12 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. El panel de plataforma todavía no la tiene.
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Términos de uso y privacidad
+
+- Páginas públicas `/terminos` y `/privacidad` con un **texto base en borrador** (`lang/es/legal.php`) que **debe revisar un abogado antes de publicarse**. Es neutro: no menciona leyes, autoridades ni países.
+- Quién presta el servicio y su correo salen de `LEGAL_ENTIDAD` y `LEGAL_CORREO` (vacías en `.env.example`); mientras falten, las páginas lo avisan.
+- **Aceptación:** casilla obligatoria en el registro y, en el primer ingreso tras cambiar `config/legal.php` → `version`, una pantalla para aceptar antes de seguir (la app móvil recibe 403 con `terminos_pendientes` y acepta en `POST /api/terminos/aceptar`). Se guarda quién, qué versión y cuándo (UTC), **sin la IP**. Las personas que ya existían aceptan en su próximo ingreso.
+
 ## Fotos de especies
 
 Las sube una persona; la app nunca genera ni inventa imágenes. Por cada foto se guardan **dos archivos** en el disco privado `fotos` (`storage/app/private/fotos/{finca}/{especie}/`, nombres aleatorios):

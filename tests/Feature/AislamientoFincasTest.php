@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Abono;
+use App\Models\AceptacionLegal;
 use App\Models\Aireacion;
 use App\Models\Alerta;
 use App\Models\AvisoPesca;
@@ -141,6 +142,7 @@ class AislamientoFincasTest extends TestCase
             Muestreo::class => Muestreo::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'peces_pesados' => 1, 'peso_total_g' => 200, 'peso_promedio_g' => 200]),
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
+            AceptacionLegal::class => AceptacionLegal::registrar($persona),
             Especie::class => $especie = Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
             EspecieFoto::class => EspecieFoto::create(['especie_id' => $especie->id, 'user_id' => $persona->id, 'ruta_original' => "x/{$sufijo}.jpg", 'ruta_ligera' => "x/{$sufijo}.webp",
                 'tipo_original' => 'image/jpeg', 'bytes_original' => 10, 'bytes_ligera' => 5, 'ancho' => 1, 'alto' => 1, 'orden' => 1]),

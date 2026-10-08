@@ -35,6 +35,7 @@ use App\Http\Controllers\EspecieController;
 use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\FotoEspecieController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
@@ -60,7 +61,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/ingreso/dos-pasos', [DosPasosController::class, 'store'])->middleware('throttle:dos-pasos')->name('dos-pasos.store');
 });
 
-Route::middleware(['auth', 'tenant'])->group(function () {
+// Términos de uso y política de privacidad: públicos (con o sin sesión)
+Route::get('/terminos', [LegalController::class, 'terminos'])->name('legal.terminos');
+Route::get('/privacidad', [LegalController::class, 'privacidad'])->name('legal.privacidad');
+
+// 'aceptacion': quien no aceptó la versión vigente de los términos va primero a aceptarlos
+Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
+    Route::get('/aceptar-terminos', [LegalController::class, 'aceptar'])->name('legal.aceptar');
+    Route::post('/aceptar-terminos', [LegalController::class, 'guardarAceptacion'])->name('legal.aceptar.store');
+
     Route::get('/', InicioController::class)->name('inicio');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AceptacionLegal;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Rules\NoIgualAlCorreo;
 use App\Support\TenantActual;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -31,6 +33,9 @@ class RegistroController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($request->input('email'))],
+            'acepto' => ['accepted'],
+        ], [
+            'acepto.accepted' => __('legal.aceptar.marca_la_casilla'),
         ]);
 
         // Un solo mensaje para «código inexistente» y «correo ya registrado»: no revela qué fincas ni qué correos existen
@@ -48,7 +53,11 @@ class RegistroController extends Controller
         ]);
         $usuario->tenant_id = $tenant->id;
         $usuario->aprobado_at = null;
-        $usuario->save();
+        DB::transaction(function () use ($usuario) {
+            $usuario->save();
+            // Quién aceptó, qué versión y cuándo (sin la IP)
+            AceptacionLegal::registrar($usuario);
+        });
 
         return redirect()->route('login')
             ->with('estado', __('mensajes.registro.solicitud_enviada_propietario_finca_debe'));

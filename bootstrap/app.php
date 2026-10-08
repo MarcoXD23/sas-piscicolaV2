@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AceptacionVigente;
 use App\Http\Middleware\CabecerasSeguridad;
 use App\Http\Middleware\CookieSeguraConHttps;
 use App\Http\Middleware\EstablecerTenant;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'rol' => VerificarRol::class,
             'turno' => VerificarTurno::class,
             'sin_conexion' => RegistroSinConexion::class,   // siempre antes de 'turno'
+            'aceptacion' => AceptacionVigente::class,       // términos y privacidad aceptados (versión vigente)
         ]);
 
         // El tenant debe fijarse antes del route model binding para que el scope aplique.

@@ -210,7 +210,7 @@ class SeguridadTest extends TestCase
     public function test_el_registro_da_el_mismo_mensaje_con_codigo_inexistente_o_correo_usado_y_ofrece_recuperar(): void
     {
         $existente = $this->persona(Rol::TRABAJADOR);
-        $datos = ['name' => 'Nuevo', 'password' => 'clave-segura-1', 'password_confirmation' => 'clave-segura-1'];
+        $datos = ['name' => 'Nuevo', 'password' => 'clave-segura-1', 'password_confirmation' => 'clave-segura-1', 'acepto' => '1'];
 
         $codigoMalo = $this->post(route('registro'), $datos + ['codigo_finca' => 'no-existe', 'email' => 'nuevo@x.test']);
         $correoUsado = $this->post(route('registro'), $datos + ['codigo_finca' => 'F01', 'email' => mb_strtoupper($existente->email)]);
@@ -281,6 +281,6 @@ class SeguridadTest extends TestCase
             'password' => 'anaperez1', 'password_confirmation' => 'anaperez1'])
             ->assertSessionHasErrors(['password' => __('mensajes.contrasena.igual_al_correo')]);
         $this->post(route('registro'), ['codigo_finca' => 'F01', 'name' => 'Ana', 'email' => 'ana@x.test',
-            'password' => 'otra-clave-9', 'password_confirmation' => 'otra-clave-9'])->assertSessionHasNoErrors();
+            'password' => 'otra-clave-9', 'password_confirmation' => 'otra-clave-9', 'acepto' => '1'])->assertSessionHasNoErrors();
     }
 }
