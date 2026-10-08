@@ -13,15 +13,16 @@
     <script>window.textos = @json(__('js'));</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen">
-    @php
-        // El panel de plataforma usa su propio ingreso (guard «plataforma») y no muestra el menú de las fincas
-        $rutaPlataforma = request()->routeIs('plataforma.*');
-        $enFinca = auth()->check() && ! $rutaPlataforma;
-        $enPlataforma = $rutaPlataforma && auth('plataforma')->check();
-        $conSesion = $enFinca || $enPlataforma;
-        $conMenuInferior = false;
-    @endphp
+@php
+    // El panel de plataforma usa su propio ingreso (guard «plataforma») y no muestra el menú de las fincas
+    $rutaPlataforma = request()->routeIs('plataforma.*');
+    $enFinca = auth()->check() && ! $rutaPlataforma;
+    $enPlataforma = $rutaPlataforma && auth('plataforma')->check();
+    $conSesion = $enFinca || $enPlataforma;
+    $conMenuInferior = false;
+@endphp
+{{-- Registros sin conexión (resources/js/sin-conexion.js): la cola del teléfono va separada por finca y persona --}}
+<body class="min-h-screen" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" @endif>
 
     {{-- Sin conexión: la página puede ser una copia guardada (solo consulta). Lleva la hora en que se generó. --}}
     <div data-sin-conexion hidden role="status" class="sticky top-0 z-40 bg-amber-400 px-4 py-2 text-center text-sm font-semibold text-amber-950 print:hidden">
@@ -102,6 +103,11 @@
                 </a>
 
                 <div class="flex shrink-0 items-center gap-1">
+                    {{-- Registros guardados en el teléfono sin enviar (o rechazados): solo aparece si hay alguno --}}
+                    <button type="button" data-cola-boton hidden data-abrir-modal="cola-sin-conexion" class="flex min-h-11 items-center gap-1.5 rounded-xl bg-amber-400 px-3 text-base font-bold text-amber-950" aria-label="{{ __('layout.cola.boton') }}">
+                        <x-icono nombre="reloj" class="h-5 w-5" />
+                        <span data-cola-total>0</span>
+                    </button>
                     {{-- Mi cuenta: contraseña y verificación en dos pasos (todos los roles) --}}
                     <a href="{{ route('mi-cuenta.index') }}" class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-marca-600" aria-label="{{ __('cuenta.enlace') }}">
                         <x-icono nombre="personal" class="h-5 w-5" />
@@ -194,6 +200,29 @@
         @endif
 
         <x-asistente />
+
+        <x-modal id="cola-sin-conexion" :titulo="__('layout.cola.titulo')">
+            <p class="mb-4 text-base text-slate-600">{{ __('layout.cola.explicacion') }}</p>
+            <p data-cola-vacia class="text-base text-slate-500">{{ __('layout.cola.vacia') }}</p>
+            <section data-cola-rechazados hidden class="mb-5">
+                <h3 class="mb-2 text-base font-semibold text-red-700">{{ __('layout.cola.rechazados') }}</h3>
+                <p class="mb-3 text-sm text-slate-600">{{ __('layout.cola.rechazados_ayuda') }}</p>
+                <ul class="space-y-3"></ul>
+            </section>
+            <section data-cola-pendientes hidden class="mb-5">
+                <h3 class="mb-2 text-base font-semibold text-slate-900">{{ __('layout.cola.pendientes') }}</h3>
+                <ul class="space-y-3"></ul>
+            </section>
+            <x-boton tipo="button" class="w-full" data-cola-enviar hidden>{{ __('layout.cola.enviar_ahora') }}</x-boton>
+        </x-modal>
+
+        <x-modal id="salir-con-pendientes" :titulo="__('layout.cola.salir_titulo')">
+            <p class="text-base text-slate-700">{!! __('layout.cola.salir_texto', ['cantidad' => '<strong data-salir-total>0</strong>']) !!}</p>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('layout.cola.esperar') }}</x-boton>
+                <x-boton tipo="button" variante="peligro" data-salir-borrar>{{ __('layout.cola.salir_borrar') }}</x-boton>
+            </div>
+        </x-modal>
     @endif
 
     <main id="contenido" @class([

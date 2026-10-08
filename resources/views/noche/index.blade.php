@@ -119,7 +119,7 @@
 
             @if ($puedeRegistrar)
                 <x-modal id="modal-oxigeno-{{ $lago->id }}" :titulo="__('noche.medicion_de', ['lago' => $lago->nombre])">
-                    <x-formulario :action="route('noche.mediciones.store', $lago)">
+                    <x-formulario :action="route('noche.mediciones.store', $lago)" :data-guardar-sin-conexion="__('layout.cola.resumen_medicion', ['lago' => $lago->nombre])">
                         <div class="grid grid-cols-2 gap-4">
                             <x-campo nombre="oxigeno_mg_l" id="oxigeno-{{ $lago->id }}" :etiqueta="__('noche.oxigeno_mg_l')" tipo="number" step="0.01" min="0" inputmode="decimal" autofocus />
                             <x-campo nombre="temperatura_c" id="temperatura-{{ $lago->id }}" :etiqueta="__('noche.temperatura_c')" tipo="number" step="0.1" inputmode="decimal" />
@@ -178,7 +178,7 @@
 
     @if ($puedeRegistrar)
         <x-modal id="modal-ronda" :titulo="__('noche.registrar_ronda')">
-            <x-formulario :action="route('noche.rondas.store')">
+            <x-formulario :action="route('noche.rondas.store')" :data-guardar-sin-conexion="__('layout.cola.resumen_ronda')">
                 <fieldset>
                     <legend class="mb-1.5 text-base font-medium text-slate-700">{{ __('noche.como_estuvo_ronda') }}</legend>
                     <div class="grid gap-2">

@@ -5,9 +5,10 @@
  *   Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas.
  * - Sin copia guardada: /offline.html.
  * - Al cerrar sesión la página pide borrar las copias ({tipo: 'limpiar'}); el servidor además envía Clear-Site-Data.
- * - Nada se registra sin conexión: los formularios verifican la señal antes de enviar (resources/js/app.js).
+ * - Los formularios verifican la señal antes de enviar (resources/js/app.js). Sin señal, solo raciones, mortalidad,
+ *   avisos de pesca, rondas y mediciones se guardan en el teléfono (IndexedDB) y se envían al volver (resources/js/sin-conexion.js).
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;

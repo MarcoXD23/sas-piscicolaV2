@@ -98,7 +98,7 @@
                         </x-boton>
                     </div>
                     <x-modal id="modal-aviso-pesca-{{ $lago->id }}" :titulo="__('lagos.reportar_listo_pescar_en', ['lago' => $lago->nombre])">
-                        <x-formulario :action="route('admin.avisos-pesca.store', $lago)">
+                        <x-formulario :action="route('admin.avisos-pesca.store', $lago)" :data-guardar-sin-conexion="__('layout.cola.resumen_aviso_pesca', ['lago' => $lago->nombre])">
                             @if ($siembras->count() > 1)
                                 <x-seleccion nombre="siembra_id" id="aviso-siembra-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$siembras->pluck('nombre_especie', 'id')->all()" required />
                             @else
@@ -158,7 +158,7 @@
 
                     @unless ($soloLectura)
                     <x-modal id="modal-mortalidad-{{ $siembra->id }}" :titulo="__('lagos.mortalidad_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
-                        <x-formulario :action="route('admin.mortalidades.store', $siembra->id)">
+                        <x-formulario :action="route('admin.mortalidades.store', $siembra->id)" :data-guardar-sin-conexion="__('layout.cola.resumen_mortalidad', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
                             <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
                             <x-campo nombre="cantidad" id="mortalidad-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces_muertos')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
                                      :ayuda="__('lagos.hay_peces_vivos', ['cantidad' => $numero($siembra->peces_vivos)])" />
@@ -235,7 +235,7 @@
 
                 @if ($siembras->isNotEmpty() && ! $soloLectura)
                     <x-modal id="modal-racion-{{ $lago->id }}" :titulo="__('lagos.alimentar_lago', ['lago' => $lago->nombre])">
-                        <x-formulario :action="route('admin.raciones.store', $lago->id)">
+                        <x-formulario :action="route('admin.raciones.store', $lago->id)" :data-guardar-sin-conexion="__('layout.cola.resumen_racion', ['lago' => $lago->nombre])">
                             <x-campo nombre="fecha" id="racion-fecha-{{ $lago->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
 
                             @if ($stocksDisponibles->isEmpty())

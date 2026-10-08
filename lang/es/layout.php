@@ -1,6 +1,27 @@
 <?php
 
 return [
+    // Registros guardados en el teléfono sin conexión (resources/js/sin-conexion.js)
+    'cola' => [
+        'boton' => 'Registros sin enviar',
+        'titulo' => 'Sin enviar',
+        'explicacion' => 'Lo que registraste sin señal queda en este teléfono y se envía solo cuando vuelve la conexión. Al llegar se revisa con las reglas de la finca (turno, bodega, peces vivos).',
+        'vacia' => 'No hay registros pendientes.',
+        'pendientes' => 'Esperando señal',
+        'rechazados' => 'Rechazados',
+        'rechazados_ayuda' => 'No se guardaron. Revisa el motivo, vuelve a registrarlos si hace falta y descártalos.',
+        'enviar_ahora' => 'Enviar ahora',
+        'salir_titulo' => 'Tienes registros sin enviar',
+        'salir_texto' => 'Hay :cantidad registro(s) guardados en este teléfono que no han llegado a la finca. Si sales, se borran del teléfono y se pierden.',
+        'esperar' => 'Esperar',
+        'salir_borrar' => 'Salir y borrarlos',
+        // Resumen de cada registro en la lista
+        'resumen_racion' => 'Ración · :lago',
+        'resumen_mortalidad' => 'Mortalidad · :especie · :lago',
+        'resumen_aviso_pesca' => 'Listo para pescar · :lago',
+        'resumen_medicion' => 'Medición del agua · :lago',
+        'resumen_ronda' => 'Ronda nocturna',
+    ],
     'logo_alt' => 'El SAS Piscícola',
     'mas' => 'Más',
     'mas_secciones' => 'Más secciones',
@@ -24,5 +45,5 @@ return [
     'principal_movil' => 'Principal (móvil)',
     'salir' => 'Salir',
     'saltar_contenido' => 'Saltar al contenido',
-    'sin_conexion' => 'Sin conexión. Estás viendo los datos guardados del :momento. No se puede registrar nada hasta que vuelva la señal.',
+    'sin_conexion' => 'Sin conexión. Estás viendo los datos guardados del :momento. Puedes registrar raciones, mortalidad, avisos de pesca, rondas y mediciones: se guardan en el teléfono y se envían al volver la señal.',
 ];

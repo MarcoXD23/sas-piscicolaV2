@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import pesaje from './pesaje';
+import { iniciarCola } from './sin-conexion';
 
 window.Alpine = Alpine;
 Alpine.data('pesaje', pesaje);   // tabla de pesadas de la cosecha
@@ -72,8 +73,10 @@ window.addEventListener('online', mostrarConexion);
 window.addEventListener('offline', mostrarConexion);
 mostrarConexion();
 
-// Nada se registra sin conexión: antes de enviar un formulario se verifica la señal.
-// Si no hay, no se envía y lo escrito queda en el formulario.
+// Registros sin conexión (resources/js/sin-conexion.js): los formularios con data-guardar-sin-conexion se guardan en el
+// teléfono y se envían al volver la señal. Los demás no se envían sin señal: lo escrito queda en el formulario.
+const cola = iniciarCola(t);
+
 const hayConexion = async () => {
     if (!navigator.onLine) return false;
     try {
@@ -107,12 +110,30 @@ document.addEventListener('submit', async (evento) => {
     }
 
     evento.preventDefault();
+
+    // Cerrar sesión con registros sin enviar: se avisa antes (al salir se borran de este teléfono)
+    if (formulario.action.endsWith('/logout') && !formulario.dataset.salirConfirmado && await cola.total() > 0) {
+        const ventana = document.getElementById('salir-con-pendientes');
+        if (ventana) {
+            ventana.querySelector('[data-salir-total]').textContent = String(await cola.total());
+            ventana.querySelector('[data-salir-borrar]').onclick = async () => {
+                await cola.borrarTodo();
+                formulario.dataset.salirConfirmado = '1';
+                ventana.close();
+                formulario.requestSubmit();
+            };
+            ventana.showModal();
+            return;
+        }
+    }
+
     const boton = evento.submitter;
     if (boton) boton.disabled = true;
     const conectado = await hayConexion();
     if (boton) boton.disabled = false;
 
     if (!conectado) {
+        if (formulario.hasAttribute('data-guardar-sin-conexion') && await cola.guardar(formulario)) return;
         avisarSinConexion(formulario);
         return;
     }

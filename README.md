@@ -189,14 +189,24 @@ El informe mensual y el libro de campo se descargan en **Excel** (`openspout/ope
 
 ### Sin conexión
 
-La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guarda las últimas 40 pantallas de consulta: con señal se piden a la red; sin señal se muestra la última copia con una franja que dice de cuándo son los datos. **Nada se registra sin conexión**: antes de enviar, cada formulario verifica la señal (`/up`); si no hay, no se envía y lo escrito queda en el formulario. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
+La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guarda las últimas 40 pantallas de consulta: con señal se piden a la red; sin señal se muestra la última copia con una franja que dice de cuándo son los datos. Antes de enviar, cada formulario verifica la señal (`/up`). Si no hay señal, el resultado depende del formulario:
+
+- **Se guardan en el teléfono:** ración, mortalidad, aviso «listo para pescar», ronda y medición del agua. Se guardan en IndexedDB, separados por finca y persona (`resources/js/sin-conexion.js`).
+  Se envían solos, en orden y con su hora real, al volver la señal o al abrir cualquier pantalla.
+  El servidor los revisa al llegar con las reglas de siempre: turno a esa hora, bodega y peces vivos. No acepta los de más de `SIN_CONEXION_HORAS` horas.
+  Un botón con el número de registros sin enviar abre la lista de pendientes y rechazados; cada rechazado muestra su motivo y sus datos.
+  Al cerrar sesión con registros sin enviar, la app avisa: si sales, se borran del teléfono.
+- **Los demás formularios no se envían:** lo escrito queda en el formulario. Por ejemplo el aireador, que depende de su estado en ese momento. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
 
 Revisión manual (Chrome → DevTools → Network → «Offline»; `Clear-Site-Data` solo funciona con HTTPS o en localhost):
 
 1. Con señal, abrir Inicio, Lagos y el detalle de un lago. Pasar a «Offline» y volver a abrirlos: se ven con la franja amarilla y la hora de esos datos.
 2. Sin señal, abrir una pantalla nunca visitada: aparece la página «Sin conexión».
-3. Sin señal, llenar un formulario (por ejemplo, una ración) y guardar: aparece el aviso y lo escrito sigue ahí. Volver a «Online» y guardar: se registra.
-4. Cerrar sesión, pasar a «Offline» y abrir Inicio: ya no se ven datos de la finca.
+3. Sin señal, registrar una ración: dice «quedó guardado en este teléfono» y aparece el botón con «1». Volver a «Online»: se envía sola y el botón desaparece.
+4. Sin señal, registrar una mortalidad con más peces de los vivos y volver a «Online»: queda en «Rechazados» con el motivo. «Descartar» la quita.
+5. Sin señal, llenar un formulario que no se guarda (por ejemplo, una siembra): aparece el aviso y lo escrito sigue ahí.
+6. Con un registro pendiente, tocar «Salir»: aparece el aviso con «Esperar» o «Salir y borrarlos».
+7. Cerrar sesión, pasar a «Offline» y abrir Inicio: ya no se ven datos de la finca.
 
 ### Datos de demostración (opcional, nunca en producción)
 
@@ -294,6 +304,7 @@ Corren contra PostgreSQL real, en la base `sas_piscicola_v2_test`, con `RefreshD
 createdb sas_piscicola_v2_test
 npm run build      # las vistas necesitan el manifest de Vite
 composer test
+npm run test:js    # reglas de la cola sin conexión (node --test, sin paquetes)
 ```
 
 ## Valores de referencia
@@ -303,7 +314,6 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 ## Pendiente
 
 - Foto real de la mojarra roja (`public/images/especies/mojarra-roja.webp`, menos de 200 KB).
-- Registro sin conexión con sincronización posterior (hoy, sin internet solo se muestra un aviso).
 - Superadmin y planes de suscripción para varias fincas.
 
 ## Estructura
