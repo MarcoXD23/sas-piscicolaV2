@@ -226,6 +226,10 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. El panel de plataforma todavía no la tiene.
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Primeros pasos de una finca nueva
+
+El inicio del propietario y del administrador muestra una lista de 6 pasos con el código de la finca: revisar la zona horaria y el idioma (al guardar Ajustes), revisar o agregar especies, definir los pesos de canasta y canastilla, crear el primer lago, invitar al personal (se marca con la primera persona registrada) y aprobar al primer trabajador. Cada paso se marca solo; los que hace otro rol se indican sin enlace. Se puede ocultar para toda la finca y no vuelve a aparecer al ocultarse ni al completarse. Las fincas que ya tenían lagos la tienen completada.
+
 ## Términos de uso y privacidad
 
 - Páginas públicas `/terminos` y `/privacidad` con un **texto base en borrador** (`lang/es/legal.php`) que **debe revisar un abogado antes de publicarse**. Es neutro: no menciona leyes, autoridades ni países.

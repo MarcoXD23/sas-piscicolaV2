@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\CalculoPesaje;
+use App\Support\PrimerUso;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,6 +33,8 @@ class AjustesPesajeController extends Controller
             'peso_canasta_kg' => round((float) $datos['peso_canasta_kg'], 2),
             'peso_canastilla_kg' => round((float) $datos['peso_canastilla_kg'], 2),
         ]);
+
+        PrimerUso::marcar($request->user()->tenant, 'pesos_definidos_at');
 
         return back()->with('estado', __('cosechas.ajustes.guardado'));
     }

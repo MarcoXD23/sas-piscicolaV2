@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
+use App\Http\Controllers\Admin\PrimerUsoController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Admin\SiembraController;
@@ -127,6 +128,8 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
         Route::get('/conversion', [ConversionController::class, 'index'])->name('conversion.index');
         Route::get('/bodega', [BodegaController::class, 'index'])->name('bodega.index');
         Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        // Ocultar la lista de primeros pasos de una finca nueva
+        Route::post('/primer-uso/ocultar', [PrimerUsoController::class, 'ocultar'])->name('primer-uso.ocultar');
         // Catálogo de especies de la finca: el propietario lo consulta, el administrador lo edita
         Route::get('/especies', [EspecieFincaController::class, 'index'])->name('especies.index');
         // Detalle de una cosecha (encabezado, pesadas y totales): el administrador y el propietario en solo lectura

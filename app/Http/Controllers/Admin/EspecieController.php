@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Especie;
 use App\Models\EspecieFoto;
 use App\Models\Rol;
+use App\Support\PrimerUso;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ class EspecieController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $especie = Especie::create($this->validar($request) + ['activo' => true]);
+        PrimerUso::marcar($request->user()->tenant, 'especies_revisadas_at');
 
         return redirect()->route('admin.especies.index')->with('estado', __('mensajes.especie.creada', ['nombre' => $especie->nombre]));
     }
@@ -49,14 +51,16 @@ class EspecieController extends Controller
     public function update(Request $request, Especie $especie): RedirectResponse
     {
         $especie->update($this->validar($request, $especie));
+        PrimerUso::marcar($request->user()->tenant, 'especies_revisadas_at');
 
         return redirect()->route('admin.especies.index')->with('estado', __('mensajes.especie.actualizada', ['nombre' => $especie->nombre]));
     }
 
     /** Desactivada: no se siembra, pero sus siembras siguen y conserva el historial. */
-    public function cambiarActivo(Especie $especie): RedirectResponse
+    public function cambiarActivo(Request $request, Especie $especie): RedirectResponse
     {
         $especie->update(['activo' => ! $especie->activo]);
+        PrimerUso::marcar($request->user()->tenant, 'especies_revisadas_at');
 
         return back()->with('estado', __($especie->activo ? 'mensajes.especie.activada' : 'mensajes.especie.desactivada', ['nombre' => $especie->nombre]));
     }

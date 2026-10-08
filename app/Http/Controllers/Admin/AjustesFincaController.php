@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\PrimerUso;
 use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
@@ -53,6 +54,8 @@ class AjustesFincaController extends Controller
 
         $finca = $request->user()->tenant;
         $finca->update($datos);
+        // Primer uso: la zona horaria y el idioma ya se revisaron
+        PrimerUso::marcar($finca, 'ajustes_revisados_at');
 
         // Con los umbrales nuevos las alertas abiertas pueden cerrarse o abrirse otras
         EvaluadorAlertas::paraFinca($finca->id);

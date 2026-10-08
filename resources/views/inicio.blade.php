@@ -11,6 +11,10 @@
         </p>
     @endif
 
+    @if ($primerUso)
+        @include('inicio._primer_uso', ['pasos' => $primerUso])
+    @endif
+
     <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-md">
         <img src="/images/estanque.webp" alt="" aria-hidden="true" decoding="async"
              class="absolute inset-0 h-full w-full object-cover opacity-35">

@@ -22,6 +22,12 @@ class Tenant extends Model
     {
         return [
             'suspendida_at' => InstanteLocal::class,
+            // Primer uso (App\Support\PrimerUso)
+            'ajustes_revisados_at' => InstanteLocal::class,
+            'especies_revisadas_at' => InstanteLocal::class,
+            'pesos_definidos_at' => InstanteLocal::class,
+            'primer_uso_oculto_at' => InstanteLocal::class,
+            'primer_uso_completado_at' => InstanteLocal::class,
             'alerta_stock_dias' => 'integer',
             'peso_canasta_kg' => 'float',
             'peso_canastilla_kg' => 'float',

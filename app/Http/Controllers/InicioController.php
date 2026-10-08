@@ -10,6 +10,7 @@ use App\Models\Lago;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Ronda;
+use App\Support\PrimerUso;
 use App\Models\Tarea;
 use App\Models\Turno;
 use App\Models\Venta;
@@ -36,6 +37,8 @@ class InicioController extends Controller
 
         return view('inicio', [
             'usuario' => $usuario,
+            // Primeros pasos de una finca nueva (solo propietario y administrador)
+            'primerUso' => PrimerUso::paraInicio($usuario),
             'esPropietario' => $esPropietario,
             'esTecnico' => $esTecnico,
 
