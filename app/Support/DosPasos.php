@@ -2,13 +2,14 @@
 
 namespace App\Support;
 
-use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * Verificación en dos pasos de una persona: activar, verificar un código (de la app o de recuperación) y desactivar.
+ * Verificación en dos pasos de una persona (User o AdministradorPlataforma, con el trait TieneDosPasos):
+ * activar, verificar un código (de la app o de recuperación) y desactivar.
  * - La clave se guarda cifrada (cast «encrypted» del modelo); los 10 códigos de recuperación, solo como hashes.
  * - Un código de la app no se acepta dos veces (último paso usado) y uno de recuperación se borra al usarlo.
  * - La verificación bloquea la fila de la persona: dos intentos simultáneos con el mismo código no pasan los dos.
@@ -22,7 +23,7 @@ final class DosPasos
      *
      * @return list<string>|null Códigos de recuperación en texto (se muestran una sola vez); null si el código no es válido
      */
-    public static function activar(User $usuario, string $clave, string $codigo): ?array
+    public static function activar(Model $usuario, string $clave, string $codigo): ?array
     {
         $paso = Totp::verificar($clave, $codigo);
         if ($paso === null) {
@@ -40,7 +41,7 @@ final class DosPasos
         return $codigos;
     }
 
-    public static function desactivar(User $usuario): void
+    public static function desactivar(Model $usuario): void
     {
         $usuario->forceFill([
             'dos_pasos_clave' => null, 'dos_pasos_activado_at' => null, 'dos_pasos_ultimo_paso' => null, 'dos_pasos_recuperacion' => null,
@@ -48,7 +49,7 @@ final class DosPasos
     }
 
     /** ¿El código (de la app o de recuperación) es válido? Lo marca como usado. */
-    public static function verificar(User $usuario, string $codigo): bool
+    public static function verificar(Model $usuario, string $codigo): bool
     {
         return DB::transaction(function () use ($usuario, $codigo) {
             // Fila bloqueada y leída sin el filtro de finca: en el login todavía no hay finca activa

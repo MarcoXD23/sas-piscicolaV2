@@ -43,6 +43,7 @@ use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
 use App\Http\Controllers\Noche\RondaController;
+use App\Http\Controllers\Plataforma\DosPasosController as PlataformaDosPasosController;
 use App\Http\Controllers\Plataforma\FincaController as PlataformaFincaController;
 use App\Http\Controllers\Plataforma\LoginController as PlataformaLoginController;
 use Illuminate\Support\Facades\Route;
@@ -253,10 +254,17 @@ Route::prefix('plataforma')->name('plataforma.')->group(function () {
     Route::middleware('guest:plataforma')->group(function () {
         Route::get('/login', [PlataformaLoginController::class, 'create'])->name('login');
         Route::post('/login', [PlataformaLoginController::class, 'store'])->middleware('throttle:ingreso-plataforma');
+        // Segundo paso del ingreso (código de la app o de recuperación)
+        Route::get('/dos-pasos', [PlataformaDosPasosController::class, 'create'])->name('dos-pasos.create');
+        Route::post('/dos-pasos', [PlataformaDosPasosController::class, 'store'])->middleware('throttle:dos-pasos')->name('dos-pasos.store');
     });
 
-    Route::middleware('auth:plataforma')->group(function () {
+    // La verificación en dos pasos es obligatoria: sin ella activa solo se puede activar o salir
+    Route::middleware(['auth:plataforma', 'plataforma_dos_pasos'])->group(function () {
         Route::post('/logout', [PlataformaLoginController::class, 'destroy'])->name('logout');
+        Route::get('/dos-pasos/activar', [PlataformaDosPasosController::class, 'activar'])->name('dos-pasos.activar');
+        Route::post('/dos-pasos/activar', [PlataformaDosPasosController::class, 'confirmar'])->middleware('throttle:dos-pasos')->name('dos-pasos.confirmar');
+        Route::get('/dos-pasos/codigos', [PlataformaDosPasosController::class, 'codigos'])->name('dos-pasos.codigos');
         Route::get('/', [PlataformaFincaController::class, 'index'])->name('fincas.index');
         Route::post('/fincas/{finca}/suspender', [PlataformaFincaController::class, 'suspender'])->name('fincas.suspender');
         Route::post('/fincas/{finca}/reactivar', [PlataformaFincaController::class, 'reactivar'])->name('fincas.reactivar');

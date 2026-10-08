@@ -15,7 +15,7 @@ class CierreTest extends TestCase
     use RefreshDatabase;
 
     /** Rutas que no exigen sesión, a propósito. */
-    private const PUBLICAS = ['login', 'registro', 'olvide-contrasena', 'restablecer-contrasena', 'restablecer-contrasena/{token}', 'ingreso/dos-pasos', 'terminos', 'privacidad', 'salud', 'api/login', 'sanctum/csrf-cookie', 'up', 'plataforma/login'];
+    private const PUBLICAS = ['login', 'registro', 'olvide-contrasena', 'restablecer-contrasena', 'restablecer-contrasena/{token}', 'ingreso/dos-pasos', 'terminos', 'privacidad', 'salud', 'api/login', 'sanctum/csrf-cookie', 'up', 'plataforma/login', 'plataforma/dos-pasos'];
 
     /** @return list<Route> Rutas privadas de las fincas (el panel de plataforma se revisa aparte) */
     private function rutas(): array
@@ -26,11 +26,13 @@ class CierreTest extends TestCase
 
     public function test_las_rutas_del_panel_de_plataforma_exigen_su_propio_ingreso_y_no_usan_finca(): void
     {
-        $rutas = collect(Rutas::getRoutes()->getRoutes())->filter(fn (Route $ruta) => str_starts_with($ruta->uri(), 'plataforma') && $ruta->uri() !== 'plataforma/login');
+        $rutas = collect(Rutas::getRoutes()->getRoutes())->filter(fn (Route $ruta) => str_starts_with($ruta->uri(), 'plataforma') && ! in_array($ruta->uri(), self::PUBLICAS, true));
 
         $this->assertNotEmpty($rutas);
         foreach ($rutas as $ruta) {
             $this->assertContains('auth:plataforma', $ruta->gatherMiddleware(), "La ruta {$ruta->uri()} no exige el ingreso de plataforma.");
+            // La verificación en dos pasos es obligatoria en todo el panel
+            $this->assertContains('plataforma_dos_pasos', $ruta->gatherMiddleware(), "La ruta {$ruta->uri()} no exige la verificación en dos pasos.");
             $this->assertNotContains('tenant', $ruta->gatherMiddleware());
         }
     }

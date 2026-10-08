@@ -4,6 +4,7 @@ use App\Http\Middleware\AceptacionVigente;
 use App\Http\Middleware\CabecerasSeguridad;
 use App\Http\Middleware\CookieSeguraConHttps;
 use App\Http\Middleware\EstablecerTenant;
+use App\Http\Middleware\PlataformaConDosPasos;
 use App\Http\Middleware\RegistroSinConexion;
 use App\Http\Middleware\VerificarRol;
 use App\Http\Middleware\VerificarTurno;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'turno' => VerificarTurno::class,
             'sin_conexion' => RegistroSinConexion::class,   // siempre antes de 'turno'
             'aceptacion' => AceptacionVigente::class,       // términos y privacidad aceptados (versión vigente)
+            'plataforma_dos_pasos' => PlataformaConDosPasos::class,   // panel de plataforma: dos pasos obligatoria
         ]);
 
         // El tenant debe fijarse antes del route model binding para que el scope aplique.

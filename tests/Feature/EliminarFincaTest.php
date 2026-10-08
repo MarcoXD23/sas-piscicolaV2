@@ -136,7 +136,7 @@ class EliminarFincaTest extends TestCase
     public function test_el_administrador_de_plataforma_la_pide_y_la_cancela(): void
     {
         AdministradorPlataforma::create(['name' => 'Dueño', 'email' => 'dueno@software.test', 'password' => 'ClaveLarga12345']);
-        $this->post(route('plataforma.login'), ['email' => 'dueno@software.test', 'password' => 'ClaveLarga12345']);
+        $this->entrarAPlataforma();
 
         $this->post(route('plataforma.fincas.eliminar', $this->finca), ['codigo' => 'NORTE', 'actual' => 'mala'])->assertSessionHasErrors('actual');
         $this->post(route('plataforma.fincas.eliminar', $this->finca), ['codigo' => 'NORTE', 'actual' => 'ClaveLarga12345'])->assertSessionHasNoErrors();

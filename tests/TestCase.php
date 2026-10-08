@@ -2,10 +2,13 @@
 
 namespace Tests;
 
+use App\Models\AdministradorPlataforma;
 use App\Models\Especie;
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\DosPasos;
 use App\Support\Region;
+use App\Support\Totp;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Carbon;
@@ -41,6 +44,27 @@ abstract class TestCase extends BaseTestCase
         // fijar otra hora con travelTo().
         $this->travelTo(Carbon::parse('2026-10-15 12:00', Region::ZONA_POR_DEFECTO));
         Region::olvidar();
+    }
+
+    /**
+     * Ingreso real al panel de plataforma con sus dos pasos (obligatorios): activa la verificación si no la tiene
+     * y entra con la contraseña y un código de la app. actingAs cambiaría el guard por defecto de toda la prueba.
+     */
+    protected function entrarAPlataforma(string $correo = 'dueno@software.test', string $clave = 'ClaveLarga12345'): AdministradorPlataforma
+    {
+        $administrador = AdministradorPlataforma::query()->where('email', $correo)->sole();
+        if (! $administrador->tieneDosPasos()) {
+            $secreto = Totp::nuevaClave();
+            DosPasos::activar($administrador, $secreto, Totp::codigo($secreto, Totp::pasoActual()));
+        }
+        // Cada ingreso de la prueba puede usar el código del paso actual (en la vida real se espera al siguiente)
+        $administrador->refresh()->forceFill(['dos_pasos_ultimo_paso' => null])->save();
+
+        $this->post(route('plataforma.login'), ['email' => $correo, 'password' => $clave])->assertRedirect(route('plataforma.dos-pasos.create'));
+        $this->post(route('plataforma.dos-pasos.store'), ['codigo' => Totp::codigo($administrador->dos_pasos_clave, Totp::pasoActual())])
+            ->assertRedirect(route('plataforma.fincas.index'));
+
+        return $administrador;
     }
 
     /** Crea un turno en curso (de 1 hora antes a 7 horas después de ahora) para el rol indicado. */

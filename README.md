@@ -147,6 +147,13 @@ php artisan piscicola:crear-admin-plataforma
 
 El comando pide nombre, correo y contraseña (mínimo 12 caracteres). Al suspender una finca su personal no puede ingresar (web ni API) y ve un mensaje claro; las sesiones abiertas se cierran en el siguiente clic y los tokens de la API se revocan. Los datos de la finca no se borran.
 
+**Verificación en dos pasos obligatoria.** Al entrar por primera vez, el panel exige activarla: se escanea un QR con la app del teléfono y se reciben 10 códigos de recuperación, que se muestran una sola vez. Desde entonces, la contraseña sola no abre sesión: se pide también el código de la app o uno de recuperación. El intento pendiente vence a los 5 minutos y hay un límite de intentos.
+No se puede desactivar desde el panel. Si se pierden el teléfono y los códigos, se quita en el servidor y al volver a entrar se activa de nuevo:
+
+```bash
+php artisan piscicola:plataforma-quitar-dos-pasos correo@ejemplo.com
+```
+
 ### Alertas
 
 Cada finca recibe alertas de **stock de alimento bajo o agotado**, **mortalidad anormal en un lago** y **agua fuera de rango**. Para el agua se usan los mismos rangos de las especies que ya usan el inicio, Seguridad & Noche y el asistente IA (`MedicionAgua::problemas()`). Los umbrales de stock (días mínimos) y de mortalidad (porcentaje y período) se editan en **Ajustes**.
@@ -235,7 +242,7 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Verificación en dos pasos (TOTP)** opcional, sin servicios externos: códigos de 6 números de una app de autenticación (Google Authenticator, Microsoft Authenticator, Authy…). Se activa con un código QR (paquete `chillerlan/php-qrcode`, generado en el servidor) o escribiendo la clave a mano. La clave se guarda **cifrada** con `APP_KEY`; se entregan 10 códigos de recuperación de un solo uso, guardados solo como hashes. Un código no se acepta dos veces.
 - **Ingreso:** web, en `/ingreso/dos-pasos` después de la contraseña (vence a los 5 minutos); API, `POST /api/login` con el campo `codigo` (sin él responde 422 con `dos_pasos_requerido: true`). Límite propio: 5 intentos por minuto por persona y 20 por IP.
 - **Teléfono perdido:** el propietario quita los dos pasos a una persona de su personal desde **Personal** (queda en la bitácora); para el propietario: `php artisan piscicola:quitar-dos-pasos correo@…`.
-- El inicio de propietario y administrador avisa mientras no la tengan activa. El panel de plataforma todavía no la tiene.
+- El inicio de propietario y administrador avisa mientras no la tengan activa. En el panel de plataforma es obligatoria (ver «Panel de plataforma»).
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
 ## Exportar y eliminar los datos de una finca

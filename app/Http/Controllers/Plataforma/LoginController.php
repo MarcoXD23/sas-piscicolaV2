@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 /**
  * Ingreso al panel de plataforma con el guard «plataforma» (separado del ingreso de las fincas).
+ * Con la verificación en dos pasos activa, la contraseña sola no abre sesión: queda pendiente del código
+ * (Plataforma\DosPasosController). Sin ella activa, entra y el panel le exige activarla (PlataformaConDosPasos).
  */
 class LoginController extends Controller
 {
@@ -26,13 +28,26 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::guard('plataforma')->attempt(['email' => mb_strtolower($credenciales['email']), 'password' => $credenciales['password']])) {
+        $guard = Auth::guard('plataforma');
+        $administrador = $guard->getProvider()->retrieveByCredentials(['email' => mb_strtolower($credenciales['email'])]);
+        if ($administrador === null || ! $guard->getProvider()->validateCredentials($administrador, ['password' => $credenciales['password']])) {
             throw ValidationException::withMessages(['email' => __('plataforma.login.incorrecto')]);
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('plataforma.fincas.index'));
+        if ($administrador->tieneDosPasos()) {
+            $request->session()->put(DosPasosController::SESION, [
+                'administrador' => $administrador->id,
+                'vence' => now()->addMinutes(DosPasosController::MINUTOS)->getTimestamp(),
+            ]);
+
+            return redirect()->route('plataforma.dos-pasos.create');
+        }
+
+        $guard->login($administrador);
+
+        return redirect()->route('plataforma.dos-pasos.activar');
     }
 
     public function destroy(Request $request): RedirectResponse

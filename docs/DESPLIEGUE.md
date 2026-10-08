@@ -148,6 +148,8 @@ Acceso al panel de plataforma (opcional, para el dueño del software):
 php artisan piscicola:crear-admin-plataforma
 ```
 
+Entra enseguida a `/plataforma` y activa la verificación en dos pasos, que es obligatoria: hasta activarla, el panel no deja hacer nada más. Guarda los códigos de recuperación fuera del teléfono.
+
 ## 6. Permisos de carpetas
 
 PHP solo necesita escribir en `storage` y `bootstrap/cache`:

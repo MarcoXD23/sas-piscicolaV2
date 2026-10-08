@@ -46,6 +46,12 @@ return [
         'no_tenia' => ':correo no tenía la verificación en dos pasos activa.',
         'listo' => 'Se quitó la verificación en dos pasos de :correo. Puede volver a activarla en Mi cuenta.',
     ],
+    'plataforma_quitar_dos_pasos' => [
+        'descripcion' => 'Quita la verificación en dos pasos de un administrador de plataforma que perdió su teléfono y sus códigos de recuperación',
+        'no_existe' => 'No hay ningún administrador de plataforma con el correo :correo.',
+        'no_tenia' => ':correo no tenía la verificación en dos pasos activa.',
+        'listo' => 'Se quitó la verificación en dos pasos de :correo. Al entrar al panel deberá activarla de nuevo.',
+    ],
     'evaluar_alertas' => [
         'descripcion' => 'Revisa las alertas de todas las fincas activas (se programa cada hora)',
         'listo' => 'Alertas revisadas en :fincas finca(s).',

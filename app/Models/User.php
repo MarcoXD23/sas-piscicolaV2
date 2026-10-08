@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Casts\InstanteLocal;
 use App\Models\Concerns\PerteneceATenant;
+use App\Models\Concerns\TieneDosPasos;
 use App\Notifications\RestablecerContrasena;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
@@ -23,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, PerteneceATenant;
+    use HasApiTokens, HasFactory, Notifiable, PerteneceATenant, TieneDosPasos;
 
     /** Envía el correo de "olvidé mi contraseña" con los textos de lang/es. */
     public function sendPasswordResetNotification($token): void
@@ -50,12 +51,6 @@ class User extends Authenticatable
             'dos_pasos_ultimo_paso' => 'integer',
             'dos_pasos_recuperacion' => 'array',
         ];
-    }
-
-    /** ¿Tiene activa la verificación en dos pasos? */
-    public function tieneDosPasos(): bool
-    {
-        return $this->dos_pasos_activado_at !== null && filled($this->dos_pasos_clave);
     }
 
     public function roles(): BelongsToMany

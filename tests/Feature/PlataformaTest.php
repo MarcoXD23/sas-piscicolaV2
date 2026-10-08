@@ -33,10 +33,10 @@ class PlataformaTest extends TestCase
         return $usuario;
     }
 
-    /** Ingreso real por el formulario (actingAs cambiaría el guard por defecto de toda la prueba). */
+    /** Ingreso real por el formulario, con sus dos pasos (TestCase::entrarAPlataforma). */
     private function entrarComoDueno(): void
     {
-        $this->post(route('plataforma.login'), ['email' => 'dueno@software.test', 'password' => 'ClaveLarga12345'])->assertRedirect(route('plataforma.fincas.index'));
+        $this->entrarAPlataforma();
     }
 
     private function salirComoDueno(): void
@@ -56,8 +56,7 @@ class PlataformaTest extends TestCase
         $this->get(route('plataforma.fincas.index'))->assertRedirect(route('plataforma.login'));
 
         $this->post(route('plataforma.login'), ['email' => 'dueno@software.test', 'password' => 'mala'])->assertSessionHasErrors('email');
-        $this->post(route('plataforma.login'), ['email' => 'dueno@software.test', 'password' => 'ClaveLarga12345'])
-            ->assertRedirect(route('plataforma.fincas.index'));
+        $this->entrarAPlataforma();
         $this->assertAuthenticatedAs($this->dueno, 'plataforma');
         $this->assertGuest('web');
 
