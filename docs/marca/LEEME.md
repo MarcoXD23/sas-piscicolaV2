@@ -24,16 +24,6 @@ Resultado medido (lo verifica `tests/Feature/MarcaTest.php`): a 16 px, 34 % de f
 
 Si el diseñador entrega un favicon simplificado (silueta de la trucha con la corona, pocos colores, revisado a 16 px), basta con reemplazar `favicon-16.png`, `favicon-32.png` y `favicon-48.png` y volver a armar `public/favicon.ico`.
 
-## Imágenes de referencia de especies (`public/images/especies/`)
+## Fotos de especies
 
-Se muestran como portada de una especie por defecto mientras la finca no suba fotos propias (Especies → Editar → Fotos).
-
-| Archivo | Peso | Origen | Licencia |
-|---|---|---|---|
-| `bagre-rayado.webp` | 48 KB | Desconocido | Desconocida |
-| `bocachico.webp` | 122 KB | Desconocido | Desconocida |
-| `cachama-blanca.webp` | 175 KB | Desconocido | Desconocida |
-| `mojarra-negra.webp` | 23 KB | Desconocido | Desconocida |
-| `trucha-arcoiris.webp` | 77 KB | Desconocido | Desconocida |
-
-Entraron al repositorio en la «Fase 1» (commit `0aa3ad2`, 5 de octubre de 2026) ya convertidas a WebP, sin registro de su fuente y sin metadatos de autor ni licencia. **No se puede saber de dónde salieron: hay que reemplazarlas por fotos propias** (o por fotos con licencia libre, anotando aquí el autor, la fuente y la licencia). La mojarra roja no tiene imagen: queda sin foto hasta que se suba una real.
+La app no trae fotos de especies por defecto, porque no se pudo documentar su origen. Cada finca sube las suyas con autor y licencia. Si en el futuro se agrega una foto por defecto, debe tener licencia clara y anotarse aquí (archivo, peso, autor, fuente, licencia).

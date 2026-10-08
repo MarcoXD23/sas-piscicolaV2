@@ -85,7 +85,7 @@ class DisenoTest extends TestCase
             ->assertDontSee('data-abrir-al-cargar', false);
     }
 
-    public function test_la_tarjeta_del_lago_muestra_la_foto_de_la_especie(): void
+    public function test_la_tarjeta_del_lago_sin_foto_de_especie_no_muestra_imagen(): void
     {
         $propietario = $this->usuario(Rol::PROPIETARIO);
         app(TenantActual::class)->establecer($propietario->tenant_id);
@@ -104,16 +104,16 @@ class DisenoTest extends TestCase
 
         $this->actingAs($propietario)->get(route('admin.lagos.index'))
             ->assertOk()
-            ->assertSee('/images/especies/cachama-blanca.webp', false);
+            ->assertDontSee('/images/especies/', false);   // la app no trae fotos de especies por defecto
     }
 
     public function test_foto_de_especie_es_null_cuando_no_hay_imagen(): void
     {
-        // Las especies por defecto traen su foto de referencia; la mojarra roja y una especie nueva, ninguna
+        // La app no trae fotos de especies por defecto: ninguna especie tiene foto hasta que la finca suba una
         $finca = \App\Models\Tenant::factory()->create();
         \App\Support\TenantActual::sinFiltro(function () use ($finca) {
             $especies = \App\Models\Especie::query()->where('tenant_id', $finca->id)->get()->keyBy('clave');
-            $this->assertSame('/images/especies/bagre-rayado.webp', $especies['bagre rayado']->foto());
+            $this->assertNull($especies['bagre rayado']->foto());
             $this->assertNull($especies['mojarra roja']->foto());
             $this->assertNull((new \App\Models\Especie(['nombre' => 'Especie sin foto', 'clima' => 'calido']))->foto());
         });

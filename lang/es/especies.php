@@ -293,7 +293,7 @@ return [
         'engorde' => 'Engorde',
     ],
     'fichas_tecnicas_referencia_especies_pueden' => 'Fichas técnicas de referencia de las especies que se pueden sembrar.',
-    'foto_pendiente' => 'Foto pendiente',
+    'foto_pendiente' => 'Sin foto todavía',
     'guia_especies' => 'Guía de especies',
     'guia_especies_2' => '← Guía de especies',
     'oxigeno_minimo' => 'Oxígeno mínimo',

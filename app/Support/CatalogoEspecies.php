@@ -6,7 +6,7 @@ namespace App\Support;
  * Datos de REFERENCIA de las 6 especies por defecto. Ya no es la lista de especies de la finca:
  * cada finca tiene su catálogo editable en la tabla especies (App\Models\Especie), que se carga con estos valores
  * al crear la finca. La clave une cada especie por defecto con sus textos de referencia (densidades, proteína,
- * manejo) y su foto de referencia mientras no tenga ficha y fotos propias.
+ * manejo) mientras no tenga ficha propia. No trae fotos: cada finca sube las suyas (ver docs/marca/LEEME.md).
  * Los valores son orientativos: cada finca debe ajustarlos con su asistente técnico.
  */
 class CatalogoEspecies
@@ -22,7 +22,6 @@ class CatalogoEspecies
             'familia' => 'Cichlidae',
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
-            'foto' => null,
             'temperatura' => [26, 30],
             'oxigeno_min' => 4,
             'ph' => [6.8, 8.2],
@@ -32,7 +31,6 @@ class CatalogoEspecies
             'familia' => 'Cichlidae',
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
-            'foto' => '/images/especies/mojarra-negra.webp',
             'temperatura' => [26, 30],
             'oxigeno_min' => 4,
             'ph' => [6.5, 8.5],
@@ -42,7 +40,6 @@ class CatalogoEspecies
             'familia' => 'Serrasalmidae',
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
-            'foto' => '/images/especies/cachama-blanca.webp',
             'temperatura' => [25, 30],
             'oxigeno_min' => 3,
             'ph' => [6.0, 8.0],
@@ -52,7 +49,6 @@ class CatalogoEspecies
             'familia' => 'Prochilodontidae',
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'detritivoro',
-            'foto' => '/images/especies/bocachico.webp',
             'temperatura' => [26, 30],
             'oxigeno_min' => 4,
             'ph' => [6.5, 7.8],
@@ -62,7 +58,6 @@ class CatalogoEspecies
             'familia' => 'Pimelodidae',
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
-            'foto' => '/images/especies/bagre-rayado.webp',
             'temperatura' => [26, 30],
             'oxigeno_min' => 4,
             'ph' => [6.5, 7.5],
@@ -72,7 +67,6 @@ class CatalogoEspecies
             'familia' => 'Salmonidae',
             'clima' => self::CLIMA_FRIO,
             'alimentacion' => 'frio',
-            'foto' => '/images/especies/trucha-arcoiris.webp',
             'temperatura' => [12, 16],
             'oxigeno_min' => 6.5,
             'ph' => [6.8, 7.8],
@@ -126,7 +120,7 @@ class CatalogoEspecies
     }
 
     /**
-     * Textos y foto de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
+     * Textos de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
      *
      * @return array<string, mixed>
      */
@@ -136,7 +130,7 @@ class CatalogoEspecies
             return [];
         }
 
-        return self::textos($clave) + ['familia' => self::ESPECIES[$clave]['familia'], 'foto' => self::ESPECIES[$clave]['foto']];
+        return self::textos($clave) + ['familia' => self::ESPECIES[$clave]['familia']];
     }
 
     /** @return array<string, mixed> Textos de la ficha en el idioma actual (nombre, densidades, proteína, manejo...) */

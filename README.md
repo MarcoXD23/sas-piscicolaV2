@@ -273,7 +273,7 @@ Se revisa el contenido real (no la extensión) y las dimensiones antes de decodi
 
 **Ajustes del servidor** para fotos de 30 MB: `upload_max_filesize = 32M`, `post_max_size = 40M`, `memory_limit = 512M` (con 128 MB solo pasan fotos de unos 13 megapíxeles) y en Nginx `client_max_body_size 40M`. En WAMP se cambian en el `php.ini` de Apache (ícono de WAMP → PHP → php.ini) y se reinician los servicios.
 
-**Respaldo:** `piscicola:respaldar` copia solo la base; copia también la carpeta `storage/app/private/fotos` el mismo día (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)). Las imágenes de referencia de `public/images/especies/` son de origen desconocido (ver [docs/marca/LEEME.md](docs/marca/LEEME.md)).
+**Respaldo:** `piscicola:respaldar` copia solo la base; copia también la carpeta `storage/app/private/fotos` el mismo día (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)). La app no trae fotos de especies por defecto: cada finca sube las suyas (ver [docs/marca/LEEME.md](docs/marca/LEEME.md)).
 
 ## Despliegue y copias de seguridad
 
@@ -324,7 +324,6 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 
 - Registrar la medición del agua en la bitácora. Hoy su hora se corrige igual que las demás, pero la anotación del reloj corregido no queda en ningún lado.
 - Guardar en el teléfono la última hora que dio el servidor y adjuntarla a cada registro sin conexión. Así el servidor rechazaría los que dicen haber ocurrido antes de ese momento: cerraría el truco de atrasar el reloj y volverlo a poner bien antes de enviar.
-- Foto real de la mojarra roja (`public/images/especies/mojarra-roja.webp`, menos de 200 KB).
 - Superadmin y planes de suscripción para varias fincas.
 
 ## Estructura

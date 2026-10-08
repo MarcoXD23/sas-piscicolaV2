@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Especie;
+use App\Models\Lago;
 use App\Models\Rol;
+use App\Models\Siembra;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantActual;
@@ -46,7 +48,7 @@ class EspeciesTest extends TestCase
         $this->actingAs($administrador)->get(route('especies.show', Especie::deClave('bagre rayado')))
             ->assertOk()
             ->assertSee('Pseudoplatystoma magdaleniatum')
-            ->assertSee('/images/especies/bagre-rayado.webp', false);
+            ->assertSee(__('especies.foto_pendiente'));
     }
 
     public function test_especie_inexistente_da_404(): void
@@ -84,6 +86,42 @@ class EspeciesTest extends TestCase
             }
             if ($ficha['foto'] !== null) {
                 $this->assertFileExists(public_path(ltrim($ficha['foto'], '/')));
+            }
+        }
+    }
+
+    public function test_una_especie_sin_foto_se_muestra_sin_error_en_todas_sus_vistas(): void
+    {
+        // La app no trae fotos por defecto: ninguna especie tiene foto hasta que la finca suba una
+        $administrador = $this->usuario(Rol::ADMINISTRADOR);
+        $especie = Especie::deClave('cachama blanca');
+        $this->assertNull($especie->foto());
+        $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
+        Siembra::create(['lago_id' => $lago->id, 'especie_id' => $especie->id, 'fecha' => now(), 'cantidad_alevinos' => 1000,
+            'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 5, 'biomasa_kg' => 5]);
+
+        // Guía y ficha: recuadro con el texto «Sin foto todavía»
+        foreach ([route('especies.index'), route('especies.show', $especie)] as $url) {
+            $html = $this->actingAs($administrador)->get($url)->assertOk()->assertSee(__('especies.foto_pendiente'))->getContent();
+            $this->assertSinImagenesRotas($html);
+        }
+
+        // Tarjeta del lago y detalle: el ícono del pez en lugar de la foto
+        foreach ([route('admin.lagos.index'), route('admin.lagos.show', $lago)] as $url) {
+            $html = $this->actingAs($administrador)->get($url)->assertOk()->assertSee('Cachama blanca')->getContent();
+            $this->assertSinImagenesRotas($html);
+        }
+    }
+
+    /** Ninguna <img> sin dirección ni apuntando a las fotos por defecto que se retiraron. */
+    private function assertSinImagenesRotas(string $html): void
+    {
+        $this->assertStringNotContainsString('/images/especies/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<img[^>]*\ssrc=""/', $html);
+        preg_match_all('/<img[^>]*\ssrc="([^"]+)"/', $html, $imagenes);
+        foreach ($imagenes[1] as $src) {
+            if (str_starts_with($src, '/') && ! str_starts_with($src, '//')) {
+                $this->assertFileExists(public_path(parse_url($src, PHP_URL_PATH)), "Imagen rota: {$src}");
             }
         }
     }

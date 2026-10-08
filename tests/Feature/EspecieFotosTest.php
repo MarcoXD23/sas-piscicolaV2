@@ -329,8 +329,8 @@ class EspecieFotosTest extends TestCase
     public function test_la_primera_foto_es_la_portada_y_borrar_quita_los_dos_archivos(): void
     {
         $bagre = Especie::deClave('bagre rayado');
-        $this->assertSame('/images/especies/bagre-rayado.webp', $bagre->foto());   // sin fotos propias: la de referencia
-        $this->assertNull($this->especie->foto());                                // la mojarra roja no tiene imagen
+        $this->assertNull($bagre->foto());            // la app no trae fotos por defecto: sin fotos propias, ninguna
+        $this->assertNull($this->especie->foto());
 
         $this->subir($this->archivo($this->jpegConMetadatos(40, 30, 1)), ['autor' => 'Primera'])->assertSessionHasNoErrors();
         $this->subir($this->archivo($this->jpegConMetadatos(40, 30, 1)), ['autor' => 'Segunda'])->assertSessionHasNoErrors();

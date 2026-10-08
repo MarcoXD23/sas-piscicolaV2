@@ -107,16 +107,16 @@ class Especie extends Model
         return $this->rangoTemperatura() !== null && $this->oxigeno_min !== null && $this->rangoPh() !== null;
     }
 
-    /** Textos y foto de referencia (solo las especies por defecto, por su clave). */
+    /** Textos de referencia (solo las especies por defecto, por su clave). */
     public function referencia(): array
     {
         return CatalogoEspecies::referencia($this->clave);
     }
 
-    /** Portada: la primera foto propia (versión ligera); sin fotos propias, la imagen de referencia (si tiene). */
+    /** Portada: la primera foto que subió la finca (versión ligera); null si no ha subido ninguna. */
     public function foto(): ?string
     {
-        return $this->fotos->first()?->url() ?? $this->referencia()['foto'] ?? null;
+        return $this->fotos->first()?->url();
     }
 
     /** @return array<string, ?string> cada campo con su texto o null si está vacío */
@@ -157,9 +157,10 @@ class Especie extends Model
             'color' => $this->color ?: null,
             'aspecto' => $this->aspecto ?: null,
             'orientativa' => $this->ficha_orientativa,
-            // Solo de referencia (especies por defecto): familia, foto, proteína por etapa, tiempo a cosecha y peso comercial
-            'familia' => $referencia['familia'] ?? null,
+            // Portada: la primera foto que subió la finca (null: la vista muestra «Sin foto todavía»)
             'foto' => $this->foto(),
+            // Solo de referencia (especies por defecto): familia, proteína por etapa, tiempo a cosecha y peso comercial
+            'familia' => $referencia['familia'] ?? null,
             'proteina' => $referencia['proteina'] ?? null,
             'meses_cosecha' => $referencia['meses_cosecha'] ?? null,
             'peso_comercial' => $referencia['peso_comercial'] ?? null,
