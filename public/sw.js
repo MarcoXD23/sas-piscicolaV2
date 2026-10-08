@@ -8,14 +8,18 @@
  * - Al cerrar sesión la página pide borrar las copias ({tipo: 'limpiar'}); el servidor además envía Clear-Site-Data.
  * - Los formularios verifican la señal antes de enviar (resources/js/app.js). Sin señal, solo raciones, mortalidad,
  *   avisos de pesca, rondas y mediciones se guardan en el teléfono (IndexedDB) y se envían al volver (resources/js/sin-conexion.js).
+ * - Registro rápido (/campo): página sin datos que se guarda al instalarse, junto con sus estilos y scripts, aparte de
+ *   las 40 pantallas (no se pierde al navegar). Con señal se renueva; sin señal se sirve la guardada. Cada paquete de
+ *   trabajo nuevo pide renovarla ({tipo: 'actualizar-campo'}). Nunca se guarda nada de /campo/ (paquete y token).
  */
-const VERSION = 'v9';
+const VERSION = 'v10';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;
-const PRECARGA = ['/offline.html', '/favicon.ico', '/icons/icon-192.png', '/manifest.webmanifest'];
+const CAMPO = '/campo';
+const PRECARGA = ['/offline.html', CAMPO, '/favicon.ico', '/icons/icon-192.png', '/manifest.webmanifest'];
 const ESTATICOS = ['/build/', '/images/', '/icons/'];
-const NUNCA_GUARDAR = ['/login', '/registro', '/olvide-contrasena', '/restablecer-contrasena', '/ingreso', '/mi-cuenta', '/plataforma', '/asistente', '/logout', '/api/', '/up', '/salud'];
+const NUNCA_GUARDAR = ['/login', '/registro', '/olvide-contrasena', '/restablecer-contrasena', '/ingreso', '/mi-cuenta', '/plataforma', '/asistente', '/logout', '/api/', '/up', '/salud', '/campo/'];
 const DESCARGAS = ['/excel', '/pdf'];
 
 const sePuedeGuardar = (url) =>
@@ -23,7 +27,11 @@ const sePuedeGuardar = (url) =>
     && !DESCARGAS.some((final) => url.pathname.endsWith(final));
 
 self.addEventListener('install', (evento) => {
-    evento.waitUntil(caches.open(CACHE_ESTATICOS).then((cache) => cache.addAll(PRECARGA)).then(() => self.skipWaiting()));
+    evento.waitUntil(caches.open(CACHE_ESTATICOS)
+        .then((cache) => cache.addAll(PRECARGA))
+        .then(() => caches.match(CAMPO, { cacheName: CACHE_ESTATICOS }))
+        .then((guardada) => guardada && guardarCampo(guardada).catch(() => {}))
+        .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (evento) => {
@@ -36,11 +44,41 @@ self.addEventListener('activate', (evento) => {
     );
 });
 
+/** Guarda /campo y los estilos y scripts que usa (para que funcione sin señal aunque nunca se haya abierto). */
+const guardarCampo = async (respuesta) => {
+    const cache = await caches.open(CACHE_ESTATICOS);
+    const html = await respuesta.clone().text();
+    await cache.put(CAMPO, respuesta);
+    const recursos = [...new Set(html.match(/\/build\/assets\/[^"'\s)]+/g) ?? [])];
+    await Promise.all(recursos.map(async (ruta) => {
+        if (!(await cache.match(ruta))) await cache.add(ruta).catch(() => {});
+    }));
+};
+
+const actualizarCampo = async () => {
+    const respuesta = await fetch(CAMPO, { cache: 'no-cache' });
+    if (respuesta.ok && respuesta.type === 'basic') await guardarCampo(respuesta);
+};
+
 self.addEventListener('message', (evento) => {
     if (evento.data?.tipo === 'limpiar') {
         evento.waitUntil(caches.delete(CACHE_PAGINAS));
     }
+    if (evento.data?.tipo === 'actualizar-campo') {
+        evento.waitUntil(actualizarCampo().catch(() => {}));
+    }
 });
+
+/** Registro rápido: con señal, la versión nueva (y se guarda); sin señal, la guardada. */
+const campo = async (evento) => {
+    try {
+        const respuesta = await fetch(evento.request);
+        if (respuesta.ok && !respuesta.redirected && respuesta.type === 'basic') evento.waitUntil(guardarCampo(respuesta.clone()));
+        return respuesta;
+    } catch {
+        return (await caches.match(CAMPO, { cacheName: CACHE_ESTATICOS })) ?? caches.match('/offline.html');
+    }
+};
 
 const guardarPagina = async (peticion, respuesta) => {
     const cache = await caches.open(CACHE_PAGINAS);
@@ -75,7 +113,7 @@ self.addEventListener('fetch', (evento) => {
     if (url.origin !== self.location.origin) return;
 
     if (peticion.mode === 'navigate') {
-        evento.respondWith(pagina(evento, url));
+        evento.respondWith(url.pathname === CAMPO ? campo(evento) : pagina(evento, url));
         return;
     }
 

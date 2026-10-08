@@ -156,6 +156,36 @@ class SinConexionTelefonoTest extends TestCase
         $this->assertStringContainsString("'X-Registrado-En': registro.registradoEn", $cola);
         $this->assertStringContainsString("'X-Hora-Telefono': new Date().toISOString()", $cola);
         $this->assertStringContainsString("index('clave').getAll(clave)", $cola);
-        $this->assertStringContainsString("const VERSION = 'v9'", file_get_contents(public_path('sw.js')));
+        $this->assertStringContainsString("const VERSION = 'v10'", file_get_contents(public_path('sw.js')));
+    }
+
+    public function test_la_cola_envia_con_un_token_fresco_y_no_con_el_de_la_pagina(): void
+    {
+        $cola = file_get_contents(resource_path('js/sin-conexion.js'));
+
+        // El token se pide justo antes de enviar; el de una página guardada puede estar vencido
+        $this->assertStringContainsString("fetch('/campo/token'", $cola);
+        $this->assertStringContainsString("'X-CSRF-TOKEN': sesion.token", $cola);
+        $this->assertStringNotContainsString('csrf-token', $cola);
+        // En /campo (sin sesión en la página) la clave sale de la sesión activa guardada en el teléfono
+        $this->assertStringContainsString('leerSesionActiva()', $cola);
+        $this->assertStringContainsString('guardarRegistro', $cola);
+    }
+
+    public function test_el_paquete_se_descarga_solo_y_se_borra_al_salir(): void
+    {
+        $this->actingAs($this->trabajador)->get(route('admin.lagos.index'))
+            ->assertSee('data-paquete-minutos="'.config('sin_conexion.minutos_paquete').'"', false);
+
+        $paquete = file_get_contents(resource_path('js/paquete.js'));
+        $this->assertStringContainsString("fetch('/campo/paquete'", $paquete);
+        $this->assertStringContainsString("cache: 'no-store'", $paquete);
+        $this->assertStringContainsString('paqueteValido(paquete, clave)', $paquete);
+        $this->assertStringContainsString("window.addEventListener('online'", $paquete);
+        $this->assertStringContainsString('clavesAjenas(claves, clave)', $paquete);
+
+        // Al cerrar sesión: pantallas guardadas, paquete y sesión activa
+        $app = file_get_contents(resource_path('js/app.js'));
+        $this->assertMatchesRegularExpression("/endsWith\\('\\/logout'\\)\\) \\{\\s*navigator\\.serviceWorker\\?\\.controller\\?\\.postMessage\\(\\{ tipo: 'limpiar' \\}\\);\\s*await paquete\\.borrar\\(\\);/", $app);
     }
 }

@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import pesaje from './pesaje';
+import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
 
 window.Alpine = Alpine;
@@ -76,6 +77,8 @@ mostrarConexion();
 // Registros sin conexión (resources/js/sin-conexion.js): los formularios con data-guardar-sin-conexion se guardan en el
 // teléfono y se envían al volver la señal. Los demás no se envían sin señal: lo escrito queda en el formulario.
 const cola = iniciarCola(t);
+// Paquete de trabajo para Registro rápido (/campo): se descarga solo en segundo plano (resources/js/paquete.js)
+const paquete = iniciarPaquete();
 
 const hayConexion = async () => {
     if (!navigator.onLine) return false;
@@ -139,9 +142,10 @@ document.addEventListener('submit', async (evento) => {
     }
 
     formulario.querySelector('[data-aviso-conexion]')?.remove();
-    // Al cerrar sesión se borran las pantallas guardadas en este teléfono
+    // Al cerrar sesión se borran las pantallas guardadas, el paquete de trabajo y la sesión activa de este teléfono
     if (formulario.action.endsWith('/logout')) {
         navigator.serviceWorker?.controller?.postMessage({ tipo: 'limpiar' });
+        await paquete.borrar();
     }
     formulario.dataset.conexionVerificada = '1';
     formulario.requestSubmit(boton ?? undefined);

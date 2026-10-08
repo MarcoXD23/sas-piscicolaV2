@@ -22,7 +22,7 @@
     $conMenuInferior = false;
 @endphp
 {{-- Registros sin conexión (resources/js/sin-conexion.js): la cola del teléfono va separada por finca y persona --}}
-<body class="min-h-screen" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" @endif>
+<body class="min-h-screen" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" data-paquete-minutos="{{ config('sin_conexion.minutos_paquete') }}" @endif>
 
     {{-- Sin conexión: la página puede ser una copia guardada (solo consulta). Lleva la hora en que se generó. --}}
     <div data-sin-conexion hidden role="status" class="sticky top-0 z-40 bg-amber-400 px-4 py-2 text-center text-sm font-semibold text-amber-950 print:hidden">

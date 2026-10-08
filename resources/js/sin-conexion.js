@@ -1,37 +1,37 @@
 /*
  * Registros hechos sin conexión (raciones, mortalidad, aviso de pesca, rondas y mediciones).
- * - Solo los formularios con data-guardar-sin-conexion (su valor es el resumen que se muestra en la lista).
- * - Se guardan en el IndexedDB del teléfono, separados por finca y persona (data-cola-clave del <body>).
+ * - Los formularios con data-guardar-sin-conexion (su valor es el resumen que se muestra en la lista) y los registros
+ *   que arma la pantalla Registro rápido (/campo) con guardarRegistro().
+ * - Se guardan en el IndexedDB del teléfono (resources/js/almacen.js), separados por finca y persona: la clave sale de
+ *   data-cola-clave del <body> o, en /campo (sin sesión en la página), de la sesión activa guardada.
+ * - Antes de enviar se pide un token vigente a /campo/token (nunca el de una página guardada, que puede estar vencido).
  * - Se envían en orden al volver la señal, al abrir cualquier pantalla y con «Enviar ahora», con las cabeceras
  *   X-Registro-Sin-Conexion (uuid), X-Registrado-En (hora del registro) y X-Hora-Telefono (hora del envío, con la que
  *   el servidor corrige un reloj mal puesto). El servidor aplica sus reglas al llegar
  *   (app/Http/Middleware/RegistroSinConexion.php).
  * - Lo que el servidor rechaza queda en «Rechazados» con su motivo y sus datos, hasta que la persona lo descarta.
  */
+import { leerSesionActiva, operacion as operacionBase, REGISTROS } from './almacen';
+import { estadoToken } from './paquete-logica';
 import { camposParaGuardar, clasificar, fechaLocal, motivoRechazo, porVencer } from './sin-conexion-logica';
 
-const BASE = 'sas-piscicola-sin-conexion';
-const ALMACEN = 'registros';
+const operacion = (modo, accion) => operacionBase(REGISTROS, modo, accion);
 
-const abrirBase = () => new Promise((resolver, rechazar) => {
-    const peticion = indexedDB.open(BASE, 1);
-    peticion.onupgradeneeded = () => {
-        const almacen = peticion.result.createObjectStore(ALMACEN, { keyPath: 'uuid' });
-        almacen.createIndex('clave', 'clave');
-    };
-    peticion.onsuccess = () => resolver(peticion.result);
-    peticion.onerror = () => rechazar(peticion.error);
-});
-
-const operacion = async (modo, accion) => {
-    const base = await abrirBase();
-    return new Promise((resolver, rechazar) => {
-        const transaccion = base.transaction(ALMACEN, modo);
-        const resultado = accion(transaccion.objectStore(ALMACEN));
-        transaccion.oncomplete = () => { base.close(); resolver(resultado?.result); };
-        transaccion.onerror = () => { base.close(); rechazar(transaccion.error); };
-        transaccion.onabort = () => { base.close(); rechazar(transaccion.error); };
-    });
+/** Token CSRF vigente de la sesión ({ token }) o el motivo para no enviar todavía ({ estado: 'sesion' | 'reintentar' }). */
+const tokenFresco = async () => {
+    try {
+        const respuesta = await fetch('/campo/token', {
+            credentials: 'same-origin',
+            cache: 'no-store',
+            redirect: 'manual',
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const cuerpo = await respuesta.json().catch(() => null);
+        const estado = estadoToken(respuesta.status, cuerpo);
+        return estado === 'listo' ? { token: cuerpo.token } : { estado };
+    } catch {
+        return { estado: 'reintentar' };
+    }
 };
 
 /** Texto de la etiqueta de un campo (o de su grupo, en los botones de opción). */
@@ -51,16 +51,20 @@ const detalleDe = (formulario) => [...formulario.elements]
     .filter(([, valor]) => String(valor).trim() !== '');
 
 export const iniciarCola = (t) => {
-    const clave = document.body.dataset.colaClave;
+    let clave = document.body.dataset.colaClave ?? null;
     const horas = Number(document.body.dataset.colaHoras) || 48;
-    const disponible = Boolean(clave) && 'indexedDB' in window && 'randomUUID' in crypto;
+    const puedeGuardar = 'indexedDB' in window && 'randomUUID' in crypto;
+    // En /campo la página no trae la clave: se usa la de la sesión activa guardada en el teléfono
+    const listo = (async () => { if (!clave && puedeGuardar) clave = await leerSesionActiva(); })();
+    const disponible = () => Boolean(clave) && puedeGuardar;
 
     const boton = document.querySelector('[data-cola-boton]');
     const ventana = document.getElementById('cola-sin-conexion');
     let enviando = false;
 
     const misRegistros = async () => {
-        if (!disponible) return [];
+        await listo;
+        if (!disponible()) return [];
         try {
             const todos = await operacion('readonly', (almacen) => almacen.index('clave').getAll(clave));
             return (todos ?? []).sort((a, b) => a.registradoEn.localeCompare(b.registradoEn));
@@ -136,31 +140,45 @@ export const iniciarCola = (t) => {
         ventana.querySelector('[data-cola-enviar]').hidden = pendientes.length === 0;
     };
 
-    /** Guarda el formulario en el teléfono. Devuelve false si no se pudo (el formulario no se toca). */
-    const guardar = async (formulario) => {
-        if (!disponible) return false;
-        const registro = {
-            uuid: crypto.randomUUID(),
-            clave,
-            url: formulario.action,
-            campos: camposParaGuardar([...new FormData(formulario).entries()]),
-            detalle: detalleDe(formulario),
-            resumen: formulario.dataset.guardarSinConexion,
-            registradoEn: new Date().toISOString(),
-            estado: 'pendiente',
-            motivo: null,
-        };
-
+    /**
+     * Guarda un registro en la cola: { url, campos: [[nombre, valor]], detalle: [[etiqueta, valor]], resumen }.
+     * Lo usan los formularios de las pantallas y Registro rápido. Devuelve false si no se pudo guardar.
+     */
+    const guardarRegistro = async ({ url, campos, detalle, resumen }) => {
+        await listo;
+        if (!disponible()) return false;
         try {
-            await operacion('readwrite', (almacen) => almacen.add(registro));
+            await operacion('readwrite', (almacen) => almacen.add({
+                uuid: crypto.randomUUID(),
+                clave,
+                url,
+                campos: camposParaGuardar(campos),
+                detalle,
+                resumen,
+                registradoEn: new Date().toISOString(),
+                estado: 'pendiente',
+                motivo: null,
+            }));
         } catch {
             return false;
         }
+        await pintar();
+        return true;
+    };
+
+    /** Guarda el formulario en el teléfono. Devuelve false si no se pudo (el formulario no se toca). */
+    const guardar = async (formulario) => {
+        const guardado = await guardarRegistro({
+            url: formulario.action,
+            campos: [...new FormData(formulario).entries()],
+            detalle: detalleDe(formulario),
+            resumen: formulario.dataset.guardarSinConexion,
+        });
+        if (!guardado) return false;
 
         formulario.reset();
         formulario.closest('dialog')?.close();
         aviso(t('cola_guardado'));
-        await pintar();
         return true;
     };
 
@@ -169,7 +187,8 @@ export const iniciarCola = (t) => {
 
     /** Envía los pendientes en orden. Se detiene si no hay señal o la sesión venció (lo demás sigue en la cola). */
     const enviar = async ({ avisar = false } = {}) => {
-        if (!disponible || enviando || !navigator.onLine) {
+        await listo;
+        if (!disponible() || enviando || !navigator.onLine) {
             if (avisar && !navigator.onLine) aviso(t('cola_sin_senal'), 'atencion');
             return;
         }
@@ -179,10 +198,15 @@ export const iniciarCola = (t) => {
         let detenido = null;
 
         try {
-            for (const registro of (await misRegistros()).filter((r) => r.estado === 'pendiente')) {
+            const pendientes = (await misRegistros()).filter((r) => r.estado === 'pendiente');
+            // Token vigente de la sesión, pedido justo ahora (si la sesión venció, los registros esperan)
+            const sesion = pendientes.length > 0 ? await tokenFresco() : { token: null };
+            if (!sesion.token && pendientes.length > 0) detenido = sesion.estado;
+
+            for (const registro of sesion.token ? pendientes : []) {
                 const datos = new FormData();
                 registro.campos.forEach(([nombre, valor]) => datos.append(nombre, valor));
-                datos.append('_token', document.querySelector('meta[name="csrf-token"]')?.content ?? '');
+                datos.append('_token', sesion.token);
 
                 let estado = 0;
                 let cuerpo = null;
@@ -195,6 +219,7 @@ export const iniciarCola = (t) => {
                         headers: {
                             Accept: 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': sesion.token,
                             'X-Registro-Sin-Conexion': registro.uuid,
                             'X-Registrado-En': registro.registradoEn,
                             'X-Hora-Telefono': new Date().toISOString(),
@@ -240,7 +265,8 @@ export const iniciarCola = (t) => {
         if (campo.value === campo.defaultValue) campo.value = campo.defaultValue = fechaLocal();
     });
 
-    if (disponible) {
+    listo.then(() => {
+        if (!disponible()) return;
         ventana?.addEventListener('click', async (evento) => {
             const descartar = evento.target.closest('[data-cola-descartar]');
             if (descartar) {
@@ -253,7 +279,7 @@ export const iniciarCola = (t) => {
         window.addEventListener('offline', fechasDeHoy);
         if (!navigator.onLine) fechasDeHoy();
         pintar().then(() => enviar());
-    }
+    });
 
-    return { disponible, guardar, enviar, total, borrarTodo };
+    return { disponible, guardar, guardarRegistro, enviar, total, borrarTodo, misRegistros };
 };

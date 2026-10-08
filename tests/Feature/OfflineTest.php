@@ -88,4 +88,17 @@ class OfflineTest extends TestCase
     {
         $this->get('/up')->assertOk();
     }
+    public function test_el_service_worker_guarda_registro_rapido_y_nunca_el_paquete_ni_el_token(): void
+    {
+        $sw = $this->serviceWorker();
+
+        // /campo se guarda al instalarse (con sus estilos y scripts) y se sirve sin señal
+        $this->assertStringContainsString("const CAMPO = '/campo';", $sw);
+        $this->assertStringContainsString("const PRECARGA = ['/offline.html', CAMPO,", $sw);
+        $this->assertStringContainsString('url.pathname === CAMPO ? campo(evento) : pagina(evento, url)', $sw);
+        $this->assertStringContainsString('html.match(/\/build\/assets\/[^', $sw);
+        $this->assertStringContainsString("evento.data?.tipo === 'actualizar-campo'", $sw);
+        // Paquete y token: nunca en caché
+        $this->assertStringContainsString("'/salud', '/campo/'];", $sw);
+    }
 }
