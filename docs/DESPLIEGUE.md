@@ -227,6 +227,7 @@ La app agrega por su cuenta HSTS y las cabeceras de seguridad cuando la petició
 
 - Las alertas, cada hora.
 - El respaldo, a diario a las 2:00, hora del servidor.
+- El latido del programador, cada minuto, y la vigilancia del estado del sistema, cada 5 minutos (ver sección 15).
 
 ```bash
 sudo crontab -u www-data -e
@@ -277,7 +278,7 @@ Con la configuración en caché, cada cambio al `.env` exige volver a correr `ph
 
 - Abre `https://finca.ejemplo.com` y entra como propietario.
 - Pide un enlace de "¿Olvidaste tu contraseña?" y confirma que llega al correo.
-- Revisa `storage/logs/laravel.log`.
+- Revisa el archivo de errores del día en `storage/logs/` (`laravel-AAAA-MM-DD.log`).
 
 ---
 
@@ -393,4 +394,52 @@ La prueba automática `RespaldoTest` hace este mismo recorrido de verdad:
 - [ ] El cron (`schedule:run`) y la cola (`sas-piscicola-cola`) están activos.
 - [ ] La primera copia está hecha y probada con `piscicola:restaurar`, y existe una copia fuera del servidor.
 - [ ] El cortafuegos deja abiertos solo SSH, 80 y 443, y PostgreSQL no está expuesto.
-- [ ] Revisaste `storage/logs/laravel.log` sin errores.
+- [ ] Revisaste el archivo de errores del día en `storage/logs/` sin errores.
+- [ ] Un servicio externo vigila `/salud` y `SALUD_CORREO_AVISO` (o un administrador de plataforma) recibe los avisos (ver sección 15).
+
+## 15. Estado del sistema y monitoreo
+
+**`/salud`** es pública y responde solo `ok` (200) o `falla` (503). No dice qué falló ni muestra datos de la app o de las fincas. Comprueba tres cosas:
+
+- La base de datos responde.
+- Se puede escribir en `storage`.
+- El programador (cron) corrió en la última hora.
+
+Tiene un límite de 60 consultas por minuto por IP.
+
+**Vigilarla desde afuera (gratis).** Usa UptimeRobot o Better Stack, que tienen plan gratuito:
+
+1. Crea un monitor de tipo **Keyword** (palabra clave) con la URL `https://finca.ejemplo.com/salud`.
+2. Pon como palabra esperada `ok` y el intervalo en **5 minutos**.
+3. Agrega tu correo (o el aviso a Telegram o la app del teléfono) como contacto de alerta.
+
+Así te enteras aunque el servidor entero esté caído, cuando la app no puede avisar por sí misma.
+
+**Aviso por correo desde la app.** `php artisan piscicola:vigilar` corre cada 5 minutos con el cron:
+
+- Si algo empieza a fallar, envía **un** correo y no lo repite mientras siga fallando.
+- Si algo distinto falla, envía otro.
+- Cuando todo se recupera, envía un último correo avisando la recuperación.
+- Lo recibe `SALUD_CORREO_AVISO`. Si está vacía, lo reciben los administradores de plataforma.
+- Necesita el correo configurado (`MAIL_*`).
+
+**Detalle para quien administra el servidor:**
+
+```bash
+php artisan piscicola:estado
+```
+
+Muestra:
+
+- Cada comprobación.
+- La versión de PostgreSQL.
+- El último ciclo del programador.
+- Los trabajos en cola y los fallidos.
+- El espacio libre en disco.
+- La última copia de seguridad en `RESPALDOS_CARPETA`.
+
+Termina con código 1 si algo falla.
+
+**Archivos de errores:** con `LOG_STACK=daily` se escribe un archivo por día, `storage/logs/laravel-AAAA-MM-DD.log`. Se borran los de más de `LOG_DAILY_DAYS` días (14 por defecto).
+
+> **Opcional, no instalado:** un servicio de reporte de errores como Sentry muestra cada excepción con su contexto. Se agrega solo si se aprueba aparte.

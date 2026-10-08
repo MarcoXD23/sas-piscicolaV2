@@ -143,6 +143,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Segundo paso (web y API): 20 por minuto por IP; además, 5 por minuto por persona (DosPasosController y API)
         RateLimiter::for('dos-pasos', fn (Request $request) => Limit::perMinute(20)->by('dos-pasos-ip|'.$request->ip()));
+        // /salud es pública: 60 consultas por minuto por IP (de sobra para un servicio de monitoreo)
+        RateLimiter::for('salud', fn (Request $request) => Limit::perMinute(60)->by('salud|'.$request->ip()));
         // Cambiar la contraseña desde Mi cuenta: 5 por minuto por persona (la contraseña actual no se adivina)
         RateLimiter::for('cambiar-contrasena', fn (Request $request) => Limit::perMinute(5)->by('cambiar-contrasena|'.$request->user()?->id));
     }

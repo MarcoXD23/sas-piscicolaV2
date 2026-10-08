@@ -23,6 +23,12 @@ return [
         'pais_invalido' => 'El país no es un código válido de 2 letras.',
         'zona_invalida' => 'La zona horaria no es válida.',
     ],
+    'estado' => [
+        'descripcion' => 'Muestra el estado del sistema: base de datos, almacenamiento, programador, cola, espacio libre y última copia',
+    ],
+    'vigilar' => [
+        'descripcion' => 'Revisa el estado del sistema y avisa por correo cuando algo empieza a fallar o se recupera (cada 5 minutos)',
+    ],
     'eliminar_fincas' => [
         'descripcion' => 'Borra definitivamente las fincas cuyo plazo de eliminación venció (y las que reaparezcan al restaurar una copia)',
         'reaparecida' => 'La finca :id ya estaba eliminada y reapareció (copia restaurada): se borra de nuevo.',

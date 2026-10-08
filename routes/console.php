@@ -18,3 +18,7 @@ Schedule::command('piscicola:respaldar')->dailyAt(config('respaldos.hora'))->wit
 // Datos de las fincas: paquetes de exportación vencidos (cada hora) y fincas con el plazo de eliminación vencido (a diario)
 Schedule::command('piscicola:limpiar-exportaciones')->hourly()->withoutOverlapping();
 Schedule::command('piscicola:eliminar-fincas')->dailyAt('03:30')->withoutOverlapping();
+
+// Estado del sistema: latido del programador (lo mira /salud) y vigilancia con aviso por correo
+Schedule::call(fn () => \App\Support\Salud\Comprobaciones::latido())->everyMinute()->name('latido-programador');
+Schedule::command('piscicola:vigilar')->everyFiveMinutes()->withoutOverlapping();

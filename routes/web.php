@@ -38,6 +38,7 @@ use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\FotoEspecieController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\SaludController;
 use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
@@ -62,6 +63,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/ingreso/dos-pasos', [DosPasosController::class, 'create'])->name('dos-pasos.create');
     Route::post('/ingreso/dos-pasos', [DosPasosController::class, 'store'])->middleware('throttle:dos-pasos')->name('dos-pasos.store');
 });
+
+// Estado del sistema para el monitoreo externo: solo «ok» o «falla», sin detalles
+Route::get('/salud', SaludController::class)->middleware('throttle:salud')->name('salud');
 
 // Términos de uso y política de privacidad: públicos (con o sin sesión)
 Route::get('/terminos', [LegalController::class, 'terminos'])->name('legal.terminos');

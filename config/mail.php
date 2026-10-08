@@ -14,7 +14,7 @@ return [
     |
     */
 
-    // Si MAIL_MAILER está vacío, los correos se escriben en storage/logs/laravel.log
+    // Si MAIL_MAILER está vacío, los correos se escriben en el registro del día (storage/logs/laravel-AAAA-MM-DD.log)
     'default' => env('MAIL_MAILER') ?: 'log',
 
     /*

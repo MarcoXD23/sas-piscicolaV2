@@ -88,7 +88,7 @@ Edita `.env`:
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.5-flash-lite` (el anterior, `gemini-3.8-flash`, se saturaba con errores 503). |
 | `GEMINI_MODEL_RESPALDO` | Opcional. Modelo que se prueba una vez si el principal sigue respondiendo 500 o 503 después de 2 reintentos (1 s y 3 s). Vacío = sin respaldo. Sugerido: `gemini-flash-lite-latest`. |
-| `MAIL_*` | Correo saliente (recuperar contraseña). Vacío = los correos se escriben en `storage/logs/laravel.log`. |
+| `MAIL_*` | Correo saliente (recuperar contraseña). Vacío = los correos se escriben en el archivo del día de `storage/logs/`. |
 
 ### Asistente IA: elegir proveedor
 
@@ -125,7 +125,7 @@ MAIL_FROM_ADDRESS=tucorreo@gmail.com
 MAIL_FROM_NAME="El SAS Piscícola"
 ```
 
-Luego `php artisan config:clear`. Mientras `MAIL_MAILER` esté vacío, el correo (con el enlace) queda en `storage/logs/laravel.log`.
+Luego `php artisan config:clear`. Mientras `MAIL_MAILER` esté vacío, el correo (con el enlace) queda en el archivo del día de `storage/logs/` (`laravel-AAAA-MM-DD.log`).
 
 ### Primer propietario
 
@@ -274,6 +274,17 @@ Hosting compartido como InfinityFree **no sirve**: solo ofrece MySQL, sin SSH ni
 | `php artisan piscicola:usuario-base` | Imprime el SQL de los dos roles de base de datos, uno dueño y otro de la app. No ejecuta nada. |
 
 Variables: `RESPALDOS_CARPETA`, `RESPALDOS_DIAS`, `RESPALDOS_HORA`, `PG_BIN` (carpeta de `pg_dump` si no está en el PATH; en Windows, entre comillas simples) y `TRUSTED_PROXIES` (IPs del proxy de confianza).
+
+### Estado del sistema
+
+- **`/salud`** responde solo `ok` o `falla`, sin más datos. Comprueba la base, el almacenamiento y que el cron haya corrido en la última hora.
+  Vigílala con UptimeRobot o Better Stack: monitor de palabra clave `ok`, cada 5 minutos.
+- **`php artisan piscicola:estado`** muestra el detalle: base, cola y fallos, disco libre, última copia y último ciclo del programador.
+- **`piscicola:vigilar`** corre cada 5 minutos y envía un solo correo cuando algo falla y otro cuando se recupera.
+  El correo va a `SALUD_CORREO_AVISO`; si está vacía, a los administradores de plataforma.
+- **Errores:** se guardan en un archivo por día en `storage/logs/` y se conservan `LOG_DAILY_DAYS` días (14).
+
+Ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md), sección 15.
 
 ## Pruebas
 
