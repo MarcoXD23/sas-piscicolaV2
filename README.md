@@ -273,7 +273,7 @@ Se revisa el contenido real (no la extensión) y las dimensiones antes de decodi
 
 **Ajustes del servidor** para fotos de 30 MB: `upload_max_filesize = 32M`, `post_max_size = 40M`, `memory_limit = 512M` (con 128 MB solo pasan fotos de unos 13 megapíxeles) y en Nginx `client_max_body_size 40M`. En WAMP se cambian en el `php.ini` de Apache (ícono de WAMP → PHP → php.ini) y se reinician los servicios.
 
-**Respaldo:** `piscicola:respaldar` copia solo la base; copia también la carpeta `storage/app/private/fotos` el mismo día (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)). La app no trae fotos de especies por defecto: cada finca sube las suyas (ver [docs/marca/LEEME.md](docs/marca/LEEME.md)).
+**Respaldo:** `piscicola:respaldar` copia solo la base; copia también la carpeta `storage/app/private/fotos` el mismo día (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)). Mientras la finca no sube fotos, cada especie por defecto muestra una foto de referencia con licencia libre y su crédito (autor, licencia y fuente en [docs/marca/LEEME.md](docs/marca/LEEME.md)). Los fondos del ingreso y de Inicio son ilustraciones SVG propias.
 
 ## Despliegue y copias de seguridad
 

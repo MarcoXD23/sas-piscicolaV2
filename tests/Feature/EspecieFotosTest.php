@@ -329,13 +329,15 @@ class EspecieFotosTest extends TestCase
     public function test_la_primera_foto_es_la_portada_y_borrar_quita_los_dos_archivos(): void
     {
         $bagre = Especie::deClave('bagre rayado');
-        $this->assertNull($bagre->foto());            // la app no trae fotos por defecto: sin fotos propias, ninguna
-        $this->assertNull($this->especie->foto());
+        $this->assertSame('/images/especies/bagre-rayado.webp', $bagre->foto());   // sin fotos propias: la de referencia
+        $this->assertSame('/images/especies/mojarra-roja.webp', $this->especie->foto());
+        $this->assertNotNull($this->especie->creditoFoto());
 
         $this->subir($this->archivo($this->jpegConMetadatos(40, 30, 1)), ['autor' => 'Primera'])->assertSessionHasNoErrors();
         $this->subir($this->archivo($this->jpegConMetadatos(40, 30, 1)), ['autor' => 'Segunda'])->assertSessionHasNoErrors();
         [$primera, $segunda] = EspecieFoto::query()->orderBy('orden')->get()->all();
         $this->assertSame($primera->url(), $this->especie->fresh()->foto());
+        $this->assertNull($this->especie->fresh()->creditoFoto());   // la foto propia manda: sin crédito de referencia
 
         // Subir la segunda la vuelve portada
         $this->actingAs($this->administrador)->post(route('admin.especies.fotos.orden', [$this->especie, $segunda]), ['direccion' => 'subir'])->assertSessionHasNoErrors();

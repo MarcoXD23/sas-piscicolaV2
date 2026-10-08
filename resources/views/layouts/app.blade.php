@@ -34,9 +34,10 @@
     </a>
 
     @unless ($conSesion)
-        {{-- Fondo del ingreso: solo CSS con los colores de la marca (la app no trae fotos de fondo, ver docs/marca/LEEME.md) --}}
-        <div class="fixed inset-0 -z-10 bg-gradient-to-br from-marca-950 via-marca-900 to-marca-700" aria-hidden="true">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--color-marca-400)_30%,transparent),transparent_60%)]"></div>
+        {{-- Fondo del ingreso: ilustración propia en SVG con los colores de la marca (ver docs/marca/LEEME.md) y un velo para el contraste --}}
+        <div class="fixed inset-0 -z-10 bg-marca-900" aria-hidden="true">
+            <img src="/images/fondo-login.svg" alt="" class="h-full w-full object-cover" decoding="async">
+            <div class="absolute inset-0 bg-gradient-to-b from-marca-950/55 via-marca-950/35 to-marca-950/70"></div>
         </div>
     @endunless
 

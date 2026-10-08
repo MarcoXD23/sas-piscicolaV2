@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice">
+  <!-- Fondo del saludo de inicio de El SAS Piscícola: estanque con peces. Ilustración propia del proyecto (ver docs/marca/LEEME.md). -->
+  <defs>
+    <linearGradient id="agua" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#134441"/>
+      <stop offset="1" stop-color="#0f655f"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="0.85" cy="0" r="0.7">
+      <stop offset="0" stop-color="#57d5c3" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#57d5c3" stop-opacity="0"/>
+    </radialGradient>
+    <path id="pez" d="M0 20C20 3 58 0 80 14L100 2L95 20L100 38L80 26C58 40 20 37 0 20Z"/>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#agua)"/>
+  <rect width="1200" height="300" fill="url(#luz)"/>
+
+  <!-- Peces del lado derecho (el texto va a la izquierda) -->
+  <g fill="#57d5c3">
+    <use href="#pez" transform="translate(1080 70) scale(-1 1)" fill-opacity="0.35"/>
+    <use href="#pez" transform="translate(960 130) scale(-0.7 0.7)" fill-opacity="0.28"/>
+    <use href="#pez" transform="translate(1130 160) scale(-0.55 0.55)" fill-opacity="0.22"/>
+    <use href="#pez" transform="translate(860 60) scale(-0.45 0.45)" fill-opacity="0.18"/>
+  </g>
+
+  <g fill="none" stroke="#94e9da" stroke-opacity="0.35" stroke-width="2">
+    <circle cx="820" cy="120" r="5"/>
+    <circle cx="832" cy="88" r="3"/>
+    <circle cx="1010" cy="40" r="4"/>
+  </g>
+
+  <!-- Olas -->
+  <path d="M0 225C140 205 260 245 420 228S700 200 860 222 1080 248 1200 220V300H0Z" fill="#149d8f" fill-opacity="0.25"/>
+  <path d="M0 262C170 245 300 280 480 264S780 238 960 258 1120 280 1200 262V300H0Z" fill="#042827" fill-opacity="0.45"/>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <!-- Fondo del ingreso de El SAS Piscícola: estanque al amanecer. Ilustración propia del proyecto (ver docs/marca/LEEME.md). -->
+  <defs>
+    <linearGradient id="agua" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#134441"/>
+      <stop offset="0.55" stop-color="#0f655f"/>
+      <stop offset="1" stop-color="#042827"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="0.78" cy="0.12" r="0.65">
+      <stop offset="0" stop-color="#57d5c3" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#57d5c3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rayo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9f5ec" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#c9f5ec" stop-opacity="0"/>
+    </linearGradient>
+    <path id="pez" d="M0 20C20 3 58 0 80 14L100 2L95 20L100 38L80 26C58 40 20 37 0 20Z"/>
+  </defs>
+
+  <rect width="1440" height="900" fill="url(#agua)"/>
+  <rect width="1440" height="900" fill="url(#luz)"/>
+
+  <!-- Rayos de luz entrando al agua -->
+  <g fill="url(#rayo)">
+    <path d="M1010 0h70l-260 900h-40z"/>
+    <path d="M1150 0h46l-170 900h-30z"/>
+    <path d="M1260 0h90l-230 900h-60z"/>
+    <path d="M880 0h40l-330 900h-26z"/>
+  </g>
+
+  <!-- Burbujas -->
+  <g fill="none" stroke="#94e9da" stroke-opacity="0.35" stroke-width="2">
+    <circle cx="210" cy="300" r="7"/>
+    <circle cx="232" cy="250" r="4"/>
+    <circle cx="198" cy="210" r="3"/>
+    <circle cx="1240" cy="430" r="6"/>
+    <circle cx="1262" cy="380" r="3.5"/>
+    <circle cx="640" cy="160" r="5"/>
+    <circle cx="655" cy="120" r="3"/>
+  </g>
+
+  <!-- Peces nadando -->
+  <g fill="#2bb9a8">
+    <use href="#pez" transform="translate(150 380) scale(1.1)" fill-opacity="0.35"/>
+    <use href="#pez" transform="translate(300 450) scale(0.7)" fill-opacity="0.25"/>
+    <use href="#pez" transform="translate(1290 250) scale(-0.9 0.9)" fill-opacity="0.3"/>
+    <use href="#pez" transform="translate(1180 320) scale(-0.6 0.6)" fill-opacity="0.22"/>
+    <use href="#pez" transform="translate(980 560) scale(-1.3 1.3)" fill-opacity="0.2"/>
+    <use href="#pez" transform="translate(470 610) scale(0.85)" fill-opacity="0.18"/>
+  </g>
+
+  <!-- Olas y fondo del estanque -->
+  <path d="M0 690C160 650 300 720 470 690S780 640 960 680 1280 720 1440 670V900H0Z" fill="#149d8f" fill-opacity="0.22"/>
+  <path d="M0 750C190 715 330 780 520 752S860 700 1040 742 1300 780 1440 740V900H0Z" fill="#0d7e75" fill-opacity="0.4"/>
+  <path d="M0 815C220 790 390 840 600 818S940 780 1140 810 1340 840 1440 812V900H0Z" fill="#042827" fill-opacity="0.7"/>
+
+  <!-- Plantas acuáticas -->
+  <g fill="none" stroke="#0d7e75" stroke-width="7" stroke-linecap="round" stroke-opacity="0.6">
+    <path d="M90 900C70 840 120 800 96 740"/>
+    <path d="M120 900C110 850 150 820 140 770"/>
+    <path d="M1330 900C1350 840 1300 800 1326 735"/>
+    <path d="M1360 900C1372 860 1340 830 1352 780"/>
+  </g>
+</svg>

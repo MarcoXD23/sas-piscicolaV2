@@ -107,16 +107,38 @@ class Especie extends Model
         return $this->rangoTemperatura() !== null && $this->oxigeno_min !== null && $this->rangoPh() !== null;
     }
 
-    /** Textos de referencia (solo las especies por defecto, por su clave). */
+    /** Textos y foto de referencia (solo las especies por defecto, por su clave). */
     public function referencia(): array
     {
         return CatalogoEspecies::referencia($this->clave);
     }
 
-    /** Portada: la primera foto que subió la finca (versión ligera); null si no ha subido ninguna. */
+    /** Portada: la primera foto que subió la finca (versión ligera); sin fotos propias, la de referencia (si tiene). */
     public function foto(): ?string
     {
-        return $this->fotos->first()?->url();
+        return $this->fotos->first()?->url() ?? $this->referencia()['foto']['ruta'] ?? null;
+    }
+
+    /**
+     * Crédito de la foto de referencia (autor, licencia, fuente y nota), solo cuando es la que se muestra: las fotos
+     * que sube la finca muestran su propio autor y licencia.
+     *
+     * @return array{ruta: string, autor: string, licencia: string, fuente: string, nota?: string}|null
+     */
+    public function creditoFoto(): ?array
+    {
+        $foto = $this->fotos->isEmpty() ? ($this->referencia()['foto'] ?? null) : null;
+        if ($foto === null) {
+            return null;
+        }
+
+        // «dominio_publico» y las notas se traducen; las licencias CC se muestran con su nombre corto
+        $foto['licencia'] = $foto['licencia'] === 'dominio_publico' ? __('especies.foto_credito.dominio_publico') : $foto['licencia'];
+        if (isset($foto['nota'])) {
+            $foto['nota'] = __('especies.foto_credito.notas.'.$foto['nota']);
+        }
+
+        return $foto;
     }
 
     /** @return array<string, ?string> cada campo con su texto o null si está vacío */
@@ -157,8 +179,9 @@ class Especie extends Model
             'color' => $this->color ?: null,
             'aspecto' => $this->aspecto ?: null,
             'orientativa' => $this->ficha_orientativa,
-            // Portada: la primera foto que subió la finca (null: la vista muestra «Sin foto todavía»)
+            // Portada: la primera foto que subió la finca o, sin ella, la de referencia con su crédito (null: «Sin foto todavía»)
             'foto' => $this->foto(),
+            'foto_credito' => $this->creditoFoto(),
             // Solo de referencia (especies por defecto): familia, proteína por etapa, tiempo a cosecha y peso comercial
             'familia' => $referencia['familia'] ?? null,
             'proteina' => $referencia['proteina'] ?? null,

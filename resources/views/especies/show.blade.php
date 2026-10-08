@@ -13,9 +13,19 @@
     </a>
 
     <section class="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 md:grid md:grid-cols-2">
-        <div class="aspect-[16/10] bg-marca-50 md:aspect-auto">
+        <div class="relative aspect-[16/10] bg-marca-50 md:aspect-auto">
             @if ($especie['foto'])
                 <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" decoding="async" class="h-full w-full object-cover">
+                {{-- Foto de referencia con licencia libre: autor, licencia y fuente (las fotos de la finca muestran las suyas abajo) --}}
+                @if ($credito = $especie['foto_credito'])
+                    <p class="absolute inset-x-0 bottom-0 bg-slate-950/65 px-3 py-1.5 text-xs leading-snug text-white">
+                        @if (isset($credito['nota']))
+                            <span class="block">{{ $credito['nota'] }}</span>
+                        @endif
+                        {{ __('especies.foto_credito.texto', ['autor' => $credito['autor'], 'licencia' => $credito['licencia']]) }}
+                        · <a href="{{ $credito['fuente'] }}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-marca-200">{{ __('especies.foto_credito.fuente') }}</a>
+                    </p>
+                @endif
             @else
                 <div class="flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 text-marca-500">
                     <x-icono nombre="pez" class="h-16 w-16" />

@@ -24,8 +24,32 @@ Resultado medido (lo verifica `tests/Feature/MarcaTest.php`): a 16 px, 34 % de f
 
 Si el diseñador entrega un favicon simplificado (silueta de la trucha con la corona, pocos colores, revisado a 16 px), basta con reemplazar `favicon-16.png`, `favicon-32.png` y `favicon-48.png` y volver a armar `public/favicon.ico`.
 
-## Fotos
+## Imágenes de la app (`public/images/`)
 
-La app no trae fotos de fondo ni de especies por defecto: no se pudo documentar su origen. Si se agrega una foto, debe tener licencia clara y anotarse aquí (archivo, peso, autor, fuente, licencia).
+Toda imagen que traiga la app debe tener origen claro y anotarse aquí: archivo, peso, autor, fuente y licencia. No se agregan imágenes sin esos datos.
 
-Las fotos de especies las sube cada finca (Especies → Fotos), con su autor y su licencia. Los fondos del ingreso y del saludo de inicio son degradados de CSS con los colores de la marca.
+### Fondos (ilustraciones propias)
+
+Dibujados en SVG para este proyecto, con los colores de la marca (`marca-*` de `resources/css/app.css`). Son parte del código del proyecto: no vienen de ningún banco de imágenes.
+
+| Archivo | Peso | Uso |
+|---|---|---|
+| `fondo-login.svg` | 3 KB | Fondo del ingreso, el registro y la recuperación de contraseña (con un velo oscuro para el contraste). |
+| `fondo-estanque.svg` | 2 KB | Fondo del saludo en Inicio (con un velo a la izquierda, donde va el texto). |
+
+### Fotos de referencia de especies (`especies/`)
+
+Se muestran mientras la finca no suba fotos propias (Especies → Fotos); la ficha muestra el crédito debajo de la foto. Todas son de Wikimedia Commons, convertidas a WebP de 1200 × 750 (16:10) sin metadatos. La de la mojarra negra es un recorte de la ilustración; la de la trucha lleva bordes negros (el fondo original) para que la tarjeta no corte el pez.
+
+| Archivo | Peso | Autor | Fuente | Licencia |
+|---|---|---|---|---|
+| `mojarra-roja.webp` | 97 KB | Takeaway | [Pla thapthim.jpg](https://commons.wikimedia.org/wiki/File:Pla_thapthim.jpg) (tilapia roja híbrida) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
+| `mojarra-negra.webp` | 75 KB | Duane Raver, U.S. Fish and Wildlife Service | [Tilapia oreochromis niloticus fish.jpg](https://commons.wikimedia.org/wiki/File:Tilapia_oreochromis_niloticus_fish.jpg) | Dominio público |
+| `cachama-blanca.webp` | 146 KB | w_endo (iNaturalist) | [Piaractus brachypomus 208962529.jpg](https://commons.wikimedia.org/wiki/File:Piaractus_brachypomus_208962529.jpg) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `bocachico.webp` | 155 KB | Zuluaga-Gómez A., Ictiología Universidad Católica de Oriente | [Prochilodus magdalenae (16197296986).jpg](https://commons.wikimedia.org/wiki/File:Prochilodus_magdalenae_(16197296986).jpg) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
+| `bagre-rayado.webp` | 119 KB | Whaldener Endo | [Pseudoplaystoma duo.jpg](https://commons.wikimedia.org/wiki/File:Pseudoplaystoma_duo.jpg) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `trucha-arcoiris.webp` | 45 KB | USFWS Mountain Prairie | [Rainbow Trout (Oncorhynchus mykiss) Gavins Point.jpg](https://commons.wikimedia.org/wiki/File:Rainbow_Trout_(Oncorhynchus_mykiss)_Gavins_Point.jpg) | Dominio público |
+
+- **Bagre rayado:** no hay fotos libres de *Pseudoplatystoma magdaleniatum*. La foto es de dos bagres del mismo género (*P. tigrinum* arriba y *P. punctifer* abajo), y la ficha lo dice.
+- **CC BY y CC BY-SA** exigen mostrar el crédito: lo hace la ficha (autor, licencia y enlace a la fuente). Con CC BY-SA, si se modifica la imagen (más allá del recorte y la conversión), la versión modificada debe compartirse con la misma licencia.
+- **Para cambiar una foto:** reemplaza el archivo (WebP, menos de 200 KB) y actualiza esta tabla y el campo `foto` de la especie en `app/Support/CatalogoEspecies.php`.

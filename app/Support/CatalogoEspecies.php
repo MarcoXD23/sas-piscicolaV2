@@ -6,7 +6,8 @@ namespace App\Support;
  * Datos de REFERENCIA de las 6 especies por defecto. Ya no es la lista de especies de la finca:
  * cada finca tiene su catálogo editable en la tabla especies (App\Models\Especie), que se carga con estos valores
  * al crear la finca. La clave une cada especie por defecto con sus textos de referencia (densidades, proteína,
- * manejo) mientras no tenga ficha propia. No trae fotos: cada finca sube las suyas (ver docs/marca/LEEME.md).
+ * manejo) mientras no tenga ficha propia, y su foto de referencia con licencia libre (autor, licencia y fuente) mientras
+ * la finca no suba fotos propias (ver docs/marca/LEEME.md).
  * Los valores son orientativos: cada finca debe ajustarlos con su asistente técnico.
  */
 class CatalogoEspecies
@@ -20,6 +21,8 @@ class CatalogoEspecies
         'mojarra roja' => [
             'cientifico' => 'Oreochromis sp. (híbrido)',
             'familia' => 'Cichlidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/mojarra-roja.webp', 'autor' => 'Takeaway', 'licencia' => 'CC BY-SA 3.0', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Pla_thapthim.jpg'],
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
             'temperatura' => [26, 30],
@@ -29,6 +32,8 @@ class CatalogoEspecies
         'mojarra negra' => [
             'cientifico' => 'Oreochromis niloticus',
             'familia' => 'Cichlidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/mojarra-negra.webp', 'autor' => 'Duane Raver, U.S. Fish and Wildlife Service', 'licencia' => 'dominio_publico', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Tilapia_oreochromis_niloticus_fish.jpg'],
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
             'temperatura' => [26, 30],
@@ -38,6 +43,8 @@ class CatalogoEspecies
         'cachama blanca' => [
             'cientifico' => 'Piaractus brachypomus',
             'familia' => 'Serrasalmidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/cachama-blanca.webp', 'autor' => 'w_endo (iNaturalist)', 'licencia' => 'CC0', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Piaractus_brachypomus_208962529.jpg'],
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
             'temperatura' => [25, 30],
@@ -47,6 +54,8 @@ class CatalogoEspecies
         'bocachico' => [
             'cientifico' => 'Prochilodus magdalenae',
             'familia' => 'Prochilodontidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/bocachico.webp', 'autor' => 'Zuluaga-Gómez A., Ictiología Universidad Católica de Oriente', 'licencia' => 'CC BY 2.0', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Prochilodus_magdalenae_(16197296986).jpg'],
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'detritivoro',
             'temperatura' => [26, 30],
@@ -56,6 +65,8 @@ class CatalogoEspecies
         'bagre rayado' => [
             'cientifico' => 'Pseudoplatystoma magdaleniatum',
             'familia' => 'Pimelodidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/bagre-rayado.webp', 'autor' => 'Whaldener Endo', 'licencia' => 'CC0', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Pseudoplaystoma_duo.jpg', 'nota' => 'mismo_genero'],
             'clima' => self::CLIMA_CALIDO,
             'alimentacion' => 'calido',
             'temperatura' => [26, 30],
@@ -65,6 +76,8 @@ class CatalogoEspecies
         'trucha arcoiris' => [
             'cientifico' => 'Oncorhynchus mykiss',
             'familia' => 'Salmonidae',
+            // Foto de referencia con licencia libre (autor, licencia y fuente: docs/marca/LEEME.md)
+            'foto' => ['ruta' => '/images/especies/trucha-arcoiris.webp', 'autor' => 'USFWS Mountain Prairie', 'licencia' => 'dominio_publico', 'fuente' => 'https://commons.wikimedia.org/wiki/File:Rainbow_Trout_(Oncorhynchus_mykiss)_Gavins_Point.jpg'],
             'clima' => self::CLIMA_FRIO,
             'alimentacion' => 'frio',
             'temperatura' => [12, 16],
@@ -120,7 +133,7 @@ class CatalogoEspecies
     }
 
     /**
-     * Textos de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
+     * Textos y foto de referencia de una especie por defecto (familia, densidades, proteína, manejo...). Vacío si no lo es.
      *
      * @return array<string, mixed>
      */
@@ -130,7 +143,7 @@ class CatalogoEspecies
             return [];
         }
 
-        return self::textos($clave) + ['familia' => self::ESPECIES[$clave]['familia']];
+        return self::textos($clave) + ['familia' => self::ESPECIES[$clave]['familia'], 'foto' => self::ESPECIES[$clave]['foto']];
     }
 
     /** @return array<string, mixed> Textos de la ficha en el idioma actual (nombre, densidades, proteína, manejo...) */

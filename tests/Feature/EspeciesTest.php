@@ -48,7 +48,30 @@ class EspeciesTest extends TestCase
         $this->actingAs($administrador)->get(route('especies.show', Especie::deClave('bagre rayado')))
             ->assertOk()
             ->assertSee('Pseudoplatystoma magdaleniatum')
-            ->assertSee(__('especies.foto_pendiente'));
+            ->assertSee('/images/especies/bagre-rayado.webp', false)
+            // Crédito de la foto de referencia: nota, autor, licencia y enlace a la fuente
+            ->assertSee(__('especies.foto_credito.notas.mismo_genero'))
+            ->assertSee(__('especies.foto_credito.texto', ['autor' => 'Whaldener Endo', 'licencia' => 'CC0']))
+            ->assertSee('href="https://commons.wikimedia.org/wiki/File:Pseudoplaystoma_duo.jpg"', false);
+    }
+
+    public function test_cada_foto_de_referencia_existe_es_liviana_y_tiene_autor_licencia_y_fuente(): void
+    {
+        $this->usuario(Rol::ADMINISTRADOR);
+        $leeme = (string) file_get_contents(base_path('docs/marca/LEEME.md'));
+
+        foreach (Especie::query()->whereNotNull('clave')->get() as $especie) {
+            $credito = $especie->creditoFoto();
+            $this->assertNotNull($credito, $especie->nombre);
+            $this->assertSame($credito['ruta'], $especie->foto());
+            $this->assertFileExists(public_path(ltrim($credito['ruta'], '/')));
+            $this->assertLessThan(200 * 1024, filesize(public_path(ltrim($credito['ruta'], '/'))), $credito['ruta']);
+            $this->assertNotSame('', trim($credito['autor']));
+            $this->assertNotSame('', trim($credito['licencia']));
+            $this->assertStringStartsWith('https://commons.wikimedia.org/wiki/File:', $credito['fuente']);
+            // Anotada en el LEEME de la marca
+            $this->assertStringContainsString(basename($credito['ruta']), $leeme);
+        }
     }
 
     public function test_especie_inexistente_da_404(): void
@@ -92,15 +115,16 @@ class EspeciesTest extends TestCase
 
     public function test_una_especie_sin_foto_se_muestra_sin_error_en_todas_sus_vistas(): void
     {
-        // La app no trae fotos por defecto: ninguna especie tiene foto hasta que la finca suba una
+        // Una especie que agrega la finca no tiene foto de referencia: hasta que suba una, ninguna
         $administrador = $this->usuario(Rol::ADMINISTRADOR);
-        $especie = Especie::deClave('cachama blanca');
+        $especie = Especie::create(['nombre' => 'Sábalo', 'clima' => Especie::CALIDO]);
         $this->assertNull($especie->foto());
+        $this->assertNull($especie->creditoFoto());
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         Siembra::create(['lago_id' => $lago->id, 'especie_id' => $especie->id, 'fecha' => now(), 'cantidad_alevinos' => 1000,
             'peso_promedio_inicial_g' => 5, 'peces_vivos' => 1000, 'peso_actual_g' => 5, 'biomasa_kg' => 5]);
 
-        // Guía y ficha: recuadro con el texto «Sin foto todavía»
+        // Guía y ficha: recuadro con el texto «Sin foto todavía» (la guía también muestra las fotos de referencia de las demás)
         foreach ([route('especies.index'), route('especies.show', $especie)] as $url) {
             $html = $this->actingAs($administrador)->get($url)->assertOk()->assertSee(__('especies.foto_pendiente'))->getContent();
             $this->assertSinImagenesRotas($html);
@@ -108,15 +132,14 @@ class EspeciesTest extends TestCase
 
         // Tarjeta del lago y detalle: el ícono del pez en lugar de la foto
         foreach ([route('admin.lagos.index'), route('admin.lagos.show', $lago)] as $url) {
-            $html = $this->actingAs($administrador)->get($url)->assertOk()->assertSee('Cachama blanca')->getContent();
+            $html = $this->actingAs($administrador)->get($url)->assertOk()->assertSee('Sábalo')->getContent();
             $this->assertSinImagenesRotas($html);
         }
     }
 
-    /** Ninguna <img> sin dirección ni apuntando a las fotos por defecto que se retiraron. */
+    /** Ninguna <img> sin dirección ni apuntando a un archivo que no existe en public/. */
     private function assertSinImagenesRotas(string $html): void
     {
-        $this->assertStringNotContainsString('/images/especies/', $html);
         $this->assertDoesNotMatchRegularExpression('/<img[^>]*\ssrc=""/', $html);
         preg_match_all('/<img[^>]*\ssrc="([^"]+)"/', $html, $imagenes);
         foreach ($imagenes[1] as $src) {

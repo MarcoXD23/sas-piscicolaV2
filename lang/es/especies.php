@@ -294,6 +294,15 @@ return [
     ],
     'fichas_tecnicas_referencia_especies_pueden' => 'Fichas técnicas de referencia de las especies que se pueden sembrar.',
     'foto_pendiente' => 'Sin foto todavía',
+    // Crédito de las fotos de referencia (licencia libre; detalle en docs/marca/LEEME.md)
+    'foto_credito' => [
+        'texto' => 'Foto: :autor · :licencia',
+        'fuente' => 'Ver fuente',
+        'dominio_publico' => 'Dominio público',
+        'notas' => [
+            'mismo_genero' => 'Bagres del mismo género (Pseudoplatystoma), parecidos al bagre rayado',
+        ],
+    ],
     'guia_especies' => 'Guía de especies',
     'guia_especies_2' => '← Guía de especies',
     'oxigeno_minimo' => 'Oxígeno mínimo',
