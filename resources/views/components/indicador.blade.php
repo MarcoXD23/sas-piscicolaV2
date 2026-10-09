@@ -1,21 +1,18 @@
 @props(['etiqueta', 'valor', 'unidad' => null, 'icono' => null])
 
-<div data-revelar {{ $attributes->class('elevable relative flex items-center gap-4 overflow-hidden rounded-2xl bg-white p-5 shadow-suave ring-1 ring-slate-200') }}>
-    {{-- Reflejo de agua en la esquina --}}
-    <span class="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br from-marca-100 to-sky-100 opacity-60 blur-2xl" aria-hidden="true"></span>
-
+{{-- Una cifra de la libreta: etiqueta arriba, número grande con cifras de ancho fijo. --}}
+<div {{ $attributes->class('flex items-center gap-4 rounded-ficha bg-ficha p-4 shadow-ficha ring-1 ring-renglon sm:p-5') }}>
     @if ($icono)
-        <span class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-marca-100 to-marca-50 text-marca-700 ring-1 ring-marca-200/60">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-ficha bg-papel-hondo text-marca-700">
             <x-icono :nombre="$icono" />
         </span>
     @endif
-    <div class="relative min-w-0">
-        <p class="text-sm font-medium text-texto-suave">{{ $etiqueta }}</p>
-        <p class="mt-0.5 text-2xl font-bold tracking-tight tabular-nums text-slate-900 sm:text-3xl">
-            {{-- data-contar: el número sube desde cero al verse (resources/js/app.js) --}}
-            <span data-contar>{{ $valor }}</span>
+    <div class="min-w-0">
+        <p class="text-sm text-tinta-suave">{{ $etiqueta }}</p>
+        <p class="mt-1 text-2xl font-bold tabular-nums text-tinta sm:text-3xl">
+            {{ $valor }}
             @if ($unidad)
-                <span class="text-base font-medium tracking-normal text-texto-suave">{{ $unidad }}</span>
+                <span class="text-base font-normal text-tinta-suave">{{ $unidad }}</span>
             @endif
         </p>
     </div>

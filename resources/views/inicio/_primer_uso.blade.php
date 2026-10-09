@@ -4,20 +4,21 @@
     $textos = __('primer_uso.pasos');
 @endphp
 
-<x-tarjeta class="mb-6 ring-2 ring-marca-200" :titulo="__('primer_uso.titulo')" :subtitulo="__('primer_uso.subtitulo', ['hechos' => $hechos, 'total' => count($pasos)])">
-    {{-- El código para invitar al personal, siempre a mano mientras se ve la lista --}}
-    <p class="mb-3 select-all font-mono text-base font-semibold text-marca-800">{{ __('primer_uso.codigo_finca', ['codigo' => $usuario->tenant->codigo]) }}</p>
-    <div class="mb-4 h-2.5 overflow-hidden rounded-full bg-slate-200/80">
-        <div class="crece-ancho h-full rounded-full bg-gradient-to-r from-marca-600 to-marca-400 shadow-brillo [animation-delay:300ms]" style="width: {{ round($hechos / count($pasos) * 100) }}%"></div>
+<x-tarjeta class="mb-8" :titulo="__('primer_uso.titulo')" :subtitulo="__('primer_uso.subtitulo', ['hechos' => $hechos, 'total' => count($pasos)])">
+    {{-- El código para invitar al personal, siempre a mano mientras se ve la lista (monoespaciado: es un código para dictar) --}}
+    <p class="mb-3 select-all font-mono text-base font-bold text-marca-800">{{ __('primer_uso.codigo_finca', ['codigo' => $usuario->tenant->codigo]) }}</p>
+    <div class="mb-5 h-2 overflow-hidden rounded-full bg-papel-hondo" aria-hidden="true">
+        <div class="h-full rounded-full bg-marca-700" style="width: {{ round($hechos / count($pasos) * 100) }}%"></div>
     </div>
 
-    <ol class="escalonado space-y-3">
+    {{-- Una secuencia real: el número de cada paso informa el orden --}}
+    <ol class="divide-y divide-renglon">
         @foreach ($pasos as $paso)
-            <li @class(['flex items-start gap-3 rounded-xl p-3 transition-colors', 'bg-gradient-to-r from-marca-50 to-white ring-1 ring-marca-100' => $paso['hecho'], 'bg-slate-50 hover:bg-slate-100/70' => ! $paso['hecho']])>
+            <li class="flex items-start gap-3 py-3">
                 <span @class([
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold',
-                    'animate-aparecer-escala bg-gradient-to-br from-marca-500 to-marca-700 text-white shadow-brillo' => $paso['hecho'],
-                    'bg-white text-texto-suave ring-1 ring-slate-300' => ! $paso['hecho'],
+                    'bg-marca-700 text-white' => $paso['hecho'],
+                    'bg-ficha text-tinta ring-1 ring-renglon-fuerte' => ! $paso['hecho'],
                 ])>
                     @if ($paso['hecho'])
                         <x-icono nombre="ok" class="h-5 w-5" /><span class="sr-only">{{ __('primer_uso.hecho') }}</span>
@@ -26,13 +27,13 @@
                     @endif
                 </span>
                 <div class="min-w-0 flex-1">
-                    <p @class(['font-semibold', 'text-texto-suave line-through' => $paso['hecho'], 'text-slate-900' => ! $paso['hecho']])>{{ $textos[$paso['clave']]['titulo'] }}</p>
+                    <p @class(['font-bold', 'text-tinta-suave line-through decoration-renglon-fuerte' => $paso['hecho']])>{{ $textos[$paso['clave']]['titulo'] }}</p>
                     @unless ($paso['hecho'])
-                        <p class="text-sm text-slate-600">{{ $textos[$paso['clave']]['ayuda'] }}</p>
+                        <p class="text-sm text-tinta-suave">{{ $textos[$paso['clave']]['ayuda'] }}</p>
                         @if ($paso['ruta'])
-                            <a href="{{ $paso['ruta'] }}" class="group mt-1 inline-flex min-h-12 items-center gap-1 font-semibold text-marca-700 underline decoration-marca-300 underline-offset-4 hover:decoration-marca-600">{{ __('primer_uso.ir') }}</a>
+                            <a href="{{ $paso['ruta'] }}" class="mt-1 inline-flex min-h-12 items-center font-bold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">{{ __('primer_uso.ir') }}</a>
                         @else
-                            <p class="mt-1 text-sm text-texto-suave">{{ __($paso['clave'] === 'pesos' ? 'primer_uso.lo_hace_administrador' : 'primer_uso.lo_hace_propietario') }}</p>
+                            <p class="mt-1 text-sm text-tinta-suave">{{ __($paso['clave'] === 'pesos' ? 'primer_uso.lo_hace_administrador' : 'primer_uso.lo_hace_propietario') }}</p>
                         @endif
                     @endunless
                 </div>
@@ -40,8 +41,8 @@
         @endforeach
     </ol>
 
-    <form method="POST" action="{{ route('admin.primer-uso.ocultar') }}" class="mt-4 text-right">
+    <form method="POST" action="{{ route('admin.primer-uso.ocultar') }}" class="mt-2 text-right">
         @csrf
-        <button class="inline-flex min-h-12 items-center text-sm text-texto-suave underline">{{ __('primer_uso.ocultar') }}</button>
+        <button class="inline-flex min-h-12 items-center text-sm text-tinta-suave underline decoration-renglon-fuerte underline-offset-4 hover:text-tinta">{{ __('primer_uso.ocultar') }}</button>
     </form>
 </x-tarjeta>

@@ -70,6 +70,8 @@ class InicioController extends Controller
                 : collect(),
             // El celador ve el agua en vivo (propietario y administrador la ven en las alertas)
             'lagosConAlertaAgua' => (! $esTecnico && $usuario->tieneRol(Rol::CELADOR)) ? $this->lagosConAlertaAgua() : collect(),
+            // Panel de agua (propietario y administrador): oxígeno y temperatura de la última medición de cada lago
+            'aguaLagos' => $esTecnico ? $this->aguaLagos() : collect(),
 
             // Producción (propietario y administrador)
             'lagosActivos' => $produccion['lagos_activos'] ?? 0,
@@ -92,6 +94,28 @@ class InicioController extends Controller
     {
         return Lago::query()->has('siembrasActivas')->with(['siembrasActivas', 'ultimaMedicion'])->orderBy('nombre')->get()
             ->map(fn (Lago $lago) => ['lago' => $lago, 'racion' => CalculadoraRacion::paraLago($lago)]);
+    }
+
+    /**
+     * Lagos con siembra activa y su última medición. Si es más vieja que la vigencia de la ración, no cuenta:
+     * el panel dice «sin medición reciente» en vez de mostrar un dato viejo como si fuera de hoy.
+     *
+     * @return Collection<int, array{lago: Lago, medicion: ?\App\Models\MedicionAgua, problemas: list<array{parametro: string, texto: string}>}>
+     */
+    private function aguaLagos(): Collection
+    {
+        return Lago::query()->has('siembrasActivas')->with(['siembrasActivas.especie', 'ultimaMedicion'])->orderBy('nombre')->get()
+            ->map(function (Lago $lago) {
+                $medicion = $lago->ultimaMedicion?->medido_at->gte(now()->subHours(CalculadoraRacion::HORAS_MEDICION_VIGENTE))
+                    ? $lago->ultimaMedicion
+                    : null;
+
+                return [
+                    'lago' => $lago,
+                    'medicion' => $medicion,
+                    'problemas' => $medicion?->problemas($lago->siembrasActivas->pluck('especie')) ?? [],
+                ];
+            });
     }
 
     /** Lagos cuya medición de las últimas 24 horas tiene alertas. @return Collection<int, array{lago: Lago, alertas: list<string>}> */

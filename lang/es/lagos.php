@@ -158,4 +158,11 @@ return [
         'alimento' => 'alimento',
         'agua' => 'agua',
     ],
+    // Ficha del lago en la lista: estado del agua (ícono + texto) y acciones
+    'ficha' => [
+        'oxigeno' => 'Oxígeno',
+        'temperatura' => 'Temperatura',
+        'sin_medicion' => 'Sin medición reciente',
+        'mas_acciones' => 'Más acciones',
+    ],
 ];

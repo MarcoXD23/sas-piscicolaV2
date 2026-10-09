@@ -46,44 +46,96 @@
                 $foto = $siembras->first()?->foto_especie;
             @endphp
 
-            <x-tarjeta class="flex flex-col overflow-hidden !p-0">
-                <div class="flex items-center gap-4 border-b border-slate-100 p-5">
+            @php
+                // Estado del agua (mismo criterio que el inicio y EvaluadorAlertas): oxígeno fuera de rango = alerta; otro problema = atención.
+                // Una medición más vieja que la vigencia de la ración no cuenta como de hoy.
+                $medicion = $lago->ultimaMedicion?->medido_at->gte(now()->subHours(\App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE)) ? $lago->ultimaMedicion : null;
+                $problemas = $medicion ? $medicion->problemas($siembras->pluck('especie')) : [];
+                $parametros = array_column($problemas, 'parametro');
+                $estadoAgua = $siembras->isEmpty() ? 'libre' : (! $medicion ? 'sin_medicion' : (in_array('oxigeno', $parametros, true) ? 'alerta' : ($parametros ? 'atencion' : 'bien')));
+                [$tonoEstado, $iconoEstado, $textoEstado] = match ($estadoAgua) {
+                    'alerta' => ['bg-alerta-fondo text-alerta ring-alerta-borde', 'alerta', __('inicio.estado_agua.alerta')],
+                    'atencion' => ['bg-atencion-fondo text-atencion ring-atencion-borde', 'alerta', __('inicio.estado_agua.atencion')],
+                    'bien' => ['bg-bien-fondo text-bien ring-bien-borde', 'ok', __('inicio.estado_agua.bien')],
+                    'sin_medicion' => ['bg-info-fondo text-info ring-info-borde', 'reloj', __('inicio.estado_agua.sin_medicion')],
+                    default => ['bg-papel-hondo text-tinta-suave ring-renglon', 'lagos', __('lagos.libre')],
+                };
+            @endphp
+
+            {{-- Ficha del lago: la pestaña dice de un vistazo cómo está el agua (ícono y texto, nunca solo color) --}}
+            <x-tarjeta @class([
+                'relative mt-3.5 flex flex-col !p-0',
+                '!ring-alerta-borde' => $estadoAgua === 'alerta',
+                '!ring-atencion-borde' => $estadoAgua === 'atencion',
+            ])>
+                <p class="absolute -top-3.5 left-4 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-bold ring-1 {{ $tonoEstado }}">
+                    <x-icono :nombre="$iconoEstado" class="h-4 w-4" /> {{ $textoEstado }}
+                </p>
+
+                <div class="flex items-start gap-4 border-b border-renglon px-5 pt-7 pb-4">
                     @if ($foto)
                         <img src="{{ $foto }}" alt="" loading="lazy" decoding="async"
-                             class="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-slate-200">
+                             class="h-14 w-14 shrink-0 rounded-ficha object-cover ring-1 ring-renglon">
                     @else
-                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-marca-50 text-marca-600">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-ficha bg-papel-hondo text-marca-700">
                             <x-icono :nombre="$siembras->isNotEmpty() ? 'pez' : 'lagos'" class="h-7 w-7" />
                         </span>
                     @endif
 
                     <div class="min-w-0 flex-1">
-                        <h2 class="truncate text-xl font-bold text-slate-900">
-                            <a href="{{ route('admin.lagos.show', $lago) }}" class="hover:text-marca-700 hover:underline">{{ $lago->nombre }}</a>
+                        <h2 class="truncate text-xl font-bold">
+                            <a href="{{ route('admin.lagos.show', $lago) }}" class="underline decoration-transparent underline-offset-4 hover:decoration-tinta">{{ $lago->nombre }}</a>
                         </h2>
-                        <p class="text-sm text-texto-suave">
+                        <p class="text-sm text-tinta-suave">
                             {{ __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]) }}@if ($siembras->count() > 1) · {{ __('lagos.policultivo') }} @endif
                         </p>
                         @if ($lago->en_retiro)
-                            <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-semibold text-amber-900">
+                            <p class="mt-1.5 inline-flex items-center gap-1 rounded-md bg-atencion-fondo px-2 py-0.5 text-sm font-bold text-atencion ring-1 ring-atencion-borde">
                                 <x-icono nombre="alerta" class="h-3.5 w-3.5" /> {{ __('lagos.retiro_sanitario') }}
                             </p>
                         @endif
                     </div>
-
-                    <span @class([
-                        'shrink-0 rounded-full px-3 py-1 text-sm font-semibold',
-                        'bg-marca-100 text-marca-800' => $siembras->isNotEmpty(),
-                        'bg-slate-100 text-slate-600' => $siembras->isEmpty(),
-                    ])>{{ $siembras->isNotEmpty() ? __('lagos.activo') : __('lagos.libre') }}</span>
                 </div>
+
+                {{-- Lectura del agua: oxígeno y temperatura en grande --}}
+                @if ($siembras->isNotEmpty())
+                    <div class="border-b border-renglon px-5 py-4">
+                        @if ($medicion)
+                            <dl class="grid grid-cols-2 gap-4">
+                                @foreach ([['oxigeno', $medicion->oxigeno_mg_l, 'mg/L'], ['temperatura', $medicion->temperatura_c, '°C']] as [$parametro, $valor, $unidad])
+                                    <div>
+                                        <dt class="text-sm text-tinta-suave">{{ __('lagos.ficha.'.$parametro) }}</dt>
+                                        <dd @class([
+                                            'mt-0.5 text-3xl font-bold tabular-nums',
+                                            'text-alerta' => $parametro === 'oxigeno' && in_array('oxigeno', $parametros, true),
+                                            'text-atencion' => $parametro === 'temperatura' && in_array('temperatura', $parametros, true),
+                                        ])>
+                                            @if ($valor !== null)
+                                                {{ $numero($valor, 1) }} <span class="text-base font-normal text-tinta-suave">{{ $unidad }}</span>
+                                            @else
+                                                <span class="text-lg font-normal text-tinta-suave">{{ __('inicio.agua.sin_dato') }}</span>
+                                            @endif
+                                        </dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                            @if ($problemas)
+                                <p @class(['mt-2 text-sm font-semibold', 'text-alerta' => $estadoAgua === 'alerta', 'text-atencion' => $estadoAgua === 'atencion'])>{{ $problemas[0]['texto'] }}</p>
+                            @endif
+                        @else
+                            <p class="flex items-center gap-2 text-base text-tinta-suave">
+                                <x-icono nombre="reloj" class="h-5 w-5" /> {{ __('lagos.ficha.sin_medicion') }}
+                            </p>
+                        @endif
+                    </div>
+                @endif
 
                 {{-- Aviso «listo para pescar»: lo ven todos; el administrador lo atiende --}}
                 @if ($aviso = $lago->avisoPescaPendiente)
-                    <div data-aviso-pesca class="flex flex-wrap items-center justify-between gap-2 border-b border-sky-100 bg-sky-50 px-5 py-3 text-sky-900">
+                    <div data-aviso-pesca class="flex flex-wrap items-center justify-between gap-2 border-b border-renglon bg-trucha/5 px-5 py-3">
                         <p class="min-w-0 text-sm">
-                            <span class="font-semibold">{{ __('lagos.aviso_pesca_listo', ['especie' => $aviso->siembra->nombre_especie]) }}</span>
-                            <span class="block">{{ __('lagos.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                            <span class="inline-flex items-center gap-1.5 font-bold text-trucha"><x-icono nombre="pez" class="h-4 w-4" />{{ __('lagos.aviso_pesca_listo', ['especie' => $aviso->siembra->nombre_especie]) }}</span>
+                            <span class="block text-tinta-suave">{{ __('lagos.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
                         </p>
                         @if ($puedeOperar)
                             <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
@@ -92,7 +144,7 @@
                         @endif
                     </div>
                 @elseif ($puedeAvisarPesca && $siembras->isNotEmpty())
-                    <div class="border-b border-slate-100 px-5 py-3">
+                    <div class="border-b border-renglon px-5 py-3">
                         <x-boton tipo="button" variante="secundario" class="w-full" data-abrir-modal="modal-aviso-pesca-{{ $lago->id }}">
                             <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.reportar_listo_pescar') }}
                         </x-boton>
@@ -114,43 +166,52 @@
                 @endif
 
                 @forelse ($siembras as $siembra)
-                    <div class="border-b border-slate-100">
+                    <div class="border-b border-renglon">
                         <div class="flex items-center justify-between gap-3 px-5 pt-4">
-                            <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
+                            <h3 class="font-bold">{{ $siembra->nombre_especie }}</h3>
                             <span class="text-sm text-texto-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
                         </div>
 
-                        <dl class="mt-3 grid grid-cols-2 gap-px bg-slate-100 text-center">
-                            <div class="bg-white p-3">
-                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.peces_vivos') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
+                        <dl class="mt-3 grid grid-cols-2 gap-px border-y border-renglon bg-renglon">
+                            <div class="bg-ficha px-5 py-2.5">
+                                <dt class="text-sm text-tinta-suave">{{ __('lagos.peces_vivos') }}</dt>
+                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peces_vivos) }}</dd>
                             </div>
-                            <div class="bg-white p-3">
-                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.biomasa') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-texto-suave">kg</span></dd>
+                            <div class="bg-ficha px-5 py-2.5">
+                                <dt class="text-sm text-tinta-suave">{{ __('lagos.biomasa') }}</dt>
+                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-texto-suave">kg</span></dd>
                             </div>
-                            <div class="bg-white p-3">
-                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.peso_promedio') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-texto-suave">g</span></dd>
+                            <div class="bg-ficha px-5 py-2.5">
+                                <dt class="text-sm text-tinta-suave">{{ __('lagos.peso_promedio') }}</dt>
+                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-texto-suave">g</span></dd>
                             </div>
-                            <div class="bg-white p-3">
-                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.dias_cultivo') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $siembra->dias_cultivo }}</dd>
+                            <div class="bg-ficha px-5 py-2.5">
+                                <dt class="text-sm text-tinta-suave">{{ __('lagos.dias_cultivo') }}</dt>
+                                <dd class="text-xl font-bold tabular-nums">{{ $siembra->dias_cultivo }}</dd>
                             </div>
                         </dl>
 
                         @unless ($soloLectura)
-                        <div @class(['grid gap-2 p-4', 'grid-cols-3' => $puedeOperar, 'grid-cols-1' => ! $puedeOperar])>
-                            <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}" :disabled="! $puedeRegistrar">
-                                <x-icono nombre="mortalidad" /> {{ __('lagos.mortalidad') }}
+                        <div class="space-y-2 p-4">
+                            <x-boton tipo="button" variante="secundario" class="w-full" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}" :disabled="! $puedeRegistrar">
+                                <x-icono nombre="mortalidad" class="h-5 w-5" /> {{ __('lagos.mortalidad') }}
                             </x-boton>
+                            {{-- Muestreo y Finalizar quedan a un paso: finalizar casi no se deshace y no debe estar junto a la acción diaria --}}
                             @if ($puedeOperar)
-                                <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
-                                    <x-icono nombre="biomasa" /> {{ __('lagos.muestreo') }}
-                                </x-boton>
-                                <x-boton tipo="button" variante="secundario" class="min-h-14 flex-col !gap-1 !px-1 !py-2 !text-sm" data-abrir-modal="modal-finalizar-{{ $siembra->id }}">
-                                    <x-icono nombre="ok" /> {{ __('lagos.finalizar') }}
-                                </x-boton>
+                                <details class="group">
+                                    <summary class="flex min-h-12 cursor-pointer list-none items-center justify-center gap-1.5 rounded-ficha text-base font-semibold text-marca-700 hover:bg-papel-hondo [&::-webkit-details-marker]:hidden">
+                                        {{ __('lagos.ficha.mas_acciones') }}
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6"/></svg>
+                                    </summary>
+                                    <div class="mt-2 grid grid-cols-2 gap-2">
+                                        <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
+                                            <x-icono nombre="biomasa" class="h-5 w-5" /> {{ __('lagos.muestreo') }}
+                                        </x-boton>
+                                        <x-boton tipo="button" variante="secundario" class="!text-alerta" data-abrir-modal="modal-finalizar-{{ $siembra->id }}">
+                                            <x-icono nombre="ok" class="h-5 w-5" /> {{ __('lagos.finalizar') }}
+                                        </x-boton>
+                                    </div>
+                                </details>
                             @endif
                         </div>
                         @endunless
@@ -165,7 +226,7 @@
 
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                <x-boton variante="peligro">{{ __('lagos.registrar') }}</x-boton>
+                                <x-boton>{{ __('lagos.registrar') }}</x-boton>
                             </div>
                         </x-formulario>
                     </x-modal>
@@ -213,7 +274,7 @@
                         </x-modal>
                     @endif
                 @empty
-                    <p class="p-5 text-base text-texto-suave">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
+                    <p class="px-5 py-4 text-base text-tinta-suave">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
                 @endforelse
 
                 <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $puedeOperar && $siembras->isNotEmpty()])>
@@ -228,7 +289,7 @@
                         </x-boton>
                     @endif
                     <a href="{{ route('admin.lagos.show', $lago) }}" @class([
-                        'flex min-h-12 items-center justify-center text-base font-semibold text-marca-700 hover:underline',
+                        'flex min-h-12 items-center justify-center rounded-ficha text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700',
                         'col-span-2' => $puedeOperar && $siembras->isNotEmpty(),
                     ])>{{ __('lagos.ver_detalle_e_historial') }}</a>
                 </div>

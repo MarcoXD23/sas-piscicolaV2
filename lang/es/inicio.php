@@ -46,4 +46,25 @@ return [
     'vencido' => 'Vencido :fecha',
     'ventas_mes' => 'Ventas del mes',
     'y_mas' => '(y :cantidad más)',
+
+    // Panel de agua: última medición de cada lago con siembra (propietario y administrador)
+    'agua' => [
+        'titulo' => 'Agua de los lagos',
+        'subtitulo' => 'Última medición de las últimas :horas horas.',
+        'oxigeno' => 'Oxígeno',
+        'temperatura' => 'Temperatura',
+        'sin_medicion' => 'Sin medición reciente',
+        'sin_dato' => 'Sin dato',
+        'medido' => 'Medido a las :hora',
+        'ver_lago' => 'Ver :lago',
+    ],
+    // Estado del agua de un lago: siempre con ícono y texto
+    'estado_agua' => [
+        'bien' => 'Bien',
+        'atencion' => 'Atención',
+        'alerta' => 'Alerta',
+        'sin_medicion' => 'Sin medición',
+    ],
+    'produccion' => 'Producción',
+    'urgente' => 'Requiere atención',
 ];

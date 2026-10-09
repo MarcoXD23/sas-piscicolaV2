@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/atkinson-hyperlegible-next';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -22,7 +23,53 @@
 }
 
 @theme {
-    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    /* Atkinson Hyperlegible Next (Braille Institute): distingue 1/l/I y 0/O, se lee al sol y con baja visión.
+       Alojada en el proyecto (paquete @fontsource-variable), sin CDN; si aún no cargó, se ve la del sistema. */
+    --font-sans: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* ── Libreta de campo ───────────────────────────────────────────────────────────────────────────
+       La app es el cuaderno de la finca: papel frío, fichas blancas, renglones finos y tinta verde muy oscura.
+       El color se reserva para acciones (marca) y estados (bien, atención, alerta, información). */
+    --color-papel: #f4f7f6;          /* fondo de la página */
+    --color-papel-hondo: #e8efed;    /* segunda capa: cabecera de tablas, menú lateral, renglón destacado */
+    --color-ficha: #ffffff;          /* tarjetas y paneles */
+    --color-tinta: #0f2a2a;          /* texto principal (14:1 sobre papel) */
+    --color-tinta-suave: #3e5654;    /* texto secundario, teñido de la tinta (7,3:1 sobre papel) */
+    --color-renglon: #d5e3e0;        /* líneas y bordes de fichas */
+    --color-renglon-fuerte: #6b8782; /* borde de campos y controles (3,9:1: se ve al sol) */
+
+    /* Estados: siempre con ícono y texto. Cada uno con su texto, fondo y borde (texto ≥ 6:1 sobre su fondo, medido). */
+    --color-bien: #0f655f;
+    --color-bien-fondo: #e3f4f0;
+    --color-bien-borde: #9fd3c8;
+    --color-atencion: #8a3b0b;
+    --color-atencion-fondo: #fdf1d6;
+    --color-atencion-borde: #eec16a;
+    --color-alerta: #9b1c1c;
+    --color-alerta-fondo: #fde4e2;
+    --color-alerta-borde: #f2a6a0;
+    --color-info: #1e40af;
+    --color-info-fondo: #e0eafc;
+    --color-info-borde: #a3bdf0;
+
+    /* La trucha del logo: solo para lo que se celebra (listo para pescar, cosecha), nunca para estados */
+    --color-trucha: #c2416a;
+    --color-corona: #8a6417;
+
+    /* Esquinas: fichas y controles de 10 px; insignias redondas */
+    --radius-ficha: 0.625rem;
+
+    /* Sombras de papel: una línea de apoyo y una sombra corta (con desplazamiento, nunca halo de color) */
+    --shadow-ficha: 0 1px 0 rgb(15 42 42 / 0.05), 0 1px 3px rgb(15 42 42 / 0.07);
+    --shadow-levantada: 0 1px 0 rgb(15 42 42 / 0.05), 0 8px 20px -8px rgb(15 42 42 / 0.22);
+
+    /* Cifras: la lectura del día (oxígeno, temperatura, biomasa) */
+    --text-cifra: 2.25rem;
+    --text-cifra--line-height: 1;
+    --text-cifra--letter-spacing: -0.02em;
+    --text-cifra-grande: 3.25rem;
+    --text-cifra-grande--line-height: 1;
+    --text-cifra-grande--letter-spacing: -0.03em;
 
     /* Paleta verde azulado de la marca */
     --color-marca-50: #effcf9;
@@ -40,12 +87,12 @@
     /* Colores con significado (clases text-texto, text-texto-suave, bg-superficie, border-borde, text-peligro…).
        Texto suave en slate-600: legible al sol (7,6:1 sobre blanco); slate-500 apenas pasa y slate-400 no. */
     --color-superficie: #ffffff;
-    --color-texto: var(--color-slate-900);
-    --color-texto-suave: var(--color-slate-600);
-    --color-borde: var(--color-slate-200);
-    --color-exito: var(--color-marca-700);
-    --color-aviso: var(--color-amber-800);
-    --color-peligro: var(--color-red-700);
+    --color-texto: var(--color-tinta);
+    --color-texto-suave: var(--color-tinta-suave);
+    --color-borde: var(--color-renglon);
+    --color-exito: var(--color-bien);
+    --color-aviso: var(--color-atencion);
+    --color-peligro: var(--color-alerta);
 
     /* Sombras con un toque del color de la marca (clases shadow-suave, shadow-elevada, shadow-brillo) */
     --shadow-suave: 0 1px 2px rgb(4 40 39 / 0.04), 0 2px 8px -2px rgb(4 40 39 / 0.06);
@@ -120,7 +167,7 @@
     html {
         -webkit-text-size-adjust: 100%;
         scroll-behavior: smooth;
-        scrollbar-color: var(--color-slate-300) transparent;
+        scrollbar-color: var(--color-renglon-fuerte) transparent;
         /* Lo enfocado o enlazado no queda debajo de la cabecera pegajosa ni del menú inferior del celular */
         scroll-padding-top: 6rem;
         scroll-padding-bottom: 6rem;
@@ -141,24 +188,22 @@
         touch-action: manipulation;
     }
 
-    /* Fondo con un reflejo suave de agua en las esquinas; el ingreso pone encima su propia foto */
+    /* Papel de la libreta: plano, sin manchas de color; el ingreso pone encima su propia foto */
     body {
-        @apply bg-slate-50 font-sans text-base text-slate-800 antialiased;
-        background-image:
-            radial-gradient(55rem 28rem at 105% -8%, rgb(148 233 218 / 0.35), transparent 70%),
-            radial-gradient(45rem 26rem at -10% -5%, rgb(186 230 253 / 0.35), transparent 70%);
-        background-repeat: no-repeat;
-        background-attachment: fixed;
+        @apply bg-papel font-sans text-base text-tinta antialiased;
+        font-optical-sizing: auto;
+        caret-color: var(--color-marca-700);
+        accent-color: var(--color-marca-700);
     }
 
     ::selection {
         background-color: var(--color-marca-200);
-        color: var(--color-marca-950);
+        color: var(--color-tinta);
     }
 
     /* Foco visible para todo lo que no trae el suyo (los componentes lo reemplazan) */
     :where(a, button, summary, [tabindex]):focus-visible {
-        outline: 2px solid var(--color-marca-500);
+        outline: 2px solid var(--color-marca-700);
         outline-offset: 2px;
     }
 }
@@ -320,20 +365,7 @@
     .escalonado > :nth-child(n + 7) { animation-delay: 240ms; }
 }
 
-/* Entrada de la página: los bloques del contenido aparecen uno tras otro (sin JavaScript, desde el primer pintado).
-   Solo "backwards": al terminar no queda ningún transform que afecte a lo fijo o pegajoso de adentro.
-   En la capa de componentes y sin peso: una clase animate-* puesta en el bloque la reemplaza. */
-@layer components {
-    :where(main#contenido > :not(dialog, script, template)) {
-        animation: var(--animate-aparecer);
-    }
-
-    :where(main#contenido > :nth-child(2)) { animation-delay: 40ms; }
-    :where(main#contenido > :nth-child(3)) { animation-delay: 80ms; }
-    :where(main#contenido > :nth-child(4)) { animation-delay: 120ms; }
-    :where(main#contenido > :nth-child(5)) { animation-delay: 160ms; }
-    :where(main#contenido > :nth-child(n + 6)) { animation-delay: 200ms; }
-}
+/* Sin entrada escalonada de la página: la app carga directo a la tarea (el movimiento queda para lo que cambia). */
 
 /* Aviso de "guardado" (session estado): entra, se queda unos segundos y se recoge solo. Con el puntero encima espera. */
 @keyframes recoger-aviso {

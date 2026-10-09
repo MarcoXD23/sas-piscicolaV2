@@ -107,35 +107,31 @@
             [$enlacesInferiores, $enlacesMas] = $enlaces->count() > 5 ? [$enlaces->take(4), $enlaces->slice(4)] : [$enlaces, collect()];
         @endphp
 
-        <header class="cabecera sticky top-0 z-30 bg-gradient-to-r from-marca-900 via-marca-700 to-marca-600 pt-[env(safe-area-inset-top)] text-white [view-transition-name:cabecera] print:hidden">
-            {{-- Reflejo de fondo, muy tenue --}}
-            <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-                <div class="absolute -top-16 right-10 h-40 w-40 rounded-full bg-marca-300/20 blur-3xl"></div>
-            </div>
-
-            <div class="relative mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-                <a href="{{ route('inicio') }}" class="group flex min-w-0 items-center gap-3">
-                    <x-logo class="h-10 w-10 shrink-0 rounded-xl shadow-lg ring-1 ring-white/25 transition duration-300 ease-resorte group-hover:-rotate-6 group-hover:scale-105" />
+        {{-- Cabecera: la tapa de la libreta, sólida en tinta (se lee al sol, sin degradados ni reflejos) --}}
+        <header class="cabecera sticky top-0 z-30 bg-tinta pt-[env(safe-area-inset-top)] text-white [view-transition-name:cabecera] print:hidden">
+            <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+                <a href="{{ route('inicio') }}" class="flex min-w-0 items-center gap-3 rounded-ficha">
+                    <x-logo class="h-10 w-10 shrink-0 rounded-lg ring-1 ring-white/15" />
                     <span class="min-w-0 leading-tight">
                         <span class="block truncate text-base font-bold">{{ config('app.name') }}</span>
-                        <span class="block truncate text-sm text-marca-100">{{ $usuarioActual->tenant?->nombre }}</span>
+                        <span class="block truncate text-sm text-white/75">{{ $usuarioActual->tenant?->nombre }}</span>
                     </span>
                 </a>
 
                 <div class="flex shrink-0 items-center gap-1">
                     {{-- Registros guardados en el teléfono sin enviar (o rechazados): solo aparece si hay alguno --}}
-                    <button type="button" data-cola-boton hidden data-abrir-modal="cola-sin-conexion" class="presionable flex min-h-12 animate-aparecer-escala items-center gap-1.5 rounded-xl bg-gradient-to-b from-amber-300 to-amber-400 px-3 text-base font-bold text-amber-950 shadow-[0_4px_14px_-4px_rgb(251_191_36/0.8)]" aria-label="{{ __('layout.cola.boton') }}">
+                    <button type="button" data-cola-boton hidden data-abrir-modal="cola-sin-conexion" class="flex min-h-12 items-center gap-1.5 rounded-ficha bg-amber-400 px-3 text-base font-bold text-amber-950 transition-colors hover:bg-amber-300" aria-label="{{ __('layout.cola.boton') }}">
                         <x-icono nombre="reloj" class="h-5 w-5" />
                         <span data-cola-total>0</span>
                     </button>
                     {{-- Mi cuenta: contraseña y verificación en dos pasos (todos los roles) --}}
-                    <a href="{{ route('mi-cuenta.index') }}" class="presionable flex min-h-12 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-white/10" aria-label="{{ __('cuenta.enlace') }}">
+                    <a href="{{ route('mi-cuenta.index') }}" class="flex min-h-12 items-center gap-2 rounded-ficha px-3 text-base font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white" aria-label="{{ __('cuenta.enlace') }}">
                         <x-icono nombre="personal" class="h-5 w-5" />
                         <span class="hidden sm:inline">{{ __('cuenta.enlace') }}</span>
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="shrink-0">
                         @csrf
-                        <button type="submit" class="presionable flex min-h-12 items-center gap-2 rounded-xl px-3 text-base font-medium text-marca-50 hover:bg-white/10">
+                        <button type="submit" class="flex min-h-12 items-center gap-2 rounded-ficha px-3 text-base font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white">
                             <x-icono nombre="salir" class="h-5 w-5" />
                             <span>{{ __('layout.salir') }}</span>
                         </button>
@@ -143,43 +139,41 @@
                 </div>
             </div>
 
-            {{-- Escritorio: segunda fila con todas las secciones (en celular va el menú inferior) --}}
+            {{-- Escritorio: todas las secciones a la vista (si no caben en un renglón pasan al siguiente; en celular va el menú inferior) --}}
             @if ($conMenuInferior)
-                <nav class="relative mx-auto hidden max-w-5xl gap-1 overflow-x-auto px-3 pb-2 [scrollbar-width:none] md:flex" aria-label="{{ __('layout.principal') }}">
-                    @foreach ($enlaces as $enlace)
-                        <a href="{{ route($enlace['ruta']) }}"
-                           @if ($enlace['es_actual']) aria-current="page" @endif
-                           @class([
-                               'group presionable flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3 text-base font-medium',
-                               'animate-aparecer-escala bg-white text-marca-800 shadow-lg shadow-marca-950/20' => $enlace['es_actual'],
-                               'text-marca-50 hover:bg-white/10 hover:text-white' => ! $enlace['es_actual'],
-                           ])>
-                            <x-icono :nombre="$enlace['icono']" class="h-5 w-5 transition duration-300 ease-resorte group-hover:scale-110" />
-                            {{ $enlace['texto'] }}
-                        </a>
-                    @endforeach
+                <nav class="hidden border-t border-white/10 md:block" aria-label="{{ __('layout.principal') }}">
+                    <div class="mx-auto flex max-w-6xl flex-wrap gap-x-1 px-3">
+                        @foreach ($enlaces as $enlace)
+                            <a href="{{ route($enlace['ruta']) }}"
+                               @if ($enlace['es_actual']) aria-current="page" @endif
+                               @class([
+                                   'flex min-h-11 items-center gap-2 px-3 text-[0.9375rem] transition-colors',
+                                   'font-bold text-white shadow-[inset_0_-3px_0_var(--color-marca-300)]' => $enlace['es_actual'],
+                                   'text-white/75 hover:bg-white/10 hover:text-white' => ! $enlace['es_actual'],
+                               ])>
+                                <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
+                                {{ $enlace['texto'] }}
+                            </a>
+                        @endforeach
+                    </div>
                 </nav>
             @endif
         </header>
 
         @if ($conMenuInferior)
-            <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/80 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-12px_rgb(4_40_39/0.18)] backdrop-blur-xl backdrop-saturate-150 [view-transition-name:menu-inferior] md:hidden print:hidden" aria-label="{{ __('layout.principal_movil') }}">
+            {{-- Celular: menú inferior sólido; la sección activa lleva una raya arriba y el texto en negrita --}}
+            <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-renglon bg-ficha pb-[env(safe-area-inset-bottom)] [view-transition-name:menu-inferior] md:hidden print:hidden" aria-label="{{ __('layout.principal_movil') }}">
                 <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
                     @foreach ($enlacesInferiores as $enlace)
                         <li>
                             <a href="{{ route($enlace['ruta']) }}"
                                @if ($enlace['es_actual']) aria-current="page" @endif
                                @class([
-                                   'presionable flex min-h-16 flex-col items-center justify-center gap-1 text-[0.8125rem] leading-tight font-semibold',
-                                   'text-marca-700' => $enlace['es_actual'],
-                                   'text-texto-suave active:text-marca-700' => ! $enlace['es_actual'],
+                                   'flex min-h-16 flex-col items-center justify-center gap-1 text-[0.8125rem] leading-tight transition-colors',
+                                   'font-bold text-tinta shadow-[inset_0_3px_0_var(--color-marca-700)]' => $enlace['es_actual'],
+                                   'text-tinta-suave active:bg-papel-hondo' => ! $enlace['es_actual'],
                                ])>
-                                <span @class([
-                                    'flex h-8 w-14 items-center justify-center rounded-full transition',
-                                    'animate-aparecer-escala bg-gradient-to-br from-marca-100 to-marca-200/80 shadow-sm' => $enlace['es_actual'],
-                                ])>
-                                    <x-icono :nombre="$enlace['icono']" @class(['animate-saltar' => $enlace['es_actual']]) />
-                                </span>
+                                <x-icono :nombre="$enlace['icono']" @class(['text-marca-700' => $enlace['es_actual']]) />
                                 {{ $enlace['texto'] }}
                             </a>
                         </li>
@@ -189,16 +183,11 @@
                         @php $masActivo = $enlacesMas->contains('es_actual', true); @endphp
                         <li>
                             <button type="button" data-abrir-modal="menu-mas" @class([
-                                'presionable flex min-h-16 w-full flex-col items-center justify-center gap-1 text-[0.8125rem] leading-tight font-semibold',
-                                'text-marca-700' => $masActivo,
-                                'text-texto-suave active:text-marca-700' => ! $masActivo,
+                                'flex min-h-16 w-full flex-col items-center justify-center gap-1 text-[0.8125rem] leading-tight transition-colors',
+                                'font-bold text-tinta shadow-[inset_0_3px_0_var(--color-marca-700)]' => $masActivo,
+                                'text-tinta-suave active:bg-papel-hondo' => ! $masActivo,
                             ])>
-                                <span @class([
-                                    'flex h-8 w-14 items-center justify-center rounded-full transition',
-                                    'animate-aparecer-escala bg-gradient-to-br from-marca-100 to-marca-200/80 shadow-sm' => $masActivo,
-                                ])>
-                                    <x-icono nombre="menu" />
-                                </span>
+                                <x-icono nombre="menu" @class(['text-marca-700' => $masActivo]) />
                                 {{ __('layout.mas') }}
                             </button>
                         </li>
@@ -208,13 +197,13 @@
 
             @if ($enlacesMas->isNotEmpty())
                 <x-modal id="menu-mas" :titulo="__('layout.mas_secciones')">
-                    <ul class="escalonado space-y-2">
+                    <ul class="-my-2 divide-y divide-renglon">
                         @foreach ($enlacesMas as $enlace)
                             <li>
-                                <a href="{{ route($enlace['ruta']) }}" @class([
-                                    'presionable flex min-h-14 items-center gap-4 rounded-2xl px-4 text-lg font-semibold',
-                                    'bg-gradient-to-r from-marca-100 to-marca-50 text-marca-800 ring-1 ring-marca-200' => $enlace['es_actual'],
-                                    'bg-slate-50 text-slate-800 hover:bg-marca-50 hover:text-marca-800' => ! $enlace['es_actual'],
+                                <a href="{{ route($enlace['ruta']) }}" @if ($enlace['es_actual']) aria-current="page" @endif @class([
+                                    '-mx-2 flex min-h-14 items-center gap-4 rounded-ficha px-2 text-lg transition-colors',
+                                    'font-bold text-marca-700' => $enlace['es_actual'],
+                                    'text-tinta hover:bg-papel-hondo' => ! $enlace['es_actual'],
                                 ])>
                                     <x-icono :nombre="$enlace['icono']" /> {{ $enlace['texto'] }}
                                 </a>
@@ -253,21 +242,19 @@
 
     <main id="contenido" @class([
         'mx-auto w-full px-4 py-6',
-        'max-w-5xl sm:py-8' => $conSesion,
+        'max-w-6xl sm:py-8' => $conSesion,
         'pb-28 md:pb-8' => $enFinca && $conMenuInferior,
         'flex min-h-screen max-w-md flex-col justify-center' => ! $conSesion,
     ])>
         @if (session('estado'))
-            <div role="status" class="aviso-temporal mb-5 flex items-start gap-3 rounded-xl border border-marca-200 bg-gradient-to-r from-marca-50 to-white px-4 py-3 text-base font-medium text-marca-800 shadow-suave">
-                <span class="flex h-6 w-6 shrink-0 animate-aparecer-escala items-center justify-center rounded-full bg-marca-500 text-white [animation-delay:200ms]">
-                    <x-icono nombre="ok" class="h-4 w-4" />
-                </span>
+            <div role="status" class="aviso-temporal mb-5 flex items-start gap-3 rounded-ficha border border-bien-borde bg-bien-fondo px-4 py-3 text-base font-semibold text-bien">
+                <x-icono nombre="ok" class="mt-0.5 h-5 w-5" />
                 <span>{{ session('estado') }}</span>
             </div>
         @endif
 
         @if ($conSesion && $errors->any() && ! old('_modal') && ! old('usuario_id'))
-            <div role="alert" class="mb-5 flex animate-sacudir items-start gap-3 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-white px-4 py-3 text-base font-medium text-red-700 shadow-suave">
+            <div role="alert" class="mb-5 flex animate-sacudir items-start gap-3 rounded-ficha border border-alerta-borde bg-alerta-fondo px-4 py-3 text-base font-semibold text-alerta">
                 <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
                 <span>{{ $errors->first() }}</span>
             </div>
@@ -276,10 +263,10 @@
         @yield('contenido')
 
         @if ($enFinca)
-            <footer class="mt-12 border-t border-slate-200/70 pt-5 text-center text-sm text-texto-suave print:hidden">
-                <a href="{{ route('legal.terminos') }}" class="underline decoration-slate-300 underline-offset-4 transition-colors hover:text-marca-700 hover:decoration-marca-400">{{ __('legal.terminos') }}</a>
+            <footer class="mt-12 border-t border-renglon pt-5 text-center text-sm text-tinta-suave print:hidden">
+                <a href="{{ route('legal.terminos') }}" class="underline decoration-renglon-fuerte underline-offset-4 transition-colors hover:text-marca-700">{{ __('legal.terminos') }}</a>
                 ·
-                <a href="{{ route('legal.privacidad') }}" class="underline decoration-slate-300 underline-offset-4 transition-colors hover:text-marca-700 hover:decoration-marca-400">{{ __('legal.privacidad') }}</a>
+                <a href="{{ route('legal.privacidad') }}" class="underline decoration-renglon-fuerte underline-offset-4 transition-colors hover:text-marca-700">{{ __('legal.privacidad') }}</a>
             </footer>
         @endif
     </main>

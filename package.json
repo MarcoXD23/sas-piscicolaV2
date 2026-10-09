@@ -18,6 +18,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
         "alpinejs": "^3.17.4"
     },
     "overrides": {

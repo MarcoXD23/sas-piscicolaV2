@@ -2,99 +2,247 @@
 
 @section('titulo', __('inicio.inicio'))
 
+{{--
+    Inicio: la hoja del día de la libreta. Arriba lo urgente (alertas, agua, novedades), luego el turno y lo pendiente,
+    y para propietario y administrador el agua de cada lago y la producción como un libro de cuentas.
+    Las pestañas de estado (ficha de archivo) llevan siempre ícono y texto, nunca solo color.
+--}}
+@php
+    $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
+    // Tonos de la pestaña de estado: fondo, texto y borde de cada estado (tokens de app.css)
+    $tono = [
+        'bien' => 'bg-bien-fondo text-bien ring-bien-borde',
+        'atencion' => 'bg-atencion-fondo text-atencion ring-atencion-borde',
+        'alerta' => 'bg-alerta-fondo text-alerta ring-alerta-borde',
+        'info' => 'bg-info-fondo text-info ring-info-borde',
+    ];
+    $pestana = 'absolute -top-3.5 left-4 inline-flex max-w-[calc(100%-2rem)] items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-bold ring-1';
+@endphp
+
 @section('contenido')
     {{-- Propietario y administrador manejan datos sensibles: se les pide activar la verificación en dos pasos --}}
     @if (auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR) && ! auth()->user()->tieneDosPasos())
-        <p class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-amber-50 to-white p-4 text-base text-amber-900 shadow-suave ring-1 ring-amber-200" role="status">
-            <span class="flex items-start gap-3">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700"><x-icono nombre="alerta" class="h-5 w-5" /></span>
-                <span class="pt-1">{{ __('cuenta.dos_pasos.aviso_panel') }}</span>
-            </span>
-            <a href="{{ route('mi-cuenta.dos-pasos.activar') }}" class="presionable inline-flex min-h-12 items-center rounded-xl bg-amber-400 px-4 font-semibold text-amber-950 shadow-sm hover:bg-amber-300">{{ __('cuenta.dos_pasos.aviso_enlace') }}</a>
-        </p>
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo px-4 py-3 text-base text-atencion" role="status">
+            <p class="flex items-start gap-2.5 font-semibold">
+                <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
+                <span>{{ __('cuenta.dos_pasos.aviso_panel') }}</span>
+            </p>
+            <a href="{{ route('mi-cuenta.dos-pasos.activar') }}" class="inline-flex min-h-12 items-center rounded-ficha bg-tinta px-4 font-semibold text-white transition-colors hover:bg-marca-900">{{ __('cuenta.dos_pasos.aviso_enlace') }}</a>
+        </div>
+    @endif
+
+    {{-- Encabezado de la hoja: foto del agua de un criadero (dominio público, ver docs/marca/LEEME.md) bajo un velo de tinta --}}
+    <header class="relative mb-8 overflow-hidden rounded-ficha bg-tinta text-white shadow-ficha">
+        <img src="/images/fondo-estanque.webp" alt="" aria-hidden="true" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-35">
+        <div class="absolute inset-0 bg-tinta/55" aria-hidden="true"></div>
+
+        <div class="relative flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-5 py-6 sm:px-7">
+            <div class="min-w-0">
+                <h1 class="text-2xl font-bold text-balance sm:text-3xl">{{ __('inicio.hola', ['nombre' => $usuario->name]) }}</h1>
+                <p class="mt-1 text-base text-white/85 first-letter:uppercase">{{ \App\Support\Region::ahora()->translatedFormat(__('comun.formatos.dia_mes')) }}</p>
+            </div>
+            <ul class="flex flex-wrap gap-2" aria-label="{{ __('inicio.tus_roles') }}">
+                @foreach ($usuario->roles as $rol)
+                    <li class="rounded-md bg-white/15 px-2.5 py-1 text-sm font-semibold capitalize ring-1 ring-white/25">{{ $rol->nombre }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </header>
+
+    {{-- ── Lo urgente ─────────────────────────────────────────────────────────────── --}}
+
+    @if ($alertas->isNotEmpty())
+        <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-2 shadow-ficha ring-1 ring-alerta-borde" role="alert" aria-labelledby="alertas-titulo">
+            <h2 id="alertas-titulo" class="{{ $pestana }} {{ $tono['alerta'] }}">
+                <x-icono nombre="alerta" class="h-4 w-4 animate-latido" /> {{ __('alertas.inicio.titulo', ['cantidad' => $alertas->count()]) }}
+            </h2>
+            <ul class="divide-y divide-renglon">
+                @foreach ($alertas as $alerta)
+                    <li class="flex items-start gap-3 py-3">
+                        <span @class([
+                            'mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-sm font-bold ring-1',
+                            $tono['alerta'] => $alerta->esCritica(),
+                            $tono['atencion'] => ! $alerta->esCritica(),
+                        ])><x-icono nombre="alerta" class="h-3.5 w-3.5" /> {{ __('alertas.severidades.'.$alerta->severidad) }}</span>
+                        <div class="min-w-0 flex-1 text-base">
+                            @if ($enlace = $alerta->enlace())
+                                <a href="{{ $enlace }}" class="font-semibold underline decoration-renglon-fuerte underline-offset-4 hover:decoration-tinta">{{ $alerta->mensaje() }}</a>
+                            @else
+                                <span class="font-semibold">{{ $alerta->mensaje() }}</span>
+                            @endif
+                            <p class="text-sm text-tinta-suave">{{ __('alertas.desde', ['momento' => $alerta->abierta_at->format('d/m H:i')]) }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+            <a href="{{ route('admin.alertas.index') }}" class="-mx-5 flex min-h-12 items-center justify-center border-t border-renglon text-base font-semibold text-marca-700 hover:bg-papel-hondo">{{ __('alertas.inicio.historial') }}</a>
+        </section>
+    @endif
+
+    {{-- Celador: lagos con el agua fuera de rango en las últimas 24 horas --}}
+    @if ($lagosConAlertaAgua->isNotEmpty())
+        <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-3 shadow-ficha ring-1 ring-alerta-borde" role="alert" aria-labelledby="agua-celador-titulo">
+            <h2 id="agua-celador-titulo" class="{{ $pestana }} {{ $tono['alerta'] }}">
+                <x-icono nombre="alerta" class="h-4 w-4" /> {{ __('inicio.calidad_agua_fuera_rango') }}
+            </h2>
+            <ul class="divide-y divide-renglon">
+                @foreach ($lagosConAlertaAgua as $item)
+                    <li class="py-2.5 text-base">
+                        <a href="{{ route('noche.index') }}" class="font-bold underline decoration-renglon-fuerte underline-offset-4 hover:decoration-tinta">{{ $item['lago']->nombre }}</a>:
+                        {{ $item['alertas'][0] }}@if (count($item['alertas']) > 1) {{ __('inicio.y_mas', ['cantidad' => count($item['alertas']) - 1]) }}@endif
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
+    @if ($novedadesNoche->isNotEmpty())
+        <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-3 shadow-ficha ring-1 ring-atencion-borde" aria-labelledby="novedades-titulo">
+            <h2 id="novedades-titulo" class="{{ $pestana }} {{ $tono['atencion'] }}">
+                <x-icono nombre="luna" class="h-4 w-4" /> {{ __('inicio.novedades_seguridad_ultimas_24_horas') }}
+            </h2>
+            <ul class="divide-y divide-renglon">
+                @foreach ($novedadesNoche as $novedad)
+                    <li class="flex gap-3 py-2.5 text-base">
+                        <span class="shrink-0 font-bold tabular-nums">{{ $novedad->registrada_at->format('H:i') }}</span>
+                        <span class="min-w-0">
+                            <span class="font-semibold">{{ $novedad->textoTipo() }}@if ($novedad->lago) {{ __('inicio.en_lago', ['lago' => $novedad->lago->nombre]) }}@endif:</span>
+                            {{ $novedad->descripcion }} <span class="text-tinta-suave">({{ $novedad->usuario?->name }})</span>
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+            <a href="{{ route('noche.index') }}" class="-mx-5 -mb-3 flex min-h-12 items-center justify-center border-t border-renglon text-base font-semibold text-marca-700 hover:bg-papel-hondo">{{ __('inicio.seguridad_noche') }}</a>
+        </section>
+    @endif
+
+    {{-- «Listo para pescar»: el único lugar donde aparece el color de la trucha (algo que se celebra, no un estado) --}}
+    @if ($avisosPesca->isNotEmpty())
+        <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-2 shadow-ficha ring-1 ring-trucha/30" aria-labelledby="pesca-titulo">
+            <h2 id="pesca-titulo" class="{{ $pestana }} bg-ficha text-trucha ring-trucha/40">
+                <x-icono nombre="pez" class="h-4 w-4" /> {{ __('inicio.listos_para_pescar', ['cantidad' => $avisosPesca->count()]) }}
+            </h2>
+            <ul class="divide-y divide-renglon">
+                @foreach ($avisosPesca as $aviso)
+                    <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+                        <div class="min-w-0">
+                            <a href="{{ route('admin.lagos.show', $aviso->lago) }}" class="font-bold underline decoration-renglon-fuerte underline-offset-4 hover:decoration-tinta">{{ __('inicio.aviso_pesca', ['lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie]) }}</a>
+                            <p class="text-sm text-tinta-suave">{{ __('inicio.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</p>
+                        </div>
+                        <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
+                            <x-boton variante="secundario">{{ __('inicio.marcar_atendido') }}</x-boton>
+                        </x-formulario>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
     @endif
 
     @if ($primerUso)
         @include('inicio._primer_uso', ['pasos' => $primerUso])
     @endif
 
-    {{-- Saludo: foto del agua de un criadero llena de peces (dominio público, ver docs/marca/LEEME.md) con un velo oscuro para el contraste --}}
-    <section class="relative mb-6 overflow-hidden rounded-3xl bg-marca-800 text-white shadow-elevada">
-        <img src="/images/fondo-estanque.webp" alt="" aria-hidden="true" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-40">
-        <div class="absolute inset-0 bg-gradient-to-r from-marca-950/90 via-marca-900/70 to-marca-800/30" aria-hidden="true"></div>
-
-        {{-- Ola al pie (dibujo fijo, decorativo) --}}
-        <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-            <svg class="absolute bottom-0 left-0 h-10 w-[200%] text-white/[0.07]" viewBox="0 0 2880 100" preserveAspectRatio="none">
-                <path fill="currentColor" d="M0 50 Q360 0 720 50 T1440 50 T2160 50 T2880 50 V100 H0Z"/>
-            </svg>
-        </div>
-
-        <div class="relative px-5 py-7 sm:px-8 sm:py-10">
-            <p class="text-base font-medium text-marca-100">{{ $usuario->tenant->nombre }}</p>
-            <h1 class="mt-1 text-3xl font-bold tracking-tight drop-shadow-sm sm:text-4xl">{{ __('inicio.hola', ['nombre' => $usuario->name]) }}</h1>
-
-            <ul class="escalonado mt-4 flex flex-wrap gap-2" aria-label="{{ __('inicio.tus_roles') }}">
-                @foreach ($usuario->roles as $rol)
-                    <li class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold capitalize ring-1 ring-white/25 backdrop-blur">{{ $rol->nombre }}</li>
-                @endforeach
-            </ul>
-        </div>
-    </section>
+    {{-- ── El turno y lo pendiente ────────────────────────────────────────────────── --}}
 
     @if ($trabajaPorTurnos)
-        <x-tarjeta class="mb-6">
-            <div class="flex items-start gap-4">
-                <span @class([
-                    'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
-                    'bg-gradient-to-br from-marca-100 to-marca-50 text-marca-700 ring-1 ring-marca-200/60' => $turnoActual,
-                    'bg-slate-100 text-texto-suave' => ! $turnoActual,
-                ])>
-                    <x-icono nombre="reloj" />
-                    {{-- En turno: punto que late --}}
-                    @if ($turnoActual)
-                        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5" aria-hidden="true">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-marca-400 opacity-60"></span>
-                            <span class="relative inline-flex h-3.5 w-3.5 rounded-full bg-marca-500 ring-2 ring-white"></span>
-                        </span>
-                    @endif
-                </span>
-                <div>
-                    @if ($turnoActual)
-                        <p class="text-sm font-medium text-marca-700">{{ __('inicio.estas_turno') }}</p>
-                        <p class="text-lg font-semibold text-slate-900">
-                            <span class="capitalize">{{ $turnoActual->rol }}</span> {{ __('inicio.hasta_las', ['hora' => $turnoActual->termina_at->format('H:i')]) }}
+        <section @class([
+            'relative mb-8 flex items-center gap-4 rounded-ficha bg-ficha px-5 pt-7 pb-5 shadow-ficha ring-1',
+            'ring-bien-borde' => $turnoActual,
+            'ring-renglon' => ! $turnoActual,
+        ]) aria-labelledby="turno-titulo">
+            <h2 id="turno-titulo" @class([$pestana, $turnoActual ? $tono['bien'] : 'bg-papel-hondo text-tinta-suave ring-renglon'])>
+                @if ($turnoActual)
+                    {{-- En turno: un punto que late (es un estado vivo, no adorno) --}}
+                    <span class="relative flex h-2.5 w-2.5" aria-hidden="true">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-bien opacity-50"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-bien"></span>
+                    </span>
+                    {{ __('inicio.estas_turno') }}
+                @else
+                    <x-icono nombre="reloj" class="h-4 w-4" /> {{ __('inicio.fuera_turno') }}
+                @endif
+            </h2>
+            <x-icono nombre="reloj" @class(['h-8 w-8', 'text-bien' => $turnoActual, 'text-tinta-suave' => ! $turnoActual]) />
+            <p class="text-xl font-bold">
+                @if ($turnoActual)
+                    <span class="capitalize">{{ $turnoActual->rol }}</span> {{ __('inicio.hasta_las', ['hora' => $turnoActual->termina_at->format('H:i')]) }}
+                @elseif ($proximoTurno)
+                    {{ __('inicio.proximo_turno') }} <span class="first-letter:uppercase">{{ $proximoTurno->inicia_at->translatedFormat(__('comun.formatos.dia_mes_hora')) }}</span>
+                    <span class="capitalize">({{ $proximoTurno->rol }})</span>
+                @else
+                    {{ __('inicio.sin_turnos') }}
+                @endif
+            </p>
+        </section>
+    @endif
+
+    @if ($tareasPendientes > 0 || $solicitudesPendientes > 0)
+        <nav class="mb-8 divide-y divide-renglon overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon" aria-label="{{ __('inicio.urgente') }}">
+            @if ($tareasPendientes > 0)
+                <a href="{{ route('mi-trabajo.index') }}" class="flex min-h-16 items-center gap-4 px-5 py-3 text-lg font-semibold transition-colors hover:bg-papel-hondo">
+                    <x-icono nombre="tareas" class="text-marca-700" />
+                    {{ __('inicio.tareas_pendientes', ['cantidad' => $tareasPendientes]) }}
+                </a>
+            @endif
+            @if ($solicitudesPendientes > 0)
+                <a href="{{ route('admin.solicitudes.index') }}" class="flex min-h-16 items-center gap-4 px-5 py-3 text-lg font-semibold transition-colors hover:bg-papel-hondo">
+                    <x-icono nombre="personal" class="text-atencion" />
+                    {{ __('inicio.solicitudes_pendientes', ['cantidad' => $solicitudesPendientes]) }}
+                </a>
+            @endif
+        </nav>
+    @endif
+
+    {{-- Trabajador: ración sugerida del día, como renglones de la libreta --}}
+    @if ($racionesHoy->isNotEmpty())
+        <x-tarjeta :titulo="__('inicio.racion_sugerida_hoy')" :subtitulo="__('inicio.segun_biomasa_peso_promedio_cada')" class="mb-8">
+            <ul class="-mt-1 divide-y divide-renglon">
+                @foreach ($racionesHoy as $item)
+                    <li class="flex items-center justify-between gap-3 py-3">
+                        <div class="min-w-0">
+                            <p class="font-bold">{{ __('lagos.lago_nombre', ['lago' => $item['lago']->nombre]) }}</p>
+                            <p class="text-sm text-tinta-suave">
+                                {{ __('lagos.tomas_de', ['tomas' => $item['racion']['tomas'], 'kg' => $numero($item['racion']['kg_por_toma'], 1)]) }}
+                                @if ($item['racion']['factor'] < 1) · <span class="font-bold text-atencion">{{ __('inicio.reducida_agua') }}</span>@endif
+                            </p>
+                        </div>
+                        <p class="shrink-0 text-2xl font-bold tabular-nums">
+                            {{ $numero($item['racion']['total_kg_dia'], 1) }} <span class="text-sm font-normal text-tinta-suave">{{ __('inicio.kg_dia') }}</span>
                         </p>
-                    @else
-                        <p class="text-sm font-medium text-texto-suave">{{ __('inicio.fuera_turno') }}</p>
-                        <p class="text-lg font-semibold text-slate-900">
-                            @if ($proximoTurno)
-                                {{ __('inicio.proximo_turno') }} <span class="first-letter:uppercase">{{ $proximoTurno->inicia_at->translatedFormat(__('comun.formatos.dia_mes_hora')) }}</span>
-                                <span class="capitalize">({{ $proximoTurno->rol }})</span>
-                            @else
-                                {{ __('inicio.sin_turnos') }}
-                            @endif
-                        </p>
-                    @endif
-                </div>
-            </div>
+                    </li>
+                @endforeach
+            </ul>
+            <x-boton :href="route('admin.lagos.index')" class="mt-4 w-full">
+                <x-icono nombre="alimentar" class="h-5 w-5" /> {{ __('inicio.ir_alimentar') }}
+            </x-boton>
         </x-tarjeta>
     @endif
 
+    {{-- Celador: la entrada a Seguridad & Noche (su pantalla es oscura; esta ficha la anticipa) --}}
+    @if ($usuario->tieneRol('celador'))
+        <a href="{{ route('noche.index') }}" class="mb-8 flex min-h-20 items-center gap-4 rounded-ficha bg-tinta px-5 py-4 text-white shadow-ficha transition-colors hover:bg-marca-950">
+            <x-icono nombre="luna" class="h-7 w-7 text-marca-300" />
+            <span>
+                <span class="block text-lg font-bold">{{ __('inicio.seguridad_noche') }}</span>
+                <span class="block text-white/80">{{ __('inicio.rondas_oxigeno_aireadores') }}</span>
+            </span>
+        </a>
+    @endif
+
     @if ($recordatorios->isNotEmpty())
-        <x-tarjeta :titulo="__('inicio.agenda_no_olvides')" class="mb-6">
-            <ul class="divide-y divide-slate-100">
+        <x-tarjeta :titulo="__('inicio.agenda_no_olvides')" class="mb-8">
+            <ul class="-mt-1 divide-y divide-renglon">
                 @foreach ($recordatorios as $evento)
                     <li class="flex items-center justify-between gap-3 py-2.5">
                         <a href="{{ route('admin.agenda.index', ['mes' => $evento->inicia_at->format('Y-m')]) }}" class="min-w-0 hover:underline">
-                            <span class="block truncate font-medium text-slate-900">{{ $evento->titulo }}@if ($evento->lago) · {{ $evento->lago->nombre }}@endif</span>
-                            <span class="text-sm text-texto-suave">{{ $evento->textoTipo() }}</span>
+                            <span class="block truncate font-semibold">{{ $evento->titulo }}@if ($evento->lago) · {{ $evento->lago->nombre }}@endif</span>
+                            <span class="text-sm text-tinta-suave">{{ $evento->textoTipo() }}</span>
                         </a>
                         <span @class([
-                            'shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold',
-                            'bg-red-100 text-red-800' => $evento->estaVencido(),
-                            'bg-marca-100 text-marca-800' => $evento->inicia_at->isToday(),
-                            'bg-slate-100 text-slate-700' => ! $evento->estaVencido() && ! $evento->inicia_at->isToday(),
+                            'shrink-0 rounded-md px-2 py-0.5 text-sm font-bold ring-1',
+                            $tono['alerta'] => $evento->estaVencido(),
+                            $tono['bien'] => ! $evento->estaVencido() && $evento->inicia_at->isToday(),
+                            'bg-papel-hondo text-tinta-suave ring-renglon' => ! $evento->estaVencido() && ! $evento->inicia_at->isToday(),
                         ])>
                             {{ $evento->estaVencido() ? __('inicio.vencido', ['fecha' => $evento->inicia_at->format('d/m')]) : ($evento->inicia_at->isToday() ? __('comun.hoy') : $evento->inicia_at->format('d/m')) }}
                         </span>
@@ -104,174 +252,114 @@
         </x-tarjeta>
     @endif
 
-    @if ($tareasPendientes > 0)
-        <a href="{{ route('mi-trabajo.index') }}" class="elevable presionable group mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-suave ring-1 ring-slate-200 hover:ring-marca-300">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-marca-100 to-marca-50 text-marca-700 transition duration-300 ease-resorte group-hover:scale-110 group-hover:-rotate-6"><x-icono nombre="tareas" /></span>
-            <span class="text-lg font-semibold text-slate-900">{{ __('inicio.tareas_pendientes', ['cantidad' => $tareasPendientes]) }}</span>
-        </a>
-    @endif
+    {{-- ── Panel de propietario y administrador ───────────────────────────────────── --}}
 
-    @if ($solicitudesPendientes > 0)
-        <a href="{{ route('admin.solicitudes.index') }}" class="elevable presionable group mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-suave ring-1 ring-slate-200 hover:ring-amber-300">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 transition duration-300 ease-resorte group-hover:scale-110 group-hover:-rotate-6"><x-icono nombre="personal" /></span>
-            <span class="text-lg font-semibold text-slate-900">{{ __('inicio.solicitudes_pendientes', ['cantidad' => $solicitudesPendientes]) }}</span>
-        </a>
-    @endif
+    @if ($esTecnico)
+        <h2 class="mb-4 text-xl font-bold">{{ $esPropietario ? __('inicio.panel_ejecutivo') : __('inicio.panel_tecnico') }}</h2>
 
-    @if ($novedadesNoche->isNotEmpty())
-        <a href="{{ route('noche.index') }}" class="elevable mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 to-white p-4 text-red-900 shadow-suave hover:border-red-300">
-            <x-icono nombre="luna" class="mt-0.5" />
-            <div>
-                <p class="font-semibold">{{ __('inicio.novedades_seguridad_ultimas_24_horas') }}</p>
-                <ul class="text-base">
-                    @foreach ($novedadesNoche as $novedad)
-                        <li>
-                            {{ $novedad->registrada_at->format('H:i') }} · {{ $novedad->textoTipo() }}@if ($novedad->lago) {{ __('inicio.en_lago', ['lago' => $novedad->lago->nombre]) }}@endif:
-                            {{ $novedad->descripcion }} <span class="text-red-700">({{ $novedad->usuario?->name }})</span>
+        {{-- Agua de los lagos: la lectura del día, en cifras grandes. Oxígeno fuera de rango = alerta (como EvaluadorAlertas); otro problema = atención. --}}
+        @if ($aguaLagos->isNotEmpty())
+            <section class="mb-6 overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon" aria-labelledby="agua-titulo">
+                <header class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-renglon px-5 py-4 sm:px-6">
+                    <h3 id="agua-titulo" class="text-lg font-bold">{{ __('inicio.agua.titulo') }}</h3>
+                    <p class="text-sm text-tinta-suave">{{ __('inicio.agua.subtitulo', ['horas' => \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE]) }}</p>
+                </header>
+
+                <ul class="divide-y divide-renglon">
+                    @foreach ($aguaLagos as $item)
+                        @php
+                            $medicion = $item['medicion'];
+                            $parametros = array_column($item['problemas'], 'parametro');
+                            $estado = ! $medicion ? 'sin_medicion' : (in_array('oxigeno', $parametros, true) ? 'alerta' : ($parametros ? 'atencion' : 'bien'));
+                            [$tonoEstado, $iconoEstado] = match ($estado) {
+                                'alerta' => [$tono['alerta'], 'alerta'],
+                                'atencion' => [$tono['atencion'], 'alerta'],
+                                'bien' => [$tono['bien'], 'ok'],
+                                default => [$tono['info'], 'reloj'],
+                            };
+                            // Sin «display» aquí: cada copia (celular / pantalla ancha) pone el suyo y no se pisan
+                            $insignia = 'items-center gap-1 rounded-md px-2 py-0.5 text-sm font-bold ring-1 '.$tonoEstado;
+                        @endphp
+                        <li class="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_8.5rem] sm:items-center sm:px-6">
+                            <div class="col-span-2 flex items-start justify-between gap-3 sm:col-span-1">
+                                <div class="min-w-0">
+                                    <a href="{{ route('admin.lagos.show', $item['lago']) }}" class="text-lg font-bold underline decoration-transparent underline-offset-4 hover:decoration-tinta">{{ $item['lago']->nombre }}</a>
+                                    <p class="truncate text-sm text-tinta-suave">
+                                        {{ $item['lago']->siembrasActivas->pluck('nombre_especie')->join(', ') }}
+                                    </p>
+                                    @if ($medicion)
+                                        <p class="text-sm text-tinta-suave">{{ __('inicio.agua.medido', ['hora' => $medicion->medido_at->format('H:i')]) }}</p>
+                                    @endif
+                                </div>
+                                <span class="{{ $insignia }} inline-flex sm:hidden"><x-icono :nombre="$iconoEstado" class="h-3.5 w-3.5" /> {{ __('inicio.estado_agua.'.$estado) }}</span>
+                            </div>
+
+                            @if ($medicion)
+                                @foreach ([['oxigeno', $medicion->oxigeno_mg_l, 'mg/L', 'alerta'], ['temperatura', $medicion->temperatura_c, '°C', 'atencion']] as [$parametro, $valor, $unidad, $tonoProblema])
+                                    <div>
+                                        <p class="text-sm text-tinta-suave">{{ __('inicio.agua.'.$parametro) }}</p>
+                                        @if ($valor !== null)
+                                            <p @class([
+                                                'mt-1 text-cifra font-bold tabular-nums',
+                                                'text-alerta' => in_array($parametro, $parametros, true) && $tonoProblema === 'alerta',
+                                                'text-atencion' => in_array($parametro, $parametros, true) && $tonoProblema === 'atencion',
+                                            ])>{{ $numero($valor, 1) }} <span class="text-base font-normal tracking-normal text-tinta-suave">{{ $unidad }}</span></p>
+                                        @else
+                                            <p class="mt-1 text-lg text-tinta-suave">{{ __('inicio.agua.sin_dato') }}</p>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            @else
+                                <p class="col-span-2 flex items-center gap-2 text-base text-tinta-suave">
+                                    <x-icono nombre="reloj" class="h-5 w-5" /> {{ __('inicio.agua.sin_medicion') }}
+                                </p>
+                            @endif
+
+                            <span class="{{ $insignia }} hidden justify-self-end sm:inline-flex"><x-icono :nombre="$iconoEstado" class="h-3.5 w-3.5" /> {{ __('inicio.estado_agua.'.$estado) }}</span>
+
+                            @if ($item['problemas'])
+                                <p @class(['col-span-2 text-sm font-semibold sm:col-span-4', 'text-alerta' => $estado === 'alerta', 'text-atencion' => $estado === 'atencion'])>
+                                    {{ $item['problemas'][0]['texto'] }}@if (count($item['problemas']) > 1) {{ __('inicio.y_mas', ['cantidad' => count($item['problemas']) - 1]) }}@endif
+                                </p>
+                            @endif
                         </li>
                     @endforeach
                 </ul>
-            </div>
-        </a>
-    @endif
+            </section>
+        @endif
 
-    @if ($usuario->tieneRol('celador'))
-        <a href="{{ route('noche.index') }}" class="elevable presionable group relative mb-6 flex items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-marca-900 to-marca-700 p-5 text-white shadow-elevada">
-            <span class="pointer-events-none absolute -top-8 right-6 h-24 w-24 rounded-full bg-marca-300/20 blur-2xl" aria-hidden="true"></span>
-            <span class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 transition duration-500 ease-resorte group-hover:-rotate-12"><x-icono nombre="luna" /></span>
-            <span class="relative">
-                <span class="block text-lg font-semibold">{{ __('inicio.seguridad_noche') }}</span>
-                <span class="block text-marca-100">{{ __('inicio.rondas_oxigeno_aireadores') }}</span>
-            </span>
-        </a>
-    @endif
-
-    @if ($avisosPesca->isNotEmpty())
-        <x-tarjeta :titulo="__('inicio.listos_para_pescar', ['cantidad' => $avisosPesca->count()])" class="mb-6">
-            <ul class="divide-y divide-slate-100">
-                @foreach ($avisosPesca as $aviso)
-                    <li class="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                        <div class="min-w-0">
-                            <a href="{{ route('admin.lagos.show', $aviso->lago) }}" class="font-semibold text-slate-900 hover:underline">{{ __('inicio.aviso_pesca', ['lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie]) }}</a>
-                            <p class="text-sm text-texto-suave">{{ __('inicio.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</p>
-                        </div>
-                        <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
-                            <x-boton variante="secundario" class="!min-h-12 !py-2">{{ __('inicio.marcar_atendido') }}</x-boton>
-                        </x-formulario>
-                    </li>
-                @endforeach
-            </ul>
-        </x-tarjeta>
-    @endif
-
-    @if ($alertas->isNotEmpty())
-        <section data-revelar class="mb-6 rounded-2xl border-l-4 border-red-500 bg-white p-4 shadow-suave ring-1 ring-red-200" role="alert" aria-labelledby="alertas-titulo">
-            <div class="mb-2 flex items-center justify-between gap-3">
-                <h2 id="alertas-titulo" class="flex items-center gap-2 text-lg font-semibold text-red-800">
-                    <x-icono nombre="alerta" class="h-5 w-5 animate-latido" /> {{ __('alertas.inicio.titulo', ['cantidad' => $alertas->count()]) }}
-                </h2>
-                <a href="{{ route('admin.alertas.index') }}" class="inline-flex min-h-12 shrink-0 items-center text-base font-medium text-marca-700 hover:underline">{{ __('alertas.inicio.historial') }}</a>
-            </div>
-            <ul class="divide-y divide-slate-100">
-                @foreach ($alertas as $alerta)
-                    <li class="flex items-start gap-3 py-2.5">
-                        <span @class([
-                            'mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold',
-                            'bg-red-100 text-red-800' => $alerta->esCritica(),
-                            'bg-amber-100 text-amber-900' => ! $alerta->esCritica(),
-                        ])>{{ __('alertas.severidades.'.$alerta->severidad) }}</span>
-                        <div class="min-w-0 flex-1 text-base text-slate-800">
-                            @if ($enlace = $alerta->enlace())
-                                <a href="{{ $enlace }}" class="hover:underline">{{ $alerta->mensaje() }}</a>
-                            @else
-                                {{ $alerta->mensaje() }}
-                            @endif
-                            <p class="text-sm text-texto-suave">{{ __('alertas.desde', ['momento' => $alerta->abierta_at->format('d/m H:i')]) }}</p>
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-        </section>
-    @endif
-
-    @if ($lagosConAlertaAgua->isNotEmpty())
-        <section data-revelar class="mb-6 rounded-2xl border border-red-200 border-l-4 border-l-red-500 bg-gradient-to-r from-red-50 to-white p-4 text-red-900 shadow-suave" role="alert">
-            <p class="mb-1 flex items-center gap-2 font-semibold"><x-icono nombre="alerta" class="h-5 w-5" /> {{ __('inicio.calidad_agua_fuera_rango') }}</p>
-            <ul class="space-y-1 text-base">
-                @foreach ($lagosConAlertaAgua as $item)
-                    <li>
-                        <a href="{{ route('noche.index') }}" class="font-semibold underline-offset-2 hover:underline">{{ $item['lago']->nombre }}</a>:
-                        {{ $item['alertas'][0] }}@if (count($item['alertas']) > 1) {{ __('inicio.y_mas', ['cantidad' => count($item['alertas']) - 1]) }}@endif
-                    </li>
-                @endforeach
-            </ul>
-        </section>
-    @endif
-
-    @if ($racionesHoy->isNotEmpty())
-        <x-tarjeta :titulo="__('inicio.racion_sugerida_hoy')" :subtitulo="__('inicio.segun_biomasa_peso_promedio_cada')" class="mb-6">
-            <ul class="divide-y divide-slate-100">
-                @foreach ($racionesHoy as $item)
-                    <li class="flex items-center justify-between gap-3 py-3">
-                        <div class="min-w-0">
-                            <p class="font-semibold text-slate-900">{{ __('lagos.lago_nombre', ['lago' => $item['lago']->nombre]) }}</p>
-                            <p class="text-sm text-texto-suave">
-                                {{ __('lagos.tomas_de', ['tomas' => $item['racion']['tomas'], 'kg' => \App\Support\Formato::numero($item['racion']['kg_por_toma'], 1)]) }}
-                                @if ($item['racion']['factor'] < 1) · <span class="font-semibold text-amber-700">{{ __('inicio.reducida_agua') }}</span>@endif
-                            </p>
-                        </div>
-                        <p class="shrink-0 text-xl font-bold tabular-nums text-slate-900">
-                            <span data-contar>{{ \App\Support\Formato::numero($item['racion']['total_kg_dia'], 1) }}</span> <span class="text-sm font-medium text-texto-suave">{{ __('inicio.kg_dia') }}</span>
-                        </p>
-                    </li>
-                @endforeach
-            </ul>
-            <x-boton :href="route('admin.lagos.index')" variante="secundario" class="mt-3 w-full">
-                <x-icono nombre="alimentar" class="h-5 w-5" /> {{ __('inicio.ir_alimentar') }}
-            </x-boton>
-        </x-tarjeta>
-    @endif
-
-    @if ($esTecnico)
-        @php $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales); @endphp
-
-        <h2 class="mb-3 flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900">
-            <span class="h-5 w-1 rounded-full bg-gradient-to-b from-marca-400 to-marca-600" aria-hidden="true"></span>
-            {{ $esPropietario ? __('inicio.panel_ejecutivo') : __('inicio.panel_tecnico') }}
-        </h2>
-
-        {{-- Cifra principal: una sola por vista --}}
-        <section data-revelar class="relative mb-4 overflow-hidden rounded-2xl bg-white p-5 shadow-suave ring-1 ring-slate-200 sm:p-6">
-            <span class="pointer-events-none absolute -top-16 -right-10 h-48 w-48 rounded-full bg-gradient-to-br from-marca-100 to-sky-100 opacity-70 blur-3xl" aria-hidden="true"></span>
-            <svg class="pointer-events-none absolute bottom-0 left-0 h-12 w-[200%] text-marca-100/70" viewBox="0 0 2880 100" preserveAspectRatio="none" aria-hidden="true">
-                <path fill="currentColor" d="M0 50 Q360 0 720 50 T1440 50 T2160 50 T2880 50 V100 H0Z"/>
-            </svg>
-            <div class="relative flex items-center gap-4">
-                <span class="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-marca-500 to-marca-700 text-white shadow-brillo sm:flex">
-                    <x-icono nombre="biomasa" class="h-7 w-7" />
-                </span>
+        {{-- Producción: la biomasa manda; el resto son renglones de un libro de cuentas --}}
+        <section class="mb-6 overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon" aria-labelledby="produccion-titulo">
+            <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 border-b border-renglon px-5 py-5 sm:px-6">
                 <div>
-                    <p class="text-sm font-medium text-texto-suave">{{ __('inicio.biomasa_total_agua') }}</p>
-                    <p class="mt-1 text-5xl font-semibold tracking-tight tabular-nums">
-                        <span data-contar class="texto-degradado">{{ $numero($biomasaTotal, 2) }}</span> <span class="text-xl font-medium text-texto-suave">kg</span>
-                    </p>
+                    <h3 id="produccion-titulo" class="text-lg font-bold">{{ __('inicio.produccion') }}</h3>
+                    <p class="mt-4 text-sm text-tinta-suave">{{ __('inicio.biomasa_total_agua') }}</p>
                 </div>
+                <p class="text-cifra-grande font-bold tabular-nums">
+                    {{ $numero($biomasaTotal, 2) }} <span class="text-xl font-normal tracking-normal text-tinta-suave">kg</span>
+                </p>
             </div>
+            {{-- Renglones del libro de cuentas: una columna en celular, dos en pantallas anchas --}}
+            <dl class="grid px-5 sm:grid-cols-2 sm:gap-x-10 sm:px-6 [&>div]:border-b [&>div]:border-renglon [&>div:last-child]:border-b-0 sm:[&>div:nth-last-child(2):nth-child(odd)]:border-b-0">
+                @foreach (array_filter([
+                    [__('inicio.peces_vivos'), $numero($pecesVivos), null],
+                    [__('inicio.lagos_siembra'), $lagosActivos, null],
+                    [__('inicio.mortalidad_30_dias'), $numero($mortalidad['muertos']), __('inicio.peces_porcentaje', ['porcentaje' => $numero($mortalidad['porcentaje'], 1)])],
+                    $esPropietario ? [__('inicio.alimento_30_dias'), $numero($alimento30, 1), 'kg'] : null,
+                    $esPropietario ? [__('inicio.ventas_mes'), \App\Support\Formato::dinero($ventasMes), null] : null,
+                    $esPropietario ? [__('inicio.cobrar'), \App\Support\Formato::dinero($cartera), null] : null,
+                ]) as [$etiqueta, $valor, $unidad])
+                    <div class="flex items-baseline justify-between gap-4 py-3.5">
+                        <dt class="text-tinta-suave">{{ $etiqueta }}</dt>
+                        <dd class="text-right text-xl font-bold tabular-nums">
+                            {{ $valor }}@if ($unidad) <span class="text-sm font-normal text-tinta-suave">{{ $unidad }}</span>@endif
+                        </dd>
+                    </div>
+                @endforeach
+            </dl>
         </section>
 
-        <div class="escalonado mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
-            <x-indicador :etiqueta="__('inicio.peces_vivos')" :valor="$numero($pecesVivos)" />
-            <x-indicador :etiqueta="__('inicio.lagos_siembra')" :valor="$lagosActivos" />
-            <x-indicador :etiqueta="__('inicio.mortalidad_30_dias')" :valor="$numero($mortalidad['muertos'])"
-                         :unidad="__('inicio.peces_porcentaje', ['porcentaje' => $numero($mortalidad['porcentaje'], 1)])" />
-            @if ($esPropietario)
-                <x-indicador :etiqueta="__('inicio.alimento_30_dias')" :valor="$numero($alimento30, 1)" unidad="kg" />
-                <x-indicador :etiqueta="__('inicio.ventas_mes')" :valor="\App\Support\Formato::dinero($ventasMes)" />
-                <x-indicador :etiqueta="__('inicio.cobrar')" :valor="\App\Support\Formato::dinero($cartera)" />
-            @endif
-        </div>
-
-        <div class="grid items-start gap-4 lg:grid-cols-2">
+        <div class="grid items-start gap-6 lg:grid-cols-2">
             <x-grafica-barras :titulo="__('inicio.biomasa_lago')" :subtitulo="__('inicio.kilogramos_cultivo_hoy')" :datos="$biomasaPorLago->all()"
                               unidad="kg" :decimales="1" :vacio="__('inicio.no_hay_lagos_siembras_activas')" />
             <x-grafica-columnas :titulo="__('inicio.mortalidad_diaria')" :subtitulo="__('inicio.peces_muertos_dia_ultimos_30')"
