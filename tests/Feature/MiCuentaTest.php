@@ -41,7 +41,9 @@ class MiCuentaTest extends TestCase
         foreach (Rol::TODOS as $rol) {
             $usuario = tap(User::factory()->create(['tenant_id' => $this->persona->tenant_id]))->asignarRoles([$rol]);
             $this->actingAs($usuario)->get(route('mi-cuenta.index'))->assertOk()
-                ->assertSee(__('cuenta.contrasena.titulo'))->assertSee($usuario->email);
+                ->assertSee(__('cuenta.contrasena.titulo'))->assertSee($usuario->email)
+                // La contraseña actual nunca viene llena: la ayuda explica por qué
+                ->assertSee(__('cuenta.contrasena.actual_ayuda'));
         }
         $this->actingAs($this->persona)->get(route('inicio'))->assertSee(route('mi-cuenta.index'));
     }

@@ -13,6 +13,7 @@ return [
         'titulo' => 'Cambiar la contraseña',
         'ayuda' => 'Al cambiarla se cierran tus sesiones en otros equipos y se desconecta la app móvil.',
         'actual' => 'Contraseña actual',
+        'actual_ayuda' => 'La misma con la que entraste. Por seguridad, la app no la muestra ni la puede rellenar.',
         'nueva' => 'Contraseña nueva (mínimo 8 caracteres)',
         'confirmar' => 'Repite la contraseña nueva',
         'guardar' => 'Cambiar contraseña',
@@ -36,10 +37,10 @@ return [
 
         // Activar
         'activar_titulo' => 'Activar verificación en dos pasos',
-        'paso_1' => '1. Abre tu app de autenticación y escanea este código QR.',
-        'paso_1_manual' => '¿No puedes escanear? Agrega una cuenta nueva y escribe esta clave:',
-        'paso_2' => '2. Escribe el código de 6 números que muestra la app.',
-        'codigo' => 'Código',
+        'paso_1' => '1. En tu app de autenticación (Google Authenticator, Microsoft Authenticator, Authy…), agrega una cuenta y escanea este código QR.',
+        'paso_1_manual' => '¿No puedes escanear? En la app elige «Ingresar una clave de configuración» y escribe ESTA CLAVE allá, en la app (no aquí abajo):',
+        'paso_2' => '2. La app muestra un código de 6 números que cambia cada 30 segundos. Escríbelo aquí (no la clave de arriba).',
+        'codigo' => 'Código de 6 números',
         'confirmar' => 'Activar',
         'clave_privada' => 'No compartas esta clave ni el código QR con nadie.',
 

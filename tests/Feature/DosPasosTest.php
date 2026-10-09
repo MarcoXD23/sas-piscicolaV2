@@ -62,6 +62,8 @@ class DosPasosTest extends TestCase
     public function test_activar_guarda_la_clave_cifrada_y_muestra_10_codigos_una_sola_vez(): void
     {
         $this->actingAs($this->trabajador)->get(route('mi-cuenta.dos-pasos.activar'))->assertOk()
+            // La clave va en la app de autenticación; aquí solo el código de 6 números
+            ->assertSee(__('cuenta.dos_pasos.paso_2'))->assertSee(__('cuenta.dos_pasos.codigo'))
             ->assertSee('<svg', false)->assertHeader('Cache-Control', 'no-store, private');
         $clave = session('dos_pasos_clave_nueva');
         $this->assertSame(32, strlen($clave));

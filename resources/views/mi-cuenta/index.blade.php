@@ -15,7 +15,7 @@
 
         <x-tarjeta :titulo="__('cuenta.contrasena.titulo')" :subtitulo="__('cuenta.contrasena.ayuda')">
             <x-formulario :action="route('mi-cuenta.contrasena')" metodo="PUT">
-                <x-campo nombre="actual" :etiqueta="__('cuenta.contrasena.actual')" tipo="password" autocomplete="current-password" required />
+                <x-campo nombre="actual" :etiqueta="__('cuenta.contrasena.actual')" tipo="password" autocomplete="current-password" required :ayuda="__('cuenta.contrasena.actual_ayuda')" />
                 <x-campo nombre="password" :etiqueta="__('cuenta.contrasena.nueva')" tipo="password" autocomplete="new-password" minlength="8" required />
                 <x-campo nombre="password_confirmation" :etiqueta="__('cuenta.contrasena.confirmar')" tipo="password" autocomplete="new-password" minlength="8" required />
                 <x-boton>{{ __('cuenta.contrasena.guardar') }}</x-boton>
