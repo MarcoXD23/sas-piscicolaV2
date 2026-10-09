@@ -360,7 +360,6 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 
 ## Pendiente
 
-- Registrar la medición del agua en la bitácora. Hoy su hora se corrige igual que las demás, pero la anotación del reloj corregido no queda en ningún lado.
 - Guardar en el teléfono la última hora que dio el servidor y adjuntarla a cada registro sin conexión. Así el servidor rechazaría los que dicen haber ocurrido antes de ese momento: cerraría el truco de atrasar el reloj y volverlo a poner bien antes de enviar.
 - Superadmin y planes de suscripción para varias fincas.
 

@@ -3,12 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Lago;
+use App\Models\MedicionAgua;
+use App\Models\Rol;
+use App\Support\Formato;
 use App\Support\MomentoRegistro;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Medición del agua: desde el detalle del lago (administrador) o desde Seguridad & Noche (celador, también sin
+ * conexión). Cada medición queda en la bitácora, con la hora del registro y, si llegó tarde, la nota de sin conexión
+ * y de la corrección del reloj del teléfono.
+ */
 class MedicionAguaController extends Controller
 {
     private const PARAMETROS = ['temperatura_c', 'oxigeno_mg_l', 'ph', 'amonio_mg_l', 'nitritos_mg_l', 'transparencia_cm'];
@@ -35,12 +45,33 @@ class MedicionAguaController extends Controller
             'between' => __('mensajes.medicion_agua.valor_esta_fuera_rango_posible'),
         ]);
 
-        $medicion = $lago->mediciones()->create($datos + ['user_id' => $request->user()->id]);
-        $alertas = $medicion->alertas($lago->siembrasActivas()->get()->pluck('especie'));
+        [$medicion, $alertas] = DB::transaction(function () use ($datos, $lago, $request) {
+            $medicion = $lago->mediciones()->create($datos + ['user_id' => $request->user()->id]);
+            $alertas = $medicion->alertas($lago->siembrasActivas()->get()->pluck('especie'));
+
+            Bitacora::registrar($request->user(), 'medicion', $lago, [Rol::ADMINISTRADOR, Rol::CELADOR], [
+                'valores' => $this->valores($medicion, count($alertas)),
+            ]);
+
+            return [$medicion, $alertas];
+        });
 
         // Se registra desde el detalle del lago o desde Seguridad & Noche: vuelve a la misma pantalla
         return back()->with('estado', $alertas === []
             ? __('mensajes.medicion_agua.medicion_registrada_todos_parametros_estan')
             : __('mensajes.medicion_agua.registrada_con_alertas', ['cantidad' => count($alertas)]));
+    }
+
+    /** «Temperatura 26,5 °C, Oxígeno 5,1 mg/L · 2 alertas»: solo los parámetros medidos. */
+    private function valores(MedicionAgua $medicion, int $alertas): string
+    {
+        $medidos = collect(self::PARAMETROS)
+            ->filter(fn (string $parametro) => $medicion->{$parametro} !== null)
+            ->map(fn (string $parametro) => __('bitacora.valores_medicion.'.$parametro, [
+                'valor' => Formato::sinCeros((float) $medicion->{$parametro}),
+            ]))
+            ->implode(', ');
+
+        return $alertas > 0 ? $medidos.' · '.trans_choice('bitacora.alertas_medicion', $alertas, ['cantidad' => $alertas]) : $medidos;
     }
 }

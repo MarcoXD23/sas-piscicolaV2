@@ -218,8 +218,11 @@ class SinConexionTest extends TestCase
 
         $this->assertSame('2026-10-08 03:00', Ronda::sole()->registrada_at->format('Y-m-d H:i'));
         $this->assertSame('2026-10-08 04:00', MedicionAgua::sole()->medido_at->format('Y-m-d H:i'));
-        $this->assertSame('2026-10-08 03:00', Bitacora::sole()->momentoLocal()->format('Y-m-d H:i'));
-        $this->assertStringContainsString(__('bitacora.reloj_corregido', ['minutos' => 90]), Bitacora::sole()->textoDetalle());
+        $ronda = Bitacora::query()->where('accion', 'ronda')->sole();
+        $this->assertSame('2026-10-08 03:00', $ronda->momentoLocal()->format('Y-m-d H:i'));
+        $this->assertStringContainsString(__('bitacora.reloj_corregido', ['minutos' => 90]), $ronda->textoDetalle());
+        // La medición también queda en la bitácora con su corrección (45 minutos)
+        $this->assertStringContainsString(__('bitacora.reloj_corregido', ['minutos' => 45]), Bitacora::query()->where('accion', 'medicion')->sole()->textoDetalle());
     }
 
     public function test_el_limite_de_48_horas_se_mide_con_la_hora_corregida(): void
@@ -301,5 +304,60 @@ class SinConexionTest extends TestCase
 
         app(TenantActual::class)->establecer($this->finca->id);
         $this->assertSame(120, Bitacora::sole()->detalle['reloj_corregido_min']);
+    }
+    public function test_la_medicion_sin_conexion_queda_en_la_bitacora_con_la_hora_corregida(): void
+    {
+        // Medición real a las 04:00; el teléfono va 90 minutos atrasado
+        $this->enviar($this->celador, route('noche.mediciones.store', $this->lago), ['temperatura_c' => 26.5, 'oxigeno_mg_l' => 5.1], '2026-10-08 04:00', relojTelefono: -90)
+            ->assertCreated();
+
+        $registro = Bitacora::query()->where('accion', 'medicion')->sole();
+        $this->assertSame('2026-10-08 04:00', $registro->momentoLocal()->format('Y-m-d H:i'));
+        $this->assertSame($this->lago->id, $registro->lago_id);
+        $this->assertSame('celador', $registro->rol);
+        $texto = $registro->textoDetalle();
+        $this->assertStringContainsString('Temperatura 26,5 °C, Oxígeno 5,1 mg/L', $texto);
+        $this->assertStringContainsString('registrado sin conexión, recibido el 08/10/2026 07:30', $texto);
+        $this->assertStringContainsString(__('bitacora.reloj_corregido', ['minutos' => 90]), $texto);
+
+        // El propietario lo ve en su bitácora
+        $propietario = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::PROPIETARIO]);
+        $this->actingAs($propietario)->get(route('admin.bitacora.index'))->assertOk()
+            ->assertSee(__('bitacora.acciones.medicion'))
+            ->assertSee('Temperatura 26,5 °C, Oxígeno 5,1 mg/L')
+            ->assertSee(__('bitacora.reloj_corregido', ['minutos' => 90]));
+    }
+
+    public function test_la_medicion_con_senal_del_administrador_tambien_queda_en_la_bitacora(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-08 09:00', 'America/Bogota'));
+        $administrador = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::ADMINISTRADOR]);
+
+        // Oxígeno bajo para la especie: la medición trae alertas
+        $this->actingAs($administrador)->post(route('admin.mediciones-agua.store', $this->lago), [
+            'medido_at' => '2026-10-08 08:30:00', 'oxigeno_mg_l' => 1.2, 'ph' => 7,
+        ])->assertSessionHasNoErrors();
+
+        $registro = Bitacora::query()->where('accion', 'medicion')->sole();
+        $this->assertSame('administrador', $registro->rol);
+        $this->assertStringStartsWith('Oxígeno 1,2 mg/L, pH 7 · ', $registro->textoDetalle());
+        $this->assertMatchesRegularExpression('/· \d+ alertas?$/', $registro->textoDetalle());
+        $this->assertStringNotContainsString('sin conexión', $registro->textoDetalle());
+    }
+
+    public function test_la_bitacora_de_una_finca_no_muestra_mediciones_de_otra(): void
+    {
+        $this->enviar($this->celador, route('noche.mediciones.store', $this->lago), ['temperatura_c' => 26.5], '2026-10-08 04:00')->assertCreated();
+
+        $otra = Tenant::create(['nombre' => 'Otra', 'codigo' => 'F02', 'zona_horaria' => 'America/Bogota']);
+        app(TenantActual::class)->establecer($otra->id);
+        $propietarioOtra = tap(User::factory()->create(['tenant_id' => $otra->id]))->asignarRoles([Rol::PROPIETARIO]);
+
+        $this->actingAs($propietarioOtra)->get(route('admin.bitacora.index'))->assertOk()
+            ->assertDontSee('Temperatura 26,5 °C');
+        $this->assertSame(0, Bitacora::query()->where('accion', 'medicion')->count());
+
+        app(TenantActual::class)->establecer($this->finca->id);
+        $this->assertSame(1, Bitacora::query()->where('accion', 'medicion')->count());
     }
 }
