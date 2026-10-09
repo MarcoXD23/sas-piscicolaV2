@@ -1,17 +1,17 @@
 {{-- Lista de eventos de la noche (rondas, novedades, aireadores y mediciones). $eventos, $tonos y $con_fecha --}}
-<ol class="rounded-2xl bg-white shadow-suave ring-1 ring-slate-200">
+<ol class="divide-y divide-renglon rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon">
     @foreach ($eventos as $evento)
-        <li class="flex gap-4 border-t border-slate-100 p-4 first:border-t-0">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $tonos[$evento['tono']] }}">
+        <li class="flex gap-4 px-5 py-3.5">
+            <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full {{ $tonos[$evento['tono']] }}">
                 <x-icono :nombre="$evento['icono']" class="h-5 w-5" />
             </span>
             <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                    <p class="font-semibold text-slate-900">{{ $evento['titulo'] }}</p>
-                    <time class="text-sm tabular-nums text-texto-suave" datetime="{{ $evento['momento']->toIso8601String() }}">{{ $evento['momento']->format(($con_fecha ?? false) ? 'd/m H:i' : 'H:i') }}</time>
+                    <p class="font-bold">{{ $evento['titulo'] }}</p>
+                    <time class="text-sm tabular-nums text-tinta-suave" datetime="{{ $evento['momento']->toIso8601String() }}">{{ $evento['momento']->format(($con_fecha ?? false) ? 'd/m H:i' : 'H:i') }}</time>
                 </div>
                 @if ($evento['detalle'] !== '')
-                    <p class="text-sm text-slate-600">{{ $evento['detalle'] }}</p>
+                    <p class="text-sm text-tinta-suave">{{ $evento['detalle'] }}</p>
                 @endif
             </div>
         </li>

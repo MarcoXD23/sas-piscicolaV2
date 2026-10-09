@@ -315,6 +315,45 @@
     animation: girar 0.7s linear infinite;
 }
 
+/* Seguridad & Noche: la libreta de noche. El celador la usa a oscuras; una pantalla blanca deslumbra y rompe la visión
+   nocturna. Solo redefine los tokens: componentes, ventanas y menú inferior se oscurecen solos (la cabecera ya es tinta).
+   Tinta apagada (no blanco puro) y estados claros sobre fondos hondos; todos los pares medidos ≥ 6,5:1. */
+body:has(.tema-noche) {
+    background-color: #0a1a19;
+}
+
+body:has(.tema-noche) :is(main, body > nav, dialog) {
+    color-scheme: dark;
+    /* El color heredado del body ya se calculó con la tinta del día: aquí se vuelve a fijar con la de noche */
+    color: var(--color-tinta);
+    --color-papel: #0a1a19;
+    --color-papel-hondo: #13302d;
+    --color-ficha: #0f2523;
+    --color-tinta: #dbe8e5;
+    --color-tinta-suave: #9db5b0;
+    --color-renglon: #1f3e3b;
+    --color-renglon-fuerte: #5d7f79;
+    --color-bien: #7fd8c9;
+    --color-bien-fondo: #0f3833;
+    --color-bien-borde: #2a6b61;
+    --color-atencion: #f2c46e;
+    --color-atencion-fondo: #352810;
+    --color-atencion-borde: #7a5a1f;
+    --color-alerta: #ff9d92;
+    --color-alerta-fondo: #3d1518;
+    --color-alerta-borde: #8b3439;
+    --color-info: #a9c4ff;
+    --color-info-fondo: #15284a;
+    --color-info-borde: #37548c;
+    --shadow-ficha: 0 1px 0 rgb(0 0 0 / 0.3);
+    --shadow-levantada: 0 10px 30px -10px rgb(0 0 0 / 0.7);
+}
+
+/* Enlaces y textos en verde de marca: sobre el fondo oscuro se aclaran para leerse (8,9:1) */
+body:has(.tema-noche) :is(main, body > nav, dialog) :is(.text-marca-700, .text-marca-800) {
+    color: var(--color-marca-300);
+}
+
 /* Cambio entre páginas: fundido corto en los navegadores que lo permiten (la cabecera y el menú se quedan quietos) */
 @view-transition {
     navigation: auto;
