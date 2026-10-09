@@ -15,13 +15,13 @@ import { debeRenovar, paqueteValido } from './paquete-logica';
 import { desplazar } from './sin-conexion';
 import { fechaLocal } from './sin-conexion-logica';
 
-const CLASE_CONTROL = 'block w-full rounded-xl border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-200 aria-invalid:border-red-600 aria-invalid:ring-2 aria-invalid:ring-red-100';
-const CLASE_AYUDA = 'mt-1 text-base text-slate-700';
-const CLASE_ERROR = 'mt-1.5 text-base font-semibold text-red-700';
-const CLASE_AVISO = 'rounded-xl bg-amber-50 p-3 text-base font-semibold text-amber-900 ring-1 ring-amber-200';
-const CLASE_SECCION = 'flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-lg font-semibold shadow-sm ring-1 transition-colors';
-const CLASE_SECCION_ABIERTA = 'bg-marca-600 text-white ring-marca-600';
-const CLASE_SECCION_CERRADA = 'bg-white text-marca-800 ring-slate-300 hover:bg-marca-50 active:bg-marca-100';
+const CLASE_CONTROL = 'block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-4 py-3 text-base text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70 aria-invalid:border-alerta aria-invalid:bg-alerta-fondo/40 aria-invalid:ring-4 aria-invalid:ring-alerta-borde/60';
+const CLASE_AYUDA = 'mt-1.5 text-base text-tinta-suave';
+const CLASE_ERROR = 'mt-1.5 text-base font-semibold text-alerta';
+const CLASE_AVISO = 'rounded-ficha border border-atencion-borde bg-atencion-fondo p-3 text-base font-semibold text-atencion';
+const CLASE_SECCION = 'flex min-h-20 flex-col items-center justify-center gap-1 rounded-ficha px-3 py-2 text-lg font-bold shadow-ficha ring-1 transition-[background-color,translate] duration-150 active:translate-y-px';
+const CLASE_SECCION_ABIERTA = 'bg-marca-700 text-white ring-marca-700';
+const CLASE_SECCION_CERRADA = 'bg-ficha text-tinta ring-renglon-fuerte hover:bg-papel-hondo active:bg-renglon';
 
 const el = (etiqueta, clase = '', texto = null) => {
     const nodo = document.createElement(etiqueta);
@@ -209,12 +209,12 @@ export const iniciarCampo = (t, cola) => {
         if (seccion === 'ronda') {
             const tipos = el('fieldset');
             tipos.setAttribute('aria-describedby', 'error-tipo');
-            tipos.append(el('legend', 'mb-1.5 text-base font-semibold text-slate-800', t('campo_tipo_ronda')));
+            tipos.append(el('legend', 'mb-1.5 text-base font-semibold text-tinta', t('campo_tipo_ronda')));
             const opciones = el('div', 'grid gap-2');
             (paquete.tipos_ronda ?? []).forEach((tipo, indice) => {
-                const etiqueta = el('label', 'flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-400 px-4 text-base text-slate-900 has-checked:border-marca-600 has-checked:bg-marca-50 has-checked:font-semibold');
+                const etiqueta = el('label', 'flex min-h-12 cursor-pointer items-center gap-3 rounded-ficha border border-renglon-fuerte px-4 text-base text-tinta transition-colors has-checked:border-marca-700 has-checked:bg-bien-fondo has-checked:font-bold');
                 const radio = entrada('radio');
-                radio.className = 'h-6 w-6 accent-marca-600';
+                radio.className = 'h-6 w-6 shrink-0 accent-marca-700';
                 radio.name = 'tipo';
                 radio.value = tipo.codigo;
                 if (indice === 0) radio.id = 'campo-tipo';   // destino del enlace del resumen de errores
