@@ -77,7 +77,7 @@ return [
     'lago_en_retiro' => 'Lago en retiro sanitario',
     'lago_en_tipo' => 'Lago en :tipo',
     'lago_nombre' => 'Lago :lago',
-    'lagos' => '← Lagos',
+    'lagos' => 'Lagos',
     'lagos_siembras' => 'Lagos y siembras',
     'libre' => 'Libre',
     'llena_solo_mediste' => 'Llena solo lo que mediste.',
@@ -151,7 +151,7 @@ return [
     'tratamiento' => 'Tratamiento',
     'tratamiento_de' => 'Tratamiento sanitario · :lago',
     'ultima_medicion' => 'Última medición: :momento',
-    'ver_detalle_e_historial' => 'Ver detalle e historial →',
+    'ver_detalle_e_historial' => 'Ver detalle e historial',
     'via' => 'Vía',
     'vias' => [
         'baño' => 'baño',

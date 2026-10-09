@@ -13,7 +13,7 @@
                 <x-campo nombre="peso_canastilla_kg" :etiqueta="__('cosechas.peso_canastilla_vacia')" tipo="number" step="0.01" min="0.01" max="20" inputmode="decimal"
                          :valor="$finca->peso_canastilla_kg" required />
             </div>
-            <p class="text-sm text-texto-suave">{{ __('cosechas.pesos_vacias_ayuda') }}</p>
+            <p class="text-sm text-tinta-suave">{{ __('cosechas.pesos_vacias_ayuda') }}</p>
             <x-boton>{{ __('cosechas.ajustes.guardar') }}</x-boton>
         </x-formulario>
     </x-tarjeta>

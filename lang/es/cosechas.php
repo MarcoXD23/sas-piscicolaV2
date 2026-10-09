@@ -63,7 +63,7 @@ return [
     'cantidad_por_tipo' => ':canastas canastas y :canastillas canastillas',
     'total_pesado' => 'Total pesado (kg)',
     'total_descuento' => 'Total de descuento (kg)',
-    'total_limpio' => 'TOTAL LIMPIO (kg)',
+    'total_limpio' => 'Total limpio (kg)',
     'cuenta' => [
         'grupo_canasta' => '{1} :cantidad canasta × :kg kg|[0,*] :cantidad canastas × :kg kg',
         'grupo_canastilla' => '{1} :cantidad canastilla × :kg kg|[0,*] :cantidad canastillas × :kg kg',

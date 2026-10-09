@@ -18,15 +18,9 @@
     </x-encabezado>
 
     @if ($soloLectura)
-        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-700">
-            <x-icono nombre="lagos" class="mt-0.5 h-5 w-5" />
-            <span>{{ __('lagos.solo_lectura') }}</span>
-        </div>
+        <x-aviso tono="info" icono="lagos" class="mb-6">{{ __('lagos.solo_lectura') }}</x-aviso>
     @elseif (! $puedeRegistrar)
-        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
-            <x-icono nombre="reloj" class="mt-0.5 h-5 w-5" />
-            <span>{{ __('lagos.estas_fuera_tu_turno_puedes') }}</span>
-        </div>
+        <x-aviso tono="atencion" icono="reloj" class="mb-6">{{ __('lagos.estas_fuera_tu_turno_puedes') }}</x-aviso>
     @endif
 
     @if ($lagos->isEmpty())
@@ -164,7 +158,7 @@
                     <div class="border-b border-renglon">
                         <div class="flex items-center justify-between gap-3 px-5 pt-4">
                             <h3 class="font-bold">{{ $siembra->nombre_especie }}</h3>
-                            <span class="text-sm text-texto-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
+                            <span class="text-sm text-tinta-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
                         </div>
 
                         <dl class="mt-3 grid grid-cols-2 gap-px border-y border-renglon bg-renglon">
@@ -174,11 +168,11 @@
                             </div>
                             <div class="bg-ficha px-5 py-2.5">
                                 <dt class="text-sm text-tinta-suave">{{ __('lagos.biomasa') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-texto-suave">kg</span></dd>
+                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-normal text-tinta-suave">kg</span></dd>
                             </div>
                             <div class="bg-ficha px-5 py-2.5">
                                 <dt class="text-sm text-tinta-suave">{{ __('lagos.peso_promedio') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-texto-suave">g</span></dd>
+                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-normal text-tinta-suave">g</span></dd>
                             </div>
                             <div class="bg-ficha px-5 py-2.5">
                                 <dt class="text-sm text-tinta-suave">{{ __('lagos.dias_cultivo') }}</dt>
@@ -236,10 +230,10 @@
                                     <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required data-peso-total />
                                     {{-- Solo informativo: el servidor calcula el promedio que se guarda --}}
                                     <div class="col-span-2">
-                                        <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-medium text-slate-700">{{ __('lagos.peso_promedio_calculado') }}</label>
+                                        <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.peso_promedio_calculado') }}</label>
                                         <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
-                                                class="flex min-h-12 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-lg font-semibold tabular-nums text-slate-900">—</output>
-                                        <p class="mt-1 text-sm text-texto-suave">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
+                                                class="flex min-h-12 w-full items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-xl font-bold tabular-nums text-tinta">—</output>
+                                        <p class="mt-1 text-sm text-tinta-suave">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
                                     </div>
                                 </div>
 
@@ -252,7 +246,7 @@
 
                         <x-modal id="modal-finalizar-{{ $siembra->id }}" :titulo="__('lagos.finalizar_siembra')">
                             <x-formulario :action="route('admin.siembras.finalizar', $siembra->id)">
-                                <p class="text-base text-slate-700">
+                                <p class="text-base text-tinta">
                                     {!! __('lagos.confirmar_finalizar', [
                                         'especie' => '<strong>'.e($siembra->nombre_especie).'</strong>',
                                         'lago' => '<strong>'.e($lago->nombre).'</strong>',
@@ -295,9 +289,7 @@
                             <x-campo nombre="fecha" id="racion-fecha-{{ $lago->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
 
                             @if ($stocksDisponibles->isEmpty())
-                                <p class="flex items-start gap-2 rounded-xl bg-red-50 p-4 text-base text-red-700">
-                                    <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" /> {{ __('lagos.no_hay_alimento_bodega') }}
-                                </p>
+                                <x-aviso tono="alerta">{{ __('lagos.no_hay_alimento_bodega') }}</x-aviso>
                             @else
                                 <x-seleccion nombre="tipo_concentrado" id="racion-concentrado-{{ $lago->id }}" :etiqueta="__('lagos.concentrado')" required
                                              :opciones="$stocksDisponibles->mapWithKeys(fn ($stock) => [$stock->tipo_concentrado => __('lagos.concentrado_disponible', ['tipo' => $stock->tipo_concentrado, 'kg' => $numero($stock->cantidad_kg, 1)])])->all()" />
@@ -323,9 +315,9 @@
                     <x-modal id="modal-siembra-{{ $lago->id }}" :titulo="$siembras->isNotEmpty() ? __('lagos.agregar_especie_a', ['lago' => $lago->nombre]) : __('lagos.siembra_en', ['lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.siembras.store', $lago->id)">
                             @if ($siembras->isNotEmpty())
-                                <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
+                                <x-aviso tono="info" icono="pez">
                                     {{ __('lagos.ayuda_policultivo', ['especies' => $siembras->pluck('nombre_especie')->join(', ', ' '.__('comun.y').' ')]) }}
-                                </p>
+                                </x-aviso>
                             @endif
                             <x-seleccion nombre="especie_id" id="siembra-especie-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$especies" required />
                             <x-campo nombre="fecha" id="siembra-fecha-{{ $lago->id }}" :etiqueta="__('lagos.fecha_siembra')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
@@ -338,12 +330,12 @@
 
                             @if ($siembras->isNotEmpty())
                                 {{-- Agua fría con cálida: es una advertencia que se confirma, no un bloqueo --}}
-                                <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-base text-amber-900">
-                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-1 h-5 w-5 rounded border-amber-400" @checked(old('confirmar_clima'))>
+                                <label class="flex min-h-12 items-start gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo p-4 text-base font-semibold text-atencion">
+                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-0.5 h-5 w-5 shrink-0 rounded" @checked(old('confirmar_clima'))>
                                     <span>{{ __('lagos.confirmar_clima') }}</span>
                                 </label>
                                 @error('confirmar_clima')
-                                    <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+                                    <p class="flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
                                 @enderror
                             @endif
 

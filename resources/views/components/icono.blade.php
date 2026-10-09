@@ -29,7 +29,8 @@
             <path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.2 1-2 2-2"/><path d="M13 7c0-1.2 1-2 2-2"/>
             @break
         @case('mortalidad')
-            <path d="M12 3l10 18H2z"/><path d="M12 10v5"/><path d="M12 18v.01"/>
+            {{-- El pez del juego, de vientre arriba y con el ojo en ×: no se confunde con el triángulo de una alerta --}}
+            <path d="M3 12c3 5 9 6 14 2l4 3V7l-4 3c-5-4-11-3-14 2z"/><path d="M7 11.5l2 2"/><path d="M9 11.5l-2 2"/>
             @break
         @case('mas')
             <path d="M12 5v14"/><path d="M5 12h14"/>

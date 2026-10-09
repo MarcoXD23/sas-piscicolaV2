@@ -8,22 +8,29 @@
         $puedeOperar = auth()->user()->tieneRol('administrador');
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
         $medicion = $lago->ultimaMedicion;
+        // Estado del agua, con el mismo criterio que la lista de lagos y el inicio (EvaluadorAlertas):
+        // oxígeno fuera de rango = alerta; otro problema = atención; una medición vieja no cuenta como de hoy.
+        $vigente = $medicion?->medido_at->gte(now()->subHours(\App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE));
+        $parametros = $medicion ? array_column($medicion->problemas($lago->siembrasActivas->pluck('especie')), 'parametro') : [];
+        $estadoAgua = ! $vigente ? 'sin_medicion' : (in_array('oxigeno', $parametros, true) ? 'alerta' : ($parametros ? 'atencion' : 'bien'));
+        // Íconos del historial: el tono del evento pasa a los colores de estado de la libreta
         $tonos = [
-            'positivo' => 'bg-marca-100 text-marca-700',
-            'alerta' => 'bg-amber-100 text-amber-700',
-            'neutro' => 'bg-slate-100 text-slate-600',
+            'positivo' => 'bg-bien-fondo text-bien',
+            'alerta' => 'bg-atencion-fondo text-atencion',
+            'neutro' => 'bg-papel-hondo text-tinta-suave',
         ];
     @endphp
 
-    <a href="{{ route('admin.lagos.index') }}" class="mb-4 inline-flex min-h-12 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
-        {{ __('lagos.lagos') }}
+    {{-- Volver a la lista: la flecha sale del juego de íconos (no un carácter de texto) --}}
+    <a href="{{ route('admin.lagos.index') }}" class="-ml-1 mb-2 inline-flex min-h-12 items-center gap-1 text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">
+        <x-icono nombre="abajo" class="h-5 w-5 rotate-90" /> {{ __('lagos.lagos') }}
     </a>
 
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
                   :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => $lago->siembrasActivas->count()]))">
         @if ($puedeOperar)
             <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
-                <x-icono nombre="reloj" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
+                <x-icono nombre="gota" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
             </x-boton>
             <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-tratamiento">
                 <x-icono nombre="alerta" class="h-5 w-5" /> {{ __('lagos.tratamiento') }}
@@ -32,49 +39,58 @@
     </x-encabezado>
 
     @foreach ($lago->tratamientosEnRetiro as $tratamiento)
-        <div role="status" class="mb-3 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-amber-900">
-            <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
-            <span>
-                <strong class="font-semibold">{{ __('lagos.retiro_hasta', ['fecha' => $tratamiento->finRetiro()->format('d/m/Y')]) }}</strong>
-                {{ __('lagos.retiro_detalle', ['producto' => $tratamiento->producto, 'motivo' => $tratamiento->motivo]) }}
-            </span>
-        </div>
+        <x-aviso tono="atencion" class="mb-3">
+            <strong class="font-bold">{{ __('lagos.retiro_hasta', ['fecha' => $tratamiento->finRetiro()->format('d/m/Y')]) }}</strong>
+            <span class="font-normal">{{ __('lagos.retiro_detalle', ['producto' => $tratamiento->producto, 'motivo' => $tratamiento->motivo]) }}</span>
+        </x-aviso>
     @endforeach
 
     @if ($alertasAgua !== [])
-        <div role="alert" class="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800">
-            <p class="mb-1 flex items-center gap-2 font-semibold">
-                <x-icono nombre="alerta" class="h-5 w-5" /> {{ __('lagos.alertas_ultima_medicion', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}
-            </p>
-            <ul class="ml-7 list-disc space-y-0.5">
+        <x-aviso tono="alerta" class="mb-3">
+            <p>{{ __('lagos.alertas_ultima_medicion', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}</p>
+            <ul class="mt-1 list-disc space-y-0.5 pl-5 font-normal">
                 @foreach ($alertasAgua as $alerta)
                     <li>{{ $alerta }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-aviso>
     @endif
 
-    <div class="mt-6 grid gap-6 lg:grid-cols-3">
-        <div class="space-y-6 lg:col-span-2">
-            <section>
-                <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('lagos.siembras_activas') }}</h2>
+    <div class="mt-8 grid items-start gap-8 lg:grid-cols-3">
+        <div class="space-y-8 lg:col-span-2">
+            <section aria-labelledby="siembras-titulo">
+                <h2 id="siembras-titulo" class="mb-4 text-seccion font-bold">{{ __('lagos.siembras_activas') }}</h2>
 
                 @forelse ($lago->siembrasActivas as $siembra)
-                    <x-tarjeta class="mb-4 !p-0 overflow-hidden">
-                        <div class="flex items-center gap-4 p-5">
+                    <x-tarjeta class="mb-4 overflow-hidden !p-0">
+                        <div class="flex items-center gap-4 px-5 py-4">
                             @if ($siembra->foto_especie)
-                                <img src="{{ $siembra->foto_especie }}" alt="" loading="lazy" decoding="async" class="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200">
+                                <img src="{{ $siembra->foto_especie }}" alt="" loading="lazy" decoding="async" class="h-12 w-12 rounded-ficha object-cover ring-1 ring-renglon">
                             @else
-                                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-marca-50 text-marca-600"><x-icono nombre="pez" /></span>
+                                <span class="flex h-12 w-12 items-center justify-center rounded-ficha bg-papel-hondo text-marca-700"><x-icono nombre="pez" /></span>
                             @endif
                             <div class="min-w-0 flex-1">
-                                <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
-                                <p class="text-sm text-texto-suave">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
+                                <h3 class="text-lg font-bold">{{ $siembra->nombre_especie }}</h3>
+                                <p class="text-sm text-tinta-suave">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
                             </div>
                         </div>
 
+                        {{-- Cifras de la siembra como renglones de la libreta --}}
+                        <dl class="grid grid-cols-3 gap-px border-y border-renglon bg-renglon">
+                            @foreach ([
+                                [__('lagos.peces_vivos'), $numero($siembra->peces_vivos), null],
+                                [__('lagos.peso_promedio'), $numero($siembra->peso_actual_g, 2), 'g'],
+                                [__('lagos.biomasa'), $numero($siembra->biomasa_kg, 2), 'kg'],
+                            ] as [$etiqueta, $valor, $unidad])
+                                <div class="bg-ficha px-4 py-3 sm:px-5">
+                                    <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
+                                    <dd class="text-lg font-bold tabular-nums sm:text-xl">{{ $valor }}@if ($unidad) <span class="text-sm font-normal text-tinta-suave">{{ $unidad }}</span>@endif</dd>
+                                </div>
+                            @endforeach
+                        </dl>
+
                         @if ($puedeOperar)
-                            <div class="grid grid-cols-2 gap-2 px-5 pb-4">
+                            <div class="grid grid-cols-2 gap-2 p-4">
                                 @if ($lago->tratamientosEnRetiro->isNotEmpty())
                                     <x-boton tipo="button" class="!px-2" disabled :title="__('lagos.lago_en_retiro')">
                                         <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
@@ -90,29 +106,12 @@
                                 </x-boton>
                             </div>
                         @endif
-
-                        <dl class="grid grid-cols-3 gap-px border-t border-slate-100 bg-slate-100 text-center">
-                            <div class="bg-white p-3">
-                                <dt class="text-sm text-texto-suave">{{ __('lagos.peces_vivos') }}</dt>
-                                <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
-                            </div>
-                            <div class="bg-white p-3">
-                                <dt class="text-sm text-texto-suave">{{ __('lagos.peso_promedio') }}</dt>
-                                <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} g</dd>
-                            </div>
-                            <div class="bg-white p-3">
-                                <dt class="text-sm text-texto-suave">{{ __('lagos.biomasa') }}</dt>
-                                <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} kg</dd>
-                            </div>
-                        </dl>
                     </x-tarjeta>
 
                     @if ($puedeOperar && $otrosLagos !== [])
                         <x-modal id="modal-traslado-{{ $siembra->id }}" :titulo="__('lagos.trasladar_especie', ['especie' => $siembra->nombre_especie])">
                             <x-formulario :action="route('admin.traslados.store', $siembra)">
-                                <p class="rounded-xl bg-marca-50 p-4 text-base text-marca-900">
-                                    {{ __('lagos.ayuda_traslado', ['especie' => $siembra->nombre_especie]) }}
-                                </p>
+                                <x-aviso tono="info" icono="lagos">{{ __('lagos.ayuda_traslado', ['especie' => $siembra->nombre_especie]) }}</x-aviso>
                                 <x-seleccion nombre="lago_destino_id" id="traslado-destino-{{ $siembra->id }}" :etiqueta="__('lagos.lago_destino')" :opciones="$otrosLagos" required />
                                 <x-campo nombre="fecha" id="traslado-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" required />
                                 <div class="grid grid-cols-2 gap-4">
@@ -123,12 +122,12 @@
                                 </div>
                                 <x-campo nombre="observaciones" id="traslado-obs-{{ $siembra->id }}" :etiqueta="__('lagos.observaciones_opcional')" />
                                 {{-- Agua fría con cálida en el lago de destino: advertencia que se confirma --}}
-                                <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-base text-amber-900">
-                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-1 h-5 w-5 rounded border-amber-400">
+                                <label class="flex min-h-12 items-start gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo p-4 text-base font-semibold text-atencion">
+                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-0.5 h-5 w-5 shrink-0 rounded">
                                     <span>{{ __('lagos.confirmar_clima') }}</span>
                                 </label>
                                 @error('confirmar_clima')
-                                    <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+                                    <p class="flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
                                 @enderror
 
                                 <div class="grid grid-cols-2 gap-3 pt-2">
@@ -144,28 +143,29 @@
                 @endforelse
             </section>
 
-            <section>
-                <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('lagos.historial') }}</h2>
+            <section aria-labelledby="historial-titulo">
+                <h2 id="historial-titulo" class="mb-4 text-seccion font-bold">{{ __('lagos.historial') }}</h2>
 
                 @if ($historial->isEmpty())
                     <x-vacio icono="reloj" :mensaje="__('lagos.todavia_no_hay_registros_este')" />
                 @else
-                    <ol class="rounded-2xl bg-white shadow-suave ring-1 ring-slate-200">
+                    {{-- Historial como renglones de la libreta: fecha a la derecha, quién y cuánto debajo --}}
+                    <ol class="divide-y divide-renglon rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon">
                         @foreach ($historial as $evento)
-                            <li class="flex gap-4 border-t border-slate-100 p-4 first:border-t-0">
-                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $tonos[$evento['tono']] }}">
+                            <li class="flex gap-4 px-5 py-3.5">
+                                <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full {{ $tonos[$evento['tono']] }}">
                                     <x-icono :nombre="$evento['icono']" class="h-5 w-5" />
                                 </span>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                                        <p class="font-semibold text-slate-900">{{ $evento['titulo'] }}</p>
-                                        <time class="text-sm text-texto-suave" datetime="{{ $evento['fecha']->toDateString() }}">{{ $evento['fecha']->format('d/m/Y') }}</time>
+                                        <p class="font-bold">{{ $evento['titulo'] }}</p>
+                                        <time class="text-sm tabular-nums text-tinta-suave" datetime="{{ $evento['fecha']->toDateString() }}">{{ $evento['fecha']->format('d/m/Y') }}</time>
                                     </div>
                                     @if ($evento['detalle'] !== '' || $evento['responsable'])
-                                        <p class="text-sm text-slate-600">{{ collect([$evento['detalle'], $evento['responsable']])->filter()->join(' · ') }}</p>
+                                        <p class="text-sm text-tinta-suave">{{ collect([$evento['detalle'], $evento['responsable']])->filter()->join(' · ') }}</p>
                                     @endif
                                     @if ($evento['enlace'] && auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR))
-                                        <a href="{{ $evento['enlace'] }}" class="mt-1 inline-block text-sm font-semibold text-marca-700 underline">{{ __('cosechas.ver_detalle') }}</a>
+                                        <a href="{{ $evento['enlace'] }}" class="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">{{ __('cosechas.ver_detalle') }}</a>
                                     @endif
                                 </div>
                             </li>
@@ -175,30 +175,74 @@
             </section>
         </div>
 
-        <aside class="space-y-6">
+        {{-- En celular la columna lateral (agua y ración) va primero: es lo urgente del lago; en pantallas anchas queda a la derecha --}}
+        <aside class="order-first space-y-8 lg:order-none">
+            {{-- Calidad del agua: la lectura del lago, con su pestaña de estado (ícono y texto) --}}
+            <x-tarjeta :titulo="__('lagos.calidad_agua')" :subtitulo="$medicion ? __('lagos.ultima_medicion', ['momento' => $medicion->medido_at->format('d/m/Y H:i')]) : null"
+                       @class(['relative mt-3.5 !pt-7', '!ring-alerta-borde' => $estadoAgua === 'alerta', '!ring-atencion-borde' => $estadoAgua === 'atencion'])>
+                <x-insignia :tono="['sin_medicion' => 'info'][$estadoAgua] ?? $estadoAgua" pestana como="p">{{ __('inicio.estado_agua.'.$estadoAgua) }}</x-insignia>
+
+                @if ($medicion)
+                    <dl class="grid grid-cols-2 gap-4">
+                        @foreach ([['oxigeno', $medicion->oxigeno_mg_l, 'mg/L', 2], ['temperatura', $medicion->temperatura_c, '°C', 1]] as [$parametro, $valor, $unidad, $decimales])
+                            <div>
+                                <dt class="text-sm text-tinta-suave">{{ __('lagos.ficha.'.$parametro) }}</dt>
+                                <dd @class([
+                                    'mt-0.5 text-cifra font-bold tabular-nums',
+                                    'text-alerta' => $parametro === 'oxigeno' && in_array('oxigeno', $parametros, true),
+                                    'text-atencion' => $parametro === 'temperatura' && in_array('temperatura', $parametros, true),
+                                ])>
+                                    @if ($valor !== null)
+                                        {{ $numero($valor, $decimales) }} <span class="text-base font-normal tracking-normal text-tinta-suave">{{ $unidad }}</span>
+                                    @else
+                                        <span class="text-lg font-normal tracking-normal text-tinta-suave">{{ __('inicio.agua.sin_dato') }}</span>
+                                    @endif
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+
+                    {{-- El resto de parámetros, solo los que se midieron --}}
+                    <dl class="mt-4 divide-y divide-renglon border-t border-renglon text-base">
+                        @foreach ([
+                            'ph' => [__('lagos.ph'), $medicion->ph !== null ? $numero($medicion->ph, 2) : null],
+                            'amonio' => [__('lagos.amonio'), $medicion->amonio_mg_l !== null ? $numero($medicion->amonio_mg_l, 2).' mg/L' : null],
+                            'nitritos' => [__('lagos.nitritos'), $medicion->nitritos_mg_l !== null ? $numero($medicion->nitritos_mg_l, 2).' mg/L' : null],
+                            'transparencia' => [__('lagos.transparencia'), $medicion->transparencia_cm !== null ? $medicion->transparencia_cm.' cm' : null],
+                        ] as $parametro => [$etiqueta, $valor])
+                            @continue($valor === null)
+                            <div class="flex items-baseline justify-between gap-3 py-2.5">
+                                <dt class="text-tinta-suave">{{ $etiqueta }}</dt>
+                                <dd @class(['font-bold tabular-nums', 'text-atencion' => in_array($parametro, $parametros, true)])>{{ $valor }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                @else
+                    <p class="flex items-center gap-2 text-base text-tinta-suave"><x-icono nombre="reloj" class="h-5 w-5" /> {{ __('lagos.aun_no_hay_mediciones') }}</p>
+                @endif
+            </x-tarjeta>
+
             @if ($racion['filas'] !== [])
                 <x-tarjeta :titulo="__('lagos.racion_sugerida')" :subtitulo="__('lagos.segun_biomasa_peso_promedio_valores')">
-                    <p class="text-3xl font-bold tabular-nums text-marca-700">
-                        {{ $numero($racion['total_kg_dia'], 1) }} <span class="text-base font-medium text-texto-suave">{{ __('lagos.kg_dia') }}</span>
+                    <p class="text-cifra font-bold tabular-nums">
+                        {{ $numero($racion['total_kg_dia'], 1) }} <span class="text-base font-normal tracking-normal text-tinta-suave">{{ __('lagos.kg_dia') }}</span>
                     </p>
-                    <p class="mt-1 text-base text-slate-600">
+                    <p class="mt-1 text-base text-tinta-suave">
                         {{ __('lagos.tomas_de', ['tomas' => $racion['tomas'], 'kg' => $numero($racion['kg_por_toma'], 1)]) }}
                     </p>
 
                     @if ($racion['factor'] < 1)
-                        <p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-                            {{ __('lagos.racion_reducida', ['horas' => \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE]) }}
-                        </p>
+                        <x-aviso tono="atencion" class="mt-4 text-sm">{{ __('lagos.racion_reducida', ['horas' => \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE]) }}</x-aviso>
                     @endif
 
-                    <dl class="mt-4 divide-y divide-slate-100 text-sm">
+                    <dl class="mt-4 divide-y divide-renglon border-t border-renglon text-sm">
                         @foreach ($racion['filas'] as $fila)
                             <div class="py-2.5">
-                                <dt class="flex justify-between gap-3 font-semibold text-slate-900">
+                                <dt class="flex justify-between gap-3 text-base font-bold">
                                     <span>{{ $fila['especie'] }}</span>
                                     <span class="tabular-nums">{{ __('lagos.kg_por_dia', ['kg' => $numero($fila['kg_dia'], 1)]) }}</span>
                                 </dt>
-                                <dd class="text-texto-suave">
+                                <dd class="text-tinta-suave">
                                     {{ __('lagos.porcentaje_de_biomasa', ['porcentaje' => $numero($fila['porcentaje'], 1), 'kg' => $numero($fila['biomasa_kg'], 1)]) }}
                                     @if ($fila['proteina'])
                                         · {{ __('lagos.etapa_proteina', ['etapa' => __('lagos.etapas.'.$fila['etapa']), 'proteina' => $fila['proteina']]) }}
@@ -212,53 +256,28 @@
 
             {{-- Especies sin tipo de alimentación: no hay ración sugerida, se registra a mano --}}
             @if ($racion['sin_sugerencia'] !== [])
-                <p class="rounded-xl bg-amber-50 p-4 text-base text-amber-900" role="status">
-                    {{ __('lagos.racion_manual', ['especies' => implode(', ', $racion['sin_sugerencia'])]) }}
-                </p>
+                <x-aviso tono="atencion" icono="alimentar">{{ __('lagos.racion_manual', ['especies' => implode(', ', $racion['sin_sugerencia'])]) }}</x-aviso>
             @endif
 
             {{-- Avisos del rango común de agua (especies sin rangos o sin rango común) --}}
             @if ($avisosRango !== [])
                 <x-tarjeta :titulo="__('lagos.rango.titulo')">
-                    <ul class="space-y-2 text-base text-amber-900">
+                    <ul class="space-y-2.5 text-base">
                         @foreach ($avisosRango as $aviso)
-                            <li>{{ $aviso }}</li>
+                            <li class="flex items-start gap-2 font-semibold text-atencion"><x-icono nombre="alerta" class="mt-0.5 h-5 w-5" /> {{ $aviso }}</li>
                         @endforeach
                     </ul>
                 </x-tarjeta>
             @endif
 
-            <x-tarjeta :titulo="__('lagos.calidad_agua')" :subtitulo="$medicion ? __('lagos.ultima_medicion', ['momento' => $medicion->medido_at->format('d/m/Y H:i')]) : null">
-                @if ($medicion)
-                    <dl class="divide-y divide-slate-100 text-base">
-                        @foreach ([
-                            __('lagos.temperatura') => $medicion->temperatura_c !== null ? $numero($medicion->temperatura_c, 1).' °C' : null,
-                            __('lagos.oxigeno_disuelto') => $medicion->oxigeno_mg_l !== null ? $numero($medicion->oxigeno_mg_l, 2).' mg/L' : null,
-                            __('lagos.ph') => $medicion->ph !== null ? $numero($medicion->ph, 2) : null,
-                            __('lagos.amonio') => $medicion->amonio_mg_l !== null ? $numero($medicion->amonio_mg_l, 2).' mg/L' : null,
-                            __('lagos.nitritos') => $medicion->nitritos_mg_l !== null ? $numero($medicion->nitritos_mg_l, 2).' mg/L' : null,
-                            __('lagos.transparencia') => $medicion->transparencia_cm !== null ? $medicion->transparencia_cm.' cm' : null,
-                        ] as $etiqueta => $valor)
-                            @continue($valor === null)
-                            <div class="flex justify-between gap-3 py-2">
-                                <dt class="text-texto-suave">{{ $etiqueta }}</dt>
-                                <dd class="font-semibold text-slate-900">{{ $valor }}</dd>
-                            </div>
-                        @endforeach
-                    </dl>
-                @else
-                    <p class="text-base text-texto-suave">{{ __('lagos.aun_no_hay_mediciones') }}</p>
-                @endif
-            </x-tarjeta>
-
             @if ($siembrasFinalizadas->isNotEmpty())
                 <x-tarjeta :titulo="__('lagos.siembras_finalizadas')">
-                    <ul class="divide-y divide-slate-100">
+                    <ul class="-mt-1 divide-y divide-renglon">
                         @foreach ($siembrasFinalizadas as $siembra)
                             <li class="py-2.5">
-                                <p class="font-medium text-slate-900">{{ $siembra->nombre_especie }}</p>
-                                <p class="text-sm text-texto-suave">
-                                    {{ $siembra->fecha->format('d/m/Y') }} – {{ $siembra->finalizada_at->format('d/m/Y') }}
+                                <p class="font-bold">{{ $siembra->nombre_especie }}</p>
+                                <p class="text-sm text-tinta-suave">
+                                    {{ $siembra->fecha->format('d/m/Y') }} - {{ $siembra->finalizada_at->format('d/m/Y') }}
                                     · {{ __('lagos.sembrados', ['cantidad' => $numero($siembra->cantidad_alevinos)]) }}
                                 </p>
                             </li>
@@ -281,7 +300,7 @@
                     <x-campo nombre="amonio_mg_l" :etiqueta="__('lagos.amonio_mg_l')" tipo="number" step="0.001" inputmode="decimal" />
                     <x-campo nombre="nitritos_mg_l" :etiqueta="__('lagos.nitritos_mg_l')" tipo="number" step="0.001" inputmode="decimal" />
                 </div>
-                <p class="text-sm text-texto-suave">{{ __('lagos.llena_solo_mediste') }}</p>
+                <p class="text-sm text-tinta-suave">{{ __('lagos.llena_solo_mediste') }}</p>
                 <x-campo nombre="observaciones" id="medicion-obs" :etiqueta="__('lagos.observaciones_opcional')" />
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
