@@ -33,7 +33,7 @@
                 </tr>
             @endforeach
         </x-tabla>
-        <p class="mt-2 text-xs text-slate-500">{{ __('reportes.especies_hoy_biomasa_hoy_muestran') }}</p>
+        <p class="mt-2 text-xs text-texto-suave">{{ __('reportes.especies_hoy_biomasa_hoy_muestran') }}</p>
     </section>
 
     <div class="grid gap-6 md:grid-cols-2 print:grid-cols-2">
@@ -43,7 +43,7 @@
                     <span>{{ $concentrado }}</span><span class="font-semibold tabular-nums">{{ $numero($kg, 1) }} kg</span>
                 </div>
             @empty
-                <p class="text-slate-500">{{ __('reportes.sin_alimentacion_registrada') }}</p>
+                <p class="text-texto-suave">{{ __('reportes.sin_alimentacion_registrada') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -51,10 +51,10 @@
             @forelse ($siembrasNuevas as $siembra)
                 <div class="border-t border-slate-100 py-2 first:border-t-0">
                     <p class="font-medium">{{ __('reportes.fecha_lago_especie', ['fecha' => $siembra->fecha->format('d/m'), 'lago' => $siembra->lago->nombre, 'especie' => $siembra->nombre_especie]) }}</p>
-                    <p class="text-sm text-slate-500">{{ __('reportes.peces_de_gramos', ['peces' => $numero($siembra->cantidad_alevinos), 'gramos' => $numero($siembra->peso_promedio_inicial_g, 2)]) }}</p>
+                    <p class="text-sm text-texto-suave">{{ __('reportes.peces_de_gramos', ['peces' => $numero($siembra->cantidad_alevinos), 'gramos' => $numero($siembra->peso_promedio_inicial_g, 2)]) }}</p>
                 </div>
             @empty
-                <p class="text-slate-500">{{ __('reportes.sin_siembras_nuevas') }}</p>
+                <p class="text-texto-suave">{{ __('reportes.sin_siembras_nuevas') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -70,7 +70,7 @@
                     <a href="{{ route('admin.cosechas.show', $cosecha) }}" class="text-marca-700 underline print:hidden">{{ __('cosechas.ver_detalle') }}</a>
                 </p>
             @empty
-                <p class="text-slate-500">{{ __('reportes.sin_cosechas') }}</p>
+                <p class="text-texto-suave">{{ __('reportes.sin_cosechas') }}</p>
             @endforelse
             @if ($ventas !== null)
                 <div class="mt-2 space-y-1 border-t border-slate-200 pt-2">
@@ -88,7 +88,7 @@
                     {{ __('reportes.detalle_traslado', ['fecha' => $traslado->fecha->format('d/m'), 'cantidad' => $numero($traslado->cantidad), 'especie' => $traslado->siembraOrigen->nombre_especie, 'origen' => $traslado->lagoOrigen->nombre, 'destino' => $traslado->lagoDestino->nombre]) }}
                 </p>
             @empty
-                <p class="text-slate-500">{{ __('reportes.sin_traslados') }}</p>
+                <p class="text-texto-suave">{{ __('reportes.sin_traslados') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -116,10 +116,10 @@
             @forelse ($avisosPesca as $aviso)
                 <p class="border-t border-slate-100 py-2 first:border-t-0">
                     {{ __('reportes.detalle_aviso_pesca', ['fecha' => $aviso->reportado_at->format('d/m H:i'), 'lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie, 'nombre' => $aviso->usuario->name]) }}
-                    <span class="block text-sm text-slate-500">{{ $aviso->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $aviso->atendido_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                    <span class="block text-sm text-texto-suave">{{ $aviso->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $aviso->atendido_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
                 </p>
             @empty
-                <p class="text-slate-500">{{ __('reportes.sin_avisos_pesca') }}</p>
+                <p class="text-texto-suave">{{ __('reportes.sin_avisos_pesca') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -128,10 +128,10 @@
                 @forelse ($entradasBodega as $entrada)
                     <p class="border-t border-slate-100 py-2 first:border-t-0">
                         {{ __('reportes.detalle_entrada', ['fecha' => $entrada->fecha->format('d/m'), 'kg' => $numero($entrada->cantidad_kg, 1), 'tipo' => $entrada->tipo_concentrado]) }}
-                        <span class="text-sm text-slate-500">{{ __('reportes.proveedor_lote', ['proveedor' => $entrada->proveedor, 'lote' => $entrada->lote]) }}</span>
+                        <span class="text-sm text-texto-suave">{{ __('reportes.proveedor_lote', ['proveedor' => $entrada->proveedor, 'lote' => $entrada->lote]) }}</span>
                     </p>
                 @empty
-                    <p class="text-slate-500">{{ __('reportes.sin_entradas') }}</p>
+                    <p class="text-texto-suave">{{ __('reportes.sin_entradas') }}</p>
                 @endforelse
             </x-tarjeta>
         @endif

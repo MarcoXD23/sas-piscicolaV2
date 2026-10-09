@@ -200,8 +200,8 @@ if (asistente) {
         vacio.hidden = true;
         const burbuja = document.createElement('div');
         burbuja.className = rol === 'user'
-            ? 'ml-8 rounded-2xl rounded-br-sm bg-marca-600 px-4 py-2.5 text-base text-white whitespace-pre-line'
-            : `mr-8 rounded-2xl rounded-bl-sm bg-slate-100 px-4 py-2.5 text-base text-slate-800 whitespace-pre-line ${clase}`;
+            ? 'ml-8 animate-aparecer rounded-2xl rounded-br-sm bg-gradient-to-br from-marca-500 to-marca-700 px-4 py-2.5 text-base text-white whitespace-pre-line shadow-brillo'
+            : `mr-8 animate-aparecer rounded-2xl rounded-bl-sm bg-slate-100 px-4 py-2.5 text-base text-slate-800 whitespace-pre-line ring-1 ring-slate-200/70 ${clase}`;
         burbuja.textContent = texto; // textContent: la respuesta nunca se interpreta como HTML
         lista.appendChild(burbuja);
         lista.scrollTop = lista.scrollHeight;
@@ -225,7 +225,7 @@ if (asistente) {
         agregar('user', texto);
         campo.value = '';
         boton.disabled = true;
-        const pensando = agregar('assistant', t('pensando'), 'italic text-slate-500');
+        const pensando = agregar('assistant', t('pensando'), 'animate-pulse italic text-slate-500');
 
         try {
             const respuesta = await fetch(asistente.dataset.url, {
@@ -281,7 +281,7 @@ const conObservador = !sinMovimiento && 'IntersectionObserver' in window;
 if (conObservador) {
     const observadorRevelar = new IntersectionObserver((entradas) => {
         entradas.filter((entrada) => entrada.isIntersecting).forEach((entrada, indice) => {
-            entrada.target.style.animationDelay = `${Math.min(indice, 6) * 70}ms`;
+            entrada.target.style.animationDelay = `${Math.min(indice, 6) * 40}ms`;
             entrada.target.classList.replace('por-revelar', 'revelado');
             observadorRevelar.unobserve(entrada.target);
         });
@@ -324,7 +324,7 @@ const contarNumero = (elemento) => {
     });
     const antes = final.slice(0, encontrado.index);
     const despues = final.slice(encontrado.index + encontrado[0].trimEnd().length);
-    const duracion = 900;
+    const duracion = 500;
     let inicio;
 
     const paso = (momento) => {

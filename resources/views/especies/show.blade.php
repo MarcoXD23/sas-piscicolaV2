@@ -8,17 +8,17 @@
 @section('titulo', $especie['nombre'])
 
 @section('contenido')
-    <a href="{{ route('especies.index') }}" class="mb-4 inline-flex min-h-11 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
+    <a href="{{ route('especies.index') }}" class="mb-4 inline-flex min-h-12 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
         {{ __('especies.guia_especies_2') }}
     </a>
 
-    <section class="mb-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 md:grid md:grid-cols-2">
+    <section class="mb-6 overflow-hidden rounded-3xl bg-white shadow-suave ring-1 ring-slate-200 md:grid md:grid-cols-2">
         <div class="relative aspect-[16/10] bg-marca-50 md:aspect-auto">
             @if ($especie['foto'])
                 <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" decoding="async" class="h-full w-full object-cover">
                 {{-- Foto de referencia con licencia libre: autor, licencia y fuente (las fotos de la finca muestran las suyas abajo) --}}
                 @if ($credito = $especie['foto_credito'])
-                    <p class="absolute inset-x-0 bottom-0 bg-slate-950/65 px-3 py-1.5 text-xs leading-snug text-white">
+                    <p class="absolute inset-x-0 bottom-0 bg-slate-950/65 px-3 py-1.5 text-sm leading-snug text-white">
                         @if (isset($credito['nota']))
                             <span class="block">{{ $credito['nota'] }}</span>
                         @endif
@@ -46,7 +46,7 @@
         <div class="p-5 sm:p-8">
             <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ $especie['nombre'] }}</h1>
             @if ($especie['cientifico'] || $especie['familia'])
-                <p class="mt-1 text-base italic text-slate-500">{{ collect([$especie['cientifico'], $especie['familia']])->filter()->join(' · ') }}</p>
+                <p class="mt-1 text-base italic text-texto-suave">{{ collect([$especie['cientifico'], $especie['familia']])->filter()->join(' · ') }}</p>
             @endif
             @unless ($especie['activo'])
                 <p class="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{{ __('especies.catalogo_finca.inactiva_guia') }}</p>
@@ -69,7 +69,7 @@
                     __('especies.peso_comercial') => $especie['peso_comercial'],
                 ] as $etiqueta => $valor)
                     <div class="rounded-xl bg-slate-50 p-3">
-                        <dt class="text-sm text-slate-500">{{ $etiqueta }}</dt>
+                        <dt class="text-sm text-texto-suave">{{ $etiqueta }}</dt>
                         <dd class="text-base font-semibold text-slate-900">{{ $valor ?? __('especies.sin_dato') }}</dd>
                     </div>
                 @endforeach
@@ -83,16 +83,16 @@
             <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('especies.fotos.galeria') }}</h2>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 @foreach ($fotos as $foto)
-                    <figure class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                    <figure class="overflow-hidden rounded-2xl bg-white shadow-suave ring-1 ring-slate-200">
                         <img src="{{ $foto->url() }}" alt="{{ $especie['nombre'] }}" loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover">
                         <figcaption class="space-y-0.5 p-3 text-sm text-slate-600">
                             @if ($foto->autor)
                                 <p>{{ __('especies.fotos.por', ['autor' => $foto->autor]) }}</p>
                             @endif
                             @if ($foto->licencia)
-                                <p class="text-slate-500">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
+                                <p class="text-texto-suave">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
                             @endif
-                            <p class="text-slate-400">{{ __('especies.fotos.subida_el', ['fecha' => \App\Support\Region::local($foto->created_at)->format('d/m/Y')]) }}</p>
+                            <p class="text-slate-500">{{ __('especies.fotos.subida_el', ['fecha' => \App\Support\Region::local($foto->created_at)->format('d/m/Y')]) }}</p>
                             @if ($veOriginal)
                                 <a href="{{ $foto->urlOriginal() }}" class="text-marca-700 underline">{{ __('especies.fotos.original') }}</a>
                             @endif
@@ -115,7 +115,7 @@
                     @foreach ($especie[$bloque] as $campo => $texto)
                         <div>
                             <dt class="font-semibold text-slate-900">{{ $etiquetas[$campo] }}</dt>
-                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $texto, 'text-slate-400' => ! $texto])>{{ $texto ?? __('especies.sin_dato') }}</dd>
+                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $texto, 'text-slate-500' => ! $texto])>{{ $texto ?? __('especies.sin_dato') }}</dd>
                         </div>
                     @endforeach
                 </dl>
@@ -128,7 +128,7 @@
                     @foreach (['color', 'aspecto'] as $campo)
                         <div>
                             <dt class="font-semibold text-slate-900">{{ __('especies.ficha.'.$campo) }}</dt>
-                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $especie[$campo], 'text-slate-400' => ! $especie[$campo]])>{{ $especie[$campo] ?? __('especies.sin_dato') }}</dd>
+                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $especie[$campo], 'text-slate-500' => ! $especie[$campo]])>{{ $especie[$campo] ?? __('especies.sin_dato') }}</dd>
                         </div>
                     @endforeach
                 </dl>
@@ -149,7 +149,7 @@
         </div>
     </div>
 
-    <p class="mt-6 text-sm text-slate-500">
+    <p class="mt-6 text-sm text-texto-suave">
         {{ __('especies.valores_referencia_ajustalos_asistente_tecnico') }}
     </p>
 @endsection

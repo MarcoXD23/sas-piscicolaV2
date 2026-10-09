@@ -20,7 +20,7 @@
                     <p class="text-base text-slate-700">
                         {{ __('comun.rango_dias', ['desde' => $permiso->fecha_inicio->format('d/m/Y'), 'hasta' => $permiso->fecha_fin->format('d/m/Y'), 'dias' => $permiso->dias()]) }}
                     </p>
-                    <p class="text-sm text-slate-500">{{ $permiso->motivo }}</p>
+                    <p class="text-sm text-texto-suave">{{ $permiso->motivo }}</p>
                     @if ($turnosAfectados[$permiso->id] > 0)
                         <p class="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">
                             {{ __('solicitudes.turnos_afectados', ['cantidad' => $turnosAfectados[$permiso->id]]) }}
@@ -40,7 +40,7 @@
                 <x-tarjeta class="mb-3">
                     <p class="text-lg font-semibold text-slate-900">{{ $hora->usuario->name }}</p>
                     <p class="text-base text-slate-700">{{ $hora->fecha->format('d/m/Y') }} · {{ __('solicitudes.horas', ['horas' => $numero($hora->horas)]) }}</p>
-                    <p class="text-sm text-slate-500">{{ $hora->motivo }}</p>
+                    <p class="text-sm text-texto-suave">{{ $hora->motivo }}</p>
 
                     <x-revision :accion="route('admin.horas-extras.revisar', $hora)" :id="'horas-'.$hora->id" />
                 </x-tarjeta>
@@ -64,11 +64,11 @@
                                     {{ __('solicitudes.horas_extra_el', ['horas' => $numero($solicitud->horas), 'fecha' => $solicitud->fecha->format('d/m')]) }}
                                 @endif
                             </p>
-                            <p class="text-sm text-slate-500">
+                            <p class="text-sm text-texto-suave">
                                 {{ collect([$solicitud->revisor?->name, $solicitud->revisado_at?->format('d/m/Y H:i'), $solicitud->respuesta])->filter()->join(' · ') }}
                             </p>
                         </div>
-                        <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $chips[$solicitud->estado] }}">{{ $solicitud->textoEstado() }}</span>
+                        <span class="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $chips[$solicitud->estado] }}">{{ $solicitud->textoEstado() }}</span>
                     </li>
                 @endforeach
             </ul>

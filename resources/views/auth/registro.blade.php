@@ -3,17 +3,20 @@
 @section('titulo', __('acceso.solicitar_acceso'))
 
 @section('contenido')
-    <div class="mb-6 text-center">
-        <x-logo class="mx-auto mb-4 h-14 w-14 rounded-2xl shadow-lg ring-1 ring-white/20" />
-        <h1 class="text-2xl font-bold text-white">{{ __('acceso.solicitar_acceso') }}</h1>
-        <p class="mt-1 text-base text-marca-100">{{ __('acceso.propietario_finca_aprobara_tu_cuenta') }}</p>
+    <div class="mb-8 text-center">
+        <div class="relative mx-auto mb-5 h-20 w-20">
+            <span class="absolute -inset-2 rounded-[2rem] bg-marca-300/40 blur-xl" aria-hidden="true"></span>
+            <x-logo class="relative h-20 w-20 rounded-3xl shadow-2xl ring-1 ring-white/30" />
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-white drop-shadow-sm">{{ __('acceso.solicitar_acceso') }}</h1>
+        <p class="mt-2 text-base text-marca-100">{{ __('acceso.propietario_finca_aprobara_tu_cuenta') }}</p>
     </div>
 
-    <x-tarjeta>
+    <x-tarjeta class="!bg-white/90 !shadow-2xl !shadow-marca-950/40 !ring-white/40 backdrop-blur-xl">
         @error('registro')
-            <div role="alert" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800">
+            <div role="alert" class="mb-5 animate-sacudir rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800">
                 <p>{{ $message }}</p>
-                <a href="{{ route('password.request') }}" class="mt-1 inline-flex min-h-11 items-center font-semibold underline underline-offset-2">{{ __('acceso.recuperar.enlace_login') }}</a>
+                <a href="{{ route('password.request') }}" class="mt-1 inline-flex min-h-12 items-center font-semibold underline underline-offset-2">{{ __('acceso.recuperar.enlace_login') }}</a>
             </div>
         @enderror
         <x-formulario :action="route('registro')">
@@ -43,12 +46,12 @@
 
     <p class="mt-6 text-center text-base text-marca-50">
         {{ __('acceso.ya_tienes_cuenta') }}
-        <a href="{{ route('login') }}" class="font-semibold text-white underline underline-offset-2">{{ __('acceso.ingresar') }}</a>
+        <a href="{{ route('login') }}" class="font-semibold text-white underline decoration-marca-300/60 underline-offset-4 transition-colors hover:decoration-white">{{ __('acceso.ingresar') }}</a>
     </p>
     <p class="mt-4 text-center text-sm text-marca-100">
-        <a href="{{ route('legal.terminos') }}" class="underline underline-offset-2">{{ __('legal.terminos') }}</a>
+        <a href="{{ route('legal.terminos') }}" class="underline decoration-marca-300/50 underline-offset-4 transition-colors hover:text-white">{{ __('legal.terminos') }}</a>
         ·
-        <a href="{{ route('legal.privacidad') }}" class="underline underline-offset-2">{{ __('legal.privacidad') }}</a>
+        <a href="{{ route('legal.privacidad') }}" class="underline decoration-marca-300/50 underline-offset-4 transition-colors hover:text-white">{{ __('legal.privacidad') }}</a>
     </p>
 @endsection
 

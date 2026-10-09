@@ -8,8 +8,8 @@
     <div class="grid max-w-3xl gap-6">
         <x-tarjeta :titulo="__('cuenta.datos')">
             <dl class="grid grid-cols-1 gap-3 text-base sm:grid-cols-2">
-                <div><dt class="text-sm text-slate-500">{{ __('cuenta.nombre') }}</dt><dd class="font-semibold text-slate-900">{{ $usuario->name }}</dd></div>
-                <div><dt class="text-sm text-slate-500">{{ __('cuenta.correo') }}</dt><dd class="break-all font-semibold text-slate-900">{{ $usuario->email }}</dd></div>
+                <div><dt class="text-sm text-texto-suave">{{ __('cuenta.nombre') }}</dt><dd class="font-semibold text-slate-900">{{ $usuario->name }}</dd></div>
+                <div><dt class="text-sm text-texto-suave">{{ __('cuenta.correo') }}</dt><dd class="break-all font-semibold text-slate-900">{{ $usuario->email }}</dd></div>
             </dl>
         </x-tarjeta>
 
@@ -25,7 +25,7 @@
         <x-tarjeta :titulo="__('cuenta.dos_pasos.titulo')" :subtitulo="__('cuenta.dos_pasos.que_es')">
             @if ($usuario->tieneDosPasos())
                 <p class="mb-2 text-base font-semibold text-marca-800">{{ __('cuenta.dos_pasos.activa', ['fecha' => $usuario->dos_pasos_activado_at->format('d/m/Y')]) }}</p>
-                <p class="mb-5 text-sm text-slate-500">{{ trans_choice('cuenta.dos_pasos.recuperacion_quedan', count($usuario->dos_pasos_recuperacion ?? [])) }}</p>
+                <p class="mb-5 text-sm text-texto-suave">{{ trans_choice('cuenta.dos_pasos.recuperacion_quedan', count($usuario->dos_pasos_recuperacion ?? [])) }}</p>
 
                 <x-formulario :action="route('mi-cuenta.dos-pasos.desactivar')" metodo="DELETE" class="border-t border-slate-200 pt-5">
                     <p class="text-sm text-slate-600">{{ __('cuenta.dos_pasos.desactivar_ayuda') }}</p>

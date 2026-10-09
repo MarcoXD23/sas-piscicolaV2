@@ -53,15 +53,15 @@
                 @if ($cosecha->pesajes->isNotEmpty())
                     @include('admin.cosechas._pesadas', ['pesaje' => \App\Support\CalculoPesaje::deCosecha($cosecha)])
                 @else
-                    <p class="text-sm text-slate-500">{{ __('cosechas.sin_pesadas') }}</p>
+                    <p class="text-sm text-texto-suave">{{ __('cosechas.sin_pesadas') }}</p>
                 @endif
             </div>
         @empty
-            <p class="text-slate-500">{{ __('reportes.sin_cosechas') }}</p>
+            <p class="text-texto-suave">{{ __('reportes.sin_cosechas') }}</p>
         @endforelse
     </section>
 
-    <p class="mt-6 text-sm text-slate-500">
+    <p class="mt-6 text-sm text-texto-suave">
         {{ __('region.aviso_libro_campo') }}
     </p>
     <div class="mt-10 hidden grid-cols-2 gap-10 print:grid">

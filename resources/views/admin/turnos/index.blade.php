@@ -31,12 +31,12 @@
                 <div class="flex min-w-0 items-center gap-3">
                     <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-marca-500" aria-hidden="true"></span>
                     <span class="truncate font-semibold text-slate-900">{{ $turno->user->name }}</span>
-                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold capitalize text-slate-700">{{ $turno->rol }}</span>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-semibold capitalize text-slate-700">{{ $turno->rol }}</span>
                 </div>
-                <span class="shrink-0 text-sm text-slate-500">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
+                <span class="shrink-0 text-sm text-texto-suave">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
             </div>
         @empty
-            <p class="text-base text-slate-500">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
+            <p class="text-base text-texto-suave">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
         @endforelse
     </x-tarjeta>
 
@@ -53,14 +53,14 @@
             @php $turnosDelDia = $turnosPorDia->get($dia->toDateString(), collect()); @endphp
 
             <section @class([
-                'rounded-2xl bg-white p-4 shadow-sm ring-1',
+                'rounded-2xl bg-white p-4 shadow-suave ring-1',
                 'ring-marca-300' => $dia->isToday(),
                 'ring-slate-200' => ! $dia->isToday(),
             ])>
                 <h3 class="mb-2 flex items-center gap-2 font-semibold capitalize text-slate-900">
                     {{ $dia->translatedFormat('l j') }}
                     @if ($dia->isToday())
-                        <span class="rounded-full bg-marca-100 px-2.5 py-0.5 text-xs font-semibold normal-case text-marca-800">{{ __('turnos.hoy') }}</span>
+                        <span class="rounded-full bg-marca-100 px-2.5 py-0.5 text-sm font-semibold normal-case text-marca-800">{{ __('turnos.hoy') }}</span>
                     @endif
                 </h3>
 
@@ -68,7 +68,7 @@
                     <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-2.5">
                         <div class="min-w-0">
                             <p class="truncate font-medium text-slate-900">{{ $turno->user->name }}</p>
-                            <p class="flex items-center gap-1.5 text-sm text-slate-500">
+                            <p class="flex items-center gap-1.5 text-sm text-texto-suave">
                                 <x-icono nombre="reloj" class="h-4 w-4" /> {{ $horario($turno) }}
                                 <span class="capitalize">· {{ $turno->rol }}</span>
                             </p>
@@ -76,7 +76,7 @@
 
                         @unless ($turno->haEmpezado())
                             <x-formulario :action="route('admin.turnos.destroy', $turno)" metodo="DELETE" class="!space-y-0">
-                                <button type="submit" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600"
                                         aria-label="{{ __('turnos.eliminar_turno_de', ['nombre' => $turno->user->name]) }}" onclick="return confirm(@js(__('turnos.confirmar_eliminar')))">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
@@ -84,7 +84,7 @@
                         @endunless
                     </div>
                 @empty
-                    <p class="text-sm text-slate-400">{{ __('turnos.sin_turnos') }}</p>
+                    <p class="text-sm text-slate-500">{{ __('turnos.sin_turnos') }}</p>
                 @endforelse
             </section>
         @endforeach

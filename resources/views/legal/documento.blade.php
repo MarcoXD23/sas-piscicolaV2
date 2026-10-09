@@ -14,10 +14,10 @@
 @section('titulo', $textos['titulo'])
 
 @section('contenido')
-    <article class="mx-auto max-w-3xl rounded-2xl bg-white p-5 text-slate-800 shadow-sm ring-1 ring-slate-200 sm:p-8">
+    <article class="mx-auto max-w-3xl rounded-2xl bg-white p-5 text-slate-800 shadow-suave ring-1 ring-slate-200 sm:p-8">
         <p class="mb-5 rounded-xl bg-amber-50 p-4 text-base font-semibold text-amber-900" role="note">{{ __('legal.borrador') }}</p>
         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">{{ $textos['titulo'] }}</h1>
-        <p class="mt-1 text-sm text-slate-500">{{ __('legal.version', ['version' => config('legal.version')]) }}</p>
+        <p class="mt-1 text-sm text-texto-suave">{{ __('legal.version', ['version' => config('legal.version')]) }}</p>
         <p class="mt-5 text-base">{{ $reemplazar($textos['intro']) }}</p>
 
         @foreach ($textos['secciones'] as $titulo => $texto)

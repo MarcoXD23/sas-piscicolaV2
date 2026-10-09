@@ -5,7 +5,16 @@
 
 /* Tablas: formato apilado solo en pantallas pequeñas; al imprimir siempre son tablas */
 @custom-variant movil (@media screen and (width < 48rem));
-@custom-variant ancho (@media print, (width >= 48rem));
+/* En bloque: con la forma corta Tailwind parte la coma de la media query y el selector queda inválido */
+@custom-variant ancho {
+    @media print {
+        @slot;
+    }
+
+    @media (width >= 48rem) {
+        @slot;
+    }
+}
 
 /* Alpine: lo que depende de un estado no se ve hasta que Alpine arranca */
 [x-cloak] {
@@ -28,6 +37,16 @@
     --color-marca-900: #134441;
     --color-marca-950: #042827;
 
+    /* Colores con significado (clases text-texto, text-texto-suave, bg-superficie, border-borde, text-peligro…).
+       Texto suave en slate-600: legible al sol (7,6:1 sobre blanco); slate-500 apenas pasa y slate-400 no. */
+    --color-superficie: #ffffff;
+    --color-texto: var(--color-slate-900);
+    --color-texto-suave: var(--color-slate-600);
+    --color-borde: var(--color-slate-200);
+    --color-exito: var(--color-marca-700);
+    --color-aviso: var(--color-amber-800);
+    --color-peligro: var(--color-red-700);
+
     /* Sombras con un toque del color de la marca (clases shadow-suave, shadow-elevada, shadow-brillo) */
     --shadow-suave: 0 1px 2px rgb(4 40 39 / 0.04), 0 2px 8px -2px rgb(4 40 39 / 0.06);
     --shadow-elevada: 0 2px 4px rgb(4 40 39 / 0.04), 0 12px 32px -8px rgb(4 40 39 / 0.18);
@@ -37,15 +56,29 @@
     --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-resorte: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Animaciones (clases animate-aparecer, animate-aparecer-escala, animate-flotar, animate-ola, animate-latido) */
-    --animate-aparecer: aparecer 0.6s var(--ease-salida) backwards;
-    --animate-aparecer-escala: aparecer-escala 0.45s var(--ease-resorte) backwards;
-    --animate-flotar: flotar 6s ease-in-out infinite;
-    --animate-ola: ola 12s linear infinite;
+    /* Animaciones (clases animate-aparecer, animate-aparecer-escala, animate-latido, animate-saltar, animate-sacudir).
+       Movimiento solo donde comunica algo: entrar, responder al toque, avisar. Nada decorativo que se repita sin fin. */
+    --animate-aparecer: aparecer 0.35s var(--ease-salida) backwards;
+    --animate-aparecer-escala: aparecer-escala 0.3s var(--ease-resorte) backwards;
     --animate-latido: latido 2s ease-in-out infinite;
+    --animate-saltar: saltar 0.6s var(--ease-resorte) 0.15s backwards;
+    --animate-sacudir: sacudir 0.45s ease-in-out 0.3s;
+
+    @keyframes saltar {
+        0% { transform: translateY(0) scale(1); }
+        40% { transform: translateY(-5px) scale(1.12); }
+        100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes sacudir {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(4px); }
+        75% { transform: translateX(-2px); }
+    }
 
     @keyframes aparecer {
-        from { opacity: 0; transform: translateY(14px); }
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
@@ -54,17 +87,7 @@
         to { opacity: 1; transform: scale(1); }
     }
 
-    @keyframes flotar {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-    }
-
-    /* Ola: un patrón que se repite cada 50% del ancho, así el desplazamiento no tiene salto */
-    @keyframes ola {
-        from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
-    }
-
+    /* Latido: solo para un estado que pide atención (alerta abierta) */
     @keyframes latido {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.6; transform: scale(0.92); }
@@ -98,6 +121,24 @@
         -webkit-text-size-adjust: 100%;
         scroll-behavior: smooth;
         scrollbar-color: var(--color-slate-300) transparent;
+        /* Lo enfocado o enlazado no queda debajo de la cabecera pegajosa ni del menú inferior del celular */
+        scroll-padding-top: 6rem;
+        scroll-padding-bottom: 6rem;
+
+        @variant md {
+            scroll-padding-top: 8.5rem;
+            scroll-padding-bottom: 1rem;
+        }
+    }
+
+    /* Tailwind 4 deja el cursor normal en los botones: todo lo que se toca muestra la mano */
+    :where(button, [role='button'], summary, select, label[for], input[type='checkbox'], input[type='radio']):not(:disabled) {
+        cursor: pointer;
+    }
+
+    /* Toque inmediato: sin la espera del doble toque para acercar (el zoom con dos dedos sigue funcionando) */
+    :where(a, button, input, select, textarea, label, summary) {
+        touch-action: manipulation;
     }
 
     /* Fondo con un reflejo suave de agua en las esquinas; el ingreso pone encima su propia foto */
@@ -130,16 +171,23 @@
         @apply md:m-auto md:max-w-lg md:rounded-3xl;
         opacity: 0;
         transform: translateY(100%);
+        /* Salida (al cerrar): más corta que la entrada y acelerando */
         transition:
-            opacity 0.25s var(--ease-salida),
-            transform 0.45s var(--ease-salida),
-            overlay 0.45s allow-discrete,
-            display 0.45s allow-discrete;
+            opacity 0.2s ease-in,
+            transform 0.2s ease-in,
+            overlay 0.2s allow-discrete,
+            display 0.2s allow-discrete;
     }
 
+    /* Entrada (al abrir): desacelerando */
     .modal[open] {
         opacity: 1;
         transform: none;
+        transition:
+            opacity 0.2s var(--ease-salida),
+            transform 0.32s var(--ease-salida),
+            overlay 0.32s allow-discrete,
+            display 0.32s allow-discrete;
     }
 
     @starting-style {
@@ -151,13 +199,16 @@
 
     @media (width >= 48rem) {
         .modal {
-            transform: translateY(1.5rem) scale(0.94);
+            transform: translateY(1rem) scale(0.96);
+        }
+
+        .modal[open] {
             transition-timing-function: var(--ease-salida), var(--ease-resorte), linear, linear;
         }
 
         @starting-style {
             .modal[open] {
-                transform: translateY(1.5rem) scale(0.94);
+                transform: translateY(1rem) scale(0.96);
             }
         }
     }
@@ -166,13 +217,17 @@
         @apply bg-slate-900/50 backdrop-blur-[3px];
         opacity: 0;
         transition:
-            opacity 0.3s ease-out,
-            overlay 0.3s allow-discrete,
-            display 0.3s allow-discrete;
+            opacity 0.2s ease-in,
+            overlay 0.2s allow-discrete,
+            display 0.2s allow-discrete;
     }
 
     .modal[open]::backdrop {
         opacity: 1;
+        transition:
+            opacity 0.3s ease-out,
+            overlay 0.3s allow-discrete,
+            display 0.3s allow-discrete;
     }
 
     @starting-style {
@@ -223,8 +278,10 @@
     .presionable {
         transition:
             transform 0.15s var(--ease-salida),
+            translate 0.25s var(--ease-salida),
+            rotate 0.3s var(--ease-salida),
             background-color 0.2s,
-            box-shadow 0.2s,
+            box-shadow 0.25s,
             color 0.2s;
     }
 
@@ -240,35 +297,71 @@
     /* Barras de las gráficas: crecen al aparecer */
     .crece-ancho {
         transform-origin: left;
-        animation: crecer-ancho 0.9s var(--ease-salida) backwards;
+        animation: crecer-ancho 0.5s var(--ease-salida) backwards;
     }
 
     .crece-alto {
         transform-origin: bottom;
-        animation: crecer-alto 0.9s var(--ease-salida) backwards;
+        animation: crecer-alto 0.5s var(--ease-salida) backwards;
+    }
+
+    /* Si la gráfica espera fuera de la pantalla, sus barras crecen cuando aparece y no antes */
+    .por-revelar :is(.crece-ancho, .crece-alto) {
+        animation: none;
     }
 }
 
 @layer utilities {
-    .escalonado > :nth-child(2) { animation-delay: 60ms; }
-    .escalonado > :nth-child(3) { animation-delay: 120ms; }
-    .escalonado > :nth-child(4) { animation-delay: 180ms; }
-    .escalonado > :nth-child(5) { animation-delay: 240ms; }
-    .escalonado > :nth-child(6) { animation-delay: 300ms; }
-    .escalonado > :nth-child(n + 7) { animation-delay: 360ms; }
+    .escalonado > :nth-child(2) { animation-delay: 40ms; }
+    .escalonado > :nth-child(3) { animation-delay: 80ms; }
+    .escalonado > :nth-child(4) { animation-delay: 120ms; }
+    .escalonado > :nth-child(5) { animation-delay: 160ms; }
+    .escalonado > :nth-child(6) { animation-delay: 200ms; }
+    .escalonado > :nth-child(n + 7) { animation-delay: 240ms; }
 }
 
 /* Entrada de la página: los bloques del contenido aparecen uno tras otro (sin JavaScript, desde el primer pintado).
-   Solo "backwards": al terminar no queda ningún transform que afecte a lo fijo o pegajoso de adentro. */
-main#contenido > :not(dialog, script, template) {
-    animation: var(--animate-aparecer);
+   Solo "backwards": al terminar no queda ningún transform que afecte a lo fijo o pegajoso de adentro.
+   En la capa de componentes y sin peso: una clase animate-* puesta en el bloque la reemplaza. */
+@layer components {
+    :where(main#contenido > :not(dialog, script, template)) {
+        animation: var(--animate-aparecer);
+    }
+
+    :where(main#contenido > :nth-child(2)) { animation-delay: 40ms; }
+    :where(main#contenido > :nth-child(3)) { animation-delay: 80ms; }
+    :where(main#contenido > :nth-child(4)) { animation-delay: 120ms; }
+    :where(main#contenido > :nth-child(5)) { animation-delay: 160ms; }
+    :where(main#contenido > :nth-child(n + 6)) { animation-delay: 200ms; }
 }
 
-main#contenido > :nth-child(2) { animation-delay: 70ms; }
-main#contenido > :nth-child(3) { animation-delay: 140ms; }
-main#contenido > :nth-child(4) { animation-delay: 210ms; }
-main#contenido > :nth-child(5) { animation-delay: 280ms; }
-main#contenido > :nth-child(n + 6) { animation-delay: 350ms; }
+/* Aviso de "guardado" (session estado): entra, se queda unos segundos y se recoge solo. Con el puntero encima espera. */
+@keyframes recoger-aviso {
+    to { opacity: 0; max-height: 0; margin-bottom: 0; padding-block: 0; border-width: 0; }
+}
+
+.aviso-temporal {
+    max-height: 12rem;
+    overflow: hidden;
+    animation: var(--animate-aparecer), recoger-aviso 0.5s ease-in 9s forwards;
+}
+
+.aviso-temporal:hover {
+    animation-play-state: paused;
+}
+
+/* Cabecera: gana sombra al bajar la página (animación ligada al desplazamiento, donde el navegador la soporte) */
+@keyframes cabecera-sombra {
+    to { box-shadow: 0 10px 30px -10px rgb(4 40 39 / 0.55); }
+}
+
+@supports (animation-timeline: scroll()) {
+    .cabecera {
+        animation: cabecera-sombra linear both;
+        animation-timeline: scroll();
+        animation-range: 0 80px;
+    }
+}
 
 /* Aparecer al bajar (data-revelar, ver resources/js/app.js): lo que empieza fuera de la pantalla espera oculto */
 .por-revelar {
@@ -281,10 +374,13 @@ main#contenido > :nth-child(n + 6) { animation-delay: 350ms; }
 }
 
 /* Onda al tocar (data-onda, ver resources/js/app.js) */
-[data-onda] {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
+/* En la capa de componentes: si el elemento trae fixed o absolute, la utilidad gana */
+@layer components {
+    [data-onda] {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
 }
 
 .onda {
@@ -341,6 +437,11 @@ main#contenido > :nth-child(n + 6) { animation-delay: 350ms; }
 
     @view-transition {
         navigation: none;
+    }
+
+    /* Sin movimiento el aviso no se recoge solo: se queda visible */
+    .aviso-temporal {
+        animation: none !important;
     }
 }
 

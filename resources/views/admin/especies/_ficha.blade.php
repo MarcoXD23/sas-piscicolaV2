@@ -1,10 +1,10 @@
 {{-- Ficha de cultivo y de procesamiento de una especie (texto libre, todo opcional). Recibe $especie. --}}
 @php
     use App\Models\Especie;
-    $area = 'block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-marca-500 focus:outline-none focus:ring-2 focus:ring-marca-200';
+    $area = 'block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-suave transition duration-200 hover:border-slate-400 focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100';
 @endphp
 
-<p class="text-sm text-slate-500">{{ __('especies.ficha.ayuda') }}</p>
+<p class="text-sm text-texto-suave">{{ __('especies.ficha.ayuda') }}</p>
 
 @foreach (['cultivo' => [Especie::CAMPOS_CULTIVO, __('especies.ficha.campos_cultivo')], 'procesamiento' => [Especie::CAMPOS_PROCESAMIENTO, __('especies.ficha.campos_procesamiento')]] as $bloque => [$campos, $etiquetas])
     <fieldset class="space-y-4 border-t border-slate-200 pt-4">

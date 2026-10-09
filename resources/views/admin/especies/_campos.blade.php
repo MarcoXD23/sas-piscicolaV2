@@ -15,4 +15,4 @@
 </fieldset>
 
 <x-seleccion nombre="alimentacion" :etiqueta="__('especies.catalogo_finca.alimentacion')" :opciones="$alimentaciones" :valor="$especie?->alimentacion ?? ''" />
-<p class="text-sm text-slate-500">{{ __('especies.catalogo_finca.rangos_opcionales') }}</p>
+<p class="text-sm text-texto-suave">{{ __('especies.catalogo_finca.rangos_opcionales') }}</p>

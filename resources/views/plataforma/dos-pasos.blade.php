@@ -16,7 +16,7 @@
             <x-boton class="w-full">{{ __('cuenta.dos_pasos.ingreso_entrar') }}</x-boton>
         </x-formulario>
         <p class="mt-4 text-center">
-            <a href="{{ route('plataforma.login') }}" class="inline-flex min-h-11 items-center text-base font-medium text-marca-700 hover:underline">{{ __('cuenta.dos_pasos.ingreso_volver') }}</a>
+            <a href="{{ route('plataforma.login') }}" class="inline-flex min-h-12 items-center text-base font-medium text-marca-700 hover:underline">{{ __('cuenta.dos_pasos.ingreso_volver') }}</a>
         </p>
     </x-tarjeta>
 @endsection

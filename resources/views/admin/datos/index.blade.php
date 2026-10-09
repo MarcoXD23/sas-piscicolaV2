@@ -19,7 +19,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 py-3 text-base">
                     <div>
                         <p class="font-medium text-slate-900">{{ __('datos.exportar.pedida', ['fecha' => $exportacion->created_at->setTimezone(\App\Support\Region::zona())->format('d/m/Y H:i')]) }}</p>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-texto-suave">
                             {{ __('datos.exportar.estados.'.$exportacion->estado) }}
                             @if ($exportacion->vence_at)
                                 · {{ $exportacion->descargable() ? __('datos.exportar.disponible_hasta', ['fecha' => $exportacion->vence_at->format('d/m/Y H:i')]) : __('datos.exportar.vencio') }}
@@ -33,13 +33,13 @@
                     @endif
                 </div>
             @empty
-                <p class="text-base text-slate-500">{{ __('datos.exportar.ninguna') }}</p>
+                <p class="text-base text-texto-suave">{{ __('datos.exportar.ninguna') }}</p>
             @endforelse
         </x-tarjeta>
 
         <x-tarjeta :titulo="__('datos.eliminar.titulo')" class="ring-red-200">
             <p class="rounded-xl bg-red-50 p-4 text-base text-red-900">{{ __('datos.eliminar.ayuda', ['dias' => config('datos.dias_gracia')]) }}</p>
-            <p class="mt-3 text-sm text-slate-500">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
+            <p class="mt-3 text-sm text-texto-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
             <x-formulario :action="route('admin.datos.eliminar')" class="mt-5">
                 <x-campo nombre="codigo" :etiqueta="__('datos.eliminar.codigo', ['codigo' => $finca->codigo])" autocomplete="off" autocapitalize="none" required />
                 <x-campo nombre="actual" :etiqueta="__('datos.eliminar.actual')" tipo="password" autocomplete="current-password" required />

@@ -40,12 +40,12 @@
                 <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
                     <div class="min-w-0">
                         <p class="font-semibold text-slate-900">{{ __('ventas.especie_lago', ['especie' => $cosecha->siembra->nombre_especie, 'lago' => $cosecha->lago->nombre]) }}</p>
-                        <p class="text-sm text-slate-500">{{ __('ventas.cosechado_el', ['fecha' => $cosecha->fecha->format('d/m/Y'), 'gramos' => Formato::numero($cosecha->peso_promedio_g)]) }}</p>
+                        <p class="text-sm text-texto-suave">{{ __('ventas.cosechado_el', ['fecha' => $cosecha->fecha->format('d/m/Y'), 'gramos' => Formato::numero($cosecha->peso_promedio_g)]) }}</p>
                     </div>
-                    <p class="shrink-0 text-lg font-bold tabular-nums text-slate-900">{{ Formato::numero($cosecha->kgDisponibles(), 1) }} <span class="text-sm font-medium text-slate-500">kg</span></p>
+                    <p class="shrink-0 text-lg font-bold tabular-nums text-slate-900">{{ Formato::numero($cosecha->kgDisponibles(), 1) }} <span class="text-sm font-medium text-texto-suave">kg</span></p>
                 </div>
             @empty
-                <p class="text-base text-slate-500">{{ __('ventas.no_hay_pescado_cosechado_sin') }}</p>
+                <p class="text-base text-texto-suave">{{ __('ventas.no_hay_pescado_cosechado_sin') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -53,13 +53,13 @@
             @forelse ($creditos as $credito)
                 <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
                     <div class="min-w-0">
-                        <p class="font-semibold text-slate-900">{{ $credito->cliente }}@if ($credito->comprador_id) <span class="text-sm font-normal text-slate-500">{{ __('ventas.empleado') }}</span>@endif</p>
-                        <p class="text-sm text-slate-500">{{ __('ventas.detalle_credito', ['fecha' => $credito->fecha->format('d/m/Y'), 'kg' => Formato::numero($credito->kg, 1), 'total' => Formato::dinero($credito->total)]) }}</p>
+                        <p class="font-semibold text-slate-900">{{ $credito->cliente }}@if ($credito->comprador_id) <span class="text-sm font-normal text-texto-suave">{{ __('ventas.empleado') }}</span>@endif</p>
+                        <p class="text-sm text-texto-suave">{{ __('ventas.detalle_credito', ['fecha' => $credito->fecha->format('d/m/Y'), 'kg' => Formato::numero($credito->kg, 1), 'total' => Formato::dinero($credito->total)]) }}</p>
                     </div>
                     <div class="shrink-0 text-right">
                         <p class="font-bold tabular-nums text-slate-900">{{ Formato::dinero($credito->saldo) }}</p>
                         @if ($puedeVender)
-                            <button type="button" data-abrir-modal="abono-{{ $credito->id }}" class="min-h-11 text-sm font-semibold text-marca-700 hover:underline">{{ __('ventas.registrar_abono') }}</button>
+                            <button type="button" data-abrir-modal="abono-{{ $credito->id }}" class="min-h-12 text-sm font-semibold text-marca-700 hover:underline">{{ __('ventas.registrar_abono') }}</button>
                         @endif
                     </div>
                 </div>
@@ -81,7 +81,7 @@
                 </x-modal>
                 @endif
             @empty
-                <p class="text-base text-slate-500">{{ __('ventas.no_hay_creditos_pendientes') }}</p>
+                <p class="text-base text-texto-suave">{{ __('ventas.no_hay_creditos_pendientes') }}</p>
             @endforelse
         </x-tarjeta>
     </div>
@@ -113,7 +113,7 @@
         @if ($ventas->hasPages())
             <nav class="mt-4 flex items-center justify-between gap-3" aria-label="{{ __('comun.paginas') }}">
                 @if ($ventas->onFirstPage()) <span></span> @else <x-boton variante="secundario" :href="$ventas->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton> @endif
-                <span class="text-sm text-slate-500">{{ __('comun.pagina_de', ['actual' => $ventas->currentPage(), 'total' => $ventas->lastPage()]) }}</span>
+                <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $ventas->currentPage(), 'total' => $ventas->lastPage()]) }}</span>
                 @if ($ventas->hasMorePages()) <x-boton variante="secundario" :href="$ventas->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton> @else <span></span> @endif
             </nav>
         @endif

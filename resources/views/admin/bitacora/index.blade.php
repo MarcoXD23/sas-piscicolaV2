@@ -31,7 +31,7 @@
                 </td>
                 <td data-label="{{ __('bitacora.persona') }}">
                     <p class="font-medium text-slate-900">{{ $registro->usuario->name }}</p>
-                    <p class="text-sm text-slate-500">{{ __('bitacora.roles.'.$registro->rol) }}</p>
+                    <p class="text-sm text-texto-suave">{{ __('bitacora.roles.'.$registro->rol) }}</p>
                 </td>
                 <td data-label="{{ __('bitacora.accion') }}">
                     <span @class([
@@ -53,7 +53,7 @@
             @else
                 <x-boton variante="secundario" :href="$registros->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton>
             @endif
-            <span class="text-sm text-slate-500">{{ __('comun.pagina_de', ['actual' => $registros->currentPage(), 'total' => $registros->lastPage()]) }}</span>
+            <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $registros->currentPage(), 'total' => $registros->lastPage()]) }}</span>
             @if ($registros->hasMorePages())
                 <x-boton variante="secundario" :href="$registros->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton>
             @else
@@ -62,5 +62,5 @@
         </nav>
     @endif
 
-    <p class="mt-6 text-sm text-slate-500">{{ __('bitacora.nota') }}</p>
+    <p class="mt-6 text-sm text-texto-suave">{{ __('bitacora.nota') }}</p>
 @endsection

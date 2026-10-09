@@ -5,7 +5,7 @@
 @endphp
 
 <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('especies.fotos.titulo')" :subtitulo="__('especies.fotos.subtitulo')">
-    <p class="mb-4 text-sm text-slate-500">{{ __('especies.fotos.cupo', ['cantidad' => $fotos->count(), 'maximo' => $maximo]) }}</p>
+    <p class="mb-4 text-sm text-texto-suave">{{ __('especies.fotos.cupo', ['cantidad' => $fotos->count(), 'maximo' => $maximo]) }}</p>
 
     @if ($fotos->isNotEmpty())
         <ol class="mb-6 space-y-3">
@@ -20,7 +20,7 @@
                             <p class="truncate text-slate-700">{{ __('especies.fotos.por', ['autor' => $foto->autor]) }}</p>
                         @endif
                         @if ($foto->licencia)
-                            <p class="truncate text-slate-500">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
+                            <p class="truncate text-texto-suave">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
                         @endif
                         <a href="{{ $foto->urlOriginal() }}" class="text-marca-700 underline">{{ __('especies.fotos.original') }}</a>
                     </div>
@@ -30,14 +30,14 @@
                                 <form method="POST" action="{{ route('admin.especies.fotos.orden', [$especie, $foto]) }}">
                                     @csrf
                                     <input type="hidden" name="direccion" value="{{ $direccion }}">
-                                    <button class="flex h-11 w-11 items-center justify-center rounded-xl text-lg text-slate-600 ring-1 ring-slate-200 hover:bg-white" aria-label="{{ $texto }}" title="{{ $texto }}">{{ $flecha }}</button>
+                                    <button class="flex h-12 w-12 items-center justify-center rounded-xl text-lg text-slate-600 ring-1 ring-slate-200 hover:bg-white" aria-label="{{ $texto }}" title="{{ $texto }}">{{ $flecha }}</button>
                                 </form>
                             @endif
                         @endforeach
                         <form method="POST" action="{{ route('admin.especies.fotos.destroy', [$especie, $foto]) }}" onsubmit="return confirm(@js(__('especies.fotos.confirmar_borrar')))">
                             @csrf
                             @method('DELETE')
-                            <button class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 ring-1 ring-slate-200 hover:bg-red-50 hover:text-red-600" aria-label="{{ __('especies.fotos.borrar') }}" title="{{ __('especies.fotos.borrar') }}">
+                            <button class="flex h-12 w-12 items-center justify-center rounded-xl text-texto-suave ring-1 ring-slate-200 hover:bg-red-50 hover:text-red-600" aria-label="{{ __('especies.fotos.borrar') }}" title="{{ __('especies.fotos.borrar') }}">
                                 <x-icono nombre="basura" class="h-5 w-5" />
                             </button>
                         </form>

@@ -10,7 +10,7 @@
             <tr>
                 <td data-label="{{ __('plataforma.fincas.finca') }}">
                     <p class="font-semibold text-slate-900">{{ $finca->nombre }}</p>
-                    <p class="text-sm text-slate-500">{{ __('plataforma.fincas.codigo', ['codigo' => $finca->codigo]) }}@if ($finca->pais) · {{ \App\Support\Region::nombrePais($finca->pais) }}@endif</p>
+                    <p class="text-sm text-texto-suave">{{ __('plataforma.fincas.codigo', ['codigo' => $finca->codigo]) }}@if ($finca->pais) · {{ \App\Support\Region::nombrePais($finca->pais) }}@endif</p>
                 </td>
                 <td data-label="{{ __('plataforma.fincas.usuarios') }}" class="tabular-nums">{{ $finca->users_count }}</td>
                 <td data-label="{{ __('plataforma.fincas.estado') }}">
@@ -19,7 +19,7 @@
                     @elseif ($finca->estaSuspendida())
                         <span class="inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800">{{ __('plataforma.fincas.suspendida_desde', ['fecha' => $finca->suspendida_at->format('d/m/Y')]) }}</span>
                         @if ($finca->motivo_suspension)
-                            <p class="mt-1 text-sm text-slate-500">{{ $finca->motivo_suspension }}</p>
+                            <p class="mt-1 text-sm text-texto-suave">{{ $finca->motivo_suspension }}</p>
                         @endif
                     @else
                         <span class="inline-block rounded-full bg-marca-100 px-3 py-1 text-sm font-semibold text-marca-800">{{ __('plataforma.fincas.activa') }}</span>

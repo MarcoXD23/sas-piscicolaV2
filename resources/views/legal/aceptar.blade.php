@@ -23,7 +23,7 @@
 
         <form method="POST" action="{{ route('logout') }}" class="mt-4 text-center">
             @csrf
-            <button class="text-base text-slate-600 underline">{{ __('legal.aceptar.no_acepto') }}</button>
+            <button class="inline-flex min-h-12 items-center text-base text-slate-600 underline">{{ __('legal.aceptar.no_acepto') }}</button>
         </form>
     </x-tarjeta>
 @endsection

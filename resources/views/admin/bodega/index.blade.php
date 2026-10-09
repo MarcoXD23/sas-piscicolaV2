@@ -45,13 +45,13 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <h2 class="text-lg font-semibold text-slate-900">{{ $stock->tipo_concentrado }}</h2>
                             @if ($estilo['chip'])
-                                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $estilo['chip'] }}">{{ $estilo['texto'] }}</span>
+                                <span class="rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $estilo['chip'] }}">{{ $estilo['texto'] }}</span>
                             @endif
                         </div>
                         <p class="mt-1 text-3xl font-bold tabular-nums {{ $estilo['cifra'] }}">
-                            {{ $numero($stock->cantidad_kg, 2) }} <span class="text-base font-medium text-slate-500">kg</span>
+                            {{ $numero($stock->cantidad_kg, 2) }} <span class="text-base font-medium text-texto-suave">kg</span>
                         </p>
-                        <p class="mt-1 text-sm text-slate-500">
+                        <p class="mt-1 text-sm text-texto-suave">
                             @if ($item['dias'] !== null)
                                 {!! __('bodega.alcanza_para', [
                                     'dias' => '<strong class="font-semibold text-slate-700">'.e(__('bodega.dias', ['dias' => $numero($item['dias'], 1)])).'</strong>',
@@ -84,7 +84,7 @@
                     <td data-label="{{ __('comun.fecha') }}">{{ $despacho->fecha->format('d/m/Y') }}</td>
                     <td data-label="{{ __('bodega.concentrado') }}">
                         <p class="font-medium text-slate-900">{{ $despacho->tipo_concentrado }}</p>
-                        <p class="text-sm text-slate-500">{{ __('bodega.detalle_entrada', ['proveedor' => $despacho->proveedor, 'lote' => $despacho->lote, 'bultos' => $despacho->bultos]) }}</p>
+                        <p class="text-sm text-texto-suave">{{ __('bodega.detalle_entrada', ['proveedor' => $despacho->proveedor, 'lote' => $despacho->lote, 'bultos' => $despacho->bultos]) }}</p>
                     </td>
                     <td data-label="{{ __('bodega.despachado') }}" class="tabular-nums">{{ $numero($despacho->cantidad_kg, 1) }} kg</td>
                     <td data-label="{{ __('bodega.recibido') }}" class="tabular-nums">{{ $despacho->tieneRecepciones() ? $numero($despacho->kgRecibidos(), 1).' kg' : '—' }}</td>
@@ -93,10 +93,10 @@
                             {{ __('bodega.estados_despacho.'.$estado, ['kg' => rtrim(rtrim($numero(abs($despacho->diferenciaKg()), 1), '0'), ',.')]) }}
                         </span>
                         @if ($despacho->revisado_at)
-                            <p class="mt-1 text-xs text-slate-500">{{ __('bodega.revisado_el', ['fecha' => $despacho->revisado_at->format('d/m/Y')]) }}</p>
+                            <p class="mt-1 text-sm text-texto-suave">{{ __('bodega.revisado_el', ['fecha' => $despacho->revisado_at->format('d/m/Y')]) }}</p>
                         @elseif ($puedeDespachar && in_array($estado, [\App\Models\DespachoAlimento::FALTANTE, \App\Models\DespachoAlimento::SOBRANTE], true))
                             <x-formulario :action="route('admin.bodega.despachos.revisado', $despacho)" class="mt-1 !space-y-0">
-                                <button class="min-h-11 text-sm font-semibold text-marca-700 hover:underline">{{ __('bodega.marcar_revisado') }}</button>
+                                <button class="min-h-12 text-sm font-semibold text-marca-700 hover:underline">{{ __('bodega.marcar_revisado') }}</button>
                             </x-formulario>
                         @endif
                     </td>
@@ -113,8 +113,8 @@
                     <a href="{{ route('admin.bodega.index', array_filter(['tipo' => $valor ?: null])) }}"
                        @if ($tipo === ($valor ?: null)) aria-current="page" @endif
                        @class([
-                           'flex min-h-10 items-center rounded-lg px-3',
-                           'bg-white text-marca-800 shadow-sm' => $tipo === ($valor ?: null),
+                           'flex min-h-12 items-center rounded-lg px-3',
+                           'bg-white text-marca-800 shadow-suave ring-1 ring-slate-200/70' => $tipo === ($valor ?: null),
                            'text-slate-600' => $tipo !== ($valor ?: null),
                        ])>{{ $texto }}</a>
                 @endforeach
@@ -155,7 +155,7 @@
                 @else
                     <x-boton variante="secundario" :href="$movimientos->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton>
                 @endif
-                <span class="text-sm text-slate-500">{{ __('comun.pagina_de', ['actual' => $movimientos->currentPage(), 'total' => $movimientos->lastPage()]) }}</span>
+                <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $movimientos->currentPage(), 'total' => $movimientos->lastPage()]) }}</span>
                 @if ($movimientos->hasMorePages())
                     <x-boton variante="secundario" :href="$movimientos->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton>
                 @else

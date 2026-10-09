@@ -28,7 +28,7 @@
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <h3 class="text-lg font-semibold text-slate-900">{{ $tarea->titulo }}</h3>
-                        <p @class(['text-sm', 'font-semibold text-red-700' => $tarea->estaVencida(), 'text-slate-500' => ! $tarea->estaVencida()])>
+                        <p @class(['text-sm', 'font-semibold text-red-700' => $tarea->estaVencida(), 'text-texto-suave' => ! $tarea->estaVencida()])>
                             {{ __($tarea->estaVencida() ? 'mi_trabajo.vencida' : 'mi_trabajo.para_el', ['fecha' => $tarea->fecha->format('d/m/Y')]) }}
                             @if ($tarea->lago) · {{ __('lagos.lago_nombre', ['lago' => $tarea->lago->nombre]) }} @endif
                         </p>
@@ -59,13 +59,13 @@
         @endforelse
 
         @if ($completadas->isNotEmpty())
-            <details class="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                <summary class="min-h-11 cursor-pointer content-center text-base font-semibold text-marca-700">{{ __('mi_trabajo.completadas_recientemente') }}</summary>
+            <details class="mt-4 rounded-2xl bg-white p-4 shadow-suave ring-1 ring-slate-200">
+                <summary class="min-h-12 cursor-pointer content-center text-base font-semibold text-marca-700">{{ __('mi_trabajo.completadas_recientemente') }}</summary>
                 <ul class="mt-2 divide-y divide-slate-100">
                     @foreach ($completadas as $tarea)
                         <li class="py-2.5">
                             <p class="font-medium text-slate-900">{{ $tarea->titulo }}</p>
-                            <p class="text-sm text-slate-500">{{ $tarea->completada_at->format('d/m/Y H:i') }}@if ($tarea->nota_cierre) · {{ $tarea->nota_cierre }}@endif</p>
+                            <p class="text-sm text-texto-suave">{{ $tarea->completada_at->format('d/m/Y H:i') }}@if ($tarea->nota_cierre) · {{ $tarea->nota_cierre }}@endif</p>
                         </li>
                     @endforeach
                 </ul>
@@ -79,14 +79,14 @@
                 <div class="flex items-start justify-between gap-3 border-t border-slate-100 py-2.5 first:border-t-0 first:pt-0">
                     <div>
                         <p class="font-medium text-slate-900">{{ __('comun.semana_del', ['desde' => $liquidacion->semana_inicio->format('d/m'), 'hasta' => $liquidacion->semana_fin->format('d/m/Y')]) }}</p>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-texto-suave">
                             {{ __('mi_trabajo.horas_liquidadas', ['turno' => $numero($liquidacion->horas_turnos), 'extra' => $numero($liquidacion->horas_extra)]) }}
                             @if ($liquidacion->descuento_pescado > 0) · {{ __('mi_trabajo.descuento_pescado', ['valor' => \App\Support\Formato::dinero($liquidacion->descuento_pescado)]) }} @endif
                         </p>
                     </div>
                     <div class="shrink-0 text-right">
                         <p class="font-bold tabular-nums">{{ \App\Support\Formato::dinero($liquidacion->total_pagar) }}</p>
-                        <p @class(['text-xs font-semibold', 'text-marca-700' => $liquidacion->estaPagada(), 'text-amber-700' => ! $liquidacion->estaPagada()])>
+                        <p @class(['text-sm font-semibold', 'text-marca-700' => $liquidacion->estaPagada(), 'text-amber-700' => ! $liquidacion->estaPagada()])>
                             {{ $liquidacion->estaPagada() ? __('mi_trabajo.pagada') : __('nomina.por_pagar') }}
                         </p>
                     </div>
@@ -112,12 +112,12 @@
                 <div class="flex items-start justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
                     <div>
                         <p class="font-medium text-slate-900">{{ __('comun.rango_dias', ['desde' => $permiso->fecha_inicio->format('d/m'), 'hasta' => $permiso->fecha_fin->format('d/m/Y'), 'dias' => $permiso->dias()]) }}</p>
-                        <p class="text-sm text-slate-500">{{ $permiso->motivo }}@if ($permiso->respuesta) · {{ __('mi_trabajo.respuesta', ['texto' => $permiso->respuesta]) }}@endif</p>
+                        <p class="text-sm text-texto-suave">{{ $permiso->motivo }}@if ($permiso->respuesta) · {{ __('mi_trabajo.respuesta', ['texto' => $permiso->respuesta]) }}@endif</p>
                     </div>
-                    <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $chips[$permiso->estado] }}">{{ $permiso->textoEstado() }}</span>
+                    <span class="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $chips[$permiso->estado] }}">{{ $permiso->textoEstado() }}</span>
                 </div>
             @empty
-                <p class="text-base text-slate-500">{{ __('mi_trabajo.no_has_pedido_permisos') }}</p>
+                <p class="text-base text-texto-suave">{{ __('mi_trabajo.no_has_pedido_permisos') }}</p>
             @endforelse
         </x-tarjeta>
 
@@ -126,12 +126,12 @@
                 <div class="flex items-start justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
                     <div>
                         <p class="font-medium text-slate-900">{{ $hora->fecha->format('d/m/Y') }} · {{ __('comun.horas_corto', ['horas' => $numero($hora->horas)]) }}</p>
-                        <p class="text-sm text-slate-500">{{ $hora->motivo }}@if ($hora->respuesta) · {{ __('mi_trabajo.respuesta', ['texto' => $hora->respuesta]) }}@endif</p>
+                        <p class="text-sm text-texto-suave">{{ $hora->motivo }}@if ($hora->respuesta) · {{ __('mi_trabajo.respuesta', ['texto' => $hora->respuesta]) }}@endif</p>
                     </div>
-                    <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $chips[$hora->estado] }}">{{ $hora->textoEstado() }}</span>
+                    <span class="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $chips[$hora->estado] }}">{{ $hora->textoEstado() }}</span>
                 </div>
             @empty
-                <p class="text-base text-slate-500">{{ __('mi_trabajo.no_has_reportado_horas_extra') }}</p>
+                <p class="text-base text-texto-suave">{{ __('mi_trabajo.no_has_reportado_horas_extra') }}</p>
             @endforelse
         </x-tarjeta>
     </div>

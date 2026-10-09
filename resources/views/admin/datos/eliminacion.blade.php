@@ -7,7 +7,7 @@
         <p class="rounded-xl bg-red-50 p-4 text-base text-red-900">
             {{ __('datos.eliminar.pantalla_texto', ['finca' => $finca->nombre, 'fecha' => $finca->eliminacion_programada_at->format('d/m/Y H:i')]) }}
         </p>
-        <p class="mt-3 text-sm text-slate-500">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
+        <p class="mt-3 text-sm text-texto-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
 
         <x-formulario :action="route('admin.datos.cancelar')" class="mt-5">
             <x-campo nombre="actual" :etiqueta="__('datos.eliminar.actual')" tipo="password" autocomplete="current-password" required />

@@ -15,7 +15,7 @@
         ];
     @endphp
 
-    <a href="{{ route('admin.lagos.index') }}" class="mb-4 inline-flex min-h-11 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
+    <a href="{{ route('admin.lagos.index') }}" class="mb-4 inline-flex min-h-12 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
         {{ __('lagos.lagos') }}
     </a>
 
@@ -69,7 +69,7 @@
                             @endif
                             <div class="min-w-0 flex-1">
                                 <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
-                                <p class="text-sm text-slate-500">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
+                                <p class="text-sm text-texto-suave">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
                             </div>
                         </div>
 
@@ -93,15 +93,15 @@
 
                         <dl class="grid grid-cols-3 gap-px border-t border-slate-100 bg-slate-100 text-center">
                             <div class="bg-white p-3">
-                                <dt class="text-xs text-slate-500">{{ __('lagos.peces_vivos') }}</dt>
+                                <dt class="text-sm text-texto-suave">{{ __('lagos.peces_vivos') }}</dt>
                                 <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
                             </div>
                             <div class="bg-white p-3">
-                                <dt class="text-xs text-slate-500">{{ __('lagos.peso_promedio') }}</dt>
+                                <dt class="text-sm text-texto-suave">{{ __('lagos.peso_promedio') }}</dt>
                                 <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} g</dd>
                             </div>
                             <div class="bg-white p-3">
-                                <dt class="text-xs text-slate-500">{{ __('lagos.biomasa') }}</dt>
+                                <dt class="text-sm text-texto-suave">{{ __('lagos.biomasa') }}</dt>
                                 <dd class="font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} kg</dd>
                             </div>
                         </dl>
@@ -150,7 +150,7 @@
                 @if ($historial->isEmpty())
                     <x-vacio icono="reloj" :mensaje="__('lagos.todavia_no_hay_registros_este')" />
                 @else
-                    <ol class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                    <ol class="rounded-2xl bg-white shadow-suave ring-1 ring-slate-200">
                         @foreach ($historial as $evento)
                             <li class="flex gap-4 border-t border-slate-100 p-4 first:border-t-0">
                                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $tonos[$evento['tono']] }}">
@@ -159,7 +159,7 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-baseline justify-between gap-x-3">
                                         <p class="font-semibold text-slate-900">{{ $evento['titulo'] }}</p>
-                                        <time class="text-sm text-slate-500" datetime="{{ $evento['fecha']->toDateString() }}">{{ $evento['fecha']->format('d/m/Y') }}</time>
+                                        <time class="text-sm text-texto-suave" datetime="{{ $evento['fecha']->toDateString() }}">{{ $evento['fecha']->format('d/m/Y') }}</time>
                                     </div>
                                     @if ($evento['detalle'] !== '' || $evento['responsable'])
                                         <p class="text-sm text-slate-600">{{ collect([$evento['detalle'], $evento['responsable']])->filter()->join(' · ') }}</p>
@@ -179,7 +179,7 @@
             @if ($racion['filas'] !== [])
                 <x-tarjeta :titulo="__('lagos.racion_sugerida')" :subtitulo="__('lagos.segun_biomasa_peso_promedio_valores')">
                     <p class="text-3xl font-bold tabular-nums text-marca-700">
-                        {{ $numero($racion['total_kg_dia'], 1) }} <span class="text-base font-medium text-slate-500">{{ __('lagos.kg_dia') }}</span>
+                        {{ $numero($racion['total_kg_dia'], 1) }} <span class="text-base font-medium text-texto-suave">{{ __('lagos.kg_dia') }}</span>
                     </p>
                     <p class="mt-1 text-base text-slate-600">
                         {{ __('lagos.tomas_de', ['tomas' => $racion['tomas'], 'kg' => $numero($racion['kg_por_toma'], 1)]) }}
@@ -198,7 +198,7 @@
                                     <span>{{ $fila['especie'] }}</span>
                                     <span class="tabular-nums">{{ __('lagos.kg_por_dia', ['kg' => $numero($fila['kg_dia'], 1)]) }}</span>
                                 </dt>
-                                <dd class="text-slate-500">
+                                <dd class="text-texto-suave">
                                     {{ __('lagos.porcentaje_de_biomasa', ['porcentaje' => $numero($fila['porcentaje'], 1), 'kg' => $numero($fila['biomasa_kg'], 1)]) }}
                                     @if ($fila['proteina'])
                                         · {{ __('lagos.etapa_proteina', ['etapa' => __('lagos.etapas.'.$fila['etapa']), 'proteina' => $fila['proteina']]) }}
@@ -241,13 +241,13 @@
                         ] as $etiqueta => $valor)
                             @continue($valor === null)
                             <div class="flex justify-between gap-3 py-2">
-                                <dt class="text-slate-500">{{ $etiqueta }}</dt>
+                                <dt class="text-texto-suave">{{ $etiqueta }}</dt>
                                 <dd class="font-semibold text-slate-900">{{ $valor }}</dd>
                             </div>
                         @endforeach
                     </dl>
                 @else
-                    <p class="text-base text-slate-500">{{ __('lagos.aun_no_hay_mediciones') }}</p>
+                    <p class="text-base text-texto-suave">{{ __('lagos.aun_no_hay_mediciones') }}</p>
                 @endif
             </x-tarjeta>
 
@@ -257,7 +257,7 @@
                         @foreach ($siembrasFinalizadas as $siembra)
                             <li class="py-2.5">
                                 <p class="font-medium text-slate-900">{{ $siembra->nombre_especie }}</p>
-                                <p class="text-sm text-slate-500">
+                                <p class="text-sm text-texto-suave">
                                     {{ $siembra->fecha->format('d/m/Y') }} – {{ $siembra->finalizada_at->format('d/m/Y') }}
                                     · {{ __('lagos.sembrados', ['cantidad' => $numero($siembra->cantidad_alevinos)]) }}
                                 </p>
@@ -281,7 +281,7 @@
                     <x-campo nombre="amonio_mg_l" :etiqueta="__('lagos.amonio_mg_l')" tipo="number" step="0.001" inputmode="decimal" />
                     <x-campo nombre="nitritos_mg_l" :etiqueta="__('lagos.nitritos_mg_l')" tipo="number" step="0.001" inputmode="decimal" />
                 </div>
-                <p class="text-sm text-slate-500">{{ __('lagos.llena_solo_mediste') }}</p>
+                <p class="text-sm text-texto-suave">{{ __('lagos.llena_solo_mediste') }}</p>
                 <x-campo nombre="observaciones" id="medicion-obs" :etiqueta="__('lagos.observaciones_opcional')" />
 
                 <div class="grid grid-cols-2 gap-3 pt-2">

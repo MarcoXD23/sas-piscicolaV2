@@ -52,19 +52,19 @@
             @endphp
 
             <section @class([
-                'flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1',
+                'flex flex-col rounded-2xl bg-white p-5 shadow-suave ring-1',
                 'ring-red-300' => $alertas !== [],
                 'ring-slate-200' => $alertas === [],
             ])>
                 <div class="mb-3 flex items-start justify-between gap-3">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900">{{ $lago->nombre }}</h3>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-texto-suave">
                             {{ $lago->siembrasActivas->isEmpty() ? __('noche.sin_peces') : $lago->siembrasActivas->pluck('nombre_especie')->join(', ') }}
                         </p>
                     </div>
                     <span @class([
-                        'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
+                        'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold',
                         'bg-sky-100 text-sky-900' => $aireacion,
                         'bg-slate-100 text-slate-600' => ! $aireacion,
                     ])>
@@ -74,12 +74,12 @@
 
                 <div class="mb-4 rounded-xl bg-slate-50 p-3">
                     @if ($medicion?->oxigeno_mg_l !== null)
-                        <p class="text-sm text-slate-500">{{ __('noche.oxigeno_a_las', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}</p>
+                        <p class="text-sm text-texto-suave">{{ __('noche.oxigeno_a_las', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}</p>
                         <p @class(['text-2xl font-bold tabular-nums', 'text-red-600' => $alertas !== [], 'text-slate-900' => $alertas === []])>
-                            {{ $numero($medicion->oxigeno_mg_l) }} <span class="text-base font-medium text-slate-500">mg/L</span>
+                            {{ $numero($medicion->oxigeno_mg_l) }} <span class="text-base font-medium text-texto-suave">mg/L</span>
                         </p>
                     @else
-                        <p class="text-base text-slate-500">{{ __('noche.sin_medicion_oxigeno') }}</p>
+                        <p class="text-base text-texto-suave">{{ __('noche.sin_medicion_oxigeno') }}</p>
                     @endif
 
                     @foreach ($alertas as $alerta)
@@ -124,7 +124,7 @@
                             <x-campo nombre="oxigeno_mg_l" id="oxigeno-{{ $lago->id }}" :etiqueta="__('noche.oxigeno_mg_l')" tipo="number" step="0.01" min="0" inputmode="decimal" autofocus />
                             <x-campo nombre="temperatura_c" id="temperatura-{{ $lago->id }}" :etiqueta="__('noche.temperatura_c')" tipo="number" step="0.1" inputmode="decimal" />
                         </div>
-                        <p class="text-sm text-slate-500">{{ __('noche.guarda_hora_presiones_guardar') }}</p>
+                        <p class="text-sm text-texto-suave">{{ __('noche.guarda_hora_presiones_guardar') }}</p>
 
                         <div class="grid grid-cols-2 gap-3 pt-2">
                             <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
@@ -158,14 +158,14 @@
                         <a href="{{ route('noche.index', ['turno' => $opcion->id]) }}"
                            @if ($opcion->is($turnoElegido)) aria-current="page" @endif
                            @class([
-                               'flex min-h-10 items-center rounded-lg px-3',
-                               'bg-white text-marca-800 shadow-sm' => $opcion->is($turnoElegido),
+                               'flex min-h-12 items-center rounded-lg px-3',
+                               'bg-white text-marca-800 shadow-suave ring-1 ring-slate-200/70' => $opcion->is($turnoElegido),
                                'text-slate-600' => ! $opcion->is($turnoElegido),
                            ])>{{ __('noche.turno_opcion', ['fecha' => $opcion->inicia_at->format('d/m'), 'nombre' => $opcion->user->name]) }}</a>
                     @endforeach
                 </nav>
 
-                <p class="mb-3 text-sm text-slate-500">{{ __('noche.turno_detalle', ['nombre' => $turnoElegido->user->name, 'desde' => $turnoElegido->inicia_at->format('d/m H:i'), 'hasta' => $turnoElegido->termina_at->format('d/m H:i')]) }}</p>
+                <p class="mb-3 text-sm text-texto-suave">{{ __('noche.turno_detalle', ['nombre' => $turnoElegido->user->name, 'desde' => $turnoElegido->inicia_at->format('d/m H:i'), 'hasta' => $turnoElegido->termina_at->format('d/m H:i')]) }}</p>
 
                 @if ($reporteTurno->isEmpty())
                     <x-vacio icono="luna" :mensaje="__('noche.turno_sin_registros')" />
@@ -199,7 +199,7 @@
                 <div>
                     <label for="ronda-descripcion" class="mb-1.5 block text-base font-medium text-slate-700">{{ __('noche.descripcion') }}</label>
                     <textarea id="ronda-descripcion" name="descripcion" rows="3"
-                              class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-marca-500 focus:outline-none focus:ring-2 focus:ring-marca-200"
+                              class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-suave transition duration-200 hover:border-slate-400 focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100"
                               placeholder="{{ __('noche.obligatoria_si_hubo_novedad') }}">{{ old('descripcion') }}</textarea>
                     @error('descripcion')
                         <p class="mt-1.5 text-sm font-medium text-red-600">{{ $message }}</p>

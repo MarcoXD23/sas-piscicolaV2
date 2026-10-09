@@ -3,12 +3,15 @@
 @section('titulo', __('acceso.recuperar.nueva_titulo'))
 
 @section('contenido')
-    <div class="mb-6 text-center">
-        <x-logo class="mx-auto mb-4 h-14 w-14 rounded-2xl shadow-lg ring-1 ring-white/20" />
-        <h1 class="text-2xl font-bold text-white">{{ __('acceso.recuperar.nueva_titulo') }}</h1>
+    <div class="mb-8 text-center">
+        <div class="relative mx-auto mb-5 h-20 w-20">
+            <span class="absolute -inset-2 rounded-[2rem] bg-marca-300/40 blur-xl" aria-hidden="true"></span>
+            <x-logo class="relative h-20 w-20 rounded-3xl shadow-2xl ring-1 ring-white/30" />
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-white drop-shadow-sm">{{ __('acceso.recuperar.nueva_titulo') }}</h1>
     </div>
 
-    <x-tarjeta>
+    <x-tarjeta class="!bg-white/90 !shadow-2xl !shadow-marca-950/40 !ring-white/40 backdrop-blur-xl">
         <x-formulario :action="route('password.update')">
             <input type="hidden" name="token" value="{{ $token }}">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" :valor="old('email', $email)" autocomplete="username" inputmode="email" required />

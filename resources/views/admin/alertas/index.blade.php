@@ -10,8 +10,8 @@
             <a href="{{ route('admin.alertas.index', array_filter(['tipo' => $valor ?: null])) }}"
                @if ($filtro === ($valor ?: null)) aria-current="page" @endif
                @class([
-                   'flex min-h-10 items-center rounded-lg px-3',
-                   'bg-white text-marca-800 shadow-sm' => $filtro === ($valor ?: null),
+                   'flex min-h-12 items-center rounded-lg px-3',
+                   'bg-white text-marca-800 shadow-suave ring-1 ring-slate-200/70' => $filtro === ($valor ?: null),
                    'text-slate-600' => $filtro !== ($valor ?: null),
                ])>{{ $texto }}</a>
         @endforeach
@@ -22,13 +22,13 @@
             <tr>
                 <td data-label="{{ __('alertas.alerta') }}">
                     <span @class([
-                        'mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                        'mb-1 inline-block rounded-full px-2.5 py-0.5 text-sm font-semibold',
                         'bg-red-100 text-red-800' => $alerta->esCritica(),
                         'bg-amber-100 text-amber-900' => ! $alerta->esCritica(),
                     ])>{{ __('alertas.tipos.'.$alerta->tipo) }} · {{ __('alertas.severidades.'.$alerta->severidad) }}</span>
                     <p class="text-slate-800">{{ $alerta->mensaje() }}</p>
                     @if ($alerta->notificada_at)
-                        <p class="text-sm text-slate-500">{{ __('alertas.notificada', ['momento' => $alerta->notificada_at->format('d/m/Y H:i')]) }}</p>
+                        <p class="text-sm text-texto-suave">{{ __('alertas.notificada', ['momento' => $alerta->notificada_at->format('d/m/Y H:i')]) }}</p>
                     @endif
                 </td>
                 <td data-label="{{ __('alertas.estado') }}">
@@ -51,7 +51,7 @@
             @else
                 <x-boton variante="secundario" :href="$alertas->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton>
             @endif
-            <span class="text-sm text-slate-500">{{ __('comun.pagina_de', ['actual' => $alertas->currentPage(), 'total' => $alertas->lastPage()]) }}</span>
+            <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $alertas->currentPage(), 'total' => $alertas->lastPage()]) }}</span>
             @if ($alertas->hasMorePages())
                 <x-boton variante="secundario" :href="$alertas->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton>
             @else

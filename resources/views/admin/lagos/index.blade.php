@@ -61,18 +61,18 @@
                         <h2 class="truncate text-xl font-bold text-slate-900">
                             <a href="{{ route('admin.lagos.show', $lago) }}" class="hover:text-marca-700 hover:underline">{{ $lago->nombre }}</a>
                         </h2>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-texto-suave">
                             {{ __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]) }}@if ($siembras->count() > 1) · {{ __('lagos.policultivo') }} @endif
                         </p>
                         @if ($lago->en_retiro)
-                            <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+                            <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-semibold text-amber-900">
                                 <x-icono nombre="alerta" class="h-3.5 w-3.5" /> {{ __('lagos.retiro_sanitario') }}
                             </p>
                         @endif
                     </div>
 
                     <span @class([
-                        'shrink-0 rounded-full px-3 py-1 text-xs font-semibold',
+                        'shrink-0 rounded-full px-3 py-1 text-sm font-semibold',
                         'bg-marca-100 text-marca-800' => $siembras->isNotEmpty(),
                         'bg-slate-100 text-slate-600' => $siembras->isEmpty(),
                     ])>{{ $siembras->isNotEmpty() ? __('lagos.activo') : __('lagos.libre') }}</span>
@@ -87,7 +87,7 @@
                         </p>
                         @if ($puedeOperar)
                             <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
-                                <x-boton variante="secundario" class="!min-h-11 !py-2 !text-sm">{{ __('lagos.marcar_atendido') }}</x-boton>
+                                <x-boton variante="secundario" class="!min-h-12 !py-2 !text-sm">{{ __('lagos.marcar_atendido') }}</x-boton>
                             </x-formulario>
                         @endif
                     </div>
@@ -117,24 +117,24 @@
                     <div class="border-b border-slate-100">
                         <div class="flex items-center justify-between gap-3 px-5 pt-4">
                             <h3 class="font-semibold text-slate-900">{{ $siembra->nombre_especie }}</h3>
-                            <span class="text-sm text-slate-500">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
+                            <span class="text-sm text-texto-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
                         </div>
 
                         <dl class="mt-3 grid grid-cols-2 gap-px bg-slate-100 text-center">
                             <div class="bg-white p-3">
-                                <dt class="text-xs font-medium text-slate-500">{{ __('lagos.peces_vivos') }}</dt>
+                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.peces_vivos') }}</dt>
                                 <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peces_vivos) }}</dd>
                             </div>
                             <div class="bg-white p-3">
-                                <dt class="text-xs font-medium text-slate-500">{{ __('lagos.biomasa') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-slate-500">kg</span></dd>
+                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.biomasa') }}</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-medium text-texto-suave">kg</span></dd>
                             </div>
                             <div class="bg-white p-3">
-                                <dt class="text-xs font-medium text-slate-500">{{ __('lagos.peso_promedio') }}</dt>
-                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-slate-500">g</span></dd>
+                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.peso_promedio') }}</dt>
+                                <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-medium text-texto-suave">g</span></dd>
                             </div>
                             <div class="bg-white p-3">
-                                <dt class="text-xs font-medium text-slate-500">{{ __('lagos.dias_cultivo') }}</dt>
+                                <dt class="text-sm font-medium text-texto-suave">{{ __('lagos.dias_cultivo') }}</dt>
                                 <dd class="text-lg font-bold tabular-nums text-slate-900">{{ $siembra->dias_cultivo }}</dd>
                             </div>
                         </dl>
@@ -183,7 +183,7 @@
                                         <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-medium text-slate-700">{{ __('lagos.peso_promedio_calculado') }}</label>
                                         <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
                                                 class="flex min-h-12 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-lg font-semibold tabular-nums text-slate-900">—</output>
-                                        <p class="mt-1 text-sm text-slate-500">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
+                                        <p class="mt-1 text-sm text-texto-suave">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
                                     </div>
                                 </div>
 
@@ -213,7 +213,7 @@
                         </x-modal>
                     @endif
                 @empty
-                    <p class="p-5 text-base text-slate-500">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
+                    <p class="p-5 text-base text-texto-suave">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
                 @endforelse
 
                 <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $puedeOperar && $siembras->isNotEmpty()])>
@@ -228,7 +228,7 @@
                         </x-boton>
                     @endif
                     <a href="{{ route('admin.lagos.show', $lago) }}" @class([
-                        'flex min-h-11 items-center justify-center text-base font-semibold text-marca-700 hover:underline',
+                        'flex min-h-12 items-center justify-center text-base font-semibold text-marca-700 hover:underline',
                         'col-span-2' => $puedeOperar && $siembras->isNotEmpty(),
                     ])>{{ __('lagos.ver_detalle_e_historial') }}</a>
                 </div>
