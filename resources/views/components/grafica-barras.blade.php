@@ -18,7 +18,7 @@
     </figcaption>
 
     @if (count($datos) === 0)
-        <p class="text-base text-texto-suave">{{ $vacio ?? __('componentes.sin_datos') }}</p>
+        <p class="text-base text-tinta-suave">{{ $vacio ?? __('componentes.sin_datos') }}</p>
     @else
         <ul class="space-y-2" aria-label="{{ $titulo }}">
             @foreach ($datos as $dato)

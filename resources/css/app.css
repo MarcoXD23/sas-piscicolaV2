@@ -84,19 +84,6 @@
     --color-marca-900: #134441;
     --color-marca-950: #042827;
 
-    /* Nombres de antes, que apuntan a la libreta (los usan vistas que aún no se rediseñan) */
-    --color-superficie: var(--color-ficha);
-    --color-texto: var(--color-tinta);
-    --color-texto-suave: var(--color-tinta-suave);
-    --color-borde: var(--color-renglon);
-    --color-exito: var(--color-bien);
-    --color-aviso: var(--color-atencion);
-    --color-peligro: var(--color-alerta);
-
-    /* Obsoletos: vistas que aún no pasan a la libreta (fase 4). Apuntan a la sombra de papel; se borran al terminar. */
-    --shadow-suave: var(--shadow-ficha);
-    --shadow-brillo: var(--shadow-ficha);
-
     /* Tipografía de la página (una sola familia; la jerarquía la dan tamaño y peso) */
     --text-titulo: 1.75rem;            /* título de cada pantalla */
     --text-titulo--line-height: 1.2;

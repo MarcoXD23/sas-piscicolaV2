@@ -78,7 +78,7 @@
     <details class="mt-3 text-sm">
         <summary class="min-h-12 cursor-pointer content-center font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4">{{ __('componentes.ver_datos') }}</summary>
         <table class="mt-2 w-full text-left">
-            <thead class="text-texto-suave"><tr><th class="py-1 font-medium">{{ __('comun.fecha') }}</th><th class="py-1 text-right font-medium">{{ $unidad ? ucfirst($unidad) : __('componentes.valor') }}</th></tr></thead>
+            <thead class="text-tinta-suave"><tr><th class="py-1 font-medium">{{ __('comun.fecha') }}</th><th class="py-1 text-right font-medium">{{ $unidad ? ucfirst($unidad) : __('componentes.valor') }}</th></tr></thead>
             <tbody class="divide-y divide-renglon">
                 @foreach (collect($datos)->reverse() as $dato)
                     <tr><td class="py-1">{{ $dato['fecha']->format('d/m/Y') }}</td><td class="py-1 text-right tabular-nums">{{ $numero($dato['valor']) }}</td></tr>
