@@ -84,9 +84,8 @@
     --color-marca-900: #134441;
     --color-marca-950: #042827;
 
-    /* Colores con significado (clases text-texto, text-texto-suave, bg-superficie, border-borde, text-peligro…).
-       Texto suave en slate-600: legible al sol (7,6:1 sobre blanco); slate-500 apenas pasa y slate-400 no. */
-    --color-superficie: #ffffff;
+    /* Nombres de antes, que apuntan a la libreta (los usan vistas que aún no se rediseñan) */
+    --color-superficie: var(--color-ficha);
     --color-texto: var(--color-tinta);
     --color-texto-suave: var(--color-tinta-suave);
     --color-borde: var(--color-renglon);
@@ -94,29 +93,32 @@
     --color-aviso: var(--color-atencion);
     --color-peligro: var(--color-alerta);
 
-    /* Sombras con un toque del color de la marca (clases shadow-suave, shadow-elevada, shadow-brillo) */
-    --shadow-suave: 0 1px 2px rgb(4 40 39 / 0.04), 0 2px 8px -2px rgb(4 40 39 / 0.06);
-    --shadow-elevada: 0 2px 4px rgb(4 40 39 / 0.04), 0 12px 32px -8px rgb(4 40 39 / 0.18);
-    --shadow-brillo: 0 6px 20px -6px rgb(13 126 117 / 0.55);
+    /* Obsoletos: vistas que aún no pasan a la libreta (fase 4). Apuntan a la sombra de papel; se borran al terminar. */
+    --shadow-suave: var(--shadow-ficha);
+    --shadow-brillo: var(--shadow-ficha);
 
-    /* Curvas de movimiento (clases ease-salida, ease-resorte) */
+    /* Tipografía de la página (una sola familia; la jerarquía la dan tamaño y peso) */
+    --text-titulo: 1.75rem;            /* título de cada pantalla */
+    --text-titulo--line-height: 1.2;
+    --text-titulo--letter-spacing: -0.01em;
+    --text-seccion: 1.25rem;           /* título de un bloque dentro de la pantalla */
+    --text-seccion--line-height: 1.3;
+
+    /* Espacios con nombre: el relleno de una ficha y el alto de un renglón */
+    --spacing-ficha: 1.25rem;
+    --spacing-renglon: 0.875rem;
+
+    /* Movimiento: rápido para responder al toque, normal para abrir y cerrar; desacelera al llegar */
     --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-resorte: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Animaciones (clases animate-aparecer, animate-aparecer-escala, animate-latido, animate-saltar, animate-sacudir).
-       Movimiento solo donde comunica algo: entrar, responder al toque, avisar. Nada decorativo que se repita sin fin. */
-    --animate-aparecer: aparecer 0.35s var(--ease-salida) backwards;
-    --animate-aparecer-escala: aparecer-escala 0.3s var(--ease-resorte) backwards;
+    /* Animaciones que comunican algo (clases animate-aparecer, animate-latido, animate-sacudir).
+       Nada decorativo ni que se repita sin motivo: la app carga directo a la tarea. */
+    --animate-aparecer: aparecer 0.25s var(--ease-salida) backwards;
     --animate-latido: latido 2s ease-in-out infinite;
-    --animate-saltar: saltar 0.6s var(--ease-resorte) 0.15s backwards;
     --animate-sacudir: sacudir 0.45s ease-in-out 0.3s;
 
-    @keyframes saltar {
-        0% { transform: translateY(0) scale(1); }
-        40% { transform: translateY(-5px) scale(1.12); }
-        100% { transform: translateY(0) scale(1); }
-    }
-
+    /* Error al enviar: un sacudón corto que señala dónde mirar */
     @keyframes sacudir {
         0%, 100% { transform: translateX(0); }
         25% { transform: translateX(-5px); }
@@ -124,43 +126,32 @@
         75% { transform: translateX(-2px); }
     }
 
+    /* Algo nuevo que llega (aviso, burbuja del asistente) */
     @keyframes aparecer {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes aparecer-escala {
-        from { opacity: 0; transform: scale(0.92); }
-        to { opacity: 1; transform: scale(1); }
     }
 
     /* Latido: solo para un estado que pide atención (alerta abierta) */
     @keyframes latido {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(0.92); }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.55; }
     }
 }
 
-@keyframes onda {
-    from { opacity: 0.35; transform: scale(0); }
-    to { opacity: 0; transform: scale(1); }
-}
-
-@keyframes brillo {
-    from { background-position: 150% 0; }
-    to { background-position: -50% 0; }
+/* Duraciones con nombre: responder al toque y abrir/cerrar */
+:root {
+    --duracion-rapida: 150ms;
+    --duracion-normal: 250ms;
 }
 
 @keyframes girar {
     to { transform: rotate(360deg); }
 }
 
-@keyframes crecer-ancho {
-    from { transform: scaleX(0); }
-}
-
-@keyframes crecer-alto {
-    from { transform: scaleY(0); }
+@keyframes pulso-esqueleto {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
 }
 
 @layer base {
@@ -208,17 +199,17 @@
     }
 }
 
-/* Ventanas emergentes (<x-modal>): hoja inferior en celular, centrada en pantallas grandes.
-   Entran y salen con transición (@starting-style); los navegadores sin soporte simplemente las muestran. */
 @layer components {
+    /* Ventanas emergentes (<x-modal>): hoja inferior en celular, centrada en pantallas grandes.
+       Entran y salen con transición (@starting-style); los navegadores sin soporte simplemente las muestran. */
     .modal {
-        @apply mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-3xl bg-white p-0 text-slate-800 shadow-2xl;
-        @apply md:m-auto md:max-w-lg md:rounded-3xl;
+        @apply mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-2xl bg-ficha p-0 text-tinta shadow-levantada;
+        @apply md:m-auto md:max-w-lg md:rounded-ficha;
         opacity: 0;
         transform: translateY(100%);
         /* Salida (al cerrar): más corta que la entrada y acelerando */
         transition:
-            opacity 0.2s ease-in,
+            opacity var(--duracion-rapida) ease-in,
             transform 0.2s ease-in,
             overlay 0.2s allow-discrete,
             display 0.2s allow-discrete;
@@ -230,9 +221,9 @@
         transform: none;
         transition:
             opacity 0.2s var(--ease-salida),
-            transform 0.32s var(--ease-salida),
-            overlay 0.32s allow-discrete,
-            display 0.32s allow-discrete;
+            transform 0.3s var(--ease-salida),
+            overlay 0.3s allow-discrete,
+            display 0.3s allow-discrete;
     }
 
     @starting-style {
@@ -244,35 +235,32 @@
 
     @media (width >= 48rem) {
         .modal {
-            transform: translateY(1rem) scale(0.96);
-        }
-
-        .modal[open] {
-            transition-timing-function: var(--ease-salida), var(--ease-resorte), linear, linear;
+            transform: translateY(0.75rem);
         }
 
         @starting-style {
             .modal[open] {
-                transform: translateY(1rem) scale(0.96);
+                transform: translateY(0.75rem);
             }
         }
     }
 
+    /* El velo oscurece la página detrás: no es decoración, dice que lo de atrás está en pausa */
     .modal::backdrop {
-        @apply bg-slate-900/50 backdrop-blur-[3px];
+        background-color: rgb(15 42 42 / 0.55);
         opacity: 0;
         transition:
-            opacity 0.2s ease-in,
-            overlay 0.2s allow-discrete,
-            display 0.2s allow-discrete;
+            opacity var(--duracion-rapida) ease-in,
+            overlay var(--duracion-rapida) allow-discrete,
+            display var(--duracion-rapida) allow-discrete;
     }
 
     .modal[open]::backdrop {
         opacity: 1;
         transition:
-            opacity 0.3s ease-out,
-            overlay 0.3s allow-discrete,
-            display 0.3s allow-discrete;
+            opacity var(--duracion-normal) ease-out,
+            overlay var(--duracion-normal) allow-discrete,
+            display var(--duracion-normal) allow-discrete;
     }
 
     @starting-style {
@@ -281,93 +269,14 @@
         }
     }
 
-    /* Vidrio esmerilado: sobre fondos con color o foto */
-    .vidrio {
-        @apply bg-white/75 backdrop-blur-xl backdrop-saturate-150;
-    }
-
-    /* Texto con degradado de la marca */
-    .texto-degradado {
-        @apply bg-gradient-to-r from-marca-700 via-marca-500 to-sky-600 bg-clip-text text-transparent;
-    }
-
-    /* Esqueleto de carga: bloque gris con un brillo que lo recorre */
+    /* Esqueleto de carga (<x-esqueleto>): renglones grises que respiran mientras llega el dato */
     .esqueleto {
-        @apply rounded-xl bg-slate-200;
-        background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
-        background-size: 200% 100%;
-        animation: brillo 1.4s ease-in-out infinite;
-    }
-
-    /* Rueda de espera */
-    .girador {
-        @apply inline-block h-5 w-5 shrink-0 rounded-full border-2 border-current border-r-transparent;
-        animation: girar 0.7s linear infinite;
-    }
-
-    /* Elevar al pasar el puntero (tarjetas que son enlaces) */
-    .elevable {
-        transition:
-            transform 0.3s var(--ease-salida),
-            box-shadow 0.3s var(--ease-salida);
-    }
-
-    @media (hover: hover) {
-        .elevable:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-elevada);
-        }
-    }
-
-    /* Presionar: todo lo que se toca se hunde un poco */
-    .presionable {
-        transition:
-            transform 0.15s var(--ease-salida),
-            translate 0.25s var(--ease-salida),
-            rotate 0.3s var(--ease-salida),
-            background-color 0.2s,
-            box-shadow 0.25s,
-            color 0.2s;
-    }
-
-    .presionable:active:not(:disabled) {
-        transform: scale(0.97);
-    }
-
-    /* Hijos que entran uno tras otro */
-    .escalonado > * {
-        animation: var(--animate-aparecer);
-    }
-
-    /* Barras de las gráficas: crecen al aparecer */
-    .crece-ancho {
-        transform-origin: left;
-        animation: crecer-ancho 0.5s var(--ease-salida) backwards;
-    }
-
-    .crece-alto {
-        transform-origin: bottom;
-        animation: crecer-alto 0.5s var(--ease-salida) backwards;
-    }
-
-    /* Si la gráfica espera fuera de la pantalla, sus barras crecen cuando aparece y no antes */
-    .por-revelar :is(.crece-ancho, .crece-alto) {
-        animation: none;
+        @apply rounded-md bg-papel-hondo;
+        animation: pulso-esqueleto 1.6s ease-in-out infinite;
     }
 }
 
-@layer utilities {
-    .escalonado > :nth-child(2) { animation-delay: 40ms; }
-    .escalonado > :nth-child(3) { animation-delay: 80ms; }
-    .escalonado > :nth-child(4) { animation-delay: 120ms; }
-    .escalonado > :nth-child(5) { animation-delay: 160ms; }
-    .escalonado > :nth-child(6) { animation-delay: 200ms; }
-    .escalonado > :nth-child(n + 7) { animation-delay: 240ms; }
-}
-
-/* Sin entrada escalonada de la página: la app carga directo a la tarea (el movimiento queda para lo que cambia). */
-
-/* Aviso de "guardado" (session estado): entra, se queda unos segundos y se recoge solo. Con el puntero encima espera. */
+/* Aviso de «guardado» (session estado): entra, se queda unos segundos y se recoge solo. Con el puntero encima espera. */
 @keyframes recoger-aviso {
     to { opacity: 0; max-height: 0; margin-bottom: 0; padding-block: 0; border-width: 0; }
 }
@@ -384,7 +293,7 @@
 
 /* Cabecera: gana sombra al bajar la página (animación ligada al desplazamiento, donde el navegador la soporte) */
 @keyframes cabecera-sombra {
-    to { box-shadow: 0 10px 30px -10px rgb(4 40 39 / 0.55); }
+    to { box-shadow: 0 8px 20px -10px rgb(15 42 42 / 0.6); }
 }
 
 @supports (animation-timeline: scroll()) {
@@ -395,36 +304,7 @@
     }
 }
 
-/* Aparecer al bajar (data-revelar, ver resources/js/app.js): lo que empieza fuera de la pantalla espera oculto */
-.por-revelar {
-    opacity: 0;
-    transform: translateY(18px);
-}
-
-.revelado {
-    animation: var(--animate-aparecer);
-}
-
-/* Onda al tocar (data-onda, ver resources/js/app.js) */
-/* En la capa de componentes: si el elemento trae fixed o absolute, la utilidad gana */
-@layer components {
-    [data-onda] {
-        position: relative;
-        overflow: hidden;
-        isolation: isolate;
-    }
-}
-
-.onda {
-    position: absolute;
-    z-index: -1;
-    border-radius: 9999px;
-    background-color: currentColor;
-    pointer-events: none;
-    animation: onda 0.6s ease-out forwards;
-}
-
-/* Botón que está enviando su formulario: rueda de espera al final y sin más clics */
+/* Botón que está enviando su formulario (ver resources/js/app.js): rueda de espera al final y sin más clics */
 .enviando {
     pointer-events: none;
 }
@@ -435,20 +315,19 @@
     animation: girar 0.7s linear infinite;
 }
 
-/* Cambio entre páginas: fundido suave en los navegadores que lo permiten */
+/* Cambio entre páginas: fundido corto en los navegadores que lo permiten (la cabecera y el menú se quedan quietos) */
 @view-transition {
     navigation: auto;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-    animation-duration: 0.22s;
+    animation-duration: 0.18s;
 }
 
 /* Tooltip de las gráficas (ver resources/js/app.js) */
 .tooltip-grafica {
-    @apply pointer-events-none fixed z-50 rounded-lg bg-slate-900/95 px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-white shadow-lg backdrop-blur;
-    animation: aparecer-escala 0.15s ease-out;
+    @apply pointer-events-none fixed z-50 rounded-md bg-tinta px-2.5 py-1.5 text-sm font-bold whitespace-nowrap text-white shadow-levantada;
 }
 
 /* Menos movimiento: quien lo pidió en su teléfono ve todo quieto (las animaciones terminan al instante) */
@@ -477,11 +356,10 @@
     }
 }
 
-/* Impresión de reportes: sin menús, botones ni animaciones */
+/* Impresión de reportes: papel blanco, sin menús, botones ni animaciones */
 @media print {
     body {
         @apply bg-white;
-        background-image: none;
     }
 
     *,
@@ -489,10 +367,5 @@
     ::after {
         animation: none !important;
         transition: none !important;
-    }
-
-    .por-revelar {
-        opacity: 1;
-        transform: none;
     }
 }

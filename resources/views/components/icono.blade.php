@@ -79,5 +79,14 @@
         @case('alerta')
             <circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5v.01"/>
             @break
+        @case('abajo')
+            <path d="m6 9 6 6 6-6"/>
+            @break
+        @case('gota')
+            <path d="M12 3c3.5 4.2 6 7.4 6 10.5a6 6 0 0 1-12 0C6 10.4 8.5 7.2 12 3z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>
+            @break
+        @case('termometro')
+            <path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 10v6"/>
+            @break
     @endswitch
 </svg>

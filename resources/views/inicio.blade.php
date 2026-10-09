@@ -9,26 +9,17 @@
 --}}
 @php
     $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
-    // Tonos de la pestaña de estado: fondo, texto y borde de cada estado (tokens de app.css)
-    $tono = [
-        'bien' => 'bg-bien-fondo text-bien ring-bien-borde',
-        'atencion' => 'bg-atencion-fondo text-atencion ring-atencion-borde',
-        'alerta' => 'bg-alerta-fondo text-alerta ring-alerta-borde',
-        'info' => 'bg-info-fondo text-info ring-info-borde',
-    ];
-    $pestana = 'absolute -top-3.5 left-4 inline-flex max-w-[calc(100%-2rem)] items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-bold ring-1';
 @endphp
 
 @section('contenido')
     {{-- Propietario y administrador manejan datos sensibles: se les pide activar la verificación en dos pasos --}}
     @if (auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR) && ! auth()->user()->tieneDosPasos())
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo px-4 py-3 text-base text-atencion" role="status">
-            <p class="flex items-start gap-2.5 font-semibold">
-                <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
-                <span>{{ __('cuenta.dos_pasos.aviso_panel') }}</span>
-            </p>
-            <a href="{{ route('mi-cuenta.dos-pasos.activar') }}" class="inline-flex min-h-12 items-center rounded-ficha bg-tinta px-4 font-semibold text-white transition-colors hover:bg-marca-900">{{ __('cuenta.dos_pasos.aviso_enlace') }}</a>
-        </div>
+        <x-aviso tono="atencion" class="mb-6">
+            {{ __('cuenta.dos_pasos.aviso_panel') }}
+            <x-slot:accion>
+                <a href="{{ route('mi-cuenta.dos-pasos.activar') }}" class="inline-flex min-h-12 items-center rounded-ficha bg-tinta px-4 font-semibold text-white transition-colors hover:bg-marca-900">{{ __('cuenta.dos_pasos.aviso_enlace') }}</a>
+            </x-slot:accion>
+        </x-aviso>
     @endif
 
     {{-- Encabezado de la hoja: foto del agua de un criadero (dominio público, ver docs/marca/LEEME.md) bajo un velo de tinta --}}
@@ -53,17 +44,11 @@
 
     @if ($alertas->isNotEmpty())
         <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-2 shadow-ficha ring-1 ring-alerta-borde" role="alert" aria-labelledby="alertas-titulo">
-            <h2 id="alertas-titulo" class="{{ $pestana }} {{ $tono['alerta'] }}">
-                <x-icono nombre="alerta" class="h-4 w-4 animate-latido" /> {{ __('alertas.inicio.titulo', ['cantidad' => $alertas->count()]) }}
-            </h2>
+            <x-insignia tono="alerta" pestana latido como="h2" id="alertas-titulo">{{ __('alertas.inicio.titulo', ['cantidad' => $alertas->count()]) }}</x-insignia>
             <ul class="divide-y divide-renglon">
                 @foreach ($alertas as $alerta)
                     <li class="flex items-start gap-3 py-3">
-                        <span @class([
-                            'mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-sm font-bold ring-1',
-                            $tono['alerta'] => $alerta->esCritica(),
-                            $tono['atencion'] => ! $alerta->esCritica(),
-                        ])><x-icono nombre="alerta" class="h-3.5 w-3.5" /> {{ __('alertas.severidades.'.$alerta->severidad) }}</span>
+                        <x-insignia :tono="$alerta->esCritica() ? 'alerta' : 'atencion'" class="mt-0.5 shrink-0">{{ __('alertas.severidades.'.$alerta->severidad) }}</x-insignia>
                         <div class="min-w-0 flex-1 text-base">
                             @if ($enlace = $alerta->enlace())
                                 <a href="{{ $enlace }}" class="font-semibold underline decoration-renglon-fuerte underline-offset-4 hover:decoration-tinta">{{ $alerta->mensaje() }}</a>
@@ -82,9 +67,7 @@
     {{-- Celador: lagos con el agua fuera de rango en las últimas 24 horas --}}
     @if ($lagosConAlertaAgua->isNotEmpty())
         <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-3 shadow-ficha ring-1 ring-alerta-borde" role="alert" aria-labelledby="agua-celador-titulo">
-            <h2 id="agua-celador-titulo" class="{{ $pestana }} {{ $tono['alerta'] }}">
-                <x-icono nombre="alerta" class="h-4 w-4" /> {{ __('inicio.calidad_agua_fuera_rango') }}
-            </h2>
+            <x-insignia tono="alerta" pestana como="h2" id="agua-celador-titulo">{{ __('inicio.calidad_agua_fuera_rango') }}</x-insignia>
             <ul class="divide-y divide-renglon">
                 @foreach ($lagosConAlertaAgua as $item)
                     <li class="py-2.5 text-base">
@@ -98,9 +81,7 @@
 
     @if ($novedadesNoche->isNotEmpty())
         <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-3 shadow-ficha ring-1 ring-atencion-borde" aria-labelledby="novedades-titulo">
-            <h2 id="novedades-titulo" class="{{ $pestana }} {{ $tono['atencion'] }}">
-                <x-icono nombre="luna" class="h-4 w-4" /> {{ __('inicio.novedades_seguridad_ultimas_24_horas') }}
-            </h2>
+            <x-insignia tono="atencion" icono="luna" pestana como="h2" id="novedades-titulo">{{ __('inicio.novedades_seguridad_ultimas_24_horas') }}</x-insignia>
             <ul class="divide-y divide-renglon">
                 @foreach ($novedadesNoche as $novedad)
                     <li class="flex gap-3 py-2.5 text-base">
@@ -119,9 +100,7 @@
     {{-- «Listo para pescar»: el único lugar donde aparece el color de la trucha (algo que se celebra, no un estado) --}}
     @if ($avisosPesca->isNotEmpty())
         <section class="relative mb-8 rounded-ficha bg-ficha px-5 pt-6 pb-2 shadow-ficha ring-1 ring-trucha/30" aria-labelledby="pesca-titulo">
-            <h2 id="pesca-titulo" class="{{ $pestana }} bg-ficha text-trucha ring-trucha/40">
-                <x-icono nombre="pez" class="h-4 w-4" /> {{ __('inicio.listos_para_pescar', ['cantidad' => $avisosPesca->count()]) }}
-            </h2>
+            <x-insignia tono="trucha" pestana como="h2" id="pesca-titulo">{{ __('inicio.listos_para_pescar', ['cantidad' => $avisosPesca->count()]) }}</x-insignia>
             <ul class="divide-y divide-renglon">
                 @foreach ($avisosPesca as $aviso)
                     <li class="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -150,18 +129,18 @@
             'ring-bien-borde' => $turnoActual,
             'ring-renglon' => ! $turnoActual,
         ]) aria-labelledby="turno-titulo">
-            <h2 id="turno-titulo" @class([$pestana, $turnoActual ? $tono['bien'] : 'bg-papel-hondo text-tinta-suave ring-renglon'])>
-                @if ($turnoActual)
+            @if ($turnoActual)
+                <x-insignia tono="bien" icono="" pestana como="h2" id="turno-titulo">
                     {{-- En turno: un punto que late (es un estado vivo, no adorno) --}}
-                    <span class="relative flex h-2.5 w-2.5" aria-hidden="true">
+                    <span class="relative mr-1 inline-flex h-2.5 w-2.5 align-middle" aria-hidden="true">
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-bien opacity-50"></span>
                         <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-bien"></span>
                     </span>
                     {{ __('inicio.estas_turno') }}
-                @else
-                    <x-icono nombre="reloj" class="h-4 w-4" /> {{ __('inicio.fuera_turno') }}
-                @endif
-            </h2>
+                </x-insignia>
+            @else
+                <x-insignia tono="neutro" icono="reloj" pestana como="h2" id="turno-titulo">{{ __('inicio.fuera_turno') }}</x-insignia>
+            @endif
             <x-icono nombre="reloj" @class(['h-8 w-8', 'text-bien' => $turnoActual, 'text-tinta-suave' => ! $turnoActual]) />
             <p class="text-xl font-bold">
                 @if ($turnoActual)
@@ -238,14 +217,10 @@
                             <span class="block truncate font-semibold">{{ $evento->titulo }}@if ($evento->lago) · {{ $evento->lago->nombre }}@endif</span>
                             <span class="text-sm text-tinta-suave">{{ $evento->textoTipo() }}</span>
                         </a>
-                        <span @class([
-                            'shrink-0 rounded-md px-2 py-0.5 text-sm font-bold ring-1',
-                            $tono['alerta'] => $evento->estaVencido(),
-                            $tono['bien'] => ! $evento->estaVencido() && $evento->inicia_at->isToday(),
-                            'bg-papel-hondo text-tinta-suave ring-renglon' => ! $evento->estaVencido() && ! $evento->inicia_at->isToday(),
-                        ])>
+                        <x-insignia class="shrink-0" icono="calendario"
+                                    :tono="$evento->estaVencido() ? 'alerta' : ($evento->inicia_at->isToday() ? 'bien' : 'neutro')">
                             {{ $evento->estaVencido() ? __('inicio.vencido', ['fecha' => $evento->inicia_at->format('d/m')]) : ($evento->inicia_at->isToday() ? __('comun.hoy') : $evento->inicia_at->format('d/m')) }}
-                        </span>
+                        </x-insignia>
                     </li>
                 @endforeach
             </ul>
@@ -271,14 +246,7 @@
                             $medicion = $item['medicion'];
                             $parametros = array_column($item['problemas'], 'parametro');
                             $estado = ! $medicion ? 'sin_medicion' : (in_array('oxigeno', $parametros, true) ? 'alerta' : ($parametros ? 'atencion' : 'bien'));
-                            [$tonoEstado, $iconoEstado] = match ($estado) {
-                                'alerta' => [$tono['alerta'], 'alerta'],
-                                'atencion' => [$tono['atencion'], 'alerta'],
-                                'bien' => [$tono['bien'], 'ok'],
-                                default => [$tono['info'], 'reloj'],
-                            };
-                            // Sin «display» aquí: cada copia (celular / pantalla ancha) pone el suyo y no se pisan
-                            $insignia = 'items-center gap-1 rounded-md px-2 py-0.5 text-sm font-bold ring-1 '.$tonoEstado;
+                            $tonoEstado = ['sin_medicion' => 'info'][$estado] ?? $estado;
                         @endphp
                         <li class="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_8.5rem] sm:items-center sm:px-6">
                             <div class="col-span-2 flex items-start justify-between gap-3 sm:col-span-1">
@@ -291,7 +259,7 @@
                                         <p class="text-sm text-tinta-suave">{{ __('inicio.agua.medido', ['hora' => $medicion->medido_at->format('H:i')]) }}</p>
                                     @endif
                                 </div>
-                                <span class="{{ $insignia }} inline-flex sm:hidden"><x-icono :nombre="$iconoEstado" class="h-3.5 w-3.5" /> {{ __('inicio.estado_agua.'.$estado) }}</span>
+                                <span class="sm:hidden"><x-insignia :tono="$tonoEstado">{{ __('inicio.estado_agua.'.$estado) }}</x-insignia></span>
                             </div>
 
                             @if ($medicion)
@@ -315,7 +283,7 @@
                                 </p>
                             @endif
 
-                            <span class="{{ $insignia }} hidden justify-self-end sm:inline-flex"><x-icono :nombre="$iconoEstado" class="h-3.5 w-3.5" /> {{ __('inicio.estado_agua.'.$estado) }}</span>
+                            <span class="hidden justify-self-end sm:block"><x-insignia :tono="$tonoEstado">{{ __('inicio.estado_agua.'.$estado) }}</x-insignia></span>
 
                             @if ($item['problemas'])
                                 <p @class(['col-span-2 text-sm font-semibold sm:col-span-4', 'text-alerta' => $estado === 'alerta', 'text-atencion' => $estado === 'atencion'])>

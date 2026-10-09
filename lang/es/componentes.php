@@ -33,4 +33,6 @@ return [
     'tu_pregunta' => 'Tu pregunta',
     'valor' => 'Valor',
     'ver_datos' => 'Ver datos',
+    // Esqueleto de carga: lo anuncia el lector de pantalla mientras llega el dato
+    'cargando' => 'Cargando…',
 ];

@@ -247,17 +247,12 @@
         'flex min-h-screen max-w-md flex-col justify-center' => ! $conSesion,
     ])>
         @if (session('estado'))
-            <div role="status" class="aviso-temporal mb-5 flex items-start gap-3 rounded-ficha border border-bien-borde bg-bien-fondo px-4 py-3 text-base font-semibold text-bien">
-                <x-icono nombre="ok" class="mt-0.5 h-5 w-5" />
-                <span>{{ session('estado') }}</span>
-            </div>
+            {{-- Se recoge solo a los 9 s (aviso-temporal en app.css); con «reducir movimiento» se queda --}}
+            <x-aviso tono="bien" class="aviso-temporal mb-5">{{ session('estado') }}</x-aviso>
         @endif
 
         @if ($conSesion && $errors->any() && ! old('_modal') && ! old('usuario_id'))
-            <div role="alert" class="mb-5 flex animate-sacudir items-start gap-3 rounded-ficha border border-alerta-borde bg-alerta-fondo px-4 py-3 text-base font-semibold text-alerta">
-                <x-icono nombre="alerta" class="mt-0.5 h-5 w-5" />
-                <span>{{ $errors->first() }}</span>
-            </div>
+            <x-aviso tono="alerta" class="mb-5 animate-sacudir">{{ $errors->first() }}</x-aviso>
         @endif
 
         @yield('contenido')

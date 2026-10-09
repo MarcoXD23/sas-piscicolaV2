@@ -1,12 +1,13 @@
 @props(['icono' => 'pez', 'mensaje'])
 
-<div data-revelar {{ $attributes->class('flex flex-col items-center rounded-2xl border-2 border-dashed border-marca-200/70 bg-gradient-to-b from-white to-marca-50/40 px-6 py-12 text-center') }}>
-    <span class="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-marca-100 to-sky-100 text-marca-600 shadow-suave ring-1 ring-marca-200/60">
-        <x-icono :nombre="$icono" class="h-8 w-8" />
+{{-- Estado vacío: un ícono, qué falta y (en el slot) la acción que lo resuelve. Nunca una pantalla en blanco. --}}
+<div {{ $attributes->class('flex flex-col items-center rounded-ficha bg-ficha px-6 py-12 text-center shadow-ficha ring-1 ring-renglon') }}>
+    <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-papel-hondo text-marca-700">
+        <x-icono :nombre="$icono" class="h-7 w-7" />
     </span>
-    <p class="max-w-sm text-base text-slate-600">{{ $mensaje }}</p>
+    <p class="max-w-sm text-base text-tinta">{{ $mensaje }}</p>
 
     @if (trim($slot) !== '')
-        <div class="mt-5">{{ $slot }}</div>
+        <div class="mt-6">{{ $slot }}</div>
     @endif
 </div>

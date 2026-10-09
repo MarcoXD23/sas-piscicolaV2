@@ -53,12 +53,11 @@
                 $problemas = $medicion ? $medicion->problemas($siembras->pluck('especie')) : [];
                 $parametros = array_column($problemas, 'parametro');
                 $estadoAgua = $siembras->isEmpty() ? 'libre' : (! $medicion ? 'sin_medicion' : (in_array('oxigeno', $parametros, true) ? 'alerta' : ($parametros ? 'atencion' : 'bien')));
-                [$tonoEstado, $iconoEstado, $textoEstado] = match ($estadoAgua) {
-                    'alerta' => ['bg-alerta-fondo text-alerta ring-alerta-borde', 'alerta', __('inicio.estado_agua.alerta')],
-                    'atencion' => ['bg-atencion-fondo text-atencion ring-atencion-borde', 'alerta', __('inicio.estado_agua.atencion')],
-                    'bien' => ['bg-bien-fondo text-bien ring-bien-borde', 'ok', __('inicio.estado_agua.bien')],
-                    'sin_medicion' => ['bg-info-fondo text-info ring-info-borde', 'reloj', __('inicio.estado_agua.sin_medicion')],
-                    default => ['bg-papel-hondo text-tinta-suave ring-renglon', 'lagos', __('lagos.libre')],
+                // Tono e ícono los pone <x-insignia>; «libre» es neutro con el ícono del lago
+                [$tonoEstado, $textoEstado] = match ($estadoAgua) {
+                    'libre' => ['neutro', __('lagos.libre')],
+                    'sin_medicion' => ['info', __('inicio.estado_agua.sin_medicion')],
+                    default => [$estadoAgua, __('inicio.estado_agua.'.$estadoAgua)],
                 };
             @endphp
 
@@ -68,9 +67,7 @@
                 '!ring-alerta-borde' => $estadoAgua === 'alerta',
                 '!ring-atencion-borde' => $estadoAgua === 'atencion',
             ])>
-                <p class="absolute -top-3.5 left-4 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-bold ring-1 {{ $tonoEstado }}">
-                    <x-icono :nombre="$iconoEstado" class="h-4 w-4" /> {{ $textoEstado }}
-                </p>
+                <x-insignia :tono="$tonoEstado" :icono="$estadoAgua === 'libre' ? 'lagos' : null" pestana como="p">{{ $textoEstado }}</x-insignia>
 
                 <div class="flex items-start gap-4 border-b border-renglon px-5 pt-7 pb-4">
                     @if ($foto)
@@ -90,9 +87,7 @@
                             {{ __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]) }}@if ($siembras->count() > 1) · {{ __('lagos.policultivo') }} @endif
                         </p>
                         @if ($lago->en_retiro)
-                            <p class="mt-1.5 inline-flex items-center gap-1 rounded-md bg-atencion-fondo px-2 py-0.5 text-sm font-bold text-atencion ring-1 ring-atencion-borde">
-                                <x-icono nombre="alerta" class="h-3.5 w-3.5" /> {{ __('lagos.retiro_sanitario') }}
-                            </p>
+                            <x-insignia tono="atencion" como="p" class="mt-1.5">{{ __('lagos.retiro_sanitario') }}</x-insignia>
                         @endif
                     </div>
                 </div>
@@ -201,7 +196,7 @@
                                 <details class="group">
                                     <summary class="flex min-h-12 cursor-pointer list-none items-center justify-center gap-1.5 rounded-ficha text-base font-semibold text-marca-700 hover:bg-papel-hondo [&::-webkit-details-marker]:hidden">
                                         {{ __('lagos.ficha.mas_acciones') }}
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6"/></svg>
+                                        <x-icono nombre="abajo" class="h-5 w-5 transition-transform group-open:rotate-180" />
                                     </summary>
                                     <div class="mt-2 grid grid-cols-2 gap-2">
                                         <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
