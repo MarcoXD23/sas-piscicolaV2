@@ -15,39 +15,39 @@
     </x-encabezado>
 
     @unless ($puedeEditar)
-        <p class="mb-4 text-sm text-texto-suave">{{ __('especies.catalogo_finca.solo_lectura') }}</p>
+        <x-aviso tono="info" class="mb-6">{{ __('especies.catalogo_finca.solo_lectura') }}</x-aviso>
     @endunless
     @error('especie')
-        <p class="mb-4 rounded-xl bg-red-50 p-4 text-base text-red-800" role="alert">{{ $message }}</p>
+        <x-aviso tono="alerta" class="mb-6">{{ $message }}</x-aviso>
     @enderror
 
     <x-tabla :columnas="[__('especies.catalogo_finca.nombre'), __('especies.clima'), __('especies.catalogo_finca.rangos'), __('especies.catalogo_finca.alimentacion'), __('especies.estado'), '']">
         @foreach ($especies as $especie)
             <tr @class(['opacity-60' => ! $especie->activo])>
                 <td data-label="{{ __('especies.catalogo_finca.nombre') }}">
-                    <a href="{{ route('especies.show', $especie) }}" class="font-semibold text-slate-900 hover:underline">{{ $especie->nombre }}</a>
+                    <a href="{{ route('especies.show', $especie) }}" class="font-bold underline decoration-transparent underline-offset-4 hover:decoration-tinta">{{ $especie->nombre }}</a>
                     @if ($especie->nombre_cientifico)
-                        <span class="block text-sm italic text-texto-suave">{{ $especie->nombre_cientifico }}</span>
+                        <span class="block text-sm italic text-tinta-suave">{{ $especie->nombre_cientifico }}</span>
                     @endif
-                    <span class="block text-sm text-texto-suave">{{ trans_choice('especies.catalogo_finca.siembras', $especie->siembras_count) }}</span>
+                    <span class="block text-sm text-tinta-suave">{{ trans_choice('especies.catalogo_finca.siembras', $especie->siembras_count) }}</span>
                 </td>
-                <td data-label="{{ __('especies.clima') }}">{{ __($especie->esFria() ? 'especies.agua_fria' : 'especies.agua_calida') }}</td>
-                <td data-label="{{ __('especies.catalogo_finca.rangos') }}" class="text-sm">
+                <td data-label="{{ __('especies.clima') }}" class="whitespace-nowrap">{{ __($especie->esFria() ? 'especies.agua_fria' : 'especies.agua_calida') }}</td>
+                <td data-label="{{ __('especies.catalogo_finca.rangos') }}" class="text-sm whitespace-nowrap">
                     @if ($especie->rangoTemperatura() || $especie->oxigeno_min !== null || $especie->rangoPh())
                         <span class="block">{{ __('especies.temperatura') }}: {{ $especie->rangoTemperatura() ? __('especies.rango_temperatura', ['min' => Formato::sinCeros($especie->temp_min), 'max' => Formato::sinCeros($especie->temp_max)]) : __('especies.sin_dato') }}</span>
                         <span class="block">{{ __('especies.oxigeno_minimo') }}: {{ $especie->oxigeno_min !== null ? __('especies.valor_oxigeno', ['valor' => Formato::sinCeros($especie->oxigeno_min)]) : __('especies.sin_dato') }}</span>
                         <span class="block">{{ __('especies.ph') }}: {{ $especie->rangoPh() ? __('especies.rango', ['min' => Formato::sinCeros($especie->ph_min), 'max' => Formato::sinCeros($especie->ph_max)]) : __('especies.sin_dato') }}</span>
                     @else
-                        <span class="text-texto-suave">{{ __('especies.catalogo_finca.sin_rangos') }}</span>
+                        <span class="text-tinta-suave">{{ __('especies.catalogo_finca.sin_rangos') }}</span>
                     @endif
                 </td>
                 <td data-label="{{ __('especies.catalogo_finca.alimentacion') }}">
                     {{ $especie->alimentacion ? __('especies.catalogo_finca.alimentaciones.'.$especie->alimentacion) : __('especies.catalogo_finca.sin_alimentacion') }}
                 </td>
                 <td data-label="{{ __('especies.estado') }}">
-                    <span @class(['rounded-full px-2.5 py-0.5 text-sm font-semibold', 'bg-marca-100 text-marca-800' => $especie->activo, 'bg-slate-100 text-slate-700' => ! $especie->activo])>
+                    <x-insignia :tono="$especie->activo ? 'bien' : 'neutro'" :icono="$especie->activo ? 'ok' : 'reloj'">
                         {{ __($especie->activo ? 'especies.catalogo_finca.activa' : 'especies.catalogo_finca.inactiva') }}
-                    </span>
+                    </x-insignia>
                 </td>
                 <td>
                     @if ($puedeEditar)
@@ -61,7 +61,7 @@
                                 <form method="POST" action="{{ route('admin.especies.destroy', $especie) }}" onsubmit="return confirm(@js(__('especies.catalogo_finca.confirmar_eliminar', ['nombre' => $especie->nombre])))">
                                     @csrf
                                     @method('DELETE')
-                                    <x-boton variante="peligro" class="!min-h-12 !px-3 !py-2 text-sm">{{ __('especies.catalogo_finca.eliminar') }}</x-boton>
+                                    <x-boton variante="secundario" class="!min-h-12 !px-3 !py-2 text-sm !text-alerta">{{ __('especies.catalogo_finca.eliminar') }}</x-boton>
                                 </form>
                             @endif
                         </div>

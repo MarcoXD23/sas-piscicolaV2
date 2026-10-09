@@ -3,8 +3,8 @@
 <x-campo nombre="nombre_cientifico" :etiqueta="__('especies.catalogo_finca.nombre_cientifico')" :valor="$especie?->nombre_cientifico" maxlength="120" />
 <x-seleccion nombre="clima" :etiqueta="__('especies.catalogo_finca.clima')" :opciones="$climas" :valor="$especie?->clima ?? \App\Models\Especie::CALIDO" required />
 
-<fieldset class="space-y-4 border-t border-slate-200 pt-4">
-    <legend class="text-base font-semibold text-slate-900">{{ __('especies.catalogo_finca.rangos') }}</legend>
+<fieldset class="space-y-4 border-t border-renglon pt-5">
+    <legend class="text-seccion font-bold">{{ __('especies.catalogo_finca.rangos') }}</legend>
     <div class="grid grid-cols-2 gap-4">
         <x-campo nombre="temp_min" :etiqueta="__('especies.catalogo_finca.temp_min')" tipo="number" step="0.1" min="0" max="45" inputmode="decimal" :valor="$especie?->temp_min" />
         <x-campo nombre="temp_max" :etiqueta="__('especies.catalogo_finca.temp_max')" tipo="number" step="0.1" min="0" max="45" inputmode="decimal" :valor="$especie?->temp_max" />
@@ -15,4 +15,4 @@
 </fieldset>
 
 <x-seleccion nombre="alimentacion" :etiqueta="__('especies.catalogo_finca.alimentacion')" :opciones="$alimentaciones" :valor="$especie?->alimentacion ?? ''" />
-<p class="text-sm text-texto-suave">{{ __('especies.catalogo_finca.rangos_opcionales') }}</p>
+<p class="text-sm text-tinta-suave">{{ __('especies.catalogo_finca.rangos_opcionales') }}</p>

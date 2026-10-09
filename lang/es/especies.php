@@ -310,7 +310,7 @@ return [
         ],
     ],
     'guia_especies' => 'Guía de especies',
-    'guia_especies_2' => '← Guía de especies',
+    'guia_especies_2' => 'Guía de especies',
     'oxigeno_minimo' => 'Oxígeno mínimo',
     'peso_comercial' => 'Peso comercial',
     'ph' => 'pH',
@@ -324,5 +324,5 @@ return [
     'valor_oxigeno' => ':valor mg/L',
     'valores_referencia_ajustalos_asistente_tecnico' => 'Valores de referencia. Ajústalos con el asistente técnico de tu finca.',
     'valores_son_referencia_ajustalos_asistente' => 'Los valores son de referencia. Ajústalos con el asistente técnico de tu finca según el agua, el clima y el alimento que uses.',
-    'ver_ficha_completa' => 'Ver ficha completa →',
+    'ver_ficha_completa' => 'Ver ficha completa',
 ];

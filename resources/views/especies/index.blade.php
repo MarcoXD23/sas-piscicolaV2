@@ -5,55 +5,55 @@
 @section('contenido')
     <x-encabezado :titulo="__('especies.guia_especies')" :subtitulo="__('especies.fichas_tecnicas_referencia_especies_pueden')" />
 
-    <div class="escalonado grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {{-- Una ficha por especie: foto, nombre, clima y los datos de cultivo que más se consultan en el campo --}}
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($especies as $especie)
-            <a data-revelar href="{{ route('especies.show', $especie['id']) }}"
-               class="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-suave ring-1 ring-slate-200 elevable hover:ring-marca-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600">
-                <div class="relative aspect-[16/10] bg-marca-50">
+            <a href="{{ route('especies.show', $especie['id']) }}"
+               class="group flex flex-col overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon transition-shadow duration-150 hover:shadow-levantada focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-700">
+                <div class="aspect-[16/10] bg-papel-hondo">
                     @if ($especie['foto'])
-                        <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" loading="lazy" decoding="async"
-                             class="h-full w-full object-cover transition duration-500 ease-salida group-hover:scale-105">
+                        <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" loading="lazy" decoding="async" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-marca-500">
+                        <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-marca-700">
                             <x-icono nombre="pez" class="h-12 w-12" />
-                            <span class="text-sm font-medium">{{ __('especies.foto_pendiente') }}</span>
+                            <span class="text-sm font-semibold">{{ __('especies.foto_pendiente') }}</span>
                         </div>
                     @endif
-
-                    <span @class([
-                        'absolute left-3 top-3 rounded-full px-3 py-1 text-sm font-semibold shadow-sm',
-                        'bg-amber-100 text-amber-900' => $especie['clima'] === \App\Models\Especie::CALIDO,
-                        'bg-sky-100 text-sky-900' => $especie['clima'] === \App\Models\Especie::FRIO,
-                    ])>{{ __($especie['clima'] === \App\Models\Especie::FRIO ? 'especies.agua_fria' : 'especies.agua_calida') }}</span>
                 </div>
 
-                <div class="flex flex-1 flex-col p-5">
-                    <h2 class="text-lg font-bold text-slate-900">{{ $especie['nombre'] }}</h2>
-                    @if ($especie['cientifico'])
-                        <p class="text-sm italic text-texto-suave">{{ $especie['cientifico'] }}</p>
-                    @endif
+                <div class="flex flex-1 flex-col px-5 pt-4 pb-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h2 class="text-seccion font-bold">{{ $especie['nombre'] }}</h2>
+                            @if ($especie['cientifico'])
+                                <p class="text-sm italic text-tinta-suave">{{ $especie['cientifico'] }}</p>
+                            @endif
+                        </div>
+                        {{-- El clima no es un estado: insignia neutra con el termómetro --}}
+                        <x-insignia tono="neutro" icono="termometro" class="mt-1 shrink-0">{{ __($especie['clima'] === \App\Models\Especie::FRIO ? 'especies.agua_fria' : 'especies.agua_calida') }}</x-insignia>
+                    </div>
 
-                    <dl class="mt-4 divide-y divide-slate-100 text-base">
+                    <dl class="mt-4 divide-y divide-renglon border-t border-renglon text-base">
                         {{-- Sin el dato en la ficha se muestra «sin dato»: nunca se inventa --}}
                         @foreach ([
                             __('especies.temperatura') => $especie['temperatura'] ? __('especies.rango_temperatura', ['min' => \App\Support\Formato::sinCeros($especie['temperatura'][0]), 'max' => \App\Support\Formato::sinCeros($especie['temperatura'][1])]) : null,
                             __('especies.cosecha') => $especie['meses_cosecha'],
                             __('especies.peso_comercial') => $especie['peso_comercial'],
                         ] as $etiqueta => $valor)
-                            <div class="flex items-center justify-between gap-3 py-2">
-                                <dt class="text-texto-suave">{{ $etiqueta }}</dt>
-                                <dd class="text-right font-semibold text-slate-900">{{ $valor ?? __('especies.sin_dato') }}</dd>
+                            <div class="flex items-baseline justify-between gap-3 py-2.5">
+                                <dt class="text-tinta-suave">{{ $etiqueta }}</dt>
+                                <dd @class(['text-right font-bold', 'font-normal text-tinta-suave' => $valor === null])>{{ $valor ?? __('especies.sin_dato') }}</dd>
                             </div>
                         @endforeach
                     </dl>
 
-                    <span class="mt-4 text-base font-semibold text-marca-700 group-hover:underline">{{ __('especies.ver_ficha_completa') }}</span>
+                    <span class="mt-auto pt-4 text-base font-bold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 group-hover:decoration-marca-700">{{ __('especies.ver_ficha_completa') }}</span>
                 </div>
             </a>
         @endforeach
     </div>
 
-    <p class="mt-6 text-sm text-texto-suave">
+    <p class="mt-8 max-w-[65ch] text-sm text-tinta-suave">
         {{ __('especies.valores_son_referencia_ajustalos_asistente') }}
     </p>
 @endsection

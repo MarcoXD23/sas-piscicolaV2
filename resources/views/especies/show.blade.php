@@ -8,58 +8,59 @@
 @section('titulo', $especie['nombre'])
 
 @section('contenido')
-    <a href="{{ route('especies.index') }}" class="mb-4 inline-flex min-h-12 items-center gap-1 text-base font-medium text-marca-700 hover:underline">
-        {{ __('especies.guia_especies_2') }}
+    {{-- Volver a la guía: la flecha sale del juego de íconos (no un carácter de texto) --}}
+    <a href="{{ route('especies.index') }}" class="-ml-1 mb-2 inline-flex min-h-12 items-center gap-1 text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">
+        <x-icono nombre="abajo" class="h-5 w-5 rotate-90" /> {{ __('especies.guia_especies_2') }}
     </a>
 
-    <section class="mb-6 overflow-hidden rounded-3xl bg-white shadow-suave ring-1 ring-slate-200 md:grid md:grid-cols-2">
-        <div class="relative aspect-[16/10] bg-marca-50 md:aspect-auto">
+    <section class="mb-8 overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon md:grid md:grid-cols-2">
+        <figure class="flex flex-col border-b border-renglon md:border-r md:border-b-0">
             @if ($especie['foto'])
-                <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" decoding="async" class="h-full w-full object-cover">
-                {{-- Foto de referencia con licencia libre: autor, licencia y fuente (las fotos de la finca muestran las suyas abajo) --}}
+                <img src="{{ $especie['foto'] }}" alt="{{ $especie['nombre'] }}" decoding="async" class="aspect-[16/10] w-full flex-1 object-cover">
+                {{-- Foto de referencia con licencia libre: autor, licencia y fuente, en un pie debajo (no encima de la imagen) --}}
                 @if ($credito = $especie['foto_credito'])
-                    <p class="absolute inset-x-0 bottom-0 bg-slate-950/65 px-3 py-1.5 text-sm leading-snug text-white">
+                    <figcaption class="bg-papel-hondo px-4 py-2.5 text-sm leading-snug text-tinta-suave">
                         @if (isset($credito['nota']))
-                            <span class="block">{{ $credito['nota'] }}</span>
+                            <span class="block font-semibold text-tinta">{{ $credito['nota'] }}</span>
                         @endif
                         {{ __('especies.foto_credito.autor', ['tipo' => $credito['tipo'], 'autor' => $credito['autor']]) }}
                         ·
                         @if (isset($credito['licencia_url']))
-                            <a href="{{ $credito['licencia_url'] }}" target="_blank" rel="noopener noreferrer license" class="underline underline-offset-2 hover:text-marca-200">{{ $credito['licencia'] }}</a>
+                            <a href="{{ $credito['licencia_url'] }}" target="_blank" rel="noopener noreferrer license" class="underline decoration-renglon-fuerte underline-offset-2 hover:text-tinta">{{ $credito['licencia'] }}</a>
                         @else
                             {{ $credito['licencia'] }}
                         @endif
-                        · <a href="{{ $credito['fuente'] }}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-marca-200">{{ __('especies.foto_credito.fuente') }}</a>
+                        · <a href="{{ $credito['fuente'] }}" target="_blank" rel="noopener noreferrer" class="underline decoration-renglon-fuerte underline-offset-2 hover:text-tinta">{{ __('especies.foto_credito.fuente') }}</a>
                         @if ($credito['modificada'])
                             · {{ __('especies.foto_credito.modificada') }}
                         @endif
-                    </p>
+                    </figcaption>
                 @endif
             @else
-                <div class="flex h-full min-h-48 w-full flex-col items-center justify-center gap-2 text-marca-500">
+                <div class="flex min-h-48 w-full flex-1 flex-col items-center justify-center gap-2 bg-papel-hondo text-marca-700">
                     <x-icono nombre="pez" class="h-16 w-16" />
-                    <span class="text-sm font-medium">{{ __('especies.foto_pendiente') }}</span>
+                    <span class="text-sm font-semibold">{{ __('especies.foto_pendiente') }}</span>
                 </div>
             @endif
-        </div>
+        </figure>
 
         <div class="p-5 sm:p-8">
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ $especie['nombre'] }}</h1>
+            <h1 class="text-titulo font-bold text-balance">{{ $especie['nombre'] }}</h1>
             @if ($especie['cientifico'] || $especie['familia'])
-                <p class="mt-1 text-base italic text-texto-suave">{{ collect([$especie['cientifico'], $especie['familia']])->filter()->join(' · ') }}</p>
+                <p class="mt-1 text-base italic text-tinta-suave">{{ collect([$especie['cientifico'], $especie['familia']])->filter()->join(' · ') }}</p>
             @endif
             @unless ($especie['activo'])
-                <p class="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{{ __('especies.catalogo_finca.inactiva_guia') }}</p>
+                <x-aviso tono="info" class="mt-4 text-sm">{{ __('especies.catalogo_finca.inactiva_guia') }}</x-aviso>
             @endunless
 
             @if ($especie['policultivo'])
-                <p class="mt-4 rounded-xl bg-marca-50 p-4 text-base text-marca-900">
-                    <strong class="font-semibold">{{ __('especies.policultivo') }}</strong> {{ $especie['policultivo'] }}
-                </p>
+                <x-aviso tono="info" icono="pez" class="mt-4">
+                    <strong class="font-bold">{{ __('especies.policultivo') }}</strong> <span class="font-normal">{{ $especie['policultivo'] }}</span>
+                </x-aviso>
             @endif
 
-            {{-- Datos de la ficha de la finca; lo que falta se muestra como «sin dato» (nunca se inventa) --}}
-            <dl class="mt-5 grid grid-cols-2 gap-3">
+            {{-- Datos de la ficha de la finca, como renglones de lectura; lo que falta se muestra como «sin dato» (nunca se inventa) --}}
+            <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-ficha bg-renglon ring-1 ring-renglon">
                 @foreach ([
                     __('especies.clima') => __($especie['clima'] === Especie::FRIO ? 'especies.agua_fria' : 'especies.agua_calida'),
                     __('especies.temperatura') => $especie['temperatura'] ? __('especies.rango_temperatura', ['min' => Formato::sinCeros($especie['temperatura'][0]), 'max' => Formato::sinCeros($especie['temperatura'][1])]) : null,
@@ -68,33 +69,33 @@
                     __('especies.tiempo_cosecha') => $especie['meses_cosecha'],
                     __('especies.peso_comercial') => $especie['peso_comercial'],
                 ] as $etiqueta => $valor)
-                    <div class="rounded-xl bg-slate-50 p-3">
-                        <dt class="text-sm text-texto-suave">{{ $etiqueta }}</dt>
-                        <dd class="text-base font-semibold text-slate-900">{{ $valor ?? __('especies.sin_dato') }}</dd>
+                    <div class="bg-ficha px-4 py-3">
+                        <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
+                        <dd @class(['mt-0.5 text-lg font-bold', 'text-base font-normal text-tinta-suave' => $valor === null])>{{ $valor ?? __('especies.sin_dato') }}</dd>
                     </div>
                 @endforeach
             </dl>
         </div>
     </section>
 
-    {{-- Galería de fotos reales (versión ligera), con su autor o fuente y su licencia --}}
+    {{-- Galería de fotos reales (versión ligera), con su autor o fuente y su licencia en el pie --}}
     @if ($fotos->isNotEmpty())
-        <section class="mb-6">
-            <h2 class="mb-3 text-lg font-semibold text-slate-900">{{ __('especies.fotos.galeria') }}</h2>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <section class="mb-8" aria-labelledby="galeria-titulo">
+            <h2 id="galeria-titulo" class="mb-4 text-seccion font-bold">{{ __('especies.fotos.galeria') }}</h2>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 @foreach ($fotos as $foto)
-                    <figure class="overflow-hidden rounded-2xl bg-white shadow-suave ring-1 ring-slate-200">
+                    <figure class="overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon">
                         <img src="{{ $foto->url() }}" alt="{{ $especie['nombre'] }}" loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover">
-                        <figcaption class="space-y-0.5 p-3 text-sm text-slate-600">
+                        <figcaption class="space-y-0.5 border-t border-renglon p-3 text-sm text-tinta-suave">
                             @if ($foto->autor)
-                                <p>{{ __('especies.fotos.por', ['autor' => $foto->autor]) }}</p>
+                                <p class="font-semibold text-tinta">{{ __('especies.fotos.por', ['autor' => $foto->autor]) }}</p>
                             @endif
                             @if ($foto->licencia)
-                                <p class="text-texto-suave">{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
+                                <p>{{ __('especies.fotos.licencia_texto', ['licencia' => $foto->licencia]) }}</p>
                             @endif
-                            <p class="text-slate-500">{{ __('especies.fotos.subida_el', ['fecha' => \App\Support\Region::local($foto->created_at)->format('d/m/Y')]) }}</p>
+                            <p>{{ __('especies.fotos.subida_el', ['fecha' => \App\Support\Region::local($foto->created_at)->format('d/m/Y')]) }}</p>
                             @if ($veOriginal)
-                                <a href="{{ $foto->urlOriginal() }}" class="text-marca-700 underline">{{ __('especies.fotos.original') }}</a>
+                                <a href="{{ $foto->urlOriginal() }}" class="inline-flex min-h-11 items-center font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">{{ __('especies.fotos.original') }}</a>
                             @endif
                         </figcaption>
                     </figure>
@@ -104,31 +105,31 @@
     @endif
 
     @if ($especie['orientativa'])
-        <p class="mb-5 rounded-xl bg-amber-50 p-4 text-base text-amber-900">{{ __('especies.ficha.orientativa') }}</p>
+        <x-aviso tono="atencion" class="mb-6">{{ __('especies.ficha.orientativa') }}</x-aviso>
     @endif
 
     {{-- Ficha de la finca: cada parte vacía se muestra como «sin dato» (nunca se inventa) --}}
-    <div class="grid gap-5 lg:grid-cols-2">
+    <div class="grid items-start gap-6 lg:grid-cols-2">
         @foreach (['cultivo' => __('especies.ficha.campos_cultivo'), 'procesamiento' => __('especies.ficha.campos_procesamiento')] as $bloque => $etiquetas)
             <x-tarjeta :titulo="__('especies.ficha.'.$bloque)">
-                <dl class="space-y-4">
+                <dl class="-mt-1 divide-y divide-renglon">
                     @foreach ($especie[$bloque] as $campo => $texto)
-                        <div>
-                            <dt class="font-semibold text-slate-900">{{ $etiquetas[$campo] }}</dt>
-                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $texto, 'text-slate-500' => ! $texto])>{{ $texto ?? __('especies.sin_dato') }}</dd>
+                        <div class="py-3">
+                            <dt class="font-bold">{{ $etiquetas[$campo] }}</dt>
+                            <dd @class(['mt-0.5 max-w-[65ch] text-base', 'text-tinta' => $texto, 'text-tinta-suave' => ! $texto])>{{ $texto ?? __('especies.sin_dato') }}</dd>
                         </div>
                     @endforeach
                 </dl>
             </x-tarjeta>
         @endforeach
 
-        <div class="space-y-5">
+        <div class="space-y-6">
             <x-tarjeta :titulo="__('especies.ficha.descripcion')">
-                <dl class="space-y-4">
+                <dl class="-mt-1 divide-y divide-renglon">
                     @foreach (['color', 'aspecto'] as $campo)
-                        <div>
-                            <dt class="font-semibold text-slate-900">{{ __('especies.ficha.'.$campo) }}</dt>
-                            <dd @class(['mt-0.5 text-base', 'text-slate-600' => $especie[$campo], 'text-slate-500' => ! $especie[$campo]])>{{ $especie[$campo] ?? __('especies.sin_dato') }}</dd>
+                        <div class="py-3">
+                            <dt class="font-bold">{{ __('especies.ficha.'.$campo) }}</dt>
+                            <dd @class(['mt-0.5 text-base', 'text-tinta' => $especie[$campo], 'text-tinta-suave' => ! $especie[$campo]])>{{ $especie[$campo] ?? __('especies.sin_dato') }}</dd>
                         </div>
                     @endforeach
                 </dl>
@@ -136,11 +137,11 @@
 
             @if ($especie['proteina'])
                 <x-tarjeta :titulo="__('especies.proteina_alimento')">
-                    <dl class="space-y-3 text-base">
+                    <dl class="-mt-1 divide-y divide-renglon text-base">
                         @foreach (__('especies.etapas') as $etapa => $texto)
-                            <div class="flex items-center justify-between gap-3">
-                                <dt class="text-slate-600">{{ $texto }}</dt>
-                                <dd class="font-semibold text-slate-900">{{ $especie['proteina'][$etapa] ?? __('especies.sin_dato') }}</dd>
+                            <div class="flex items-baseline justify-between gap-3 py-2.5">
+                                <dt class="text-tinta-suave">{{ $texto }}</dt>
+                                <dd class="font-bold tabular-nums">{{ $especie['proteina'][$etapa] ?? __('especies.sin_dato') }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -149,7 +150,7 @@
         </div>
     </div>
 
-    <p class="mt-6 text-sm text-texto-suave">
+    <p class="mt-8 max-w-[65ch] text-sm text-tinta-suave">
         {{ __('especies.valores_referencia_ajustalos_asistente_tecnico') }}
     </p>
 @endsection
