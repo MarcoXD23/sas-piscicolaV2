@@ -10,7 +10,7 @@
                           :descargas="collect(['excel' => 'admin.reportes.libro-campo.excel', 'pdf' => 'admin.reportes.libro-campo.pdf'])->map(fn ($ruta) => route($ruta, ['lago_id' => $lago->id, 'desde' => $desde->toDateString(), 'hasta' => $hasta->toDateString()]))->all()" />
 
     <section class="mb-6 break-inside-avoid">
-        <h2 class="mb-2 text-lg font-semibold text-slate-900">{{ __('reportes.siembras_periodo') }}</h2>
+        <h2 class="mb-2 text-lg font-semibold text-tinta">{{ __('reportes.siembras_periodo') }}</h2>
         <x-tabla :columnas="[__('reportes.especie'), __('comun.fecha'), __('reportes.peces_sembrados'), __('reportes.proveedor'), __('reportes.lote'), __('reportes.estado')]" :vacio="__('reportes.no_hubo_siembras_periodo')">
             @foreach ($siembras as $siembra)
                 <tr>
@@ -26,7 +26,7 @@
     </section>
 
     <section>
-        <h2 class="mb-2 text-lg font-semibold text-slate-900">{{ __('reportes.registro_cronologico') }}</h2>
+        <h2 class="mb-2 text-lg font-semibold text-tinta">{{ __('reportes.registro_cronologico') }}</h2>
         <x-tabla :columnas="[__('comun.fecha'), __('reportes.actividad'), __('reportes.detalle'), __('reportes.responsable')]" :vacio="__('reportes.no_hay_registros_periodo')">
             @foreach ($registros as $registro)
                 <tr>
@@ -41,10 +41,10 @@
 
     {{-- Cosechas del período: encabezado, pesadas y totales --}}
     <section class="mt-6">
-        <h2 class="mb-2 text-lg font-semibold text-slate-900">{{ __('reportes.cosechas_periodo') }}</h2>
+        <h2 class="mb-2 text-lg font-semibold text-tinta">{{ __('reportes.cosechas_periodo') }}</h2>
         @forelse ($cosechas as $cosecha)
             <div class="mb-6 break-inside-avoid">
-                <p class="mb-2 text-base text-slate-800">
+                <p class="mb-2 text-base text-tinta">
                     <strong>{{ $cosecha->fecha->format('d/m/Y') }}</strong> · {{ $cosecha->siembra->nombre_especie }}
                     · {{ __('reportes.destino_cosecha', ['destino' => $cosecha->destino ?: __('cosechas.sin_dato')]) }}
                     · {{ __('cosechas.despacho') }}: {{ $cosecha->despachadoPor?->name ?? __('cosechas.sin_dato') }}
@@ -53,19 +53,19 @@
                 @if ($cosecha->pesajes->isNotEmpty())
                     @include('admin.cosechas._pesadas', ['pesaje' => \App\Support\CalculoPesaje::deCosecha($cosecha)])
                 @else
-                    <p class="text-sm text-texto-suave">{{ __('cosechas.sin_pesadas') }}</p>
+                    <p class="text-sm text-tinta-suave">{{ __('cosechas.sin_pesadas') }}</p>
                 @endif
             </div>
         @empty
-            <p class="text-texto-suave">{{ __('reportes.sin_cosechas') }}</p>
+            <p class="text-tinta-suave">{{ __('reportes.sin_cosechas') }}</p>
         @endforelse
     </section>
 
-    <p class="mt-6 text-sm text-texto-suave">
+    <p class="mt-6 text-sm text-tinta-suave">
         {{ __('region.aviso_libro_campo') }}
     </p>
     <div class="mt-10 hidden grid-cols-2 gap-10 print:grid">
-        <p class="border-t border-slate-400 pt-2 text-sm">{{ __('reportes.responsable_tecnico') }}</p>
-        <p class="border-t border-slate-400 pt-2 text-sm">{{ __('reportes.propietario') }}</p>
+        <p class="border-t border-renglon-fuerte pt-2 text-sm">{{ __('reportes.responsable_tecnico') }}</p>
+        <p class="border-t border-renglon-fuerte pt-2 text-sm">{{ __('reportes.propietario') }}</p>
     </div>
 @endsection

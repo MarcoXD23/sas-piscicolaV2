@@ -30,18 +30,18 @@
                     <time datetime="{{ $registro->momentoLocal()->toIso8601String() }}">{{ $registro->momentoLocal()->format('d/m/Y H:i:s') }}</time>
                 </td>
                 <td data-label="{{ __('bitacora.persona') }}">
-                    <p class="font-medium text-slate-900">{{ $registro->usuario->name }}</p>
-                    <p class="text-sm text-texto-suave">{{ __('bitacora.roles.'.$registro->rol) }}</p>
+                    <p class="font-medium text-tinta">{{ $registro->usuario->name }}</p>
+                    <p class="text-sm text-tinta-suave">{{ __('bitacora.roles.'.$registro->rol) }}</p>
                 </td>
                 <td data-label="{{ __('bitacora.accion') }}">
                     <span @class([
                         'inline-block rounded-full px-2.5 py-0.5 text-sm font-semibold',
-                        'bg-amber-100 text-amber-900' => in_array($registro->accion, ['mortalidad', 'novedad'], true),
-                        'bg-marca-100 text-marca-800' => ! in_array($registro->accion, ['mortalidad', 'novedad'], true),
+                        'bg-atencion-fondo text-atencion' => in_array($registro->accion, ['mortalidad', 'novedad'], true),
+                        'bg-bien-fondo text-bien' => ! in_array($registro->accion, ['mortalidad', 'novedad'], true),
                     ])>{{ __('bitacora.acciones.'.$registro->accion) }}</span>
                 </td>
                 <td data-label="{{ __('bitacora.lago') }}">{{ $registro->detalle['lago'] ?? '—' }}</td>
-                <td data-label="{{ __('bitacora.detalle') }}" class="text-slate-700">{{ $registro->textoDetalle() }}</td>
+                <td data-label="{{ __('bitacora.detalle') }}" class="text-tinta">{{ $registro->textoDetalle() }}</td>
             </tr>
         @endforeach
     </x-tabla>
@@ -51,16 +51,16 @@
             @if ($registros->onFirstPage())
                 <span></span>
             @else
-                <x-boton variante="secundario" :href="$registros->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton>
+                <x-boton variante="secundario" :href="$registros->previousPageUrl()"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /> {{ __('comun.anteriores') }}</x-boton>
             @endif
-            <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $registros->currentPage(), 'total' => $registros->lastPage()]) }}</span>
+            <span class="text-sm text-tinta-suave">{{ __('comun.pagina_de', ['actual' => $registros->currentPage(), 'total' => $registros->lastPage()]) }}</span>
             @if ($registros->hasMorePages())
-                <x-boton variante="secundario" :href="$registros->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton>
+                <x-boton variante="secundario" :href="$registros->nextPageUrl()">{{ __('comun.siguientes') }} <x-icono nombre="abajo" class="h-5 w-5 -rotate-90" /></x-boton>
             @else
                 <span></span>
             @endif
         </nav>
     @endif
 
-    <p class="mt-6 text-sm text-texto-suave">{{ __('bitacora.nota') }}</p>
+    <p class="mt-6 text-sm text-tinta-suave">{{ __('bitacora.nota') }}</p>
 @endsection

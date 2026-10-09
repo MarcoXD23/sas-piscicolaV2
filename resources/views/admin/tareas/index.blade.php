@@ -74,9 +74,9 @@
 
     @if ($tareas->hasPages())
         <nav class="mt-4 flex items-center justify-between gap-3" aria-label="{{ __('comun.paginas') }}">
-            @if ($tareas->onFirstPage()) <span></span> @else <x-boton variante="secundario" :href="$tareas->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton> @endif
+            @if ($tareas->onFirstPage()) <span></span> @else <x-boton variante="secundario" :href="$tareas->previousPageUrl()"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /> {{ __('comun.anteriores') }}</x-boton> @endif
             <span class="text-sm text-tinta-suave">{{ __('comun.pagina_de', ['actual' => $tareas->currentPage(), 'total' => $tareas->lastPage()]) }}</span>
-            @if ($tareas->hasMorePages()) <x-boton variante="secundario" :href="$tareas->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton> @else <span></span> @endif
+            @if ($tareas->hasMorePages()) <x-boton variante="secundario" :href="$tareas->nextPageUrl()">{{ __('comun.siguientes') }} <x-icono nombre="abajo" class="h-5 w-5 -rotate-90" /></x-boton> @else <span></span> @endif
         </nav>
     @endif
 

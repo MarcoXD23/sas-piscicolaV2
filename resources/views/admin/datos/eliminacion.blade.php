@@ -3,11 +3,11 @@
 @section('titulo', __('datos.eliminar.pantalla_titulo'))
 
 @section('contenido')
-    <x-tarjeta class="mx-auto max-w-xl ring-2 ring-red-200" :titulo="__('datos.eliminar.pantalla_titulo')">
-        <p class="rounded-xl bg-red-50 p-4 text-base text-red-900">
+    <x-tarjeta class="mx-auto max-w-xl ring-2 ring-alerta-borde" :titulo="__('datos.eliminar.pantalla_titulo')">
+        <x-aviso tono="alerta">
             {{ __('datos.eliminar.pantalla_texto', ['finca' => $finca->nombre, 'fecha' => $finca->eliminacion_programada_at->format('d/m/Y H:i')]) }}
-        </p>
-        <p class="mt-3 text-sm text-texto-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
+        </x-aviso>
+        <p class="mt-3 text-sm text-tinta-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
 
         <x-formulario :action="route('admin.datos.cancelar')" class="mt-5">
             <x-campo nombre="actual" :etiqueta="__('datos.eliminar.actual')" tipo="password" autocomplete="current-password" required />

@@ -15,7 +15,7 @@
 
         <x-tarjeta :titulo="__('reportes.libro_campo')" :subtitulo="__('reportes.registro_cronologico_lago_siembras_alimento')">
             @if ($lagos === [])
-                <p class="text-base text-texto-suave">{{ __('reportes.primero_registra_lago') }}</p>
+                <p class="text-base text-tinta-suave">{{ __('reportes.primero_registra_lago') }}</p>
             @else
                 <x-formulario :action="route('admin.reportes.libro-campo')" metodo="GET">
                     <x-seleccion nombre="lago_id" :etiqueta="__('reportes.lago')" :opciones="$lagos" required />
@@ -25,7 +25,7 @@
                     </div>
                     <x-boton class="w-full"><x-icono nombre="reporte" class="h-5 w-5" /> {{ __('reportes.ver_libro_campo') }}</x-boton>
                 </x-formulario>
-                <p class="mt-3 text-sm text-texto-suave">
+                <p class="mt-3 text-sm text-tinta-suave">
                     {{ __('region.aviso_trazabilidad') }}
                 </p>
             @endif

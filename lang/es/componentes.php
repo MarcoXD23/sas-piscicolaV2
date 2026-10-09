@@ -21,7 +21,7 @@ return [
     'preguntame_tus_lagos_racion_dia' => 'Pregúntame por tus lagos, la ración del día, el agua o tus tareas. Respondo con los datos de la finca que puedes ver.',
     'rechazar' => 'Rechazar',
     'rechazar_solicitud' => 'Rechazar solicitud',
-    'reportes' => '← Reportes',
+    'reportes' => 'Reportes',
     'respuestas_son_orientativas_verifica_importante' => 'Las respuestas son orientativas: verifica lo importante.',
     'secciones' => 'Secciones',
     'sin_datos' => 'Sin datos.',

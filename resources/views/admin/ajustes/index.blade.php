@@ -14,10 +14,10 @@
                          :valor="$finca->zona_horaria" :ayuda="__('region.ajustes.zona_ayuda')" required />
             <x-seleccion nombre="idioma" :etiqueta="__('region.ajustes.idioma')" :opciones="$idiomas" :valor="$finca->idioma" required />
 
-            <p class="text-sm text-texto-suave">{{ __('region.ajustes.hora_actual', ['hora' => \App\Support\Region::ahora()->format('d/m/Y H:i')]) }}</p>
+            <p class="text-sm text-tinta-suave">{{ __('region.ajustes.hora_actual', ['hora' => \App\Support\Region::ahora()->format('d/m/Y H:i')]) }}</p>
 
-            <fieldset class="space-y-5 border-t border-slate-200 pt-5">
-                <legend class="mb-1 text-lg font-semibold text-slate-900">{{ __('alertas.ajustes.titulo') }}</legend>
+            <fieldset class="space-y-5 border-t border-renglon pt-5">
+                <legend class="mb-1 text-lg font-semibold text-tinta">{{ __('alertas.ajustes.titulo') }}</legend>
                 <x-campo nombre="alerta_stock_dias" :etiqueta="__('alertas.ajustes.stock_dias')" tipo="number" min="1" max="90" inputmode="numeric"
                          :valor="$finca->alerta_stock_dias" :ayuda="__('alertas.ajustes.stock_dias_ayuda')" required />
                 <div class="grid grid-cols-2 gap-4">
@@ -26,7 +26,7 @@
                     <x-campo nombre="alerta_mortalidad_dias" :etiqueta="__('alertas.ajustes.mortalidad_dias')" tipo="number" min="1" max="60" inputmode="numeric"
                              :valor="$finca->alerta_mortalidad_dias" required />
                 </div>
-                <p class="text-sm text-texto-suave">{{ __('alertas.ajustes.mortalidad_ayuda') }}</p>
+                <p class="text-sm text-tinta-suave">{{ __('alertas.ajustes.mortalidad_ayuda') }}</p>
                 <x-campo nombre="alerta_despacho_dias" :etiqueta="__('alertas.ajustes.despacho_dias')" tipo="number" min="1" max="30" inputmode="numeric"
                          :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
             </fieldset>
@@ -44,18 +44,18 @@
     <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('cosechas.ajustes.titulo')" :subtitulo="__('cosechas.ajustes.subtitulo')">
         <dl class="grid grid-cols-2 gap-4 text-base">
             <div>
-                <dt class="text-sm text-texto-suave">{{ __('cosechas.peso_canasta_vacia') }}</dt>
-                <dd class="font-semibold tabular-nums text-slate-900">{{ \App\Support\CalculoPesaje::kg($finca->peso_canasta_kg) }}</dd>
+                <dt class="text-sm text-tinta-suave">{{ __('cosechas.peso_canasta_vacia') }}</dt>
+                <dd class="font-semibold tabular-nums text-tinta">{{ \App\Support\CalculoPesaje::kg($finca->peso_canasta_kg) }}</dd>
             </div>
             <div>
-                <dt class="text-sm text-texto-suave">{{ __('cosechas.peso_canastilla_vacia') }}</dt>
-                <dd class="font-semibold tabular-nums text-slate-900">{{ \App\Support\CalculoPesaje::kg($finca->peso_canastilla_kg) }}</dd>
+                <dt class="text-sm text-tinta-suave">{{ __('cosechas.peso_canastilla_vacia') }}</dt>
+                <dd class="font-semibold tabular-nums text-tinta">{{ \App\Support\CalculoPesaje::kg($finca->peso_canastilla_kg) }}</dd>
             </div>
         </dl>
         @if (auth()->user()->tieneRol(\App\Models\Rol::ADMINISTRADOR))
             <x-boton variante="secundario" class="mt-4" :href="route('admin.ajustes-pesaje.edit')">{{ __('cosechas.ajustes.enlace') }}</x-boton>
         @else
-            <p class="mt-4 text-sm text-texto-suave">{{ __('cosechas.ajustes.solo_lectura') }}</p>
+            <p class="mt-4 text-sm text-tinta-suave">{{ __('cosechas.ajustes.solo_lectura') }}</p>
         @endif
     </x-tarjeta>
 @endsection

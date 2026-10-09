@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'anteriores' => '← Anteriores',
+    'anteriores' => 'Anteriores',
     'cancelar' => 'Cancelar',
     'desde' => 'Desde',
     'dias_cortos' => [
@@ -32,7 +32,7 @@ return [
     'personal' => 'Personal',
     'rango_dias' => ':desde – :hasta (:dias día(s))',
     'semana_del' => 'Semana del :desde al :hasta',
-    'siguientes' => 'Siguientes →',
+    'siguientes' => 'Siguientes',
     'sin_finca_activa' => [
         'consulta' => 'Consulta de :modelo sin finca activa. Fija la finca (TenantActual::establecer) o usa TenantActual::sinFiltro().',
         'creacion' => 'Se intentó crear :modelo sin finca activa y sin tenant_id.',

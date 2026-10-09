@@ -4,7 +4,7 @@
 
 <header class="mb-6 border-b-2 border-tinta pb-4">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <a href="{{ route('admin.reportes.index') }}" class="inline-flex min-h-12 items-center text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">{{ __('componentes.reportes') }}</a>
+        <a href="{{ route('admin.reportes.index') }}" class="-ml-1 inline-flex min-h-12 items-center gap-1 text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /> {{ __('componentes.reportes') }}</a>
         <div class="flex flex-wrap gap-2">
             @foreach ($descargas as $formato => $url)
                 <x-boton variante="secundario" :href="$url">
