@@ -80,6 +80,8 @@ return [
     'cola_hay_rechazados' => 'Hay registros que la finca no aceptó. Revísalos en «Sin enviar».',
     'cola_sesion' => 'Tu sesión venció: vuelve a entrar con tu usuario y lo guardado se enviará solo.',
     'cola_sin_senal' => 'Todavía no hay señal. Se enviarán solos cuando vuelva.',
+    // Con señal pero sin respuesta del servidor (caído, túnel cerrado): lo guardado no se pierde
+    'cola_sin_servidor' => 'No se pudo conectar con el servidor. Lo guardado sigue en este teléfono y se enviará solo cuando se pueda.',
     'cola_registrado' => 'Registrado el :momento',
     'cola_motivo' => 'Motivo: :motivo',
     'cola_rechazo_generico' => 'La finca no aceptó este registro.',

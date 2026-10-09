@@ -88,8 +88,8 @@ export const iniciarCola = (t) => {
             document.getElementById('contenido')?.prepend(caja);
         }
         caja.className = tipo === 'ok'
-            ? 'mb-5 rounded-xl border border-marca-300 bg-marca-50 px-4 py-3 text-base font-semibold text-marca-900'
-            : 'mb-5 rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-base font-semibold text-amber-900';
+            ? 'mb-5 rounded-ficha border border-bien-borde bg-bien-fondo px-4 py-3 text-base font-semibold text-bien'
+            : 'mb-5 rounded-ficha border border-atencion-borde bg-atencion-fondo px-4 py-3 text-base font-semibold text-atencion';
         caja.textContent = texto;
         desplazar(caja);
     };
@@ -102,23 +102,23 @@ export const iniciarCola = (t) => {
     };
 
     const tarjeta = (registro) => {
-        const li = elemento('li', 'rounded-xl border border-slate-300 p-4');
-        li.appendChild(elemento('p', 'text-base font-semibold text-slate-900', registro.resumen));
+        const li = elemento('li', 'rounded-ficha border border-renglon bg-ficha p-4');
+        li.appendChild(elemento('p', 'text-base font-bold text-tinta', registro.resumen));
         const momento = new Date(registro.registradoEn).toLocaleString(document.documentElement.lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-        li.appendChild(elemento('p', 'text-base text-slate-700', t('cola_registrado', { momento })));
+        li.appendChild(elemento('p', 'text-base text-tinta-suave', t('cola_registrado', { momento })));
 
-        const lista = elemento('ul', 'mt-2 space-y-1 text-base text-slate-800');
+        const lista = elemento('ul', 'mt-2 space-y-1 text-base text-tinta');
         registro.detalle.forEach(([etiqueta, valor]) => lista.appendChild(elemento('li', '', `${etiqueta}: ${valor}`)));
         li.appendChild(lista);
 
         if (registro.estado === 'rechazado') {
-            li.appendChild(elemento('p', 'mt-2 rounded-lg bg-red-50 px-3 py-2 text-base font-semibold text-red-800', t('cola_motivo', { motivo: registro.motivo })));
-            const descartar = elemento('button', 'mt-3 min-h-12 rounded-xl px-5 text-base font-semibold text-red-800 ring-1 ring-inset ring-red-300 hover:bg-red-50', t('cola_descartar'));
+            li.appendChild(elemento('p', 'mt-2 rounded-md border border-alerta-borde bg-alerta-fondo px-3 py-2 text-base font-semibold text-alerta', t('cola_motivo', { motivo: registro.motivo })));
+            const descartar = elemento('button', 'mt-3 min-h-12 rounded-ficha px-5 text-base font-semibold text-alerta ring-1 ring-inset ring-alerta-borde transition-colors hover:bg-alerta-fondo', t('cola_descartar'));
             descartar.type = 'button';
             descartar.dataset.colaDescartar = registro.uuid;
             li.appendChild(descartar);
         } else if (porVencer(registro.registradoEn, horas)) {
-            li.appendChild(elemento('p', 'mt-2 text-base font-semibold text-amber-900', t('cola_por_vencer', { horas })));
+            li.appendChild(elemento('p', 'mt-2 text-base font-semibold text-atencion', t('cola_por_vencer', { horas })));
         }
 
         return li;
@@ -273,7 +273,8 @@ export const iniciarCola = (t) => {
         if (enviados > 0) aviso(t(enviados === 1 ? 'cola_enviado_uno' : 'cola_enviados_varios', { cantidad: enviados }));
         if (rechazados > 0) aviso(t('cola_hay_rechazados'), 'atencion');
         if (detenido === 'sesion') aviso(t('cola_sesion'), 'atencion');
-        else if (detenido && avisar) aviso(t('cola_sin_senal'), 'atencion');
+        // Aquí el teléfono sí tiene conexión: lo que falla es llegar al servidor
+        else if (detenido && avisar) aviso(t('cola_sin_servidor'), 'atencion');
         await pintar();
     };
 
