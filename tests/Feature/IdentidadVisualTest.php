@@ -67,8 +67,9 @@ class IdentidadVisualTest extends TestCase
     {
         $sw = file_get_contents(public_path('sw.js'));
 
-        // Cada versión borra las copias anteriores (la v9 retiró los fondos SVG; la v10 agregó Registro rápido; la v11, su acceso en offline.html)
-        $this->assertStringContainsString("const VERSION = 'v11'", $sw);
+        // Cada versión borra las copias anteriores (la v9 retiró los fondos SVG; la v10 agregó Registro rápido; la v11, su acceso en offline.html;
+        // la v12 estrena la libreta de campo)
+        $this->assertStringContainsString("const VERSION = 'v12'", $sw);
         $this->assertStringContainsString("const ESTATICOS = ['/build/', '/images/', '/icons/'];", $sw);
     }
 

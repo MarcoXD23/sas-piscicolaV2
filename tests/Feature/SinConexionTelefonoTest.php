@@ -156,7 +156,7 @@ class SinConexionTelefonoTest extends TestCase
         $this->assertStringContainsString("'X-Registrado-En': registro.registradoEn", $cola);
         $this->assertStringContainsString("'X-Hora-Telefono': new Date().toISOString()", $cola);
         $this->assertStringContainsString("index('clave').getAll(clave)", $cola);
-        $this->assertStringContainsString("const VERSION = 'v11'", file_get_contents(public_path('sw.js')));
+        $this->assertStringContainsString("const VERSION = 'v12'", file_get_contents(public_path('sw.js')));
     }
 
     public function test_la_cola_envia_con_un_token_fresco_y_no_con_el_de_la_pagina(): void

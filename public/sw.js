@@ -12,7 +12,8 @@
  *   las 40 pantallas (no se pierde al navegar). Con señal se renueva; sin señal se sirve la guardada. Cada paquete de
  *   trabajo nuevo pide renovarla ({tipo: 'actualizar-campo'}). Nunca se guarda nada de /campo/ (paquete y token).
  */
-const VERSION = 'v11';
+// v12: estrena la «Libreta de campo»; los teléfonos borran las pantallas y estilos guardados del diseño anterior
+const VERSION = 'v12';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;
