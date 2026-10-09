@@ -25,48 +25,43 @@
 <body class="min-h-screen" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" data-paquete-minutos="{{ config('sin_conexion.minutos_paquete') }}" @endif>
 
     {{-- Sin conexión: la página puede ser una copia guardada (solo consulta). Lleva la hora en que se generó. --}}
-    <div data-sin-conexion hidden role="status" class="sticky top-0 z-40 animate-aparecer bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 px-4 py-2 text-center text-sm font-semibold text-amber-950 shadow-md print:hidden">
+    <div data-sin-conexion hidden role="status" class="sticky top-0 z-40 animate-aparecer bg-amber-400 px-4 py-2 text-center text-sm font-bold text-amber-950 print:hidden">
         {{ __('layout.sin_conexion', ['momento' => \App\Support\Region::ahora()->format('d/m H:i')]) }}
         @auth
             <a href="{{ route('campo') }}" class="ml-1 underline underline-offset-2">{{ __('layout.abrir_registro_rapido') }}</a>
         @endauth
     </div>
 
-    <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-marca-800 focus:shadow">
+    <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-ficha focus:px-4 focus:py-2 focus:text-bien focus:shadow">
         {{ __('layout.saltar_contenido') }}
     </a>
 
     @unless ($conSesion)
-        {{-- Fondo del ingreso: foto de un estanque piscícola (CC0, ver docs/marca/LEEME.md) con un velo oscuro para el contraste --}}
-        <div class="fixed inset-0 -z-10 overflow-hidden bg-marca-900" aria-hidden="true">
+        {{-- Fondo del ingreso: foto de un estanque piscícola (CC0, ver docs/marca/LEEME.md) bajo un velo de tinta parejo, con una ola fija al pie --}}
+        <div class="fixed inset-0 -z-10 overflow-hidden bg-tinta" aria-hidden="true">
             <img src="/images/fondo-login.webp" alt="" class="h-full w-full object-cover" decoding="async">
-            <div class="absolute inset-0 bg-gradient-to-b from-marca-950/80 via-marca-900/65 to-marca-950/90"></div>
-            <div class="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-marca-400/20 blur-3xl"></div>
-            <div class="absolute -right-24 bottom-24 h-80 w-80 rounded-full bg-sky-400/15 blur-3xl"></div>
-            {{-- Olas al pie (dibujo fijo) --}}
-            <svg class="absolute bottom-0 left-0 h-28 w-[200%] text-marca-400/15" viewBox="0 0 2880 100" preserveAspectRatio="none">
+            <div class="absolute inset-0 bg-tinta/75"></div>
+            <svg class="absolute bottom-0 left-0 h-24 w-[200%] text-marca-400/15" viewBox="0 0 2880 100" preserveAspectRatio="none">
                 <path fill="currentColor" d="M0 50 Q360 0 720 50 T1440 50 T2160 50 T2880 50 V100 H0Z"/>
-            </svg>
-            <svg class="absolute bottom-0 left-0 h-20 w-[200%] text-marca-950/50" viewBox="0 0 2880 100" preserveAspectRatio="none">
-                <path fill="currentColor" d="M0 60 Q360 20 720 60 T1440 60 T2160 60 T2880 60 V100 H0Z"/>
             </svg>
         </div>
     @endunless
 
     @if ($enPlataforma)
-        <header class="cabecera sticky top-0 z-30 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 pt-[env(safe-area-inset-top)] text-white [view-transition-name:cabecera] print:hidden">
-            <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-                <a href="{{ route('plataforma.fincas.index') }}" class="group flex min-w-0 items-center gap-3">
-                    <x-logo class="h-10 w-10 shrink-0 rounded-xl shadow-lg ring-1 ring-white/20 transition duration-300 ease-resorte group-hover:-rotate-6 group-hover:scale-105" />
+        {{-- Panel de plataforma: la misma tapa de tinta que la finca; el subtítulo dice dónde se está --}}
+        <header class="cabecera sticky top-0 z-30 bg-tinta pt-[env(safe-area-inset-top)] text-white [view-transition-name:cabecera] print:hidden">
+            <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+                <a href="{{ route('plataforma.fincas.index') }}" class="flex min-w-0 items-center gap-3 rounded-ficha">
+                    <x-logo class="h-10 w-10 shrink-0 rounded-lg ring-1 ring-white/15" />
                     <span class="min-w-0 leading-tight">
                         <span class="block truncate text-base font-bold">{{ config('app.name') }}</span>
-                        <span class="block truncate text-sm text-slate-300">{{ __('plataforma.panel') }}</span>
+                        <span class="block truncate text-sm text-white/75">{{ __('plataforma.panel') }}</span>
                     </span>
                 </a>
 
                 <form method="POST" action="{{ route('plataforma.logout') }}" class="shrink-0">
                     @csrf
-                    <button type="submit" class="presionable flex min-h-12 items-center gap-2 rounded-xl px-3 text-base font-medium text-slate-100 hover:bg-white/10">
+                    <button type="submit" class="flex min-h-12 items-center gap-2 rounded-ficha px-3 text-base font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white">
                         <x-icono nombre="salir" class="h-5 w-5" />
                         <span>{{ __('layout.salir') }}</span>
                     </button>
@@ -217,22 +212,22 @@
         <x-asistente />
 
         <x-modal id="cola-sin-conexion" :titulo="__('layout.cola.titulo')">
-            <p class="mb-4 text-base text-slate-600">{{ __('layout.cola.explicacion') }}</p>
-            <p data-cola-vacia class="text-base text-texto-suave">{{ __('layout.cola.vacia') }}</p>
+            <p class="mb-4 text-base text-tinta-suave">{{ __('layout.cola.explicacion') }}</p>
+            <p data-cola-vacia class="text-base text-tinta-suave">{{ __('layout.cola.vacia') }}</p>
             <section data-cola-rechazados hidden class="mb-5">
-                <h3 class="mb-2 text-base font-semibold text-red-700">{{ __('layout.cola.rechazados') }}</h3>
-                <p class="mb-3 text-sm text-slate-600">{{ __('layout.cola.rechazados_ayuda') }}</p>
+                <h3 class="mb-2 text-base font-semibold text-alerta">{{ __('layout.cola.rechazados') }}</h3>
+                <p class="mb-3 text-sm text-tinta-suave">{{ __('layout.cola.rechazados_ayuda') }}</p>
                 <ul class="space-y-3"></ul>
             </section>
             <section data-cola-pendientes hidden class="mb-5">
-                <h3 class="mb-2 text-base font-semibold text-slate-900">{{ __('layout.cola.pendientes') }}</h3>
+                <h3 class="mb-2 text-base font-semibold text-tinta">{{ __('layout.cola.pendientes') }}</h3>
                 <ul class="space-y-3"></ul>
             </section>
             <x-boton tipo="button" class="w-full" data-cola-enviar hidden>{{ __('layout.cola.enviar_ahora') }}</x-boton>
         </x-modal>
 
         <x-modal id="salir-con-pendientes" :titulo="__('layout.cola.salir_titulo')">
-            <p class="text-base text-slate-700">{!! __('layout.cola.salir_texto', ['cantidad' => '<strong data-salir-total>0</strong>']) !!}</p>
+            <p class="text-base text-tinta">{!! __('layout.cola.salir_texto', ['cantidad' => '<strong data-salir-total>0</strong>']) !!}</p>
             <div class="mt-5 grid grid-cols-2 gap-3">
                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('layout.cola.esperar') }}</x-boton>
                 <x-boton tipo="button" variante="peligro" data-salir-borrar>{{ __('layout.cola.salir_borrar') }}</x-boton>

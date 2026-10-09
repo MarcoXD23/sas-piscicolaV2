@@ -8,8 +8,8 @@
     <div class="grid max-w-3xl gap-6">
         <x-tarjeta :titulo="__('cuenta.datos')">
             <dl class="grid grid-cols-1 gap-3 text-base sm:grid-cols-2">
-                <div><dt class="text-sm text-texto-suave">{{ __('cuenta.nombre') }}</dt><dd class="font-semibold text-slate-900">{{ $usuario->name }}</dd></div>
-                <div><dt class="text-sm text-texto-suave">{{ __('cuenta.correo') }}</dt><dd class="break-all font-semibold text-slate-900">{{ $usuario->email }}</dd></div>
+                <div><dt class="text-sm text-tinta-suave">{{ __('cuenta.nombre') }}</dt><dd class="font-semibold text-tinta">{{ $usuario->name }}</dd></div>
+                <div><dt class="text-sm text-tinta-suave">{{ __('cuenta.correo') }}</dt><dd class="break-all font-semibold text-tinta">{{ $usuario->email }}</dd></div>
             </dl>
         </x-tarjeta>
 
@@ -24,11 +24,11 @@
 
         <x-tarjeta :titulo="__('cuenta.dos_pasos.titulo')" :subtitulo="__('cuenta.dos_pasos.que_es')">
             @if ($usuario->tieneDosPasos())
-                <p class="mb-2 text-base font-semibold text-marca-800">{{ __('cuenta.dos_pasos.activa', ['fecha' => $usuario->dos_pasos_activado_at->format('d/m/Y')]) }}</p>
-                <p class="mb-5 text-sm text-texto-suave">{{ trans_choice('cuenta.dos_pasos.recuperacion_quedan', count($usuario->dos_pasos_recuperacion ?? [])) }}</p>
+                <p class="mb-2 text-base font-semibold text-bien">{{ __('cuenta.dos_pasos.activa', ['fecha' => $usuario->dos_pasos_activado_at->format('d/m/Y')]) }}</p>
+                <p class="mb-5 text-sm text-tinta-suave">{{ trans_choice('cuenta.dos_pasos.recuperacion_quedan', count($usuario->dos_pasos_recuperacion ?? [])) }}</p>
 
-                <x-formulario :action="route('mi-cuenta.dos-pasos.desactivar')" metodo="DELETE" class="border-t border-slate-200 pt-5">
-                    <p class="text-sm text-slate-600">{{ __('cuenta.dos_pasos.desactivar_ayuda') }}</p>
+                <x-formulario :action="route('mi-cuenta.dos-pasos.desactivar')" metodo="DELETE" class="border-t border-renglon pt-5">
+                    <p class="text-sm text-tinta-suave">{{ __('cuenta.dos_pasos.desactivar_ayuda') }}</p>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <x-campo nombre="actual" id="desactivar-actual" :etiqueta="__('cuenta.contrasena.actual')" tipo="password" autocomplete="current-password" required />
                         <x-campo nombre="codigo" id="desactivar-codigo" :etiqueta="__('cuenta.dos_pasos.ingreso_codigo')" inputmode="numeric" autocomplete="one-time-code" maxlength="20" required />
@@ -36,7 +36,7 @@
                     <x-boton variante="peligro">{{ __('cuenta.dos_pasos.desactivar') }}</x-boton>
                 </x-formulario>
             @else
-                <p class="mb-4 text-base text-slate-600">{{ __('cuenta.dos_pasos.inactiva') }}</p>
+                <p class="mb-4 text-base text-tinta-suave">{{ __('cuenta.dos_pasos.inactiva') }}</p>
                 <x-boton :href="route('mi-cuenta.dos-pasos.activar')">{{ __('cuenta.dos_pasos.activar') }}</x-boton>
             @endif
         </x-tarjeta>

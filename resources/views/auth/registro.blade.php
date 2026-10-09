@@ -4,17 +4,14 @@
 
 @section('contenido')
     <div class="mb-8 text-center">
-        <div class="relative mx-auto mb-5 h-20 w-20">
-            <span class="absolute -inset-2 rounded-[2rem] bg-marca-300/40 blur-xl" aria-hidden="true"></span>
-            <x-logo class="relative h-20 w-20 rounded-3xl shadow-2xl ring-1 ring-white/30" />
-        </div>
+        <x-logo class="mx-auto mb-5 h-20 w-20 rounded-2xl shadow-levantada ring-1 ring-white/20" />
         <h1 class="text-3xl font-bold tracking-tight text-white drop-shadow-sm">{{ __('acceso.solicitar_acceso') }}</h1>
         <p class="mt-2 text-base text-marca-100">{{ __('acceso.propietario_finca_aprobara_tu_cuenta') }}</p>
     </div>
 
-    <x-tarjeta class="!bg-white/90 !shadow-2xl !shadow-marca-950/40 !ring-white/40 backdrop-blur-xl">
+    <x-tarjeta class="!shadow-levantada !ring-0">
         @error('registro')
-            <div role="alert" class="mb-5 animate-sacudir rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-800">
+            <div role="alert" class="mb-5 animate-sacudir rounded-ficha border border-alerta-borde bg-alerta-fondo px-4 py-3 text-base text-alerta">
                 <p>{{ $message }}</p>
                 <a href="{{ route('password.request') }}" class="mt-1 inline-flex min-h-12 items-center font-semibold underline underline-offset-2">{{ __('acceso.recuperar.enlace_login') }}</a>
             </div>
@@ -29,15 +26,15 @@
             <x-campo nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" tipo="password" autocomplete="new-password" required />
 
             {{-- Aceptar los términos y la privacidad es obligatorio para registrarse --}}
-            <label class="flex items-start gap-3 text-base text-slate-700">
-                <input type="checkbox" name="acepto" value="1" required @checked(old('acepto')) class="mt-1 h-5 w-5 rounded border-slate-300 accent-marca-600">
+            <label class="flex items-start gap-3 text-base text-tinta">
+                <input type="checkbox" name="acepto" value="1" required @checked(old('acepto')) class="mt-1 h-5 w-5 rounded border-renglon-fuerte accent-marca-600">
                 <span>{!! __('legal.aceptar.registro_casilla', [
                     'terminos' => '<a href="'.e(route('legal.terminos')).'" target="_blank" rel="noopener" class="font-semibold text-marca-700 underline">'.e(__('legal.terminos')).'</a>',
                     'privacidad' => '<a href="'.e(route('legal.privacidad')).'" target="_blank" rel="noopener" class="font-semibold text-marca-700 underline">'.e(__('legal.privacidad')).'</a>',
                 ]) !!}</span>
             </label>
             @error('acepto')
-                <p class="text-sm font-medium text-red-600">{{ $message }}</p>
+                <p class="text-sm font-medium text-alerta">{{ $message }}</p>
             @enderror
 
             <x-boton class="w-full">{{ __('acceso.enviar_solicitud') }}</x-boton>

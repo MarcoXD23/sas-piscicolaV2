@@ -4,21 +4,18 @@
 
 @section('contenido')
     <div class="mb-8 text-center">
-        <div class="relative mx-auto mb-5 h-20 w-20">
-            <span class="absolute -inset-2 rounded-[2rem] bg-marca-300/40 blur-xl" aria-hidden="true"></span>
-            <x-logo class="relative h-20 w-20 rounded-3xl shadow-2xl ring-1 ring-white/30" />
-        </div>
+        <x-logo class="mx-auto mb-5 h-20 w-20 rounded-2xl shadow-levantada ring-1 ring-white/20" />
         <h1 class="text-3xl font-bold tracking-tight text-white drop-shadow-sm">{{ config('app.name') }}</h1>
         <p class="mt-2 text-base text-marca-100">{{ __('acceso.gestion_tu_finca_piscicola') }}</p>
     </div>
 
-    <x-tarjeta class="!bg-white/90 !shadow-2xl !shadow-marca-950/40 !ring-white/40 backdrop-blur-xl">
+    <x-tarjeta class="!shadow-levantada !ring-0">
         <x-formulario :action="route('login')">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" autocomplete="username" inputmode="email" required autofocus />
             <x-campo nombre="password" :etiqueta="__('acceso.contrasena')" tipo="password" autocomplete="current-password" required />
 
-            <label class="flex min-h-12 items-center gap-3 text-base text-slate-700">
-                <input type="checkbox" name="recordarme" value="1" class="h-5 w-5 rounded border-slate-300 accent-marca-600">
+            <label class="flex min-h-12 items-center gap-3 text-base text-tinta">
+                <input type="checkbox" name="recordarme" value="1" class="h-5 w-5 rounded border-renglon-fuerte accent-marca-600">
                 {{ __('acceso.mantener_sesion_iniciada') }}
             </label>
 
