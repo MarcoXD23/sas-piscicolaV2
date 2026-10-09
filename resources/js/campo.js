@@ -57,12 +57,12 @@ export const iniciarCampo = (t, cola) => {
         const caja = $('[data-campo-mensaje]');
         caja.hidden = false;
         caja.className = tipo === 'ok'
-            ? 'mb-4 rounded-xl border border-marca-300 bg-marca-50 px-4 py-3 text-base font-semibold text-marca-900'
-            : 'mb-4 rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-base font-semibold text-amber-900';
+            ? 'mb-4 rounded-ficha border border-bien-borde bg-bien-fondo px-4 py-3 text-base font-semibold text-bien'
+            : 'mb-4 rounded-ficha border border-atencion-borde bg-atencion-fondo px-4 py-3 text-base font-semibold text-atencion';
         const parrafo = el('p', '', texto);
         caja.replaceChildren(parrafo);
         if (accion) {
-            const boton = el('button', 'mt-3 inline-flex min-h-12 items-center justify-center rounded-xl bg-marca-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-marca-700', accion.texto);
+            const boton = el('button', 'mt-3 inline-flex min-h-12 items-center justify-center rounded-ficha bg-marca-700 px-5 py-3 text-base font-semibold text-white shadow-ficha transition-[background-color,translate] duration-150 hover:bg-marca-800 active:translate-y-px active:bg-marca-900', accion.texto);
             boton.type = 'button';
             boton.addEventListener('click', accion.alTocar);
             caja.append(boton);
@@ -97,7 +97,7 @@ export const iniciarCampo = (t, cola) => {
         const [claveHace, datosHace] = textoHace(edad);
         const caja = $('[data-campo-antiguedad]');
         caja.textContent = `${t('campo_datos_del', { momento: cuando, hace: t(claveHace, datosHace) })}${edad.vieja ? ` ${t('campo_datos_viejos')}` : ''}`;
-        caja.className = edad.vieja ? CLASE_AVISO : 'text-base text-slate-700';
+        caja.className = edad.vieja ? CLASE_AVISO : 'text-base text-tinta-suave';
         $('[data-campo-truncado]').hidden = !paquete.lagos_truncados;
         $('[data-campo-truncado]').textContent = t('campo_lagos_truncados', { n: paquete.max_lagos });
 
@@ -121,7 +121,7 @@ export const iniciarCampo = (t, cola) => {
     /** Campo con etiqueta visible, ayuda y mensaje de error conectados al control (aria-describedby). */
     const grupo = (nombre, etiqueta, control, ayuda = null) => {
         const caja = el('div');
-        const titulo = el('label', 'mb-1.5 block text-base font-semibold text-slate-800', etiqueta);
+        const titulo = el('label', 'mb-1.5 block text-base font-semibold text-tinta', etiqueta);
         titulo.htmlFor = `campo-${nombre}`;
         control.id = `campo-${nombre}`;
         control.name = nombre;
@@ -181,7 +181,7 @@ export const iniciarCampo = (t, cola) => {
                 ayuda.textContent = sugerida ? t('campo_racion_sugerida', { kg: sugerida.toLocaleString(document.documentElement.lang) }) : '';
                 if (sugerida && kg.value === '') kg.value = String(sugerida);
             });
-            if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-xl bg-red-50 p-4 text-base font-semibold text-red-800 ring-1 ring-red-200', t('campo_sin_concentrado')));
+            if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-ficha border border-alerta-borde bg-alerta-fondo p-4 text-base font-semibold text-alerta', t('campo_sin_concentrado')));
             campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), grupoKg, fecha());
         }
 
@@ -235,7 +235,7 @@ export const iniciarCampo = (t, cola) => {
         }
 
         if (seccion === 'medicion') {
-            const ayuda = el('p', 'text-base text-slate-700', t('campo_medicion_ayuda'));
+            const ayuda = el('p', 'text-base text-tinta-suave', t('campo_medicion_ayuda'));
             const parametros = el('div', 'grid grid-cols-2 gap-4');
             (paquete.medicion ?? []).forEach((parametro) => parametros.append(grupo(parametro.campo, parametro.etiqueta,
                 entrada('text', { inputmode: parametro.paso >= 1 ? 'numeric' : 'decimal', autocomplete: 'off', placeholder: `${parametro.min} – ${parametro.max}` }))));
@@ -269,14 +269,14 @@ export const iniciarCampo = (t, cola) => {
         resumen.hidden = lista.length === 0;
         if (lista.length === 0) return;
 
-        const titulo = el('h3', 'text-base font-bold text-red-800', t(lista.length === 1 ? 'campo_revisa_uno' : 'campo_revisa_varios', { n: lista.length }));
+        const titulo = el('h3', 'text-base font-bold text-alerta', t(lista.length === 1 ? 'campo_revisa_uno' : 'campo_revisa_varios', { n: lista.length }));
         titulo.id = 'campo-resumen-titulo';
         const enlaces = el('ul', 'mt-2 list-disc space-y-1 pl-5');
         lista.forEach(([campo, [claveError, datosError]]) => {
             // El error general de la medición lleva al primer parámetro
             const destino = formulario.querySelector(`#campo-${campo}`) ?? formulario.querySelector('[data-error-de="medicion"]')?.previousElementSibling?.querySelector('input');
             const item = el('li');
-            const enlace = el('a', 'font-semibold text-red-800 underline underline-offset-2', t(claveError, datosError));
+            const enlace = el('a', 'font-semibold text-alerta underline underline-offset-4', t(claveError, datosError));
             enlace.href = destino?.id ? `#${destino.id}` : '#';
             enlace.addEventListener('click', (evento) => {
                 evento.preventDefault();
@@ -298,13 +298,13 @@ export const iniciarCampo = (t, cola) => {
 
     const abrir = (seccion) => {
         const contenedor = $('[data-campo-formulario]');
-        const formulario = el('form', 'space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-300');
+        const formulario = el('form', 'space-y-5 rounded-ficha bg-ficha p-5 shadow-ficha ring-1 ring-renglon');
         formulario.noValidate = true;   // se valida aquí, con los textos de la app
         formulario.dataset.seccion = seccion;
-        formulario.append(el('h2', 'text-xl font-bold text-slate-900', t(`campo_seccion_${seccion}`)));
+        formulario.append(el('h2', 'text-seccion font-bold text-tinta', t(`campo_seccion_${seccion}`)));
 
         // Resumen de errores: se llena al fallar el envío y recibe el foco (role=alert lo anuncia)
-        const resumen = el('div', 'rounded-xl border-2 border-red-300 bg-red-50 p-4 focus:outline-none focus:ring-2 focus:ring-red-400');
+        const resumen = el('div', 'rounded-ficha border-2 border-alerta-borde bg-alerta-fondo p-4 focus:outline-none focus:ring-4 focus:ring-alerta-borde/60');
         resumen.dataset.campoResumen = '';
         resumen.setAttribute('role', 'alert');
         resumen.setAttribute('aria-labelledby', 'campo-resumen-titulo');
@@ -318,10 +318,10 @@ export const iniciarCampo = (t, cola) => {
         formulario.append(...camposDe(seccion, formulario));
 
         const botones = el('div', 'grid grid-cols-2 gap-3 pt-2');
-        const cancelar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 py-3 text-base font-semibold text-marca-800 shadow-sm ring-1 ring-inset ring-marca-300 hover:bg-marca-50', t('campo_cancelar'));
+        const cancelar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-ficha bg-ficha px-5 py-3 text-base font-semibold text-tinta ring-1 ring-inset ring-renglon-fuerte transition-[background-color,translate] duration-150 hover:bg-papel-hondo active:translate-y-px', t('campo_cancelar'));
         cancelar.type = 'button';
         cancelar.addEventListener('click', cerrar);
-        const guardar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-marca-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-marca-700 disabled:opacity-60', t('campo_guardar'));
+        const guardar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-ficha bg-marca-700 px-5 py-3 text-base font-semibold text-white shadow-ficha transition-[background-color,translate] duration-150 hover:bg-marca-800 active:translate-y-px active:bg-marca-900 disabled:cursor-not-allowed disabled:opacity-50', t('campo_guardar'));
         guardar.type = 'submit';
         botones.append(cancelar, guardar);
         formulario.append(botones);
