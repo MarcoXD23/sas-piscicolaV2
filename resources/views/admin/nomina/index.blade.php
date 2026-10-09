@@ -8,14 +8,14 @@
     <x-pestanas-personal />
 
     <div class="mb-4 flex items-center justify-between gap-2">
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.nomina.index', ['semana' => $lunes->subWeek()->toDateString()])" :aria-label="__('nomina.semana_anterior')">←</x-boton>
-        <h2 class="text-center text-lg font-semibold text-slate-900">
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.nomina.index', ['semana' => $lunes->subWeek()->toDateString()])" :aria-label="__('nomina.semana_anterior')"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /></x-boton>
+        <h2 class="text-center text-lg font-semibold text-tinta">
             {{ __('comun.semana_del', ['desde' => $lunes->translatedFormat('j M'), 'hasta' => $lunes->addDays(6)->translatedFormat('j M Y')]) }}
         </h2>
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.nomina.index', ['semana' => $lunes->addWeek()->toDateString()])" :aria-label="__('nomina.semana_siguiente')">→</x-boton>
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.nomina.index', ['semana' => $lunes->addWeek()->toDateString()])" :aria-label="__('nomina.semana_siguiente')"><x-icono nombre="abajo" class="h-5 w-5 -rotate-90" /></x-boton>
     </div>
 
-    <p class="mb-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
+    <p class="mb-4 rounded-ficha bg-papel-hondo p-3 text-sm text-tinta">
         {{ __('nomina.explicacion') }}
         @unless ($semanaTerminada)
             <strong class="font-semibold">{{ __('nomina.esta_semana_aun_no_termina') }}</strong> {{ __('nomina.solo_turnos_terminados') }}
@@ -38,11 +38,11 @@
             <x-tarjeta>
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <h3 class="text-lg font-semibold text-slate-900">{{ $persona->name }}</h3>
-                        <p class="text-sm capitalize text-texto-suave">{{ $persona->roles->pluck('nombre')->intersect(\App\Models\Turno::ROLES)->join(' y ') }}</p>
-                        <p class="mt-1 text-sm text-slate-600">
+                        <h3 class="text-lg font-semibold text-tinta">{{ $persona->name }}</h3>
+                        <p class="text-sm capitalize text-tinta-suave">{{ $persona->roles->pluck('nombre')->intersect(\App\Models\Turno::ROLES)->join(' y ') }}</p>
+                        <p class="mt-1 text-sm text-tinta-suave">
                             @if ($sinTarifas)
-                                <span class="font-semibold text-amber-700">{{ __('nomina.sin_tarifas_configuradas') }}</span>
+                                <span class="font-semibold text-atencion">{{ __('nomina.sin_tarifas_configuradas') }}</span>
                             @else
                                 {{ __('nomina.tarifas_resumen', ['hora' => Formato::dinero($persona->valor_hora), 'extra' => Formato::dinero($persona->valor_hora_extra)]) }}
                             @endif
@@ -53,26 +53,26 @@
                     @if ($liquidacion)
                         <span @class([
                             'rounded-full px-3 py-1 text-sm font-semibold',
-                            'bg-marca-100 text-marca-800' => $liquidacion->estaPagada(),
-                            'bg-amber-100 text-amber-900' => ! $liquidacion->estaPagada(),
+                            'bg-bien-fondo text-bien' => $liquidacion->estaPagada(),
+                            'bg-atencion-fondo text-atencion' => ! $liquidacion->estaPagada(),
                         ])>{{ $liquidacion->estaPagada() ? __('nomina.pagada_el', ['fecha' => $liquidacion->pagada_at->format('d/m')]) : __('nomina.por_pagar') }}</span>
                     @endif
                 </div>
 
                 @php $fila = $liquidacion ?? $previa; @endphp
                 <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-base sm:grid-cols-4">
-                    <div><dt class="text-sm text-texto-suave">{{ __('nomina.horas_turno') }}</dt><dd class="font-semibold tabular-nums">{{ __('comun.horas_corto', ['horas' => Formato::numero($fila['horas_turnos'], 1)]) }}</dd></div>
-                    <div><dt class="text-sm text-texto-suave">{{ __('nomina.horas_extra') }}</dt><dd class="font-semibold tabular-nums">{{ __('comun.horas_corto', ['horas' => Formato::numero($fila['horas_extra'], 1)]) }}</dd></div>
-                    <div><dt class="text-sm text-texto-suave">{{ __('nomina.bruto') }}</dt><dd class="font-semibold tabular-nums">{{ $sinTarifas && ! $liquidacion ? '—' : Formato::dinero($fila['bruto']) }}</dd></div>
+                    <div><dt class="text-sm text-tinta-suave">{{ __('nomina.horas_turno') }}</dt><dd class="font-semibold tabular-nums">{{ __('comun.horas_corto', ['horas' => Formato::numero($fila['horas_turnos'], 1)]) }}</dd></div>
+                    <div><dt class="text-sm text-tinta-suave">{{ __('nomina.horas_extra') }}</dt><dd class="font-semibold tabular-nums">{{ __('comun.horas_corto', ['horas' => Formato::numero($fila['horas_extra'], 1)]) }}</dd></div>
+                    <div><dt class="text-sm text-tinta-suave">{{ __('nomina.bruto') }}</dt><dd class="font-semibold tabular-nums">{{ $sinTarifas && ! $liquidacion ? '—' : Formato::dinero($fila['bruto']) }}</dd></div>
                     <div>
-                        <dt class="text-sm text-texto-suave">{{ $liquidacion ? __('nomina.total_a_pagar') : __('nomina.pescado_por_descontar') }}</dt>
-                        <dd class="text-lg font-bold tabular-nums text-slate-900">{{ Formato::dinero($liquidacion ? $liquidacion->total_pagar : $saldoPescado) }}</dd>
+                        <dt class="text-sm text-tinta-suave">{{ $liquidacion ? __('nomina.total_a_pagar') : __('nomina.pescado_por_descontar') }}</dt>
+                        <dd class="text-lg font-bold tabular-nums text-tinta">{{ Formato::dinero($liquidacion ? $liquidacion->total_pagar : $saldoPescado) }}</dd>
                     </div>
                 </dl>
 
                 @if ($liquidacion)
                     @if ($liquidacion->descuento_pescado > 0)
-                        <p class="mt-2 text-sm text-slate-600">{{ __('nomina.incluye_descuento', ['valor' => Formato::dinero($liquidacion->descuento_pescado)]) }}</p>
+                        <p class="mt-2 text-sm text-tinta-suave">{{ __('nomina.incluye_descuento', ['valor' => Formato::dinero($liquidacion->descuento_pescado)]) }}</p>
                     @endif
                     @unless ($liquidacion->estaPagada())
                         <div class="mt-4 grid grid-cols-2 gap-2">
@@ -86,7 +86,7 @@
                     @endunless
                 @else
                     @if ($previa['turnos_en_permiso']->isNotEmpty() || $previa['turnos_sin_terminar'] > 0)
-                        <p class="mt-2 text-sm text-slate-600">
+                        <p class="mt-2 text-sm text-tinta-suave">
                             @if ($previa['turnos_en_permiso']->isNotEmpty()) {{ __('nomina.turnos_en_permiso', ['cantidad' => $previa['turnos_en_permiso']->count()]) }} @endif
                             @if ($previa['turnos_sin_terminar'] > 0) {{ __('nomina.turnos_sin_terminar', ['cantidad' => $previa['turnos_sin_terminar']]) }} @endif
                         </p>
@@ -97,7 +97,7 @@
                             <input type="hidden" name="user_id" value="{{ $persona->id }}">
                             <input type="hidden" name="semana" value="{{ $lunes->toDateString() }}">
                             @if ($saldoPescado > 0)
-                                <label class="flex min-h-12 items-center gap-3 text-base text-slate-700">
+                                <label class="flex min-h-12 items-center gap-3 text-base text-tinta">
                                     <input type="checkbox" name="descontar_pescado" value="1" class="h-5 w-5 rounded accent-marca-600">
                                     {{ __('nomina.descontar_pescado', ['valor' => Formato::dinero(min($saldoPescado, $previa['bruto']))]) }}
                                 </label>
@@ -114,7 +114,7 @@
                         <x-campo nombre="valor_hora" id="hora-{{ $persona->id }}" :etiqueta="__('nomina.hora_ordinaria')" tipo="number" min="1" inputmode="numeric" :valor="$persona->valor_hora" required />
                         <x-campo nombre="valor_hora_extra" id="extra-{{ $persona->id }}" :etiqueta="__('nomina.hora_extra')" tipo="number" min="1" inputmode="numeric" :valor="$persona->valor_hora_extra" required />
                     </div>
-                    <p class="text-sm text-texto-suave">{{ __('nomina.valores_moneda_finca_sin_decimales') }}</p>
+                    <p class="text-sm text-tinta-suave">{{ __('nomina.valores_moneda_finca_sin_decimales') }}</p>
                     <div class="grid grid-cols-2 gap-3 pt-2">
                         <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
                         <x-boton>{{ __('comun.guardar') }}</x-boton>

@@ -5,15 +5,15 @@
 @section('contenido')
     @php
         $colores = [
-            'cosecha' => 'bg-marca-100 text-marca-900',
-            'compra' => 'bg-sky-100 text-sky-900',
+            'cosecha' => 'bg-bien-fondo text-bien',
+            'compra' => 'bg-info-fondo text-info',
             'visita' => 'bg-violet-100 text-violet-900',
-            'mantenimiento' => 'bg-amber-100 text-amber-900',
+            'mantenimiento' => 'bg-atencion-fondo text-atencion',
             'pago' => 'bg-rose-100 text-rose-900',
-            'sanidad' => 'bg-red-100 text-red-900',
-            'otro' => 'bg-slate-100 text-slate-800',
-            'retiro' => 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200',
-            'permiso' => 'bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200',
+            'sanidad' => 'bg-alerta-fondo text-alerta',
+            'otro' => 'bg-papel-hondo text-tinta',
+            'retiro' => 'bg-atencion-fondo text-atencion ring-1 ring-inset ring-atencion-borde',
+            'permiso' => 'bg-papel text-tinta-suave ring-1 ring-inset ring-renglon',
         ];
         $eventos = $porDia->flatten(1)->pluck('evento')->filter()->unique('id');
         $diasSemana = __('comun.dias_cortos');
@@ -26,14 +26,14 @@
     </x-encabezado>
 
     <div class="mb-4 flex items-center justify-between gap-2">
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->subMonth()->format('Y-m')])" :aria-label="__('agenda.mes_anterior')">←</x-boton>
-        <h2 class="text-center text-xl font-semibold capitalize text-slate-900">{{ $mes->translatedFormat('F Y') }}</h2>
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.agenda.index', ['mes' => $mes->addMonth()->format('Y-m')])" :aria-label="__('agenda.mes_siguiente')">→</x-boton>
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.agenda.index', ['mes' => $mes->subMonth()->format('Y-m')])" :aria-label="__('agenda.mes_anterior')"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /></x-boton>
+        <h2 class="text-center text-xl font-semibold capitalize text-tinta">{{ $mes->translatedFormat('F Y') }}</h2>
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.agenda.index', ['mes' => $mes->addMonth()->format('Y-m')])" :aria-label="__('agenda.mes_siguiente')"><x-icono nombre="abajo" class="h-5 w-5 -rotate-90" /></x-boton>
     </div>
 
     {{-- Escritorio: calendario mensual --}}
-    <div class="hidden overflow-hidden rounded-2xl bg-white shadow-suave ring-1 ring-slate-200 md:block">
-        <div class="grid grid-cols-7 border-b border-slate-200 bg-marca-50 text-center text-sm font-semibold text-marca-900">
+    <div class="hidden overflow-hidden rounded-ficha bg-ficha shadow-ficha ring-1 ring-renglon md:block">
+        <div class="grid grid-cols-7 border-b border-renglon bg-papel-hondo text-center text-sm font-bold text-tinta">
             @foreach ($diasSemana as $nombre)
                 <div class="py-2">{{ $nombre }}</div>
             @endforeach
@@ -42,14 +42,14 @@
             @foreach ($dias as $dia)
                 @php $elementos = $porDia->get($dia->toDateString(), collect()); @endphp
                 <div @class([
-                    'min-h-28 border-b border-r border-slate-100 p-1.5 [&:nth-child(7n)]:border-r-0',
-                    'bg-slate-50/70' => ! $dia->isSameMonth($mes),
+                    'min-h-28 border-b border-r border-renglon p-1.5 [&:nth-child(7n)]:border-r-0',
+                    'bg-papel' => ! $dia->isSameMonth($mes),
                 ])>
                     <p @class([
                         'mb-1 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
                         'bg-marca-600 text-white' => $dia->isToday(),
-                        'text-slate-500' => ! $dia->isToday() && ! $dia->isSameMonth($mes),
-                        'text-slate-700' => ! $dia->isToday() && $dia->isSameMonth($mes),
+                        'text-tinta-suave' => ! $dia->isToday() && ! $dia->isSameMonth($mes),
+                        'text-tinta' => ! $dia->isToday() && $dia->isSameMonth($mes),
                     ])>{{ $dia->day }}</p>
 
                     <ul class="space-y-1">
@@ -66,7 +66,7 @@
                             </li>
                         @endforeach
                         @if ($elementos->count() > 3)
-                            <li class="px-1.5 text-sm text-texto-suave">{{ __('agenda.mas', ['cantidad' => $elementos->count() - 3]) }}</li>
+                            <li class="px-1.5 text-sm text-tinta-suave">{{ __('agenda.mas', ['cantidad' => $elementos->count() - 3]) }}</li>
                         @endif
                     </ul>
                 </div>
@@ -78,19 +78,19 @@
     <div class="space-y-3 md:hidden">
         @php $diasConElementos = $dias->filter(fn ($dia) => $dia->isSameMonth($mes) && $porDia->has($dia->toDateString())); @endphp
         @forelse ($diasConElementos as $dia)
-            <section @class(['rounded-2xl bg-white p-4 shadow-suave ring-1', 'ring-marca-300' => $dia->isToday(), 'ring-slate-200' => ! $dia->isToday()])>
-                <h3 class="mb-2 font-semibold capitalize text-slate-900">{{ $dia->translatedFormat('l j') }}</h3>
+            <section @class(['rounded-ficha bg-ficha p-4 shadow-ficha ring-1', 'ring-marca-300' => $dia->isToday(), 'ring-renglon' => ! $dia->isToday()])>
+                <h3 class="mb-2 font-semibold capitalize text-tinta">{{ $dia->translatedFormat('l j') }}</h3>
                 <ul class="space-y-2">
                     @foreach ($porDia[$dia->toDateString()] as $elemento)
                         <li>
                             @if ($elemento['evento'])
                                 <button type="button" data-abrir-modal="evento-{{ $elemento['evento']->id }}"
-                                        @class(['flex min-h-12 w-full items-center gap-2 rounded-xl px-3 text-left text-base font-medium', $colores[$elemento['color']], 'line-through opacity-60' => $elemento['evento']->estaCompletado()])>
+                                        @class(['flex min-h-12 w-full items-center gap-2 rounded-ficha px-3 text-left text-base font-medium', $colores[$elemento['color']], 'line-through opacity-60' => $elemento['evento']->estaCompletado()])>
                                     @if ($elemento['hora'])<span class="tabular-nums">{{ $elemento['hora'] }}</span>@endif
                                     <span class="min-w-0 truncate">{{ $elemento['titulo'] }}</span>
                                 </button>
                             @else
-                                <span class="flex min-h-12 items-center rounded-xl px-3 text-base {{ $colores[$elemento['color']] }}">{{ $elemento['titulo'] }}</span>
+                                <span class="flex min-h-12 items-center rounded-ficha px-3 text-base {{ $colores[$elemento['color']] }}">{{ $elemento['titulo'] }}</span>
                             @endif
                         </li>
                     @endforeach
@@ -110,9 +110,9 @@
     @foreach ($eventos as $evento)
         <x-modal id="evento-{{ $evento->id }}" :titulo="$evento->titulo">
             <dl class="space-y-2 text-base">
-                <div class="flex justify-between gap-3"><dt class="text-texto-suave">{{ __('agenda.tipo') }}</dt><dd class="font-semibold">{{ $evento->textoTipo() }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-tinta-suave">{{ __('agenda.tipo') }}</dt><dd class="font-semibold">{{ $evento->textoTipo() }}</dd></div>
                 <div class="flex justify-between gap-3">
-                    <dt class="text-texto-suave">{{ __('agenda.cuando') }}</dt>
+                    <dt class="text-tinta-suave">{{ __('agenda.cuando') }}</dt>
                     <dd class="text-right font-semibold first-letter:uppercase">
                         {{ $evento->inicia_at->translatedFormat(__('comun.formatos.dia_mes'))
                             .($evento->todo_el_dia ? '' : ', '.$evento->inicia_at->format('H:i'))
@@ -120,14 +120,14 @@
                     </dd>
                 </div>
                 @if ($evento->lago)
-                    <div class="flex justify-between gap-3"><dt class="text-texto-suave">{{ __('agenda.lago') }}</dt><dd class="font-semibold">{{ $evento->lago->nombre }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-tinta-suave">{{ __('agenda.lago') }}</dt><dd class="font-semibold">{{ $evento->lago->nombre }}</dd></div>
                 @endif
                 @if ($evento->recordar_dias_antes > 0)
-                    <div class="flex justify-between gap-3"><dt class="text-texto-suave">{{ __('agenda.aviso') }}</dt><dd class="font-semibold">{{ __('agenda.dias_antes', ['dias' => $evento->recordar_dias_antes]) }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-tinta-suave">{{ __('agenda.aviso') }}</dt><dd class="font-semibold">{{ __('agenda.dias_antes', ['dias' => $evento->recordar_dias_antes]) }}</dd></div>
                 @endif
             </dl>
             @if ($evento->descripcion)
-                <p class="mt-4 rounded-xl bg-slate-50 p-3 text-base text-slate-700">{{ $evento->descripcion }}</p>
+                <p class="mt-4 rounded-ficha bg-papel p-3 text-base text-tinta">{{ $evento->descripcion }}</p>
             @endif
 
             @if ($evento->estaCompletado())
@@ -168,7 +168,7 @@
                              :valor="$editar?->recordar_dias_antes ?? 1" required />
                 </div>
                 <x-campo nombre="descripcion" id="descripcion{{ $sufijo }}" :etiqueta="__('agenda.notas_opcional')" :valor="$editar?->descripcion" />
-                <p class="text-sm text-texto-suave">{{ __('agenda.sin_hora_evento_es_todo') }}</p>
+                <p class="text-sm text-tinta-suave">{{ __('agenda.sin_hora_evento_es_todo') }}</p>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

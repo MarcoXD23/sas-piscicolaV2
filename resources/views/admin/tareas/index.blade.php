@@ -9,14 +9,15 @@
         </x-boton>
     </x-encabezado>
 
-    <nav class="mb-6 flex gap-1 rounded-2xl bg-slate-200/70 p-1" aria-label="{{ __('tareas.filtrar_tareas') }}">
+    {{-- Filtro como las pestañas de la libreta: la opción activa lleva raya y negrita --}}
+    <nav class="mb-6 flex gap-1 border-b border-renglon" aria-label="{{ __('tareas.filtrar_tareas') }}">
         @foreach (['pendientes' => __('tareas.pendientes'), 'completadas' => __('tareas.completadas')] as $valor => $texto)
             @php $activa = ($valor === 'completadas') === $verCompletadas; @endphp
             <a href="{{ route('admin.tareas.index', $valor === 'completadas' ? ['ver' => 'completadas'] : []) }}" @if ($activa) aria-current="page" @endif
                @class([
-                   'flex min-h-12 flex-1 items-center justify-center rounded-xl px-4 text-base font-semibold',
-                   'bg-white text-marca-800 shadow-suave ring-1 ring-slate-200/70' => $activa,
-                   'text-slate-600 hover:text-slate-900' => ! $activa,
+                   '-mb-px flex min-h-12 flex-1 items-center justify-center px-4 text-base transition-colors sm:flex-none',
+                   'font-bold text-tinta shadow-[inset_0_-3px_0_var(--color-marca-700)]' => $activa,
+                   'text-tinta-suave hover:bg-papel-hondo hover:text-tinta' => ! $activa,
                ])>{{ $texto }}</a>
         @endforeach
     </nav>
@@ -34,14 +35,14 @@
             <x-tarjeta>
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <h2 class="text-lg font-semibold text-slate-900">{{ $tarea->titulo }}</h2>
-                        <p class="text-sm text-texto-suave">
+                        <h2 class="text-lg font-semibold text-tinta">{{ $tarea->titulo }}</h2>
+                        <p class="text-sm text-tinta-suave">
                             {{ $tarea->asignado->name }}
                             @if ($tarea->lago) · {{ __('lagos.lago_nombre', ['lago' => $tarea->lago->nombre]) }} @endif
                             · {{ __('tareas.asignada_por', ['nombre' => $tarea->creador->name]) }}
                         </p>
                         @if ($tarea->descripcion)
-                            <p class="mt-2 text-base text-slate-700">{{ $tarea->descripcion }}</p>
+                            <p class="mt-2 text-base text-tinta">{{ $tarea->descripcion }}</p>
                         @endif
                         @if ($tarea->estaCompletada())
                             <p class="mt-2 text-sm font-medium text-marca-700">
@@ -54,12 +55,12 @@
                         @unless ($tarea->estaCompletada())
                             <span @class([
                                 'rounded-full px-2.5 py-0.5 text-sm font-semibold',
-                                'bg-red-100 text-red-800' => $tarea->estaVencida(),
-                                'bg-slate-100 text-slate-700' => ! $tarea->estaVencida(),
+                                'bg-alerta-fondo text-alerta' => $tarea->estaVencida(),
+                                'bg-papel-hondo text-tinta' => ! $tarea->estaVencida(),
                             ])>{{ $tarea->estaVencida() ? __('tareas.vencida', ['fecha' => $tarea->fecha->format('d/m')]) : $tarea->fecha->format('d/m') }}</span>
 
                             <x-formulario :action="route('admin.tareas.destroy', $tarea)" metodo="DELETE" class="!space-y-0">
-                                <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600"
+                                <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-ficha text-tinta-suave hover:bg-alerta-fondo hover:text-alerta"
                                         aria-label="{{ __('tareas.eliminar_tarea', ['titulo' => $tarea->titulo]) }}" onclick="return confirm(@js(__('tareas.confirmar_eliminar')))">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
@@ -74,7 +75,7 @@
     @if ($tareas->hasPages())
         <nav class="mt-4 flex items-center justify-between gap-3" aria-label="{{ __('comun.paginas') }}">
             @if ($tareas->onFirstPage()) <span></span> @else <x-boton variante="secundario" :href="$tareas->previousPageUrl()">{{ __('comun.anteriores') }}</x-boton> @endif
-            <span class="text-sm text-texto-suave">{{ __('comun.pagina_de', ['actual' => $tareas->currentPage(), 'total' => $tareas->lastPage()]) }}</span>
+            <span class="text-sm text-tinta-suave">{{ __('comun.pagina_de', ['actual' => $tareas->currentPage(), 'total' => $tareas->lastPage()]) }}</span>
             @if ($tareas->hasMorePages()) <x-boton variante="secundario" :href="$tareas->nextPageUrl()">{{ __('comun.siguientes') }}</x-boton> @else <span></span> @endif
         </nav>
     @endif

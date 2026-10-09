@@ -27,25 +27,25 @@
 
     <x-tarjeta :titulo="__('turnos.turno_ahora')" class="mb-6">
         @forelse ($enCurso as $turno)
-            <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
+            <div class="flex items-center justify-between gap-3 border-t border-renglon py-3 first:border-t-0 first:pt-0">
                 <div class="flex min-w-0 items-center gap-3">
                     <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-marca-500" aria-hidden="true"></span>
-                    <span class="truncate font-semibold text-slate-900">{{ $turno->user->name }}</span>
-                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-semibold capitalize text-slate-700">{{ $turno->rol }}</span>
+                    <span class="truncate font-semibold text-tinta">{{ $turno->user->name }}</span>
+                    <span class="rounded-full bg-papel-hondo px-2.5 py-0.5 text-sm font-semibold capitalize text-tinta">{{ $turno->rol }}</span>
                 </div>
-                <span class="shrink-0 text-sm text-texto-suave">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
+                <span class="shrink-0 text-sm text-tinta-suave">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
             </div>
         @empty
-            <p class="text-base text-texto-suave">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
+            <p class="text-base text-tinta-suave">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
         @endforelse
     </x-tarjeta>
 
     <div class="mb-4 flex items-center justify-between gap-2">
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->subWeek()->toDateString()])" :aria-label="__('turnos.semana_anterior')">←</x-boton>
-        <h2 class="text-center text-lg font-semibold text-slate-900">
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.turnos.index', ['semana' => $semana->subWeek()->toDateString()])" :aria-label="__('turnos.semana_anterior')"><x-icono nombre="abajo" class="h-5 w-5 rotate-90" /></x-boton>
+        <h2 class="text-center text-lg font-semibold text-tinta">
             {{ $semana->translatedFormat('j M') }} – {{ $semana->addDays(6)->translatedFormat('j M Y') }}
         </h2>
-        <x-boton variante="secundario" class="!px-3" :href="route('admin.turnos.index', ['semana' => $semana->addWeek()->toDateString()])" :aria-label="__('turnos.semana_siguiente')">→</x-boton>
+        <x-boton variante="secundario" class="w-12 !px-0" :href="route('admin.turnos.index', ['semana' => $semana->addWeek()->toDateString()])" :aria-label="__('turnos.semana_siguiente')"><x-icono nombre="abajo" class="h-5 w-5 -rotate-90" /></x-boton>
     </div>
 
     <div class="space-y-3">
@@ -53,22 +53,22 @@
             @php $turnosDelDia = $turnosPorDia->get($dia->toDateString(), collect()); @endphp
 
             <section @class([
-                'rounded-2xl bg-white p-4 shadow-suave ring-1',
+                'rounded-ficha bg-ficha p-4 shadow-ficha ring-1',
                 'ring-marca-300' => $dia->isToday(),
-                'ring-slate-200' => ! $dia->isToday(),
+                'ring-renglon' => ! $dia->isToday(),
             ])>
-                <h3 class="mb-2 flex items-center gap-2 font-semibold capitalize text-slate-900">
+                <h3 class="mb-2 flex items-center gap-2 font-semibold capitalize text-tinta">
                     {{ $dia->translatedFormat('l j') }}
                     @if ($dia->isToday())
-                        <span class="rounded-full bg-marca-100 px-2.5 py-0.5 text-sm font-semibold normal-case text-marca-800">{{ __('turnos.hoy') }}</span>
+                        <span class="rounded-full bg-bien-fondo px-2.5 py-0.5 text-sm font-semibold normal-case text-bien">{{ __('turnos.hoy') }}</span>
                     @endif
                 </h3>
 
                 @forelse ($turnosDelDia as $turno)
-                    <div class="flex items-center justify-between gap-3 border-t border-slate-100 py-2.5">
+                    <div class="flex items-center justify-between gap-3 border-t border-renglon py-2.5">
                         <div class="min-w-0">
-                            <p class="truncate font-medium text-slate-900">{{ $turno->user->name }}</p>
-                            <p class="flex items-center gap-1.5 text-sm text-texto-suave">
+                            <p class="truncate font-medium text-tinta">{{ $turno->user->name }}</p>
+                            <p class="flex items-center gap-1.5 text-sm text-tinta-suave">
                                 <x-icono nombre="reloj" class="h-4 w-4" /> {{ $horario($turno) }}
                                 <span class="capitalize">· {{ $turno->rol }}</span>
                             </p>
@@ -76,7 +76,7 @@
 
                         @unless ($turno->haEmpezado())
                             <x-formulario :action="route('admin.turnos.destroy', $turno)" metodo="DELETE" class="!space-y-0">
-                                <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600"
+                                <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-ficha text-tinta-suave hover:bg-alerta-fondo hover:text-alerta"
                                         aria-label="{{ __('turnos.eliminar_turno_de', ['nombre' => $turno->user->name]) }}" onclick="return confirm(@js(__('turnos.confirmar_eliminar')))">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
@@ -84,7 +84,7 @@
                         @endunless
                     </div>
                 @empty
-                    <p class="text-sm text-slate-500">{{ __('turnos.sin_turnos') }}</p>
+                    <p class="text-sm text-tinta-suave">{{ __('turnos.sin_turnos') }}</p>
                 @endforelse
             </section>
         @endforeach
@@ -105,17 +105,17 @@
                 </div>
 
                 <fieldset>
-                    <legend class="mb-1.5 text-base font-medium text-slate-700">{{ __('turnos.dias') }}</legend>
+                    <legend class="mb-1.5 text-base font-medium text-tinta">{{ __('turnos.dias') }}</legend>
                     <div class="grid grid-cols-7 gap-1">
                         @foreach ($diasSemana as $numero => $nombre)
-                            <label class="flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-xl border border-slate-300 text-sm font-semibold text-slate-600 has-checked:border-marca-500 has-checked:bg-marca-50 has-checked:text-marca-800">
+                            <label class="flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-ficha border border-renglon-fuerte text-sm font-semibold text-tinta-suave has-checked:border-marca-700 has-checked:bg-bien-fondo has-checked:text-bien">
                                 <input type="checkbox" name="dias[]" value="{{ $numero }}" class="sr-only" @checked(in_array($numero, $diasMarcados, true))>
                                 {{ $nombre }}
                             </label>
                         @endforeach
                     </div>
                     @error('dias')
-                        <p class="mt-1.5 text-sm font-medium text-red-600">{{ $message }}</p>
+                        <p class="mt-1.5 text-sm font-medium text-alerta">{{ $message }}</p>
                     @enderror
                 </fieldset>
 
