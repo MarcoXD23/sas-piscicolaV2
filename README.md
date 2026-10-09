@@ -207,15 +207,53 @@ La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guar
   Al cerrar sesión con registros sin enviar, la app avisa: si sales, se borran del teléfono.
 - **Los demás formularios no se envían:** lo escrito queda en el formulario. Por ejemplo el aireador, que depende de su estado en ese momento. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
 
-Revisión manual (Chrome → DevTools → Network → «Offline»; `Clear-Site-Data` solo funciona con HTTPS o en localhost):
+#### Modo de campo: Registro rápido
 
-1. Con señal, abrir Inicio, Lagos y el detalle de un lago. Pasar a «Offline» y volver a abrirlos: se ven con la franja amarilla y la hora de esos datos.
-2. Sin señal, abrir una pantalla nunca visitada: aparece la página «Sin conexión».
-3. Sin señal, registrar una ración: dice «quedó guardado en este teléfono» y aparece el botón con «1». Volver a «Online»: se envía sola y el botón desaparece.
-4. Sin señal, registrar una mortalidad con más peces de los vivos y volver a «Online»: queda en «Rechazados» con el motivo. «Descartar» la quita.
-5. Sin señal, llenar un formulario que no se guarda (por ejemplo, una siembra): aparece el aviso y lo escrito sigue ahí.
-6. Con un registro pendiente, tocar «Salir»: aparece el aviso con «Esperar» o «Salir y borrarlos».
-7. Cerrar sesión, pasar a «Offline» y abrir Inicio: ya no se ven datos de la finca.
+Para registrar sin señal no hace falta haber abierto antes ninguna pantalla:
+
+- **Paquete de trabajo:** con señal, el teléfono descarga solo, en segundo plano, lo mínimo para registrar (`GET /campo/paquete`). Lo hace al entrar, en cada pantalla si el paquete tiene más de 15 minutos y al volver la conexión.
+  Lo guarda en IndexedDB, por finca y persona. Trae solo lo del rol:
+
+  | Rol | Secciones |
+  |---|---|
+  | Trabajador | Ración, mortalidad y aviso de pesca |
+  | Administrador | Ración y mortalidad |
+  | Celador | Ronda y medición |
+  | Propietario | Ninguna |
+
+  Incluye hasta `SIN_CONEXION_MAX_LAGOS` lagos (vacío = 60) con sus lotes activos, los concentrados de bodega, los tipos de ronda, los rangos de medición y los turnos cercanos. No trae personal ni dinero.
+- **Registro rápido (`/campo`):** una sola página sin datos, que el service worker guarda al instalarse. Arma los formularios con el paquete y valida en el teléfono con las reglas del servidor.
+  Muestra «Datos del … (hace …)», en ámbar si pasan de 12 horas, y avisa si según los turnos guardados la persona no está en turno.
+  Se abre desde el menú (administrador, trabajador y celador), desde la franja «Sin conexión» y desde la página «Sin conexión» (`offline.html`).
+- **Envío:** los registros van a la misma cola: uuid, hora real, corrección del reloj y bitácora. Antes de enviar se pide un token vigente (`GET /campo/token`), nunca el de una página guardada. Al volver la señal salen solos y la app avisa «Se enviaron N registros».
+- **Al cerrar sesión** se borran el paquete, la sesión activa del teléfono y la cola, con aviso previo si hay pendientes. Si entra otra persona en el mismo teléfono, se borran los paquetes ajenos.
+- **Límite:** la sesión dura `SESSION_LIFETIME` minutos (120). Tras una jornada larga sin señal, lo registrado espera a que la persona vuelva a entrar para enviarse.
+
+#### Prueba a mano en un teléfono real (modo avión, desde cero)
+
+Hazla en el teléfono de la finca, con la app ya en HTTPS.
+
+1. **Teléfono limpio:** borra los datos del sitio (Chrome → ⋮ → Configuración → Configuración de sitios → Todos los sitios → la app → Borrar). Entra con señal como **trabajador** en turno y **no abras Lagos**. Espera unos 10 segundos en Inicio.
+2. **Modo avión:** activa el modo avión y toca **Lagos**. Aparece «Sin conexión» con el botón **Abrir Registro rápido**.
+3. **Registro rápido:** debe mostrar tu nombre, la finca, «Datos del … (hace …)» y los botones Ración, Mortalidad y Listo para pescar.
+4. **Registrar sin señal:** registra una ración y una mortalidad. Dice «Quedó guardado en este teléfono» y el contador de arriba muestra **2**.
+5. **Validación:** intenta más peces que los vivos del lote, una fecha futura y más kilos que los de bodega. No deja guardar y explica por qué.
+6. **Volver la señal:** desactiva el modo avión y espera unos segundos. Sale «Se enviaron 2 registros» y el contador desaparece. En Lagos están la ración y la mortalidad. En la Bitácora (propietario) dicen «registrado sin conexión».
+7. **Rechazo:** en modo avión registra una mortalidad. Antes de quitar el modo avión, desde otro teléfono con señal, finaliza esa siembra o registra una mortalidad que deje menos peces. Al volver la señal, la tuya queda en **Rechazados** con su motivo, y «Descartar» la quita.
+8. **Celador:** entra como celador en turno, activa el modo avión y abre Registro rápido. Una ronda con novedad sin descripción no se guarda, y una medición fuera de rango tampoco. Una ronda «Sin novedad» y una temperatura válida se guardan y se envían al volver la señal.
+9. **Datos viejos:** deja el teléfono más de 12 horas sin abrir la app con señal, o adelanta la hora del teléfono. El aviso «Datos del …» sale en ámbar.
+10. **Cerrar sesión:** con un registro pendiente, toca «Salir». Aparece el aviso para esperar o salir y borrarlos. Sal, activa el modo avión y abre Registro rápido: dice «Todavía no hay datos en este teléfono».
+11. **Otra persona:** en el mismo teléfono entra otra persona con señal. En Registro rápido solo ve su nombre y sus lagos.
+
+#### Pantallas guardadas (consulta)
+
+Revisión con Chrome → DevTools → Network → «Offline». `Clear-Site-Data` solo funciona con HTTPS o en localhost.
+
+1. Con señal, abre Inicio, Lagos y el detalle de un lago. Pasa a «Offline» y vuelve a abrirlos: se ven con la franja amarilla y la hora de esos datos.
+2. Sin señal, llena un formulario que no se guarda en el teléfono (por ejemplo, una siembra): aparece el aviso y lo escrito sigue ahí.
+3. Cierra sesión, pasa a «Offline» y abre Inicio: ya no se ven datos de la finca.
+
+Pruebas automáticas de la cola, del paquete y de Registro rápido en Node, sin paquetes: `npm run test:js`.
 
 ### Datos de demostración (opcional, nunca en producción)
 

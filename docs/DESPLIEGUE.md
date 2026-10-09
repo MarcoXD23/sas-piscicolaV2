@@ -198,6 +198,9 @@ RESPALDOS_DIAS=14
 RESPALDOS_HORA=07:00
 
 SALUD_CORREO_AVISO=tu-correo@ejemplo.com
+
+# Opcional: lagos máximos en el paquete de trabajo de Registro rápido (vacío = 60)
+SIN_CONEXION_MAX_LAGOS=
 ```
 
 - **`APP_DEBUG`:** debe quedar en `false`. Con `true`, cada error muestra el SQL y la configuración, y la app deja una alerta crítica en el log.
@@ -549,6 +552,7 @@ La prueba automática `RespaldoTest` hace este mismo recorrido de verdad:
 - [ ] El cron (`schedule:run`) y la cola (`sas-piscicola-cola`) están activos.
 - [ ] La primera copia está hecha y probada con `piscicola:restaurar`, y `rclone` ya dejó una copia fuera de Hostinger.
 - [ ] Revisaste el archivo de errores del día en `storage/logs/` sin errores.
+- [ ] Hiciste en un teléfono real la prueba en modo avión de Registro rápido (README, «Sin conexión» → «Prueba a mano en un teléfono real»).
 - [ ] Un servicio externo vigila `/salud` y `SALUD_CORREO_AVISO` (o un administrador de plataforma) recibe los avisos (ver sección 15).
 - [ ] La verificación en dos pasos del panel de plataforma está activa.
 
