@@ -163,3 +163,15 @@ export const armarRegistro = (seccion, datos, paquete, t) => {
         resumen: t('campo_resumen_medicion', { lago: lago.nombre }),
     };
 };
+
+/**
+ * Resumen de errores para mostrar arriba del formulario: [campo, [clave, datos]] en el orden de los campos en
+ * pantalla (orden: nombres de campo tal como aparecen). Los errores de campos que no están en «orden» van al final.
+ */
+export const resumenErrores = (errores, orden) => {
+    const posicion = (campo) => {
+        const indice = orden.indexOf(campo);
+        return indice === -1 ? orden.length : indice;
+    };
+    return Object.entries(errores).sort(([a], [b]) => posicion(a) - posicion(b));
+};

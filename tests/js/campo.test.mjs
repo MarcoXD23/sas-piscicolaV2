@@ -1,7 +1,7 @@
 // Reglas de la pantalla Registro rápido. Correr con: npm run test:js (node --test, sin paquetes)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, enTurno, numero, textoHace, validar } from '../../resources/js/campo-logica.js';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, enTurno, numero, resumenErrores, textoHace, validar } from '../../resources/js/campo-logica.js';
 
 const HOY = '2026-10-08';
 const t = (clave, datos = {}) => `${clave}${Object.keys(datos).length ? JSON.stringify(datos) : ''}`;
@@ -110,4 +110,13 @@ test('aviso de turno: solo si la sección lo exige y no hay turno ahora', () => 
     assert.equal(avisarFueraDeTurno(paquete, 'racion', fuera), true);
     assert.equal(avisarFueraDeTurno(paquete, 'ronda', enElTurno), true);   // no tiene turno de celador
     assert.equal(avisarFueraDeTurno({ ...paquete, exige_turno: { racion: false } }, 'racion', fuera), false);   // administrador
+});
+
+test('el resumen de errores sigue el orden de los campos en pantalla', () => {
+    const errores = validar('racion', { lago_id: '', tipo_concentrado: '', cantidad_kg: '0', fecha: '2026-10-09' }, paquete, HOY);
+    assert.deepEqual(resumenErrores(errores, ['lago_id', 'tipo_concentrado', 'cantidad_kg', 'fecha']).map(([campo]) => campo),
+        ['lago_id', 'tipo_concentrado', 'cantidad_kg', 'fecha']);
+    // Un error sin campo en pantalla (el general de la medición) va al final
+    assert.deepEqual(resumenErrores({ medicion: ['x', {}], lago_id: ['y', {}] }, ['lago_id']).map(([campo]) => campo), ['lago_id', 'medicion']);
+    assert.deepEqual(resumenErrores({}, ['lago_id']), []);
 });

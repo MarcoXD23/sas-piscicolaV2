@@ -271,3 +271,118 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
 
+
+// Animaciones de la interfaz (estilos en resources/css/app.css). Quien pidió menos movimiento en su teléfono no las ve.
+const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const conObservador = !sinMovimiento && 'IntersectionObserver' in window;
+
+// Aparecer al bajar (data-revelar): lo que está fuera de la pantalla al cargar entra cuando se ve.
+// Lo que ya está a la vista no se toca: lo anima la entrada de la página.
+if (conObservador) {
+    const observadorRevelar = new IntersectionObserver((entradas) => {
+        entradas.filter((entrada) => entrada.isIntersecting).forEach((entrada, indice) => {
+            entrada.target.style.animationDelay = `${Math.min(indice, 6) * 70}ms`;
+            entrada.target.classList.replace('por-revelar', 'revelado');
+            observadorRevelar.unobserve(entrada.target);
+        });
+    }, { rootMargin: '0px 0px -6% 0px' });
+
+    document.querySelectorAll('[data-revelar]').forEach((elemento) => {
+        if (elemento.getBoundingClientRect().top < window.innerHeight) return;
+        elemento.classList.add('por-revelar');
+        observadorRevelar.observe(elemento);
+    });
+}
+
+// Números que cuentan hacia arriba (data-contar): el texto ya viene formateado por el servidor en el idioma de la finca.
+// Se lee con los separadores de ese idioma; si el número es ambiguo no se anima. Al terminar queda el texto original.
+const separadores = Object.fromEntries(new Intl.NumberFormat(document.documentElement.lang || undefined)
+    .formatToParts(12345.6).filter((parte) => parte.type === 'group' || parte.type === 'decimal')
+    .map((parte) => [parte.type, parte.value]));
+
+const contarNumero = (elemento) => {
+    const final = elemento.textContent;
+    const encontrado = final.match(/-?\d[\d.,   ]*\d|\d/);
+    if (elemento.children.length || !encontrado) return;
+
+    const [entero, decimales = ''] = encontrado[0].trim().split(separadores.decimal ?? '.');
+    const grupo = separadores.group ?? ',';
+    const sinSigno = entero.replace(/^-/, '');
+    const conGrupos = sinSigno.includes(grupo);
+    const enteroValido = conGrupos
+        ? sinSigno.split(grupo).every((bloque, i) => (i === 0 ? /^\d{1,3}$/ : /^\d{3}$/).test(bloque))
+        : /^\d+$/.test(sinSigno);
+    if (!enteroValido || !/^\d*$/.test(decimales)) return;
+
+    const objetivo = Number(`${entero.split(grupo).join('')}.${decimales || '0'}`);
+    if (!Number.isFinite(objetivo) || objetivo === 0) return;
+
+    const formato = new Intl.NumberFormat(document.documentElement.lang || undefined, {
+        minimumFractionDigits: decimales.length,
+        maximumFractionDigits: decimales.length,
+        useGrouping: conGrupos,
+    });
+    const antes = final.slice(0, encontrado.index);
+    const despues = final.slice(encontrado.index + encontrado[0].trimEnd().length);
+    const duracion = 900;
+    let inicio;
+
+    const paso = (momento) => {
+        inicio ??= momento;
+        const avance = Math.min((momento - inicio) / duracion, 1);
+        if (avance >= 1) {
+            elemento.textContent = final;
+            return;
+        }
+        const suavizado = 1 - (1 - avance) ** 3;
+        elemento.textContent = antes + formato.format(objetivo * suavizado) + despues;
+        requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+};
+
+if (conObservador) {
+    const observadorContar = new IntersectionObserver((entradas) => {
+        entradas.filter((entrada) => entrada.isIntersecting).forEach((entrada) => {
+            observadorContar.unobserve(entrada.target);
+            contarNumero(entrada.target);
+        });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('[data-contar]').forEach((elemento) => observadorContar.observe(elemento));
+}
+
+// Onda al tocar (data-onda): un círculo que se expande desde el dedo
+document.addEventListener('pointerdown', (evento) => {
+    if (sinMovimiento) return;
+    const elemento = evento.target.closest?.('[data-onda]');
+    if (!elemento || elemento.disabled) return;
+
+    const caja = elemento.getBoundingClientRect();
+    const tamano = Math.hypot(caja.width, caja.height) * 2;
+    const onda = document.createElement('span');
+    onda.className = 'onda';
+    onda.setAttribute('aria-hidden', 'true');
+    onda.style.width = onda.style.height = `${tamano}px`;
+    onda.style.left = `${evento.clientX - caja.left - tamano / 2}px`;
+    onda.style.top = `${evento.clientY - caja.top - tamano / 2}px`;
+    elemento.appendChild(onda);
+    onda.addEventListener('animationend', () => onda.remove());
+});
+
+// Botón que envía: rueda de espera mientras carga la página siguiente. Va después del control de conexión:
+// solo marca los envíos que de verdad salen. Si la página no cambia (descarga, error), se quita sola.
+const quitarEnviando = (boton) => {
+    boton.classList.remove('enviando');
+    boton.removeAttribute('aria-busy');
+};
+
+document.addEventListener('submit', (evento) => {
+    const boton = evento.submitter;
+    if (evento.defaultPrevented || !boton || (evento.target.getAttribute('method') ?? 'get').toLowerCase() !== 'post') return;
+    boton.classList.add('enviando');
+    boton.setAttribute('aria-busy', 'true');
+    setTimeout(() => quitarEnviando(boton), 10000);
+});
+
+// Al volver atrás el navegador puede mostrar la página guardada con el botón aún esperando
+window.addEventListener('pageshow', () => document.querySelectorAll('.enviando').forEach(quitarEnviando));

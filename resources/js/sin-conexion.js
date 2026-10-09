@@ -17,6 +17,12 @@ import { camposParaGuardar, clasificar, fechaLocal, motivoRechazo, porVencer } f
 
 const operacion = (modo, accion) => operacionBase(REGISTROS, modo, accion);
 
+/** Lleva un elemento a la vista: suave, salvo que el teléfono pida reducir el movimiento. */
+export const desplazar = (nodo, block = 'nearest') => nodo?.scrollIntoView({
+    block,
+    behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+});
+
 /** Token CSRF vigente de la sesión ({ token }) o el motivo para no enviar todavía ({ estado: 'sesion' | 'reintentar' }). */
 const tokenFresco = async () => {
     try {
@@ -82,10 +88,10 @@ export const iniciarCola = (t) => {
             document.getElementById('contenido')?.prepend(caja);
         }
         caja.className = tipo === 'ok'
-            ? 'mb-5 rounded-xl border border-marca-200 bg-marca-50 px-4 py-3 text-base font-medium text-marca-800'
-            : 'mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-base font-medium text-amber-900';
+            ? 'mb-5 rounded-xl border border-marca-300 bg-marca-50 px-4 py-3 text-base font-semibold text-marca-900'
+            : 'mb-5 rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-base font-semibold text-amber-900';
         caja.textContent = texto;
-        caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        desplazar(caja);
     };
 
     const elemento = (etiqueta, clase, texto = '') => {
@@ -96,31 +102,48 @@ export const iniciarCola = (t) => {
     };
 
     const tarjeta = (registro) => {
-        const li = elemento('li', 'rounded-xl border border-slate-200 p-4');
+        const li = elemento('li', 'rounded-xl border border-slate-300 p-4');
         li.appendChild(elemento('p', 'text-base font-semibold text-slate-900', registro.resumen));
         const momento = new Date(registro.registradoEn).toLocaleString(document.documentElement.lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-        li.appendChild(elemento('p', 'text-sm text-slate-500', t('cola_registrado', { momento })));
+        li.appendChild(elemento('p', 'text-base text-slate-700', t('cola_registrado', { momento })));
 
-        const lista = elemento('ul', 'mt-2 space-y-0.5 text-sm text-slate-700');
+        const lista = elemento('ul', 'mt-2 space-y-1 text-base text-slate-800');
         registro.detalle.forEach(([etiqueta, valor]) => lista.appendChild(elemento('li', '', `${etiqueta}: ${valor}`)));
         li.appendChild(lista);
 
         if (registro.estado === 'rechazado') {
-            li.appendChild(elemento('p', 'mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700', t('cola_motivo', { motivo: registro.motivo })));
-            const descartar = elemento('button', 'mt-3 min-h-11 rounded-xl px-4 text-base font-semibold text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-50', t('cola_descartar'));
+            li.appendChild(elemento('p', 'mt-2 rounded-lg bg-red-50 px-3 py-2 text-base font-semibold text-red-800', t('cola_motivo', { motivo: registro.motivo })));
+            const descartar = elemento('button', 'mt-3 min-h-12 rounded-xl px-5 text-base font-semibold text-red-800 ring-1 ring-inset ring-red-300 hover:bg-red-50', t('cola_descartar'));
             descartar.type = 'button';
             descartar.dataset.colaDescartar = registro.uuid;
             li.appendChild(descartar);
         } else if (porVencer(registro.registradoEn, horas)) {
-            li.appendChild(elemento('p', 'mt-2 text-sm font-medium text-amber-800', t('cola_por_vencer', { horas })));
+            li.appendChild(elemento('p', 'mt-2 text-base font-semibold text-amber-900', t('cola_por_vencer', { horas })));
         }
 
         return li;
     };
 
+    // Región que anuncia los cambios del contador a los lectores de pantalla (solo cuando cambia el número)
+    let anuncio = null;
+    let ultimoTotal = null;
+    const anunciar = (total) => {
+        if (ultimoTotal !== null && ultimoTotal !== total) {
+            if (!anuncio) {
+                anuncio = elemento('p', 'sr-only');
+                anuncio.setAttribute('role', 'status');
+                anuncio.setAttribute('aria-live', 'polite');
+                document.body.appendChild(anuncio);
+            }
+            anuncio.textContent = total === 0 ? t('cola_anuncio_ninguno') : t(total === 1 ? 'cola_anuncio_uno' : 'cola_anuncio_varios', { cantidad: total });
+        }
+        ultimoTotal = total;
+    };
+
     const pintar = async () => {
         if (!boton) return;
         const registros = await misRegistros();
+        anunciar(registros.length);
         const pendientes = registros.filter((registro) => registro.estado === 'pendiente');
         const rechazados = registros.filter((registro) => registro.estado === 'rechazado');
 
@@ -270,6 +293,7 @@ export const iniciarCola = (t) => {
         ventana?.addEventListener('click', async (evento) => {
             const descartar = evento.target.closest('[data-cola-descartar]');
             if (descartar) {
+                if (!window.confirm(t('cola_confirmar_descartar'))) return;
                 await quitar(descartar.dataset.colaDescartar);
                 await pintar();
             }

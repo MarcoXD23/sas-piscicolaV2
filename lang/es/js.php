@@ -43,6 +43,10 @@ return [
     'campo_fuera_de_turno' => 'Según tus turnos guardados, ahora no estás en turno: la finca puede rechazar este registro.',
     'campo_cancelar' => 'Cancelar',
     'campo_guardar' => 'Guardar',
+    'campo_guardando' => 'Guardando…',
+    'campo_registrar_otra' => 'Registrar otra: :seccion',
+    'campo_revisa_uno' => 'Revisa 1 campo:',
+    'campo_revisa_varios' => 'Revisa :n campos:',
     'campo_no_se_pudo_guardar' => 'No se pudo guardar en este teléfono. Revisa el espacio libre e inténtalo otra vez.',
     'campo_guardado_enviando' => 'Guardado. Enviando a la finca…',
     'campo_sesion_vencida' => 'Tu sesión venció: entra de nuevo con tu usuario para actualizar los datos y enviar lo guardado.',
@@ -81,6 +85,10 @@ return [
     'cola_rechazo_generico' => 'La finca no aceptó este registro.',
     'cola_por_vencer' => 'Envíalo pronto: después de :horas horas ya no se acepta.',
     'cola_descartar' => 'Descartar',
+    'cola_confirmar_descartar' => '¿Descartar este registro? Se borra de este teléfono y no se puede recuperar.',
+    'cola_anuncio_uno' => '1 registro sin enviar.',
+    'cola_anuncio_varios' => ':cantidad registros sin enviar.',
+    'cola_anuncio_ninguno' => 'No quedan registros sin enviar.',
     'sin_conexion_guardar' => 'No hay conexión: no se guardó. Lo que escribiste sigue aquí; inténtalo cuando vuelva la señal.',
 
     // Pesaje de la cosecha (resources/js/pesaje.js). Lo que se guarda lo vuelve a calcular el servidor.

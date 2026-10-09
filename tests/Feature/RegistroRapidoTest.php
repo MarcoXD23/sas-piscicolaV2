@@ -139,6 +139,13 @@ class RegistroRapidoTest extends TestCase
         }
         $this->assertStringContainsString('data-horas-viejo="'.config('sin_conexion.horas_paquete_viejo').'"', $html);
         $this->assertStringContainsString('"campo_quien":', $html);   // textos de la pantalla en window.textos
+        // Íconos de cada sección (SVG propios de la app) y textos de la revisión de UI: guardando, registrar otra, resumen de errores
+        foreach (['racion', 'mortalidad', 'aviso_pesca', 'ronda', 'medicion'] as $seccion) {
+            $this->assertMatchesRegularExpression('/<template data-campo-icono="'.$seccion.'"><svg[^>]*aria-hidden="true"/', $html, $seccion);
+        }
+        foreach (['campo_guardando', 'campo_registrar_otra', 'campo_revisa_varios', 'cola_confirmar_descartar', 'cola_anuncio_varios'] as $texto) {
+            $this->assertStringContainsString('"'.$texto.'":', $html, $texto);
+        }
         // Sin token, sin finca y sin el contador del layout de la app
         $this->assertStringNotContainsString('csrf-token', $html);
         $this->assertStringNotContainsString('data-cola-clave', $html);

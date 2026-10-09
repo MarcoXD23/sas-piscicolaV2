@@ -4,15 +4,24 @@
  *   la sesión activa (IndexedDB). Nada depende de páginas guardadas ni del token de la página.
  * - Cada registro se valida en el teléfono (campo-logica.js) y va a la cola de siempre (sin-conexion.js): uuid, hora
  *   real y corrección del reloj. Con señal se envía enseguida; sin señal, al volver (avisa «Se enviaron N registros»).
+ * - Pensada para usar en el campo: textos de 16 px con buen contraste (sol fuerte), botones grandes (guantes), errores
+ *   anunciados y con resumen enlazado, y sin animaciones si el teléfono pide reducir el movimiento.
  * - Todo texto que llega del paquete se escribe con textContent: nunca se interpreta como HTML.
  */
-import { operacion, PAQUETES, leerSesionActiva } from './almacen';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, SECCIONES, textoHace, validar } from './campo-logica';
+import { leerSesionActiva, operacion, PAQUETES } from './almacen';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
 import { leerPaquete } from './paquete';
 import { debeRenovar, paqueteValido } from './paquete-logica';
+import { desplazar } from './sin-conexion';
 import { fechaLocal } from './sin-conexion-logica';
 
-const CLASE_CONTROL = 'block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-marca-500 focus:outline-none focus:ring-2 focus:ring-marca-200';
+const CLASE_CONTROL = 'block w-full rounded-xl border border-slate-400 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-200 aria-invalid:border-red-600 aria-invalid:ring-2 aria-invalid:ring-red-100';
+const CLASE_AYUDA = 'mt-1 text-base text-slate-700';
+const CLASE_ERROR = 'mt-1.5 text-base font-semibold text-red-700';
+const CLASE_AVISO = 'rounded-xl bg-amber-50 p-3 text-base font-semibold text-amber-900 ring-1 ring-amber-200';
+const CLASE_SECCION = 'flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-lg font-semibold shadow-sm ring-1 transition-colors';
+const CLASE_SECCION_ABIERTA = 'bg-marca-600 text-white ring-marca-600';
+const CLASE_SECCION_CERRADA = 'bg-white text-marca-800 ring-slate-300 hover:bg-marca-50 active:bg-marca-100';
 
 const el = (etiqueta, clase = '', texto = null) => {
     const nodo = document.createElement(etiqueta);
@@ -43,17 +52,36 @@ export const iniciarCampo = (t, cola) => {
     let paquete = null;
     let actualizando = false;
 
-    const mensaje = (texto, tipo = 'ok') => {
+    /** Mensaje de estado arriba de la pantalla, con una acción opcional ({ texto, alTocar }). */
+    const mensaje = (texto, tipo = 'ok', accion = null) => {
         const caja = $('[data-campo-mensaje]');
         caja.hidden = false;
         caja.className = tipo === 'ok'
-            ? 'mb-4 rounded-xl border border-marca-200 bg-marca-50 px-4 py-3 text-base font-medium text-marca-800'
-            : 'mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-base font-medium text-amber-900';
-        caja.textContent = texto;
-        caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            ? 'mb-4 rounded-xl border border-marca-300 bg-marca-50 px-4 py-3 text-base font-semibold text-marca-900'
+            : 'mb-4 rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-base font-semibold text-amber-900';
+        const parrafo = el('p', '', texto);
+        caja.replaceChildren(parrafo);
+        if (accion) {
+            const boton = el('button', 'mt-3 inline-flex min-h-12 items-center justify-center rounded-xl bg-marca-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-marca-700', accion.texto);
+            boton.type = 'button';
+            boton.addEventListener('click', accion.alTocar);
+            caja.append(boton);
+        }
+        desplazar(caja, 'nearest');
     };
 
-    // --- Encabezado: quién registra y de cuándo son los datos ---
+    // --- Encabezado: quién registra, de cuándo son los datos y las secciones del rol ---
+
+    const marcarSeccion = (abierta) => {
+        $('[data-campo-secciones]').querySelectorAll('button[data-seccion]').forEach((boton) => {
+            const esta = boton.dataset.seccion === abierta;
+            boton.setAttribute('aria-pressed', esta ? 'true' : 'false');
+            boton.className = `${CLASE_SECCION} ${esta ? CLASE_SECCION_ABIERTA : CLASE_SECCION_CERRADA}`;
+        });
+    };
+
+    /** Ícono de la sección: copia de la plantilla que trae la página (los íconos propios de la app, en SVG). */
+    const iconoDe = (seccion) => document.querySelector(`template[data-campo-icono="${seccion}"]`)?.content.cloneNode(true) ?? document.createDocumentFragment();
 
     const pintarEstado = () => {
         $('[data-campo-cargando]').hidden = true;
@@ -69,34 +97,43 @@ export const iniciarCampo = (t, cola) => {
         const [claveHace, datosHace] = textoHace(edad);
         const caja = $('[data-campo-antiguedad]');
         caja.textContent = `${t('campo_datos_del', { momento: cuando, hace: t(claveHace, datosHace) })}${edad.vieja ? ` ${t('campo_datos_viejos')}` : ''}`;
-        caja.className = edad.vieja
-            ? 'rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900'
-            : 'text-sm text-slate-600';
+        caja.className = edad.vieja ? CLASE_AVISO : 'text-base text-slate-700';
         $('[data-campo-truncado]').hidden = !paquete.lagos_truncados;
         $('[data-campo-truncado]').textContent = t('campo_lagos_truncados', { n: paquete.max_lagos });
 
         const botones = $('[data-campo-secciones]');
         const secciones = (paquete.secciones ?? []).filter((seccion) => SECCIONES.includes(seccion));
+        const abierta = $('[data-campo-formulario] form')?.dataset.seccion ?? null;
         botones.replaceChildren(...secciones.map((seccion) => {
-            const boton = el('button', 'flex min-h-16 items-center justify-center rounded-2xl bg-white px-4 text-lg font-semibold text-marca-800 shadow-sm ring-1 ring-slate-200 hover:bg-marca-50', t(`campo_seccion_${seccion}`));
+            const boton = el('button');
             boton.type = 'button';
+            boton.dataset.seccion = seccion;
+            boton.append(iconoDe(seccion), el('span', '', t(`campo_seccion_${seccion}`)));
             boton.addEventListener('click', () => abrir(seccion));
             return boton;
         }));
+        marcarSeccion(abierta);
         $('[data-campo-sin-secciones]').hidden = secciones.length > 0;
     };
 
     // --- Formularios ---
 
+    /** Campo con etiqueta visible, ayuda y mensaje de error conectados al control (aria-describedby). */
     const grupo = (nombre, etiqueta, control, ayuda = null) => {
         const caja = el('div');
-        const titulo = el('label', 'mb-1.5 block text-base font-medium text-slate-700', etiqueta);
+        const titulo = el('label', 'mb-1.5 block text-base font-semibold text-slate-800', etiqueta);
         titulo.htmlFor = `campo-${nombre}`;
         control.id = `campo-${nombre}`;
         control.name = nombre;
         caja.append(titulo, control);
-        if (ayuda) caja.append(el('p', 'mt-1 text-sm text-slate-500', ayuda));
-        const error = el('p', 'mt-1.5 text-sm font-medium text-red-600');
+        if (ayuda) {
+            const parrafo = el('p', CLASE_AYUDA, ayuda);
+            parrafo.id = `ayuda-${nombre}`;
+            control.setAttribute('aria-describedby', parrafo.id);
+            caja.append(parrafo);
+        }
+        const error = el('p', CLASE_ERROR);
+        error.id = `error-${nombre}`;
         error.dataset.errorDe = nombre;
         error.hidden = true;
         caja.append(error);
@@ -136,15 +173,15 @@ export const iniciarCampo = (t, cola) => {
         if (seccion === 'racion') {
             const concentrados = lista((paquete.concentrados ?? []).map((c) => [c.tipo, t('campo_opcion_concentrado', { tipo: c.tipo, kg: c.kg.toLocaleString(document.documentElement.lang) })]), t('campo_elige'));
             const kg = entrada('text', { inputmode: 'decimal', autocomplete: 'off' });
-            const ayuda = el('p', 'mt-1 text-sm text-slate-500');
+            const grupoKg = grupo('cantidad_kg', t('campo_kg'), kg, ' ');
+            const ayuda = grupoKg.querySelector('#ayuda-cantidad_kg');
+            ayuda.textContent = '';
             selectorLago.addEventListener('change', () => {
                 const sugerida = lagos.find((lago) => String(lago.id) === selectorLago.value)?.racion_sugerida_kg;
                 ayuda.textContent = sugerida ? t('campo_racion_sugerida', { kg: sugerida.toLocaleString(document.documentElement.lang) }) : '';
                 if (sugerida && kg.value === '') kg.value = String(sugerida);
             });
-            const grupoKg = grupo('cantidad_kg', t('campo_kg'), kg);
-            grupoKg.insertBefore(ayuda, grupoKg.lastChild);
-            if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-xl bg-red-50 p-4 text-base text-red-700', t('campo_sin_concentrado')));
+            if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-xl bg-red-50 p-4 text-base font-semibold text-red-800 ring-1 ring-red-200', t('campo_sin_concentrado')));
             campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), grupoKg, fecha());
         }
 
@@ -162,7 +199,7 @@ export const iniciarCampo = (t, cola) => {
             if (seccion === 'mortalidad') {
                 campos.push(grupo('cantidad', t('campo_peces_muertos'), entrada('text', { inputmode: 'numeric', autocomplete: 'off' })), fecha());
             } else {
-                const pendiente = el('p', 'rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900', t('campo_error_aviso_pendiente'));
+                const pendiente = el('p', CLASE_AVISO, t('campo_error_aviso_pendiente'));
                 pendiente.dataset.campoAvisoPendiente = '';
                 pendiente.hidden = true;
                 campos.push(pendiente, grupo('nota', t('campo_nota_opcional'), entrada('text', { maxlength: '500' })));
@@ -171,19 +208,22 @@ export const iniciarCampo = (t, cola) => {
 
         if (seccion === 'ronda') {
             const tipos = el('fieldset');
-            tipos.append(el('legend', 'mb-1.5 text-base font-medium text-slate-700', t('campo_tipo_ronda')));
+            tipos.setAttribute('aria-describedby', 'error-tipo');
+            tipos.append(el('legend', 'mb-1.5 text-base font-semibold text-slate-800', t('campo_tipo_ronda')));
             const opciones = el('div', 'grid gap-2');
-            (paquete.tipos_ronda ?? []).forEach((tipo) => {
-                const etiqueta = el('label', 'flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-300 px-4 text-base has-checked:border-marca-500 has-checked:bg-marca-50');
+            (paquete.tipos_ronda ?? []).forEach((tipo, indice) => {
+                const etiqueta = el('label', 'flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-400 px-4 text-base text-slate-900 has-checked:border-marca-600 has-checked:bg-marca-50 has-checked:font-semibold');
                 const radio = entrada('radio');
-                radio.className = 'h-5 w-5 accent-marca-600';
+                radio.className = 'h-6 w-6 accent-marca-600';
                 radio.name = 'tipo';
                 radio.value = tipo.codigo;
+                if (indice === 0) radio.id = 'campo-tipo';   // destino del enlace del resumen de errores
                 radio.checked = tipo.codigo === paquete.sin_novedad;
                 etiqueta.append(radio, document.createTextNode(tipo.texto));
                 opciones.append(etiqueta);
             });
-            const error = el('p', 'mt-1.5 text-sm font-medium text-red-600');
+            const error = el('p', CLASE_ERROR);
+            error.id = 'error-tipo';
             error.dataset.errorDe = 'tipo';
             error.hidden = true;
             tipos.append(opciones, error);
@@ -195,34 +235,93 @@ export const iniciarCampo = (t, cola) => {
         }
 
         if (seccion === 'medicion') {
+            const ayuda = el('p', 'text-base text-slate-700', t('campo_medicion_ayuda'));
             const parametros = el('div', 'grid grid-cols-2 gap-4');
             (paquete.medicion ?? []).forEach((parametro) => parametros.append(grupo(parametro.campo, parametro.etiqueta,
                 entrada('text', { inputmode: parametro.paso >= 1 ? 'numeric' : 'decimal', autocomplete: 'off', placeholder: `${parametro.min} – ${parametro.max}` }))));
-            const error = el('p', 'text-sm font-medium text-red-600');
+            const error = el('p', CLASE_ERROR);
+            error.id = 'error-medicion';
             error.dataset.errorDe = 'medicion';
             error.hidden = true;
-            campos.push(el('p', 'text-sm text-slate-600', t('campo_medicion_ayuda')), parametros, error);
+            campos.push(ayuda, parametros, error);
         }
 
         return campos;
     };
 
+    /** Marca los campos con error (aria-invalid + mensaje conectado) y arma el resumen enlazado arriba del formulario. */
+    const mostrarErrores = (formulario, errores) => {
+        const orden = [...formulario.querySelectorAll('[data-error-de]')].map((nodo) => nodo.dataset.errorDe);
+        formulario.querySelectorAll('[data-error-de]').forEach((nodo) => {
+            const error = errores[nodo.dataset.errorDe];
+            nodo.hidden = !error;
+            nodo.textContent = error ? t(error[0], error[1]) : '';
+            const control = formulario.querySelector(`#campo-${nodo.dataset.errorDe}`);
+            if (!control) return;
+            const ayuda = formulario.querySelector(`#ayuda-${nodo.dataset.errorDe}`);
+            control.setAttribute('aria-describedby', [ayuda?.id, error ? nodo.id : null].filter(Boolean).join(' '));
+            if (error && control.type !== 'radio') control.setAttribute('aria-invalid', 'true');
+            else control.removeAttribute('aria-invalid');
+        });
+
+        const resumen = formulario.querySelector('[data-campo-resumen]');
+        const lista = resumenErrores(errores, orden);
+        resumen.hidden = lista.length === 0;
+        if (lista.length === 0) return;
+
+        const titulo = el('h3', 'text-base font-bold text-red-800', t(lista.length === 1 ? 'campo_revisa_uno' : 'campo_revisa_varios', { n: lista.length }));
+        titulo.id = 'campo-resumen-titulo';
+        const enlaces = el('ul', 'mt-2 list-disc space-y-1 pl-5');
+        lista.forEach(([campo, [claveError, datosError]]) => {
+            // El error general de la medición lleva al primer parámetro
+            const destino = formulario.querySelector(`#campo-${campo}`) ?? formulario.querySelector('[data-error-de="medicion"]')?.previousElementSibling?.querySelector('input');
+            const item = el('li');
+            const enlace = el('a', 'font-semibold text-red-800 underline underline-offset-2', t(claveError, datosError));
+            enlace.href = destino?.id ? `#${destino.id}` : '#';
+            enlace.addEventListener('click', (evento) => {
+                evento.preventDefault();
+                destino?.focus();
+                desplazar(destino, 'center');
+            });
+            item.append(enlace);
+            enlaces.append(item);
+        });
+        resumen.replaceChildren(titulo, enlaces);
+        resumen.focus();
+        desplazar(resumen, 'center');
+    };
+
+    const cerrar = () => {
+        $('[data-campo-formulario]').replaceChildren();
+        marcarSeccion(null);
+    };
+
     const abrir = (seccion) => {
         const contenedor = $('[data-campo-formulario]');
-        const formulario = el('form', 'space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200');
+        const formulario = el('form', 'space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-300');
         formulario.noValidate = true;   // se valida aquí, con los textos de la app
+        formulario.dataset.seccion = seccion;
         formulario.append(el('h2', 'text-xl font-bold text-slate-900', t(`campo_seccion_${seccion}`)));
 
+        // Resumen de errores: se llena al fallar el envío y recibe el foco (role=alert lo anuncia)
+        const resumen = el('div', 'rounded-xl border-2 border-red-300 bg-red-50 p-4 focus:outline-none focus:ring-2 focus:ring-red-400');
+        resumen.dataset.campoResumen = '';
+        resumen.setAttribute('role', 'alert');
+        resumen.setAttribute('aria-labelledby', 'campo-resumen-titulo');
+        resumen.tabIndex = -1;
+        resumen.hidden = true;
+        formulario.append(resumen);
+
         if (avisarFueraDeTurno(paquete, seccion)) {
-            formulario.append(el('p', 'rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900', t('campo_fuera_de_turno')));
+            formulario.append(el('p', CLASE_AVISO, t('campo_fuera_de_turno')));
         }
         formulario.append(...camposDe(seccion, formulario));
 
         const botones = el('div', 'grid grid-cols-2 gap-3 pt-2');
-        const cancelar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 py-3 text-base font-semibold text-marca-700 shadow-sm ring-1 ring-inset ring-marca-200 hover:bg-marca-50', t('campo_cancelar'));
+        const cancelar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 py-3 text-base font-semibold text-marca-800 shadow-sm ring-1 ring-inset ring-marca-300 hover:bg-marca-50', t('campo_cancelar'));
         cancelar.type = 'button';
-        cancelar.addEventListener('click', () => contenedor.replaceChildren());
-        const guardar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-marca-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-marca-700', t('campo_guardar'));
+        cancelar.addEventListener('click', cerrar);
+        const guardar = el('button', 'inline-flex min-h-12 items-center justify-center rounded-xl bg-marca-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-marca-700 disabled:opacity-60', t('campo_guardar'));
         guardar.type = 'submit';
         botones.append(cancelar, guardar);
         formulario.append(botones);
@@ -231,30 +330,31 @@ export const iniciarCampo = (t, cola) => {
             evento.preventDefault();
             const datos = Object.fromEntries(new FormData(formulario).entries());
             const errores = validar(seccion, datos, paquete, fechaLocal());
-            formulario.querySelectorAll('[data-error-de]').forEach((nodo) => {
-                const error = errores[nodo.dataset.errorDe];
-                nodo.hidden = !error;
-                nodo.textContent = error ? t(error[0], error[1]) : '';
-            });
-            if (Object.keys(errores).length > 0) {
-                formulario.querySelector('[data-error-de]:not([hidden])')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                return;
-            }
+            mostrarErrores(formulario, errores);
+            if (Object.keys(errores).length > 0) return;
 
+            // Mientras se guarda: el botón lo dice y no se puede tocar dos veces
             guardar.disabled = true;
+            guardar.textContent = t('campo_guardando');
             const guardado = await cola.guardarRegistro(armarRegistro(seccion, datos, paquete, t));
             guardar.disabled = false;
+            guardar.textContent = t('campo_guardar');
             if (!guardado) {
                 mensaje(t('campo_no_se_pudo_guardar'), 'atencion');
                 return;
             }
-            contenedor.replaceChildren();
-            mensaje(t(navigator.onLine ? 'campo_guardado_enviando' : 'cola_guardado'));
+            cerrar();
+            // En el campo es común registrar varias seguidas: «Registrar otra» reabre la misma sección
+            mensaje(t(navigator.onLine ? 'campo_guardado_enviando' : 'cola_guardado'), 'ok', {
+                texto: t('campo_registrar_otra', { seccion: t(`campo_seccion_${seccion}`) }),
+                alTocar: () => abrir(seccion),
+            });
             if (navigator.onLine) cola.enviar({ avisar: true });
         });
 
         contenedor.replaceChildren(formulario);
-        formulario.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        marcarSeccion(seccion);
+        desplazar(formulario, 'start');
     };
 
     // --- Actualizar el paquete desde esta pantalla (con señal) ---

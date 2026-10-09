@@ -27,59 +27,339 @@
     --color-marca-800: #11514d;
     --color-marca-900: #134441;
     --color-marca-950: #042827;
+
+    /* Sombras con un toque del color de la marca (clases shadow-suave, shadow-elevada, shadow-brillo) */
+    --shadow-suave: 0 1px 2px rgb(4 40 39 / 0.04), 0 2px 8px -2px rgb(4 40 39 / 0.06);
+    --shadow-elevada: 0 2px 4px rgb(4 40 39 / 0.04), 0 12px 32px -8px rgb(4 40 39 / 0.18);
+    --shadow-brillo: 0 6px 20px -6px rgb(13 126 117 / 0.55);
+
+    /* Curvas de movimiento (clases ease-salida, ease-resorte) */
+    --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-resorte: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Animaciones (clases animate-aparecer, animate-aparecer-escala, animate-flotar, animate-ola, animate-latido) */
+    --animate-aparecer: aparecer 0.6s var(--ease-salida) backwards;
+    --animate-aparecer-escala: aparecer-escala 0.45s var(--ease-resorte) backwards;
+    --animate-flotar: flotar 6s ease-in-out infinite;
+    --animate-ola: ola 12s linear infinite;
+    --animate-latido: latido 2s ease-in-out infinite;
+
+    @keyframes aparecer {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes aparecer-escala {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes flotar {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    /* Ola: un patrón que se repite cada 50% del ancho, así el desplazamiento no tiene salto */
+    @keyframes ola {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    @keyframes latido {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(0.92); }
+    }
+}
+
+@keyframes onda {
+    from { opacity: 0.35; transform: scale(0); }
+    to { opacity: 0; transform: scale(1); }
+}
+
+@keyframes brillo {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes crecer-ancho {
+    from { transform: scaleX(0); }
+}
+
+@keyframes crecer-alto {
+    from { transform: scaleY(0); }
 }
 
 @layer base {
     html {
         -webkit-text-size-adjust: 100%;
+        scroll-behavior: smooth;
+        scrollbar-color: var(--color-slate-300) transparent;
     }
 
+    /* Fondo con un reflejo suave de agua en las esquinas; el ingreso pone encima su propia foto */
     body {
         @apply bg-slate-50 font-sans text-base text-slate-800 antialiased;
+        background-image:
+            radial-gradient(55rem 28rem at 105% -8%, rgb(148 233 218 / 0.35), transparent 70%),
+            radial-gradient(45rem 26rem at -10% -5%, rgb(186 230 253 / 0.35), transparent 70%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    ::selection {
+        background-color: var(--color-marca-200);
+        color: var(--color-marca-950);
+    }
+
+    /* Foco visible para todo lo que no trae el suyo (los componentes lo reemplazan) */
+    :where(a, button, summary, [tabindex]):focus-visible {
+        outline: 2px solid var(--color-marca-500);
+        outline-offset: 2px;
     }
 }
 
-
-/* Ventanas emergentes (<x-modal>): hoja inferior en celular, centrada en pantallas grandes. */
+/* Ventanas emergentes (<x-modal>): hoja inferior en celular, centrada en pantallas grandes.
+   Entran y salen con transición (@starting-style); los navegadores sin soporte simplemente las muestran. */
 @layer components {
     .modal {
         @apply mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-3xl bg-white p-0 text-slate-800 shadow-2xl;
         @apply md:m-auto md:max-w-lg md:rounded-3xl;
-    }
-
-    .modal::backdrop {
-        @apply bg-slate-900/50 backdrop-blur-[2px];
+        opacity: 0;
+        transform: translateY(100%);
+        transition:
+            opacity 0.25s var(--ease-salida),
+            transform 0.45s var(--ease-salida),
+            overlay 0.45s allow-discrete,
+            display 0.45s allow-discrete;
     }
 
     .modal[open] {
-        animation: modal-entrada 180ms ease-out;
+        opacity: 1;
+        transform: none;
+    }
+
+    @starting-style {
+        .modal[open] {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+    }
+
+    @media (width >= 48rem) {
+        .modal {
+            transform: translateY(1.5rem) scale(0.94);
+            transition-timing-function: var(--ease-salida), var(--ease-resorte), linear, linear;
+        }
+
+        @starting-style {
+            .modal[open] {
+                transform: translateY(1.5rem) scale(0.94);
+            }
+        }
+    }
+
+    .modal::backdrop {
+        @apply bg-slate-900/50 backdrop-blur-[3px];
+        opacity: 0;
+        transition:
+            opacity 0.3s ease-out,
+            overlay 0.3s allow-discrete,
+            display 0.3s allow-discrete;
     }
 
     .modal[open]::backdrop {
-        animation: modal-fondo 180ms ease-out;
+        opacity: 1;
+    }
+
+    @starting-style {
+        .modal[open]::backdrop {
+            opacity: 0;
+        }
+    }
+
+    /* Vidrio esmerilado: sobre fondos con color o foto */
+    .vidrio {
+        @apply bg-white/75 backdrop-blur-xl backdrop-saturate-150;
+    }
+
+    /* Texto con degradado de la marca */
+    .texto-degradado {
+        @apply bg-gradient-to-r from-marca-700 via-marca-500 to-sky-600 bg-clip-text text-transparent;
+    }
+
+    /* Esqueleto de carga: bloque gris con un brillo que lo recorre */
+    .esqueleto {
+        @apply rounded-xl bg-slate-200;
+        background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
+        background-size: 200% 100%;
+        animation: brillo 1.4s ease-in-out infinite;
+    }
+
+    /* Rueda de espera */
+    .girador {
+        @apply inline-block h-5 w-5 shrink-0 rounded-full border-2 border-current border-r-transparent;
+        animation: girar 0.7s linear infinite;
+    }
+
+    /* Elevar al pasar el puntero (tarjetas que son enlaces) */
+    .elevable {
+        transition:
+            transform 0.3s var(--ease-salida),
+            box-shadow 0.3s var(--ease-salida);
+    }
+
+    @media (hover: hover) {
+        .elevable:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-elevada);
+        }
+    }
+
+    /* Presionar: todo lo que se toca se hunde un poco */
+    .presionable {
+        transition:
+            transform 0.15s var(--ease-salida),
+            background-color 0.2s,
+            box-shadow 0.2s,
+            color 0.2s;
+    }
+
+    .presionable:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    /* Hijos que entran uno tras otro */
+    .escalonado > * {
+        animation: var(--animate-aparecer);
+    }
+
+    /* Barras de las gráficas: crecen al aparecer */
+    .crece-ancho {
+        transform-origin: left;
+        animation: crecer-ancho 0.9s var(--ease-salida) backwards;
+    }
+
+    .crece-alto {
+        transform-origin: bottom;
+        animation: crecer-alto 0.9s var(--ease-salida) backwards;
     }
 }
 
-@keyframes modal-entrada {
-    from { opacity: 0; transform: translateY(2rem); }
-    to { opacity: 1; transform: translateY(0); }
+@layer utilities {
+    .escalonado > :nth-child(2) { animation-delay: 60ms; }
+    .escalonado > :nth-child(3) { animation-delay: 120ms; }
+    .escalonado > :nth-child(4) { animation-delay: 180ms; }
+    .escalonado > :nth-child(5) { animation-delay: 240ms; }
+    .escalonado > :nth-child(6) { animation-delay: 300ms; }
+    .escalonado > :nth-child(n + 7) { animation-delay: 360ms; }
 }
 
-@keyframes modal-fondo {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Entrada de la página: los bloques del contenido aparecen uno tras otro (sin JavaScript, desde el primer pintado).
+   Solo "backwards": al terminar no queda ningún transform que afecte a lo fijo o pegajoso de adentro. */
+main#contenido > :not(dialog, script, template) {
+    animation: var(--animate-aparecer);
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .modal[open], .modal[open]::backdrop { animation: none; }
+main#contenido > :nth-child(2) { animation-delay: 70ms; }
+main#contenido > :nth-child(3) { animation-delay: 140ms; }
+main#contenido > :nth-child(4) { animation-delay: 210ms; }
+main#contenido > :nth-child(5) { animation-delay: 280ms; }
+main#contenido > :nth-child(n + 6) { animation-delay: 350ms; }
+
+/* Aparecer al bajar (data-revelar, ver resources/js/app.js): lo que empieza fuera de la pantalla espera oculto */
+.por-revelar {
+    opacity: 0;
+    transform: translateY(18px);
+}
+
+.revelado {
+    animation: var(--animate-aparecer);
+}
+
+/* Onda al tocar (data-onda, ver resources/js/app.js) */
+[data-onda] {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.onda {
+    position: absolute;
+    z-index: -1;
+    border-radius: 9999px;
+    background-color: currentColor;
+    pointer-events: none;
+    animation: onda 0.6s ease-out forwards;
+}
+
+/* Botón que está enviando su formulario: rueda de espera al final y sin más clics */
+.enviando {
+    pointer-events: none;
+}
+
+.enviando::after {
+    content: '';
+    @apply ml-1 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-current border-r-transparent;
+    animation: girar 0.7s linear infinite;
+}
+
+/* Cambio entre páginas: fundido suave en los navegadores que lo permiten */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.22s;
 }
 
 /* Tooltip de las gráficas (ver resources/js/app.js) */
 .tooltip-grafica {
-    @apply pointer-events-none fixed z-50 rounded-lg bg-slate-900 px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-white shadow-lg;
+    @apply pointer-events-none fixed z-50 rounded-lg bg-slate-900/95 px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap text-white shadow-lg backdrop-blur;
+    animation: aparecer-escala 0.15s ease-out;
 }
 
-/* Impresión de reportes: sin menús ni botones */
+/* Menos movimiento: quien lo pidió en su teléfono ve todo quieto (las animaciones terminan al instante) */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    ::before,
+    ::after,
+    ::backdrop {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0s !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    @view-transition {
+        navigation: none;
+    }
+}
+
+/* Impresión de reportes: sin menús, botones ni animaciones */
 @media print {
-    body { @apply bg-white; }
+    body {
+        @apply bg-white;
+        background-image: none;
+    }
+
+    *,
+    ::before,
+    ::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .por-revelar {
+        opacity: 1;
+        transform: none;
+    }
 }
