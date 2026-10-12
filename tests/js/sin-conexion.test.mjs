@@ -1,7 +1,7 @@
 // Reglas de la cola de registros sin conexión. Correr con: npm run test:js (usa node --test, sin paquetes)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { camposParaGuardar, clasificar, fechaLocal, horasGuardado, motivoRechazo, porVencer } from '../../resources/js/sin-conexion-logica.js';
+import { camposParaGuardar, clasificar, fechaLocal, horaMasReciente, horasGuardado, motivoRechazo, porVencer } from '../../resources/js/sin-conexion-logica.js';
 
 test('guardado y duplicado salen de la cola', () => {
     assert.equal(clasificar(201), 'listo');
@@ -44,4 +44,14 @@ test('no se guardan el token ni la marca de la ventana ni archivos', () => {
 
 test('fecha local con ceros', () => {
     assert.equal(fechaLocal(new Date(2026, 0, 5, 23, 59)), '2026-01-05');
+});
+
+test('la última hora del servidor solo avanza', () => {
+    assert.equal(horaMasReciente(null, '2026-10-08T10:00:00.000Z'), '2026-10-08T10:00:00.000Z');
+    assert.equal(horaMasReciente('2026-10-08T10:00:00.000Z', '2026-10-08T11:00:00.000Z'), '2026-10-08T11:00:00.000Z');
+    // Una página guardada (hora vieja) no la baja
+    assert.equal(horaMasReciente('2026-10-08T10:00:00.000Z', '2026-10-08T09:00:00.000Z'), '2026-10-08T10:00:00.000Z');
+    // Un dato que no es fecha se ignora
+    assert.equal(horaMasReciente('2026-10-08T10:00:00.000Z', 'basura'), '2026-10-08T10:00:00.000Z');
+    assert.equal(horaMasReciente(undefined, null), null);
 });

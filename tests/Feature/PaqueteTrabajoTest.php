@@ -220,6 +220,7 @@ class PaqueteTrabajoTest extends TestCase
             Middleware::CABECERA_ID => $uuid,
             Middleware::CABECERA_MOMENTO => now()->subMinutes(30)->utc()->toIso8601String(),
             Middleware::CABECERA_HORA_TELEFONO => now()->utc()->toIso8601String(),
+            Middleware::CABECERA_ULTIMA_HORA_SERVIDOR => now()->subMinutes(31)->utc()->toIso8601String(),
         ])->post($paquete['lagos'][0]['siembras'][0]['url_mortalidad'], ['fecha' => now()->toDateString(), 'cantidad' => 5]);
 
         $enviar()->assertCreated()->assertJson(['estado' => 'guardado']);

@@ -6,7 +6,7 @@
  * - Recuerda la sesión activa (para /campo) y borra los paquetes de otras personas del mismo teléfono.
  * - Al cerrar sesión, borrar() quita el paquete y la sesión activa.
  */
-import { disponible, operacion, PAQUETES, SESION } from './almacen';
+import { disponible, operacion, PAQUETES, recordarDeRespuesta, SESION } from './almacen';
 import { clavesAjenas, debeRenovar, paqueteValido } from './paquete-logica';
 
 /** Paquete guardado de una finca|persona, o null. */
@@ -49,6 +49,7 @@ export const iniciarPaquete = () => {
                 cache: 'no-store',
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
+            await recordarDeRespuesta(clave, respuesta);
             if (!respuesta.ok) return;
             const paquete = await respuesta.json();
             if (!paqueteValido(paquete, clave)) return;

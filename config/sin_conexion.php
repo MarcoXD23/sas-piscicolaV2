@@ -11,6 +11,14 @@ return [
     // Margen (en minutos) para relojes de teléfono un poco adelantados.
     'margen_reloj_minutos' => 2,
 
+    // Un registro no puede decir que ocurrió antes de la última hora que el teléfono recibió del servidor (menos este
+    // margen, en minutos). Cierra el truco de atrasar el reloj y volverlo a poner bien antes de enviar.
+    'margen_hora_servidor_minutos' => 2,
+
+    // ¿Se rechaza el registro que llega sin esa hora (X-Ultima-Hora-Servidor)? Vacío = sí.
+    'exigir_hora_servidor' => in_array(env('SIN_CONEXION_EXIGIR_HORA_SERVIDOR'), [null, ''], true)
+        || filter_var(env('SIN_CONEXION_EXIGIR_HORA_SERVIDOR'), FILTER_VALIDATE_BOOL),
+
     // Modo de campo (Registro rápido): lagos que viajan en el paquete de trabajo, por nombre. Vacío = 60.
     'max_lagos' => max(1, (int) (env('SIN_CONEXION_MAX_LAGOS') ?: 60)),
 

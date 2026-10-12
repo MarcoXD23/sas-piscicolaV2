@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\RegistroSinConexion as Registro;
 use App\Support\MomentoRegistro;
+use App\Support\Region;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,6 +22,10 @@ use Throwable;
  *   Desfase = hora del servidor − hora del teléfono; hora real = X-Registrado-En + desfase. La hora real no puede ser
  *   futura ni más vieja que SIN_CONEXION_HORAS; el turno, la bitácora y las horas guardadas se evalúan a esa hora
  *   (MomentoRegistro). Un desfase de más de 5 minutos queda anotado en la bitácora.
+ * - X-Ultima-Hora-Servidor: la última hora que el teléfono recibió del servidor (cabecera X-Hora-Servidor de cada
+ *   respuesta, middleware HoraServidor) antes de guardar el registro. La hora real del registro no puede ser anterior
+ *   a ella (con margen_hora_servidor_minutos): cierra el truco de atrasar el reloj para caer en el turno y volverlo a
+ *   poner bien antes de enviar. Obligatoria mientras SIN_CONEXION_EXIGIR_HORA_SERVIDOR sea true (por defecto).
  * Las reglas de siempre (stock, peces vivos, finca, rol) se aplican al llegar. La respuesta es JSON:
  * 201 guardado, 200 duplicado, 403/422 rechazado con su motivo.
  */
@@ -31,6 +36,8 @@ class RegistroSinConexion
     public const CABECERA_MOMENTO = 'X-Registrado-En';
 
     public const CABECERA_HORA_TELEFONO = 'X-Hora-Telefono';
+
+    public const CABECERA_ULTIMA_HORA_SERVIDOR = 'X-Ultima-Hora-Servidor';
 
     /** Desde este desfase (en minutos) la corrección del reloj se anota en la bitácora. */
     public const MINUTOS_PARA_ANOTAR = 5;
@@ -52,6 +59,11 @@ class RegistroSinConexion
             return $momento;
         }
         [$momento, $desfaseSegundos] = $momento;
+
+        $rechazo = $this->despuesDeLaHoraDelServidor($momento, $request->header(self::CABECERA_ULTIMA_HORA_SERVIDOR));
+        if ($rechazo !== null) {
+            return $rechazo;
+        }
 
         $minutosCorregidos = intdiv(abs($desfaseSegundos), 60);
         $this->momentoRegistro->fijar($momento, $minutosCorregidos > self::MINUTOS_PARA_ANOTAR ? $minutosCorregidos : null);
@@ -130,6 +142,37 @@ class RegistroSinConexion
         }
 
         return [$momento, $desfase];
+    }
+
+    /**
+     * La hora real del registro (ya corregida) no puede ser anterior a la última hora que el teléfono recibió del
+     * servidor antes de guardarlo: el registro no pudo ocurrir antes de esa respuesta.
+     */
+    private function despuesDeLaHoraDelServidor(CarbonImmutable $momento, ?string $ultimaHoraServidor): ?Response
+    {
+        if (blank($ultimaHoraServidor)) {
+            return config('sin_conexion.exigir_hora_servidor') ? $this->rechazo(__('mensajes.sin_conexion.sin_hora_servidor')) : null;
+        }
+
+        try {
+            $servidor = CarbonImmutable::parse($ultimaHoraServidor)->utc();
+        } catch (Throwable) {
+            return $this->rechazo(__('mensajes.sin_conexion.datos_invalidos'));
+        }
+
+        // El servidor nunca dio una hora futura: si la trae, el dato no es de él
+        if ($servidor->greaterThan(CarbonImmutable::now()->addMinutes((int) config('sin_conexion.margen_reloj_minutos')))) {
+            return $this->rechazo(__('mensajes.sin_conexion.datos_invalidos'));
+        }
+
+        if ($momento->lessThan($servidor->subMinutes((int) config('sin_conexion.margen_hora_servidor_minutos')))) {
+            return $this->rechazo(__('mensajes.sin_conexion.antes_de_hora_servidor', [
+                'momento' => Region::local($momento)->format('d/m/Y H:i'),
+                'servidor' => Region::local($servidor)->format('d/m/Y H:i'),
+            ]));
+        }
+
+        return null;
     }
 
     private function rechazo(string $mensaje): Response

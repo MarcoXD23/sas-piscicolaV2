@@ -4,6 +4,7 @@ use App\Http\Middleware\AceptacionVigente;
 use App\Http\Middleware\CabecerasSeguridad;
 use App\Http\Middleware\CookieSeguraConHttps;
 use App\Http\Middleware\EstablecerTenant;
+use App\Http\Middleware\HoraServidor;
 use App\Http\Middleware\PlataformaConDosPasos;
 use App\Http\Middleware\RegistroSinConexion;
 use App\Http\Middleware\VerificarRol;
@@ -26,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(CabecerasSeguridad::class);
         // Cookie de sesión segura con HTTPS (directo o vía proxy de confianza); corre antes de abrir la sesión
         $middleware->append(CookieSeguraConHttps::class);
+        // Hora del servidor en cada respuesta: el teléfono la adjunta a los registros sin conexión
+        $middleware->append(HoraServidor::class);
 
         $middleware->alias([
             'tenant' => EstablecerTenant::class,

@@ -369,6 +369,7 @@ export const iniciarCampo = (t, cola) => {
                 redirect: 'manual',
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
+            await cola.recordarHora(respuesta);
             if (respuesta.status === 401 || respuesta.status === 419 || respuesta.type === 'opaqueredirect') {
                 if (avisar) mensaje(t('campo_sesion_vencida'), 'atencion');
                 return;

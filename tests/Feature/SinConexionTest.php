@@ -70,8 +70,10 @@ class SinConexionTest extends TestCase
      * Envío como lo hace el teléfono al volver la señal: hora local de Bogotá con su desfase, en ISO 8601.
      * $horaLocal es la hora real del registro; $relojTelefono, cuántos minutos va adelantado (+) o atrasado (−) el
      * reloj del teléfono: así lo verían la hora del registro y la hora del envío que manda el teléfono.
+     * $ultimaHoraServidor: la última hora que el teléfono recibió del servidor antes de guardar (por defecto, un minuto
+     * antes de la hora real del registro).
      */
-    private function enviar(User $usuario, string $url, array $datos, string $horaLocal, ?string $id = null, int $relojTelefono = 0): TestResponse
+    private function enviar(User $usuario, string $url, array $datos, string $horaLocal, ?string $id = null, int $relojTelefono = 0, ?string $ultimaHoraServidor = null): TestResponse
     {
         // Cada envío lleva solo sus cabeceras (withHeaders las acumula entre peticiones)
         $this->flushHeaders();
@@ -80,6 +82,7 @@ class SinConexionTest extends TestCase
             Middleware::CABECERA_ID => $id ?? (string) Str::uuid(),
             Middleware::CABECERA_MOMENTO => Carbon::parse($horaLocal, 'America/Bogota')->addMinutes($relojTelefono)->toIso8601String(),
             Middleware::CABECERA_HORA_TELEFONO => now()->addMinutes($relojTelefono)->toIso8601String(),
+            Middleware::CABECERA_ULTIMA_HORA_SERVIDOR => $ultimaHoraServidor ?? Carbon::parse($horaLocal, 'America/Bogota')->subMinute()->utc()->toIso8601String(),
         ])->post($url, $datos);
     }
 
@@ -305,6 +308,7 @@ class SinConexionTest extends TestCase
         app(TenantActual::class)->establecer($this->finca->id);
         $this->assertSame(120, Bitacora::sole()->detalle['reloj_corregido_min']);
     }
+
     public function test_la_medicion_sin_conexion_queda_en_la_bitacora_con_la_hora_corregida(): void
     {
         // Medición real a las 04:00; el teléfono va 90 minutos atrasado

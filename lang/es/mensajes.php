@@ -158,6 +158,8 @@ return [
         'duplicado' => 'Este registro ya se había recibido.',
         'hora_futura' => 'La hora del registro está en el futuro. Revisa la fecha y la hora del teléfono.',
         'sin_hora_telefono' => 'El envío no trae la hora del teléfono. Actualiza la app y vuelve a intentarlo.',
+        'sin_hora_servidor' => 'El registro no trae la última hora que el teléfono recibió del servidor. Actualiza la app y vuelve a registrarlo.',
+        'antes_de_hora_servidor' => 'El registro dice haber ocurrido el :momento, antes de la última hora que el teléfono recibió del servidor (:servidor). Revisa que el teléfono tenga la fecha y la hora automáticas y vuelve a registrarlo.',
         'muy_viejo' => 'El registro tiene más de :horas horas sin enviarse y ya no se acepta. Avísale al administrador.',
     ],
     'siembra' => [

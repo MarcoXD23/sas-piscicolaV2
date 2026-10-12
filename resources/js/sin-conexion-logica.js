@@ -35,3 +35,14 @@ export const fechaLocal = (fecha = new Date()) => [
     String(fecha.getMonth() + 1).padStart(2, '0'),
     String(fecha.getDate()).padStart(2, '0'),
 ].join('-');
+
+/**
+ * Última hora del servidor que se guarda: la más reciente de las dos (ISO 8601). Una página guardada sin señal trae
+ * una hora vieja y nunca baja la que ya estaba; un dato que no es una fecha se ignora.
+ */
+export const horaMasReciente = (guardada, nueva) => {
+    const valida = (hora) => typeof hora === 'string' && hora !== '' && !Number.isNaN(new Date(hora).getTime());
+    if (!valida(nueva)) return valida(guardada) ? guardada : null;
+    if (!valida(guardada)) return nueva;
+    return new Date(nueva).getTime() > new Date(guardada).getTime() ? nueva : guardada;
+};

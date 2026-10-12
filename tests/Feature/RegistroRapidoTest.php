@@ -66,6 +66,7 @@ class RegistroRapidoTest extends TestCase
             Middleware::CABECERA_ID => (string) Str::uuid(),
             Middleware::CABECERA_MOMENTO => now()->subMinutes(10)->utc()->format('Y-m-d\TH:i:s.v\Z'),
             Middleware::CABECERA_HORA_TELEFONO => now()->utc()->format('Y-m-d\TH:i:s.v\Z'),
+            Middleware::CABECERA_ULTIMA_HORA_SERVIDOR => now()->subMinutes(11)->utc()->format('Y-m-d\TH:i:s.v\Z'),
         ])->post($url, $campos);
     }
 

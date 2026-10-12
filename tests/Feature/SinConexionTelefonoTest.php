@@ -129,6 +129,7 @@ class SinConexionTelefonoTest extends TestCase
             Middleware::CABECERA_ID => $uuid,
             Middleware::CABECERA_MOMENTO => $hora,
             Middleware::CABECERA_HORA_TELEFONO => now()->utc()->format('Y-m-d\TH:i:s.v\Z'),
+            Middleware::CABECERA_ULTIMA_HORA_SERVIDOR => now()->subMinutes(41)->utc()->format('Y-m-d\TH:i:s.v\Z'),
         ])->post(route('noche.rondas.store'), ['tipo' => Ronda::SIN_NOVEDAD, 'lago_id' => '', 'descripcion' => ''])
             ->assertCreated()->assertJson(['estado' => 'guardado']);
 

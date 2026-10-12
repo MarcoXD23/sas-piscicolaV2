@@ -202,7 +202,13 @@ La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guar
   Se envían solos, en orden y con su hora real, al volver la señal o al abrir cualquier pantalla.
   El servidor los revisa al llegar con las reglas de siempre: turno a esa hora, bodega y peces vivos. No acepta los de más de `SIN_CONEXION_HORAS` horas.
   **Reloj del teléfono:** cada envío trae también la hora del teléfono en ese instante (`X-Hora-Telefono`; sin ella se rechaza). El servidor calcula el desfase (su hora menos la del teléfono) y lo suma a la hora del registro antes de revisar el turno, el límite de horas y la bitácora. Si el desfase pasa de 5 minutos, la bitácora anota «hora del teléfono corregida en X minutos» y el propietario lo ve.
-  Límite conocido: quien atrase el reloj para caer en el turno y lo vuelva a poner bien antes de enviar no queda corregido (ver «Pendiente»).
+  **Última hora del servidor:** cada respuesta trae la hora del servidor (cabecera `X-Hora-Servidor`, middleware global `HoraServidor`, también en `/up`, `/campo/token` y `/campo/paquete`). Cada pantalla la trae también en `data-hora-servidor`.
+  El teléfono guarda la más reciente por finca y persona. Nunca la baja: una pantalla guardada sin señal trae una vieja.
+  Al guardar un registro, la congela en él y la envía como `X-Ultima-Hora-Servidor`. El servidor rechaza el registro si su hora real, ya corregida, es más de 2 minutos anterior a ella.
+  Así queda cerrado el truco de atrasar el reloj para caer en el turno y volverlo a poner bien antes de enviar: el teléfono ya había visto una hora posterior.
+  Un registro sin esa cabecera se rechaza. `SIN_CONEXION_EXIGIR_HORA_SERVIDOR=false` lo afloja.
+  Caso a tener en cuenta: si el teléfono iba atrasado sin saberlo y la hora automática lo corrige entre guardar y enviar, ya no queda desfase que corregir. El registro se rechaza con el motivo («Revisa que el teléfono tenga la fecha y la hora automáticas…») y queda en «Rechazados» con sus datos para repetirlo.
+  Un trabajo legítimo de varias horas sin señal pasa, porque la hora congelada es la de la última conexión. Siguen igual la corrección del reloj, los ids idempotentes y la nota de bitácora «registrado sin conexión, recibido el …».
   Un botón con el número de registros sin enviar abre la lista de pendientes y rechazados; cada rechazado muestra su motivo y sus datos.
   Al cerrar sesión con registros sin enviar, la app avisa: si sales, se borran del teléfono.
 - **Los demás formularios no se envían:** lo escrito queda en el formulario. Por ejemplo el aireador, que depende de su estado en ese momento. Nunca se guardan el ingreso, la recuperación de contraseña, el panel de plataforma, el asistente ni las descargas. Al cerrar sesión se borran las copias (`Clear-Site-Data` y aviso al service worker).
@@ -371,7 +377,6 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 
 ## Pendiente
 
-- Guardar en el teléfono la última hora que dio el servidor y adjuntarla a cada registro sin conexión. Así el servidor rechazaría los que dicen haber ocurrido antes de ese momento: cerraría el truco de atrasar el reloj y volverlo a poner bien antes de enviar.
 - Superadmin y planes de suscripción para varias fincas.
 
 ## Estructura

@@ -87,6 +87,7 @@ const hayConexion = async () => {
     if (!navigator.onLine) return false;
     try {
         const respuesta = await fetch('/up', { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(4000) });
+        cola.recordarHora(respuesta);
         return respuesta.ok;
     } catch {
         return false;

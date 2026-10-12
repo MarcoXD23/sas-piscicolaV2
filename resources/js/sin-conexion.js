@@ -7,11 +7,12 @@
  * - Antes de enviar se pide un token vigente a /campo/token (nunca el de una página guardada, que puede estar vencido).
  * - Se envían en orden al volver la señal, al abrir cualquier pantalla y con «Enviar ahora», con las cabeceras
  *   X-Registro-Sin-Conexion (uuid), X-Registrado-En (hora del registro) y X-Hora-Telefono (hora del envío, con la que
- *   el servidor corrige un reloj mal puesto). El servidor aplica sus reglas al llegar
+ *   el servidor corrige un reloj mal puesto) y X-Ultima-Hora-Servidor (la última hora que dio el servidor antes de
+ *   guardar el registro: no pudo ocurrir antes de ella). El servidor aplica sus reglas al llegar
  *   (app/Http/Middleware/RegistroSinConexion.php).
  * - Lo que el servidor rechaza queda en «Rechazados» con su motivo y sus datos, hasta que la persona lo descarta.
  */
-import { leerSesionActiva, operacion as operacionBase, REGISTROS } from './almacen';
+import { leerHoraServidor, leerSesionActiva, operacion as operacionBase, recordarDeRespuesta, recordarHoraServidor, REGISTROS } from './almacen';
 import { estadoToken } from './paquete-logica';
 import { camposParaGuardar, clasificar, fechaLocal, motivoRechazo, porVencer } from './sin-conexion-logica';
 
@@ -24,7 +25,7 @@ export const desplazar = (nodo, block = 'nearest') => nodo?.scrollIntoView({
 });
 
 /** Token CSRF vigente de la sesión ({ token }) o el motivo para no enviar todavía ({ estado: 'sesion' | 'reintentar' }). */
-const tokenFresco = async () => {
+const tokenFresco = async (clave) => {
     try {
         const respuesta = await fetch('/campo/token', {
             credentials: 'same-origin',
@@ -32,6 +33,7 @@ const tokenFresco = async () => {
             redirect: 'manual',
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         });
+        await recordarDeRespuesta(clave, respuesta);
         const cuerpo = await respuesta.json().catch(() => null);
         const estado = estadoToken(respuesta.status, cuerpo);
         return estado === 'listo' ? { token: cuerpo.token } : { estado };
@@ -61,7 +63,11 @@ export const iniciarCola = (t) => {
     const horas = Number(document.body.dataset.colaHoras) || 48;
     const puedeGuardar = 'indexedDB' in window && 'randomUUID' in crypto;
     // En /campo la página no trae la clave: se usa la de la sesión activa guardada en el teléfono
-    const listo = (async () => { if (!clave && puedeGuardar) clave = await leerSesionActiva(); })();
+    // La página trae la hora del servidor con que se generó (una guardada sin señal trae una vieja: no baja la guardada)
+    const listo = (async () => {
+        if (!clave && puedeGuardar) clave = await leerSesionActiva();
+        if (clave && puedeGuardar) await recordarHoraServidor(clave, document.body.dataset.horaServidor);
+    })();
     const disponible = () => Boolean(clave) && puedeGuardar;
 
     const boton = document.querySelector('[data-cola-boton]');
@@ -170,6 +176,8 @@ export const iniciarCola = (t) => {
     const guardarRegistro = async ({ url, campos, detalle, resumen }) => {
         await listo;
         if (!disponible()) return false;
+        // La última hora que dio el servidor, congelada al guardar (la de después no sirve: el registro es anterior)
+        const horaServidor = await leerHoraServidor(clave);
         try {
             await operacion('readwrite', (almacen) => almacen.add({
                 uuid: crypto.randomUUID(),
@@ -179,6 +187,7 @@ export const iniciarCola = (t) => {
                 detalle,
                 resumen,
                 registradoEn: new Date().toISOString(),
+                horaServidor,
                 estado: 'pendiente',
                 motivo: null,
             }));
@@ -223,7 +232,7 @@ export const iniciarCola = (t) => {
         try {
             const pendientes = (await misRegistros()).filter((r) => r.estado === 'pendiente');
             // Token vigente de la sesión, pedido justo ahora (si la sesión venció, los registros esperan)
-            const sesion = pendientes.length > 0 ? await tokenFresco() : { token: null };
+            const sesion = pendientes.length > 0 ? await tokenFresco(clave) : { token: null };
             if (!sesion.token && pendientes.length > 0) detenido = sesion.estado;
 
             for (const registro of sesion.token ? pendientes : []) {
@@ -246,8 +255,10 @@ export const iniciarCola = (t) => {
                             'X-Registro-Sin-Conexion': registro.uuid,
                             'X-Registrado-En': registro.registradoEn,
                             'X-Hora-Telefono': new Date().toISOString(),
+                            ...(registro.horaServidor ? { 'X-Ultima-Hora-Servidor': registro.horaServidor } : {}),
                         },
                     });
+                    await recordarDeRespuesta(clave, respuesta);
                     estado = respuesta.status;
                     cuerpo = await respuesta.json().catch(() => null);
                 } catch {
@@ -306,5 +317,11 @@ export const iniciarCola = (t) => {
         pintar().then(() => enviar());
     });
 
-    return { disponible, guardar, guardarRegistro, enviar, total, borrarTodo, misRegistros };
+    /** Guarda la hora del servidor que trae una respuesta (/up, /campo/paquete) para esta finca|persona. */
+    const recordarHora = async (respuesta) => {
+        await listo;
+        if (disponible()) await recordarDeRespuesta(clave, respuesta);
+    };
+
+    return { disponible, guardar, guardarRegistro, enviar, total, borrarTodo, misRegistros, recordarHora };
 };
