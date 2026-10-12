@@ -334,10 +334,21 @@ Variables: `RESPALDOS_CARPETA`, `RESPALDOS_DIAS`, `RESPALDOS_HORA`, `PG_BIN` (ca
 
 ### Estado del sistema
 
-- **`/salud`** responde solo `ok` o `falla`, sin más datos. Comprueba la base, el almacenamiento y que el cron haya corrido en la última hora.
+- **`/salud`** responde solo `ok` o `falla`, sin más datos, y guarda su resultado 30 segundos. Seis comprobaciones, todas con umbral en `config/salud.php`:
+
+  | Comprobación | Falla si… | Variable opcional |
+  |---|---|---|
+  | Base de datos | no responde | — |
+  | Almacenamiento | no se puede escribir y leer en `storage` | — |
+  | Programador | el cron no corrió en los últimos 10 minutos | `SALUD_MINUTOS_PROGRAMADOR` |
+  | Copia de seguridad | la última tiene más de 36 horas, o no hay copias en `RESPALDOS_CARPETA` | `SALUD_HORAS_COPIA` |
+  | Disco | el espacio libre baja del 10 % o de 1 GB | `SALUD_DISCO_PORCENTAJE`, `SALUD_DISCO_GB` |
+  | Cola | un trabajo lleva más de 15 minutos esperando, o hay trabajos en `failed_jobs` | `SALUD_MINUTOS_COLA` |
+
+  Sin `RESPALDOS_CARPETA`, la copia falla solo en producción (`SALUD_EXIGIR_COPIA` lo cambia). La caché se ajusta con `SALUD_CACHE_SEGUNDOS`.
   Vigílala con UptimeRobot o Better Stack: monitor de palabra clave `ok`, cada 5 minutos.
-- **`php artisan piscicola:estado`** muestra el detalle: base, cola y fallos, disco libre, última copia y último ciclo del programador.
-- **`piscicola:vigilar`** corre cada 5 minutos y envía un solo correo cuando algo falla y otro cuando se recupera.
+- **`php artisan piscicola:estado`** muestra cada comprobación con su umbral y lo medido: versión de la base, último ciclo del programador, última copia y hace cuántas horas, espacio libre (GB y %) y la cola (pendientes, atascados y fallidos).
+- **`piscicola:vigilar`** corre cada 5 minutos, muestra cada comprobación con su umbral y envía un solo correo cuando algo falla y otro cuando se recupera.
   El correo va a `SALUD_CORREO_AVISO`; si está vacía, a los administradores de plataforma.
 - **Errores:** se guardan en un archivo por día en `storage/logs/` y se conservan `LOG_DAILY_DAYS` días (14).
 

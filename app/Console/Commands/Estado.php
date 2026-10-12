@@ -2,17 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Respaldar as ComandoRespaldar;
 use App\Support\Formato;
 use App\Support\Salud\Comprobaciones;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
- * Detalle del estado del sistema, para quien administra el servidor (lo que /salud no muestra):
- * base de datos, cola y cola de fallos, espacio libre, última copia de seguridad y último ciclo del programador.
+ * Detalle del estado del sistema, para quien administra el servidor (lo que /salud no muestra): cada comprobación
+ * con su umbral y lo medido (versión de la base, último ciclo del programador, última copia, espacio libre y cola).
  */
 class Estado extends Command
 {
@@ -28,16 +26,19 @@ class Estado extends Command
     {
         $resultados = Comprobaciones::correr();
         $marca = fn (bool $bien) => $bien ? __('salud.bien') : __('salud.falla');
+        $detalle = [
+            'base' => $this->versionBase(),
+            'almacenamiento' => null,
+            'programador' => $this->ultimoCiclo(),
+            'copia' => $this->ultimaCopia(),
+            'disco' => $this->discoLibre(),
+            'cola' => $this->cola(),
+        ];
 
-        $this->table([__('salud.columna_dato'), __('salud.columna_valor')], [
-            [__('salud.comprobaciones.base'), $marca($resultados['base']).' · '.$this->versionBase()],
-            [__('salud.comprobaciones.almacenamiento'), $marca($resultados['almacenamiento'])],
-            [__('salud.comprobaciones.programador'), $marca($resultados['programador']).' · '.$this->ultimoCiclo()],
-            [__('salud.cola'), $this->contar('jobs')],
-            [__('salud.cola_fallos'), $this->contar('failed_jobs')],
-            [__('salud.disco_libre'), $this->discoLibre()],
-            [__('salud.ultima_copia'), $this->ultimaCopia()],
-        ]);
+        $this->table([__('salud.columna_dato'), __('salud.columna_valor')], array_map(
+            fn (string $nombre) => [Comprobaciones::etiqueta($nombre), $marca($resultados[$nombre]).($detalle[$nombre] !== null ? ' · '.$detalle[$nombre] : '')],
+            Comprobaciones::NOMBRES,
+        ));
 
         $this->line(Comprobaciones::todoBien($resultados) ? __('salud.todo_bien') : __('salud.algo_falla'));
 
@@ -53,22 +54,6 @@ class Estado extends Command
         }
     }
 
-    private function contar(string $tabla): string
-    {
-        try {
-            return Schema::hasTable($tabla) ? Formato::numero(DB::table($tabla)->count()) : __('salud.sin_dato');
-        } catch (Throwable) {
-            return __('salud.sin_dato');
-        }
-    }
-
-    private function discoLibre(): string
-    {
-        $libre = @disk_free_space(storage_path());
-
-        return $libre === false ? __('salud.sin_dato') : __('salud.gb', ['gb' => Formato::numero($libre / 1024 ** 3, 1)]);
-    }
-
     private function ultimoCiclo(): string
     {
         $ultimo = Comprobaciones::ultimoLatido();
@@ -78,21 +63,43 @@ class Estado extends Command
 
     private function ultimaCopia(): string
     {
-        $carpeta = config('respaldos.carpeta');
-        if (blank($carpeta)) {
-            return __('salud.sin_carpeta_respaldos');
+        if (blank(config('respaldos.carpeta'))) {
+            return config('salud.exigir_copia') ? __('salud.sin_carpeta_respaldos') : __('salud.sin_carpeta_no_aplica');
         }
-
-        $copias = glob(rtrim($carpeta, '\\/').DIRECTORY_SEPARATOR.ComandoRespaldar::PREFIJO.'*.dump') ?: [];
-        if ($copias === []) {
+        $copia = Comprobaciones::ultimaCopia();
+        if ($copia === null) {
             return __('salud.sin_copias');
         }
-        usort($copias, fn ($a, $b) => filemtime($b) <=> filemtime($a));
 
         return __('salud.copia', [
-            'archivo' => basename($copias[0]),
-            'fecha' => date('Y-m-d H:i', filemtime($copias[0])),
-            'mb' => Formato::numero(filesize($copias[0]) / 1048576, 2),
+            'archivo' => $copia['archivo'],
+            'fecha' => $copia['fecha']->setTimezone(config('app.timezone'))->format('Y-m-d H:i'),
+            'horas' => Formato::numero((int) $copia['fecha']->diffInHours(now(), true)),
+            'mb' => Formato::numero($copia['bytes'] / 1048576, 2),
+        ]);
+    }
+
+    private function discoLibre(): string
+    {
+        $espacio = Comprobaciones::espacioDisco();
+        if ($espacio === null || $espacio['total'] <= 0) {
+            return __('salud.sin_dato');
+        }
+
+        return __('salud.disco', [
+            'gb' => Formato::numero($espacio['libre'] / 1024 ** 3, 1),
+            'porcentaje' => Formato::numero($espacio['libre'] / $espacio['total'] * 100, 1),
+        ]);
+    }
+
+    private function cola(): string
+    {
+        $cola = Comprobaciones::estadoCola();
+
+        return $cola === null ? __('salud.sin_dato') : __('salud.detalle_cola', [
+            'pendientes' => Formato::numero($cola['pendientes']),
+            'atascados' => Formato::numero($cola['atascados']),
+            'fallidos' => Formato::numero($cola['fallidos']),
         ]);
     }
 }

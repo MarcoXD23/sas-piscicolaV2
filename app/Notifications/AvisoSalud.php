@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Salud\Comprobaciones;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -34,7 +35,7 @@ class AvisoSalud extends Notification
             ->subject(__('salud.correo.asunto_falla', ['app' => $app]))
             ->line(__('salud.correo.falla', ['app' => $app, 'url' => config('app.url')]));
         foreach ($this->fallas as $falla) {
-            $correo->line('- '.__('salud.comprobaciones.'.$falla));
+            $correo->line('- '.Comprobaciones::etiqueta($falla));
         }
 
         return $correo->line(__('salud.correo.revisar'));

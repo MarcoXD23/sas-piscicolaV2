@@ -42,11 +42,16 @@ class VigilarSalud extends Command
         }
 
         $this->guardarEstado($fallas);
-        $this->line($fallas === [] ? __('salud.todo_bien') : __('salud.fallan', ['comprobaciones' => implode(', ', array_map(fn ($f) => __('salud.comprobaciones.'.$f), $fallas))]));
+        // Cada comprobación con su umbral (config/salud.php)
+        foreach ($resultados as $nombre => $bien) {
+            $this->line(($bien ? __('salud.bien') : __('salud.falla')).' · '.Comprobaciones::etiqueta($nombre));
+        }
+        $this->line($fallas === [] ? __('salud.todo_bien') : __('salud.fallan', ['comprobaciones' => implode(', ', array_map(fn ($f) => Comprobaciones::etiqueta($f), $fallas))]));
 
         return $fallas === [] ? self::SUCCESS : self::FAILURE;
     }
 
+    /** Destino principal: SALUD_CORREO_AVISO; si está vacía, los administradores de plataforma. */
     private function avisar(AvisoSalud $aviso): void
     {
         $destinos = config('salud.correo_aviso')

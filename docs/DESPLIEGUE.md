@@ -558,13 +558,28 @@ La prueba automática `RespaldoTest` hace este mismo recorrido de verdad:
 
 ## 15. Estado del sistema y monitoreo
 
-**`/salud`** es pública y responde solo `ok` (200) o `falla` (503). No dice qué falló ni muestra datos de la app o de las fincas. Comprueba tres cosas:
+**`/salud`** es pública y responde solo `ok` (200) o `falla` (503). No dice qué falló ni muestra datos de la app o de las fincas. Comprueba seis cosas:
 
 - La base de datos responde.
-- Se puede escribir en `storage`.
-- El programador (cron) corrió en la última hora.
+- Se puede escribir y leer en `storage`.
+- El programador (cron) corrió en los últimos **10 minutos**.
+- La copia de seguridad más reciente en `RESPALDOS_CARPETA` tiene **36 horas** o menos. Si la carpeta está configurada pero vacía, falla. Sin `RESPALDOS_CARPETA`, falla solo en producción (`APP_ENV=production`).
+- El disco de `storage` tiene al menos **10 %** libre y al menos **1 GB** libre (deben cumplirse los dos).
+- Ningún trabajo de la cola lleva más de **15 minutos** esperando y la tabla `failed_jobs` está vacía. Después de revisar un trabajo fallido, bórralo con `php artisan queue:forget <uuid>` o `php artisan queue:flush` para que la comprobación vuelva a estar bien.
 
-Tiene un límite de 60 consultas por minuto por IP.
+Cada umbral se puede cambiar en `.env` (vacío = el valor por defecto) y luego `php artisan config:cache`:
+
+| Variable | Por defecto | Qué cambia |
+|---|---|---|
+| `SALUD_MINUTOS_PROGRAMADOR` | 10 | Minutos sin que corra el programador |
+| `SALUD_HORAS_COPIA` | 36 | Horas máximas de la última copia |
+| `SALUD_EXIGIR_COPIA` | `true` en producción | Si falta `RESPALDOS_CARPETA`, ¿cuenta como falla? |
+| `SALUD_DISCO_PORCENTAJE` | 10 | Porcentaje libre mínimo |
+| `SALUD_DISCO_GB` | 1 | GB libres mínimos |
+| `SALUD_MINUTOS_COLA` | 15 | Minutos que un trabajo puede esperar en la cola |
+| `SALUD_CACHE_SEGUNDOS` | 30 | Segundos que `/salud` guarda su resultado |
+
+`/salud` guarda su resultado 30 segundos: un monitor que consulta seguido no repite las comprobaciones, y una falla o una recuperación tarda hasta 30 segundos en verse. Además tiene un límite de 60 consultas por minuto por IP.
 
 **Vigilarla desde afuera (gratis).** Usa UptimeRobot o Better Stack, que tienen plan gratuito:
 
@@ -576,7 +591,8 @@ Así te enteras aunque el servidor entero esté caído, cuando la app no puede a
 
 **Aviso por correo desde la app.** `php artisan piscicola:vigilar` corre cada 5 minutos con el cron:
 
-- Si algo empieza a fallar, envía **un** correo y no lo repite mientras siga fallando.
+- Muestra en pantalla cada comprobación con su umbral (`Bien` o `FALLA`).
+- Si algo empieza a fallar, envía **un** correo con las comprobaciones que fallan y su umbral, y no lo repite mientras siga fallando.
 - Si algo distinto falla, envía otro.
 - Cuando todo se recupera, envía un último correo avisando la recuperación.
 - Lo recibe `SALUD_CORREO_AVISO`. Si está vacía, lo reciben los administradores de plataforma.
@@ -590,12 +606,12 @@ sudo -u www-data php artisan piscicola:estado
 
 Muestra:
 
-- Cada comprobación.
-- La versión de PostgreSQL.
-- El último ciclo del programador.
-- Los trabajos en cola y los fallidos.
-- El espacio libre en disco.
-- La última copia de seguridad en `RESPALDOS_CARPETA`.
+- Cada comprobación con su umbral y lo medido:
+  - La versión de PostgreSQL.
+  - El último ciclo del programador.
+  - La última copia de seguridad en `RESPALDOS_CARPETA` y hace cuántas horas se hizo.
+  - El espacio libre en disco, en GB y en porcentaje.
+  - Los trabajos en cola: pendientes, atascados y fallidos.
 
 Termina con código 1 si algo falla.
 
