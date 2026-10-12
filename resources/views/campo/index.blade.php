@@ -54,6 +54,7 @@
         {{-- Íconos de cada sección (los propios de la app, en SVG): campo.js los copia en los botones --}}
         <template data-campo-icono="racion"><x-icono nombre="alimentar" class="h-7 w-7" /></template>
         <template data-campo-icono="mortalidad"><x-icono nombre="mortalidad" class="h-7 w-7" /></template>
+        <template data-campo-icono="muestreo"><x-icono nombre="biomasa" class="h-7 w-7" /></template>
         <template data-campo-icono="aviso_pesca"><x-icono nombre="pez" class="h-7 w-7" /></template>
         <template data-campo-icono="ronda"><x-icono nombre="luna" class="h-7 w-7" /></template>
         <template data-campo-icono="medicion"><x-icono nombre="lagos" class="h-7 w-7" /></template>
@@ -64,7 +65,8 @@
                 <p data-campo-antiguedad></p>
                 <p data-campo-truncado hidden class="text-base font-semibold text-atencion"></p>
             </div>
-            <div data-campo-secciones class="grid grid-cols-2 gap-3"></div>
+            {{-- Con un número impar de secciones, la última ocupa todo el ancho (no queda media fila vacía) --}}
+            <div data-campo-secciones class="grid grid-cols-2 gap-3 [&>:last-child:nth-child(odd)]:col-span-2"></div>
             <p data-campo-sin-secciones hidden class="text-base text-tinta-suave">{{ __('campo.sin_secciones') }}</p>
         </section>
 

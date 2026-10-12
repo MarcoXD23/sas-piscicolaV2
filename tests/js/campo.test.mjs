@@ -1,7 +1,7 @@
 // Reglas de la pantalla Registro rápido. Correr con: npm run test:js (node --test, sin paquetes)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, enTurno, numero, resumenErrores, textoHace, validar } from '../../resources/js/campo-logica.js';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, enTurno, numero, promedioMuestreo, resumenErrores, textoHace, validar } from '../../resources/js/campo-logica.js';
 
 const HOY = '2026-10-08';
 const t = (clave, datos = {}) => `${clave}${Object.keys(datos).length ? JSON.stringify(datos) : ''}`;
@@ -11,7 +11,7 @@ const paquete = {
     secciones: ['racion', 'mortalidad', 'aviso_pesca', 'ronda', 'medicion'],
     lagos: [
         { id: 1, nombre: 'L01', url_racion: '/admin/lagos/1/raciones', url_aviso_pesca: '/admin/lagos/1/avisos-pesca', url_medicion: '/noche/lagos/1/mediciones', aviso_pendiente: false, racion_sugerida_kg: 4.5,
-            siembras: [{ id: 7, especie: 'Cachama blanca', fecha: '2026-09-01', peces_vivos: 950, url_mortalidad: '/admin/siembras/7/mortalidades' }] },
+            siembras: [{ id: 7, especie: 'Cachama blanca', fecha: '2026-09-01', peces_vivos: 950, url_mortalidad: '/admin/siembras/7/mortalidades', peso_actual_g: 50, url_muestreo: '/admin/siembras/7/muestreos' }] },
         { id: 2, nombre: 'L02', url_medicion: '/noche/lagos/2/mediciones', url_aviso_pesca: '/admin/lagos/2/avisos-pesca', aviso_pendiente: true,
             siembras: [{ id: 8, especie: 'Bocachico', fecha: '2026-10-01', peces_vivos: 10 }] },
     ],
@@ -22,6 +22,7 @@ const paquete = {
         { campo: 'temperatura_c', etiqueta: 'Temperatura (°C)', min: 0, max: 45, paso: 0.1 },
         { campo: 'transparencia_cm', etiqueta: 'Transparencia (cm)', min: 0, max: 500, paso: 1 },
     ],
+    muestreo: { peces_pesados: { min: 1, max: 100000 }, peso_total_g: { min: 0.1, max: 999999 } },
     urls: { ronda: '/noche/rondas' },
     turnos: [{ rol: 'trabajador', inicia_at: '2026-10-08T11:00:00Z', termina_at: '2026-10-08T19:00:00Z' }],
     exige_turno: { racion: true, mortalidad: true, aviso_pesca: true, ronda: true, medicion: true },
@@ -119,4 +120,38 @@ test('el resumen de errores sigue el orden de los campos en pantalla', () => {
     // Un error sin campo en pantalla (el general de la medición) va al final
     assert.deepEqual(resumenErrores({ medicion: ['x', {}], lago_id: ['y', {}] }, ['lago_id']).map(([campo]) => campo), ['lago_id', 'medicion']);
     assert.deepEqual(resumenErrores({}, ['lago_id']), []);
+});
+
+test('muestreo: mismos límites que el servidor, lote del lago y no antes de la siembra', () => {
+    const bien = { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total_g: '1250,5', fecha: HOY };
+    assert.deepEqual(validar('muestreo', bien, paquete, HOY), {});
+    // Límites: peces enteros de 1 a 100.000; peso de 0,1 a 999.999 g
+    assert.deepEqual(claves(validar('muestreo', { ...bien, peces_pesados: '0', peso_total_g: '0,05' }, paquete, HOY)),
+        { peces_pesados: 'campo_error_entero_rango', peso_total_g: 'campo_error_rango' });
+    assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '100001' }, paquete, HOY).peces_pesados, ['campo_error_entero_rango', { min: 1, max: 100000 }]);
+    assert.equal(validar('muestreo', { ...bien, peces_pesados: '2.5' }, paquete, HOY).peces_pesados[0], 'campo_error_entero_rango');
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total_g: '1000000' }, paquete, HOY).peso_total_g, ['campo_error_rango', { min: 0.1, max: 999999 }]);
+    assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '100000', peso_total_g: '0,1' }, paquete, HOY), {});
+    // Como el servidor: los peces pesados pueden ser más que los vivos del paquete
+    assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '5000' }, paquete, HOY), {});
+    assert.equal(validar('muestreo', { ...bien, fecha: '2026-10-09' }, paquete, HOY).fecha[0], 'campo_error_fecha_futura');
+    assert.equal(validar('muestreo', { ...bien, fecha: '2026-08-31' }, paquete, HOY).fecha[0], 'campo_error_fecha_siembra');
+    // La siembra 8 no tiene muestreo en este paquete
+    assert.equal(validar('muestreo', { ...bien, lago_id: '2', siembra_id: '8' }, paquete, HOY).siembra_id[0], 'campo_error_siembra');
+});
+
+test('muestreo: promedio con 2 decimales como el servidor', () => {
+    assert.equal(promedioMuestreo('20', '1250,5'), 62.53);   // 62,525 → 62,53
+    assert.equal(promedioMuestreo('3', '100'), 33.33);
+    assert.equal(promedioMuestreo('', '100'), null);
+    assert.equal(promedioMuestreo('0', '100'), null);
+    assert.equal(promedioMuestreo('2,5', '100'), null);
+});
+
+test('muestreo: el registro armado va a la siembra con los tres campos', () => {
+    const registro = armarRegistro('muestreo', { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total_g: '1250,5', fecha: HOY }, paquete, t);
+    assert.equal(registro.url, '/admin/siembras/7/muestreos');
+    assert.deepEqual(registro.campos, [['fecha', HOY], ['peces_pesados', '20'], ['peso_total_g', '1250.5']]);
+    assert.deepEqual(registro.detalle.at(-1), ['campo_peso_promedio_g', '62.53']);
+    assert.equal(registro.resumen, 'campo_resumen_muestreo{"especie":"Cachama blanca","lago":"L01"}');
 });

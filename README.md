@@ -198,7 +198,7 @@ El informe mensual y el libro de campo se descargan en **Excel** (`openspout/ope
 
 La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guarda las últimas 40 pantallas de consulta: con señal se piden a la red; sin señal se muestra la última copia con una franja que dice de cuándo son los datos. Antes de enviar, cada formulario verifica la señal (`/up`). Si no hay señal, el resultado depende del formulario:
 
-- **Se guardan en el teléfono:** ración, mortalidad, aviso «listo para pescar», ronda y medición del agua. Se guardan en IndexedDB, separados por finca y persona (`resources/js/sin-conexion.js`).
+- **Se guardan en el teléfono:** ración, mortalidad, aviso «listo para pescar», ronda y medición del agua; en Registro rápido, también el muestreo del administrador. Se guardan en IndexedDB, separados por finca y persona (`resources/js/sin-conexion.js`).
   Se envían solos, en orden y con su hora real, al volver la señal o al abrir cualquier pantalla.
   El servidor los revisa al llegar con las reglas de siempre: turno a esa hora, bodega y peces vivos. No acepta los de más de `SIN_CONEXION_HORAS` horas.
   **Reloj del teléfono:** cada envío trae también la hora del teléfono en ese instante (`X-Hora-Telefono`; sin ella se rechaza). El servidor calcula el desfase (su hora menos la del teléfono) y lo suma a la hora del registro antes de revisar el turno, el límite de horas y la bitácora. Si el desfase pasa de 5 minutos, la bitácora anota «hora del teléfono corregida en X minutos» y el propietario lo ve.
@@ -223,14 +223,18 @@ Para registrar sin señal no hace falta haber abierto antes ninguna pantalla:
   | Rol | Secciones |
   |---|---|
   | Trabajador | Ración, mortalidad y aviso de pesca |
-  | Administrador | Ración y mortalidad |
+  | Administrador | Ración, mortalidad y muestreo (sin turno) |
   | Celador | Ronda y medición |
   | Propietario | Ninguna |
 
-  Incluye hasta `SIN_CONEXION_MAX_LAGOS` lagos (vacío = 60) con sus lotes activos, los concentrados de bodega, los tipos de ronda, los rangos de medición y los turnos cercanos. No trae personal ni dinero.
+  Incluye hasta `SIN_CONEXION_MAX_LAGOS` lagos (vacío = 60) con sus lotes activos, los concentrados de bodega, los tipos de ronda, los rangos de medición y los turnos cercanos. Para el administrador, cada lote trae además su peso actual y los límites del muestreo (`PaqueteTrabajo::RANGOS_MUESTREO`, los mismos del servidor). No trae personal ni dinero.
 - **Registro rápido (`/campo`):** una sola página sin datos, que el service worker guarda al instalarse. Arma los formularios con el paquete y valida en el teléfono con las reglas del servidor.
   Muestra «Datos del … (hace …)», en ámbar si pasan de 12 horas, y avisa si según los turnos guardados la persona no está en turno.
   Se abre desde el menú (administrador, trabajador y celador), desde la franja «Sin conexión» y desde la página «Sin conexión» (`offline.html`).
+- **Muestreo (administrador):** junto al lago, sin señal. Lago, lote, fecha, peces pesados y peso total en gramos. El teléfono muestra el promedio en vivo (2 decimales, como el servidor) y la diferencia con el peso del paquete; la que vale es la que calcula el servidor al llegar.
+  Valida con las reglas del servidor: peces enteros de 1 a 100.000, peso de 0,1 a 999.999 g, fecha no posterior a hoy ni anterior a la siembra. Si la siembra se finalizó mientras tanto, el registro queda en «Rechazados».
+  El muestreo siempre queda en el historial. El peso actual y la biomasa solo cambian si es el más reciente por fecha de la siembra; con la misma fecha, gana el que llega después. Si no es el más reciente, la respuesta dice «Guardado en el historial. El peso actual sigue siendo X g».
+  La fecha se compara con el día en que de verdad se registró (`MomentoRegistro`): un muestreo de las 23:50 enviado después de medianoche conserva su día. El modal de muestreo en Lagos sigue necesitando conexión.
 - **Envío:** los registros van a la misma cola: uuid, hora real, corrección del reloj y bitácora. Antes de enviar se pide un token vigente (`GET /campo/token`), nunca el de una página guardada. Al volver la señal salen solos y la app avisa «Se enviaron N registros».
 - **Al cerrar sesión** se borran el paquete, la sesión activa del teléfono y la cola, con aviso previo si hay pendientes. Si entra otra persona en el mismo teléfono, se borran los paquetes ajenos.
 - **Límite:** la sesión dura `SESSION_LIFETIME` minutos (120). Tras una jornada larga sin señal, lo registrado espera a que la persona vuelva a entrar para enviarse.

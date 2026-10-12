@@ -86,11 +86,11 @@ class PaqueteTrabajoTest extends TestCase
         $this->assertSame([], $paquete['medicion']);
     }
 
-    public function test_el_administrador_registra_racion_y_mortalidad_pero_no_el_aviso(): void
+    public function test_el_administrador_registra_racion_mortalidad_y_muestreo_pero_no_el_aviso(): void
     {
         $paquete = $this->paquete($this->persona(Rol::ADMINISTRADOR))->json();
 
-        $this->assertSame([PaqueteTrabajo::RACION, PaqueteTrabajo::MORTALIDAD], $paquete['secciones']);
+        $this->assertSame([PaqueteTrabajo::RACION, PaqueteTrabajo::MORTALIDAD, PaqueteTrabajo::MUESTREO], $paquete['secciones']);
         $this->assertArrayNotHasKey('aviso_pendiente', $paquete['lagos'][0]);
         $this->assertArrayNotHasKey('url_aviso_pesca', $paquete['lagos'][0]);
         $this->assertSame([], $paquete['turnos']);   // el administrador no trabaja por turnos

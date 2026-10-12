@@ -1,14 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\AgendaController;
-use App\Http\Controllers\CampoController;
 use App\Http\Controllers\Admin\AjustesFincaController;
+use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\AlertaController;
 use App\Http\Controllers\Admin\AvisoPescaController;
 use App\Http\Controllers\Admin\BitacoraController;
 use App\Http\Controllers\Admin\BodegaController;
 use App\Http\Controllers\Admin\ConversionController;
-use App\Http\Controllers\Admin\AjustesPesajeController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
@@ -34,12 +33,12 @@ use App\Http\Controllers\Auth\DosPasosController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarContrasenaController;
 use App\Http\Controllers\Auth\RegistroController;
+use App\Http\Controllers\CampoController;
 use App\Http\Controllers\EspecieController;
-use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\FotoEspecieController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\LegalController;
-use App\Http\Controllers\SaludController;
+use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\MiTrabajoController;
 use App\Http\Controllers\Noche\AireacionController;
 use App\Http\Controllers\Noche\NocheController;
@@ -47,10 +46,11 @@ use App\Http\Controllers\Noche\RondaController;
 use App\Http\Controllers\Plataforma\DosPasosController as PlataformaDosPasosController;
 use App\Http\Controllers\Plataforma\FincaController as PlataformaFincaController;
 use App\Http\Controllers\Plataforma\LoginController as PlataformaLoginController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Http\Controllers\SaludController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -177,7 +177,6 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     Route::middleware('rol:administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
-        Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
         Route::get('/cosechas/crear', [CosechaController::class, 'create'])->name('cosechas.create');
@@ -219,6 +218,11 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     Route::middleware(['rol:administrador,trabajador', 'sin_conexion', 'turno:trabajador'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/siembras/{siembra}/mortalidades', [MortalidadController::class, 'store'])->name('mortalidades.store');
         Route::post('/lagos/{lago}/raciones', [RacionController::class, 'store'])->name('raciones.store');
+    });
+
+    // Muestreo: solo el administrador, sin turno (también enviado después de registrarse sin conexión en Registro rápido)
+    Route::middleware(['rol:administrador', 'sin_conexion'])->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/siembras/{siembra}/muestreos', [MuestreoController::class, 'store'])->name('muestreos.store');
     });
 
     // Aviso «listo para pescar»: lo reporta el trabajador, solo en su turno

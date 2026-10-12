@@ -115,6 +115,7 @@ return [
     'muestreo' => [
         'esta_siembra_ya_esta_finalizada' => 'Esta siembra ya está finalizada.',
         'muestreo_registrado_biomasa_recalculada' => 'Muestreo registrado y biomasa recalculada.',
+        'guardado_en_historial' => 'Guardado en el historial. El peso actual sigue siendo :actual g.',
         'registrado_con_promedio' => 'Muestreo registrado: promedio :promedio g (antes :anterior g, :diferencia g). Biomasa recalculada.',
     ],
     'nomina' => [

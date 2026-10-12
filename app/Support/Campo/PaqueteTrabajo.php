@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
 /**
  * «Paquete de trabajo» para registrar sin conexión (pantalla Registro rápido, /campo): lo mínimo para armar los
  * formularios de campo en el teléfono, solo de la finca activa (TenantScope) y solo con las secciones del rol.
- * - Trabajador: ración, mortalidad y aviso de pesca. Administrador: ración y mortalidad. Celador: ronda y medición.
+ * - Trabajador: ración, mortalidad y aviso de pesca. Administrador: ración, mortalidad y muestreo. Celador: ronda y medición.
  *   Propietario: ninguna (solo consulta).
  * - Sin datos de personal, dinero ni de otros roles. Lagos: hasta config('sin_conexion.max_lagos'), por nombre.
  * El servidor vuelve a revisar todo al recibir cada registro (turno, bodega, peces vivos): esto solo arma la pantalla.
@@ -26,6 +26,8 @@ final class PaqueteTrabajo
     public const RACION = 'racion';
 
     public const MORTALIDAD = 'mortalidad';
+
+    public const MUESTREO = 'muestreo';
 
     public const AVISO_PESCA = 'aviso_pesca';
 
@@ -43,6 +45,15 @@ final class PaqueteTrabajo
         'transparencia_cm' => [0, 500, 1],
     ];
 
+    /** Límites del muestreo: los mismos que valida MuestreoController (lo comprueba RegistroRapidoMuestreoTest). */
+    public const RANGOS_MUESTREO = [
+        'peces_pesados' => [1, 100000],
+        'peso_total_g' => [0.1, 999999],
+    ];
+
+    /** Secciones que el administrador registra sin turno. */
+    private const SIN_TURNO_ADMINISTRADOR = [self::RACION, self::MORTALIDAD, self::MUESTREO];
+
     /** Horas de turnos que viajan en el paquete (solo para avisar «fuera de turno»; el servidor decide). */
     private const HORAS_TURNOS_ATRAS = 12;
 
@@ -54,6 +65,7 @@ final class PaqueteTrabajo
         return array_values(array_filter([
             $usuario->tieneRol(Rol::ADMINISTRADOR, Rol::TRABAJADOR) ? self::RACION : null,
             $usuario->tieneRol(Rol::ADMINISTRADOR, Rol::TRABAJADOR) ? self::MORTALIDAD : null,
+            $usuario->tieneRol(Rol::ADMINISTRADOR) ? self::MUESTREO : null,
             $usuario->tieneRol(Rol::TRABAJADOR) ? self::AVISO_PESCA : null,
             $usuario->tieneRol(Rol::CELADOR) ? self::RONDA : null,
             $usuario->tieneRol(Rol::CELADOR) ? self::MEDICION : null,
@@ -93,9 +105,10 @@ final class PaqueteTrabajo
             'tipos_ronda' => $tiene(self::RONDA) ? collect(Ronda::opciones())->map(fn ($texto, $codigo) => ['codigo' => $codigo, 'texto' => $texto])->values()->all() : [],
             'sin_novedad' => Ronda::SIN_NOVEDAD,
             'medicion' => $tiene(self::MEDICION) ? self::medicion() : [],
+            'muestreo' => $tiene(self::MUESTREO) ? collect(self::RANGOS_MUESTREO)->map(fn (array $rango) => ['min' => $rango[0], 'max' => $rango[1]])->all() : [],
             'turnos' => self::turnos($usuario, $secciones),
-            // Secciones que exigen turno a esta persona (el administrador registra ración y mortalidad sin turno)
-            'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! (in_array($seccion, [self::RACION, self::MORTALIDAD], true) && $usuario->tieneRol(Rol::ADMINISTRADOR))])->all(),
+            // Secciones que exigen turno a esta persona (el administrador registra ración, mortalidad y muestreo sin turno)
+            'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! (in_array($seccion, self::SIN_TURNO_ADMINISTRADOR, true) && $usuario->tieneRol(Rol::ADMINISTRADOR))])->all(),
             'urls' => $secciones === [] ? [] : array_filter([
                 'ronda' => $tiene(self::RONDA) ? route('noche.rondas.store', absolute: false) : null,
             ]),
@@ -114,6 +127,9 @@ final class PaqueteTrabajo
                 'fecha' => $siembra->fecha->format('Y-m-d'),
                 'peces_vivos' => (int) $siembra->peces_vivos,
                 'url_mortalidad' => $tiene(self::MORTALIDAD) ? route('admin.mortalidades.store', $siembra->id, absolute: false) : null,
+                // Muestreo: el peso de ahora (para mostrar la diferencia; la que vale la calcula el servidor al llegar)
+                'peso_actual_g' => $tiene(self::MUESTREO) ? round((float) $siembra->peso_actual_g, 2) : null,
+                'url_muestreo' => $tiene(self::MUESTREO) ? route('admin.muestreos.store', $siembra->id, absolute: false) : null,
             ], fn ($valor) => $valor !== null))->values()->all(),
             'racion_sugerida_kg' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? CalculadoraRacion::paraLago($lago)['kg_por_toma'] : null,
             'aviso_pendiente' => $tiene(self::AVISO_PESCA) ? (bool) $lago->aviso_pendiente : null,

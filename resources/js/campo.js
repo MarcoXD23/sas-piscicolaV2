@@ -9,7 +9,7 @@
  * - Todo texto que llega del paquete se escribe con textContent: nunca se interpreta como HTML.
  */
 import { leerSesionActiva, operacion, PAQUETES } from './almacen';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
 import { leerPaquete } from './paquete';
 import { debeRenovar, paqueteValido } from './paquete-logica';
 import { desplazar } from './sin-conexion';
@@ -157,6 +157,7 @@ export const iniciarCampo = (t, cola) => {
     const lagosPara = (seccion) => (paquete.lagos ?? []).filter((lago) => ({
         racion: Boolean(lago.url_racion),
         mortalidad: (lago.siembras ?? []).some((siembra) => siembra.url_mortalidad),
+        muestreo: (lago.siembras ?? []).some((siembra) => siembra.url_muestreo),
         aviso_pesca: Boolean(lago.url_aviso_pesca),
         ronda: true,
         medicion: Boolean(lago.url_medicion),
@@ -185,11 +186,12 @@ export const iniciarCampo = (t, cola) => {
             campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), grupoKg, fecha());
         }
 
-        if (seccion === 'mortalidad' || seccion === 'aviso_pesca') {
+        if (seccion === 'mortalidad' || seccion === 'muestreo' || seccion === 'aviso_pesca') {
             const lote = lista([], t('campo_elige_lago_primero'));
+            const url = { mortalidad: 'url_mortalidad', muestreo: 'url_muestreo' }[seccion];
             selectorLago.addEventListener('change', () => {
                 const lago = lagos.find((uno) => String(uno.id) === selectorLago.value);
-                const siembras = (lago?.siembras ?? []).filter((siembra) => seccion === 'aviso_pesca' || siembra.url_mortalidad);
+                const siembras = (lago?.siembras ?? []).filter((siembra) => !url || siembra[url]);
                 lote.replaceChildren(opcion('', t(lago ? 'campo_elige' : 'campo_elige_lago_primero')), ...siembras.map((siembra) => opcion(siembra.id, textoSiembra(siembra))));
                 if (siembras.length === 1) lote.value = String(siembras[0].id);
                 const aviso = formulario.querySelector('[data-campo-aviso-pendiente]');
@@ -198,6 +200,32 @@ export const iniciarCampo = (t, cola) => {
             campos.push(grupo('siembra_id', t('campo_lote'), lote));
             if (seccion === 'mortalidad') {
                 campos.push(grupo('cantidad', t('campo_peces_muertos'), entrada('text', { inputmode: 'numeric', autocomplete: 'off' })), fecha());
+            } else if (seccion === 'muestreo') {
+                const peces = entrada('text', { inputmode: 'numeric', autocomplete: 'off' });
+                const gramos = entrada('text', { inputmode: 'decimal', autocomplete: 'off' });
+                const medidas = el('div', 'grid grid-cols-2 gap-4');
+                medidas.append(grupo('peces_pesados', t('campo_peces_pesados'), peces), grupo('peso_total_g', t('campo_peso_total_g'), gramos));
+                // Promedio en vivo y diferencia con el peso del paquete (la que vale la calcula el servidor al llegar)
+                const promedio = el('p', 'rounded-ficha bg-papel-hondo p-4 text-base text-tinta', t('campo_promedio_vacio'));
+                promedio.setAttribute('aria-live', 'polite');
+                const formato = (n) => n.toLocaleString(document.documentElement.lang, { maximumFractionDigits: 2 });
+                const calcular = () => {
+                    const valor = promedioMuestreo(peces.value, gramos.value);
+                    const siembra = lagos.find((uno) => String(uno.id) === selectorLago.value)?.siembras?.find((una) => String(una.id) === lote.value);
+                    if (valor === null) {
+                        promedio.textContent = t('campo_promedio_vacio');
+                    } else if (siembra) {
+                        const signo = valor >= siembra.peso_actual_g ? '+' : '−';
+                        promedio.textContent = t('campo_promedio_diferencia', {
+                            promedio: formato(valor), anterior: formato(siembra.peso_actual_g), diferencia: signo + formato(Math.abs(valor - siembra.peso_actual_g)),
+                        });
+                    } else {
+                        promedio.textContent = t('campo_promedio', { promedio: formato(valor) });
+                    }
+                };
+                [peces, gramos].forEach((campo) => campo.addEventListener('input', calcular));
+                [selectorLago, lote].forEach((campo) => campo.addEventListener('change', calcular));
+                campos.push(medidas, promedio, fecha());
             } else {
                 const pendiente = el('p', CLASE_AVISO, t('campo_error_aviso_pendiente'));
                 pendiente.dataset.campoAvisoPendiente = '';

@@ -7,7 +7,8 @@
  * - Sin copia guardada: /offline.html.
  * - Al cerrar sesión la página pide borrar las copias ({tipo: 'limpiar'}); el servidor además envía Clear-Site-Data.
  * - Los formularios verifican la señal antes de enviar (resources/js/app.js). Sin señal, solo raciones, mortalidad,
- *   avisos de pesca, rondas y mediciones se guardan en el teléfono (IndexedDB) y se envían al volver (resources/js/sin-conexion.js).
+ *   avisos de pesca, rondas, mediciones y (en Registro rápido) muestreos se guardan en el teléfono (IndexedDB) y se envían
+ *   al volver (resources/js/sin-conexion.js).
  * - Registro rápido (/campo): página sin datos que se guarda al instalarse, junto con sus estilos y scripts, aparte de
  *   las 40 pantallas (no se pierde al navegar). Con señal se renueva; sin señal se sirve la guardada. Cada paquete de
  *   trabajo nuevo pide renovarla ({tipo: 'actualizar-campo'}). Nunca se guarda nada de /campo/ (paquete y token).
