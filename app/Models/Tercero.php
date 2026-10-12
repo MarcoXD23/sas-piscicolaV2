@@ -49,6 +49,37 @@ class Tercero extends Model
         return collect(self::CATEGORIAS)->mapWithKeys(fn (string $codigo) => [$codigo => __('jornaleros.categorias.'.$codigo)])->all();
     }
 
+    /** Partículas de nombres y apellidos que van en minúscula (salvo al inicio del campo). */
+    private const PARTICULAS = ['de', 'del', 'la', 'las', 'los', 'y', 'e'];
+
+    /**
+     * Nombres o apellidos con mayúscula inicial en cada palabra, al guardar: «tereza gonzale» → «Tereza Gonzale»,
+     * «PEREZ» → «Perez», «maría de la cruz» → «María de la Cruz», «gómez-pérez» → «Gómez-Pérez», «o'neil» → «O'Neil».
+     * Respeta tildes y eñes. Las iniciales quedan en mayúscula («j. pérez» → «J. Pérez», «J.C.» igual) y las partículas
+     * (de, del, la, las, los, y, e) en minúscula salvo al inicio. Quita espacios repetidos.
+     */
+    public static function formatearNombre(?string $texto): ?string
+    {
+        $palabras = preg_split('/\s+/u', trim((string) $texto), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if ($palabras === []) {
+            return null;
+        }
+
+        return implode(' ', array_map(function (string $palabra, int $posicion): string {
+            $minuscula = mb_strtolower($palabra);
+            // Iniciales: una letra sola, o letras con punto («J.», «J.C.»)
+            if (preg_match('/^(\p{L}\.)+$|^\p{L}$/u', $palabra)) {
+                return $posicion > 0 && in_array($minuscula, self::PARTICULAS, true) ? $minuscula : mb_strtoupper($palabra);
+            }
+            if ($posicion > 0 && in_array($minuscula, self::PARTICULAS, true)) {
+                return $minuscula;
+            }
+
+            // Mayúscula al inicio y después de un guion o un apóstrofo («Gómez-Pérez», «O'Neil»)
+            return preg_replace_callback("/(^|[-'’])(\\p{L})/u", fn (array $m) => $m[1].mb_strtoupper($m[2]), $minuscula);
+        }, $palabras, array_keys($palabras)));
+    }
+
     /** Documento sin espacios, puntos ni guiones, en mayúsculas («1.234.567-8» y «12345678» son el mismo). */
     public static function normalizarDocumento(?string $documento): ?string
     {

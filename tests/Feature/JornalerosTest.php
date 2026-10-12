@@ -180,6 +180,43 @@ class JornalerosTest extends TestCase
         $this->assertSame('Ana', $jornalero->fresh()->nombres);
     }
 
+    public function test_nombres_y_apellidos_con_mayuscula_inicial_al_guardar(): void
+    {
+        foreach ([
+            'tereza gonzale' => 'Tereza Gonzale',
+            'PEREZ' => 'Perez',
+            'MARÍA JOSÉ' => 'María José',
+            'ÑUÑEZ  ángel' => 'Ñuñez Ángel',
+            'maría de la cruz' => 'María de la Cruz',
+            'de la torre' => 'De la Torre',
+            'pedro de los santos y del río' => 'Pedro de los Santos y del Río',
+            'gómez-pérez' => 'Gómez-Pérez',
+            'MARÍA-JOSÉ' => 'María-José',
+            "o'neil" => "O'Neil",
+            "D'ANGELO" => "D'Angelo",
+            'j. pérez' => 'J. Pérez',
+            'J.C. gómez' => 'J.C. Gómez',
+            'ana m gómez' => 'Ana M Gómez',
+            '   luz    marina  ' => 'Luz Marina',
+        ] as $escrito => $guardado) {
+            $this->assertSame($guardado, Tercero::formatearNombre($escrito), $escrito);
+        }
+        $this->assertNull(Tercero::formatearNombre('   '));
+
+        // Al agregar y al editar desde la pantalla
+        $this->agregar(['nombres' => 'tereza', 'apellidos' => 'gonzale DE LA cruz', 'documento' => '']);
+        $jornalero = $this->jornalero();
+        $this->assertSame(['Tereza', 'Gonzale de la Cruz'], [$jornalero->nombres, $jornalero->apellidos]);
+        $this->actingAs($this->administrador)->put(route('admin.jornaleros.update', $jornalero), ['nombres' => 'TEREZA MARÍA', 'apellidos' => "o'neil-pérez"]);
+        $this->assertSame(['Tereza María', "O'Neil-Pérez"], [$jornalero->fresh()->nombres, $jornalero->fresh()->apellidos]);
+
+        // Lo ya guardado no se toca hasta que alguien lo edite y guarde
+        $id = DB::table('terceros')->insertGetId(['tenant_id' => $this->finca->id, 'nombres' => 'ana MARÍA', 'apellidos' => 'pérez',
+            'es_jornalero' => true, 'created_at' => now(), 'updated_at' => now()]);
+        $this->ver($this->propietario, route('admin.jornaleros.index'))->assertOk();
+        $this->assertSame(['ana MARÍA', 'pérez'], [Tercero::find($id)->nombres, Tercero::find($id)->apellidos]);
+    }
+
     public function test_buscar_por_nombre_o_por_documento_exacto(): void
     {
         $this->agregar();

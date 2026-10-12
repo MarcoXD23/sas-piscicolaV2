@@ -177,6 +177,10 @@ class JornaleroController extends Controller
             throw ValidationException::withMessages(['documento' => __('jornaleros.validacion.documento_repetido')]);
         }
 
+        // Mayúscula inicial en cada palabra, solo al guardar (lo ya guardado no se toca hasta que se edite)
+        $datos['nombres'] = Tercero::formatearNombre($datos['nombres']);
+        $datos['apellidos'] = Tercero::formatearNombre($datos['apellidos'] ?? null);
+
         return $datos;
     }
 

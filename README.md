@@ -304,6 +304,7 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 Fase A del módulo (las jornadas, las tarifas y la planilla vienen en las siguientes fases).
 
 - **Tabla única `terceros`** para las personas externas de la finca: jornaleros ahora; clientes y proveedores (Gastos) después, sin duplicar personas (`es_jornalero`, `es_cliente`, `es_proveedor`).
+- **Nombres y apellidos** se guardan con mayúscula inicial en cada palabra (`Tercero::formatearNombre`), solo al guardar: «tereza gonzale» → «Tereza Gonzale», «PEREZ» → «Perez», «maría de la cruz» → «María de la Cruz», «gómez-pérez» → «Gómez-Pérez», «o'neil» → «O'Neil». Respeta tildes y eñes, deja las iniciales en mayúscula («J. Pérez», «J.C.») y las partículas (de, del, la, las, los, y, e) en minúscula salvo al inicio. Lo ya guardado no cambia hasta que se edita.
 - **Documento:**
   - se guarda **cifrado** con `APP_KEY` (cast `encrypted`), nunca en texto claro;
   - para que no se repita dentro de la finca se guarda una **huella HMAC-SHA256** del documento normalizado, con una clave derivada de `APP_KEY`: no se puede adivinar probando documentos;
