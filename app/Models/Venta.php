@@ -20,7 +20,7 @@ class Venta extends Model
         return collect(self::FORMAS_PAGO)->mapWithKeys(fn (string $codigo) => [$codigo => __('ventas.formas_pago.'.$codigo)])->all();
     }
 
-    protected $fillable = ['cosecha_id', 'user_id', 'comprador_id', 'cliente', 'fecha', 'kg', 'precio_kg', 'total', 'forma_pago', 'saldo'];
+    protected $fillable = ['cosecha_id', 'user_id', 'comprador_id', 'tercero_id', 'cliente', 'fecha', 'kg', 'precio_kg', 'total', 'forma_pago', 'saldo'];
 
     protected function casts(): array
     {
@@ -41,6 +41,18 @@ class Venta extends Model
     public function comprador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'comprador_id');
+    }
+
+    /** Comprador sin cuenta (jornalero). */
+    public function tercero(): BelongsTo
+    {
+        return $this->belongsTo(Tercero::class);
+    }
+
+    /** Nombre del comprador: el de hoy si es un jornalero (o «Jornalero N» si se anonimizó); si no, el guardado. */
+    public function nombreCliente(): string
+    {
+        return $this->tercero_id !== null && $this->tercero ? $this->tercero->nombreCompleto() : $this->cliente;
     }
 
     public function usuario(): BelongsTo

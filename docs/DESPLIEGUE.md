@@ -203,6 +203,7 @@ SALUD_CORREO_AVISO=tu-correo@ejemplo.com
 SIN_CONEXION_MAX_LAGOS=
 ```
 
+- **`APP_KEY`: guárdala aparte, en tu gestor de contraseñas, el mismo día que instalas.** Con ella se cifran los documentos de los jornaleros y las claves de verificación en dos pasos. La copia de la base (`piscicola:respaldar`) **no** la incluye: si pierdes el servidor y restauras la base con una `APP_KEY` distinta, esos datos ya no se pueden leer. No la cambies nunca en producción; si alguna vez hiciera falta, conserva la anterior en `APP_PREVIOUS_KEYS`.
 - **`APP_DEBUG`:** debe quedar en `false`. Con `true`, cada error muestra el SQL y la configuración, y la app deja una alerta crítica en el log.
 - **`SESSION_SECURE_COOKIE=true`:** la cookie de sesión solo viaja por HTTPS. Hasta terminar el paso 8 (HTTPS) no se puede iniciar sesión: es lo esperado.
 - **`TRUSTED_PROXIES` vacío:** con Nginx y PHP-FPM en el mismo servidor no hay proxy delante. PHP recibe directamente la IP real del visitante y el HTTPS. Solo se llena si después pones un proxy delante, por ejemplo Cloudflare con la nube naranja: entonces van sus rangos (https://www.cloudflare.com/ips/).
@@ -464,6 +465,8 @@ En el cron de root (`sudo crontab -e`), después de las dos copias del día:
 - `RESPALDOS_CARPETA=C:\respaldos`.
 - Si `pg_dump` no está en el PATH: `PG_BIN='C:\Program Files\PostgreSQL\17\bin'`, con comillas simples.
 - Para programarlo, usa el Programador de tareas de Windows con `php C:\wamp64\www\sas-piscicola\artisan piscicola:respaldar`.
+
+**`APP_KEY`, aparte de las copias.** Las copias de la base guardan cifrados los documentos de los jornaleros y las claves de dos pasos; se leen solo con la `APP_KEY` del `.env`, que no va en la copia. Guárdala en tu gestor de contraseñas (paso 4): una copia restaurada con otra clave pierde esos datos.
 
 **Nunca** subas una copia (`*.dump`) ni el `.env` a git; el `.gitignore` ya los excluye.
 

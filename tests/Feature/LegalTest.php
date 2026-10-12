@@ -96,13 +96,14 @@ class LegalTest extends TestCase
     {
         $persona = User::factory()->conRoles(Rol::PROPIETARIO)->create(['tenant_id' => $this->finca->id]);
         $this->actingAs($persona)->get(route('inicio'))->assertOk();
+        $vigente = config('legal.version');
 
         config(['legal.version' => '2027-01-15']);
         $this->actingAs($persona)->get(route('inicio'))->assertRedirect(route('legal.aceptar'));
         $this->actingAs($persona)->get(route('legal.aceptar'))->assertSee('2027-01-15');
         $this->actingAs($persona)->post(route('legal.aceptar.store'), ['acepto' => '1']);
 
-        $this->assertSame(['2026-10-28', '2027-01-15'], AceptacionLegal::query()->where('user_id', $persona->id)->orderBy('version')->pluck('version')->all());
+        $this->assertSame([$vigente, '2027-01-15'], AceptacionLegal::query()->where('user_id', $persona->id)->orderBy('version')->pluck('version')->all());
         $this->actingAs($persona)->get(route('inicio'))->assertOk();
     }
 

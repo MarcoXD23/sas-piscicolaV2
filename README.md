@@ -29,6 +29,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Bodega | `/admin/bodega` | Dos pasos: el propietario registra el **despacho** y el administrador la **recepción** (contra el despacho o sin despacho). Diferencia por despacho (faltante, sobrante, exacto), aviso de despachos sin recibir después de N días (Ajustes), stock = recibido − raciones (nunca negativo), días de cobertura y alertas de stock. |
 | Cosechas | `/admin/cosechas/crear` | Pesaje como en el cuaderno: cada **pesada** con su tipo (canasta o canastilla), cantidad y peso pesado. **Descuento = cantidad × peso de una vacía** (se multiplica) y **peso limpio = peso pesado − descuento**; totales y meta opcional en vivo. El servidor rehace todas las cuentas y guarda el total limpio. Encabezado con lago y especie, destino del pedido (con sugerencias), fecha (editable para cosechas atrasadas), hora automática y quién despachó. También se puede registrar solo el total limpio. Los pesos por defecto de una canasta (2 kg) y una canastilla (1,5 kg) vacías los cambia el administrador en **Pesaje**. Detalle de cada cosecha, historial del lago, informe mensual y libro de campo (pantalla, Excel y PDF) muestran pesadas y totales. |
 | Ventas | `/admin/ventas` | Ventas de pescado cosechado (de contado o a crédito, también a empleados) y abonos. |
+| Jornaleros | `/admin/jornaleros` | Trabajadores ocasionales **sin cuenta en la app** que vienen a pescar o procesar y se pagan por jornada (no son personal ni tienen rol). Propietario y administrador los agregan con nombres, apellidos, documento y teléfono opcionales y su categoría habitual (procesador, pescador, rayador, lavado de canastas u otro). Pueden comprar pescado a crédito en Ventas. Ver **Jornaleros y personas sin cuenta**. |
 | Personal | `/admin/personal` | Aprobación y roles, **turnos rotativos**, solicitudes (permisos y horas extra) y **nómina semanal**. |
 | Tareas | `/admin/tareas` | Tareas para el personal de campo; se marcan hechas solo en turno. |
 | Mi trabajo | `/mi-trabajo` | Para trabajador y celador: tareas, permisos, horas extra, saldo de pescado y pagos de nómina. |
@@ -298,6 +299,23 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. En el panel de plataforma es obligatoria (ver «Panel de plataforma»).
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Jornaleros y personas sin cuenta
+
+Fase A del módulo (las jornadas, las tarifas y la planilla vienen en las siguientes fases).
+
+- **Tabla única `terceros`** para las personas externas de la finca: jornaleros ahora; clientes y proveedores (Gastos) después, sin duplicar personas (`es_jornalero`, `es_cliente`, `es_proveedor`).
+- **Documento:**
+  - se guarda **cifrado** con `APP_KEY` (cast `encrypted`), nunca en texto claro;
+  - para que no se repita dentro de la finca se guarda una **huella HMAC-SHA256** del documento normalizado, con una clave derivada de `APP_KEY`: no se puede adivinar probando documentos;
+  - el **administrador** lo escribe y ve solo los últimos 4 dígitos (`•••• 1234`); el **propietario** lo ve completo;
+  - se busca solo por documento exacto, comparando huellas.
+- **Anonimizar** (solo el propietario, escribiendo `ANONIMIZAR`; no se deshace): borra documento y teléfono y cambia el nombre por «Jornalero N». No se permite con saldo por cobrar.
+- **Bitácora:** guarda solo el `tercero_id` (nunca el nombre ni el documento) y resuelve el nombre al mostrarse, así la anonimización también la cubre. Las ventas guardan el nombre de ese día en `cliente` y se reemplaza al anonimizar.
+- **Ventas:** el comprador puede ser un empleado, un jornalero (`ventas.tercero_id`) o un nombre escrito. Un `CHECK` impide tener empleado y jornalero a la vez.
+- **Asistente IA:** nunca recibe documento ni teléfono de terceros.
+- **Exportar y eliminar la finca:** `terceros` sale en el ZIP con el documento legible y sin la huella, y se borra con la finca, después de la bitácora que lo referencia.
+- **Guarda la `APP_KEY` aparte** (gestor de contraseñas): la copia de la base no la incluye, y sin ella los documentos cifrados no se pueden leer. Ver docs/DESPLIEGUE.md, pasos 4 y 11.
+
 ## Exportar y eliminar los datos de una finca
 
 - **Exportar** (propietario, en Ajustes → Datos de la finca): un ZIP con un CSV por tabla (UTF-8 con BOM), las fotos originales y un `LEEME.txt`; sin contraseñas, tokens, claves de dos pasos ni datos de otras fincas. Se genera en segundo plano (trabajador de la cola), una vez por hora, y se descarga durante 24 horas (`piscicola:limpiar-exportaciones`, cada hora). Queda en la bitácora.
@@ -312,6 +330,7 @@ El inicio del propietario y del administrador muestra una lista de 6 pasos con e
 ## Términos de uso y privacidad
 
 - Páginas públicas `/terminos` y `/privacidad` con un **texto base en borrador** (`lang/es/legal.php`) que **debe revisar un abogado antes de publicarse**. Es neutro: no menciona leyes, autoridades ni países.
+- **Pendiente de revisión por el abogado:** la sección «Personas sin cuenta en la app» (jornaleros), agregada en la versión `2026-11-01`: qué datos se guardan, para qué, quién los ve, que la finca debe informarles y tener su autorización cuando la normativa lo exija, y cómo pedir verlos, corregirlos o borrarlos.
 - Quién presta el servicio y su correo salen de `LEGAL_ENTIDAD` y `LEGAL_CORREO` (vacías en `.env.example`); mientras falten, las páginas lo avisan.
 - **Aceptación:** casilla obligatoria en el registro y, en el primer ingreso tras cambiar `config/legal.php` → `version`, una pantalla para aceptar antes de seguir (la app móvil recibe 403 con `terminos_pendientes` y acepta en `POST /api/terminos/aceptar`). Se guarda quién, qué versión y cuándo (UTC), **sin la IP**. Las personas que ya existían aceptan en su próximo ingreso.
 

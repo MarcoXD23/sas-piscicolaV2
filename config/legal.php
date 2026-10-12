@@ -6,7 +6,8 @@
 return [
 
     // Versión vigente de los textos. Al cambiarla, cada persona debe aceptarlos de nuevo en su próximo ingreso.
-    'version' => '2026-10-28',
+    // 2026-11-01: sección «Personas sin cuenta en la app» (jornaleros), pendiente de revisión por el abogado
+    'version' => '2026-11-01',
 
     // Quién responde por el servicio. Vacíos: las páginas muestran un aviso de dato pendiente (no se inventan).
     'entidad' => env('LEGAL_ENTIDAD') ?: null,

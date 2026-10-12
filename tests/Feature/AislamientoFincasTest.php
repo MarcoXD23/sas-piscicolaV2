@@ -31,6 +31,7 @@ use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Tarea;
 use App\Models\Tenant;
+use App\Models\Tercero;
 use App\Models\Traslado;
 use App\Models\Tratamiento;
 use App\Models\Turno;
@@ -62,6 +63,7 @@ class AislamientoFincasTest extends TestCase
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
+        'jornalero' => Tercero::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -152,6 +154,7 @@ class AislamientoFincasTest extends TestCase
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
             StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),
             Tarea::class => Tarea::create(['asignada_a' => $persona->id, 'creada_por' => $persona->id, 'titulo' => "Tarea {$sufijo}", 'fecha' => '2026-10-20']),
+            Tercero::class => Tercero::create(['nombres' => "Jornalero {$sufijo}", 'es_jornalero' => true]),
             Traslado::class => Traslado::create(['siembra_origen_id' => $siembra->id, 'siembra_destino_id' => $destino->id, 'lago_origen_id' => $lago->id, 'lago_destino_id' => $otroLago->id,
                 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'cantidad' => 1, 'peso_promedio_g' => 200, 'biomasa_kg' => 0.2]),
             Tratamiento::class => Tratamiento::create(['lago_id' => $lago->id, 'user_id' => $persona->id, 'fecha_inicio' => '2026-10-01', 'fecha_fin' => '2026-10-02',

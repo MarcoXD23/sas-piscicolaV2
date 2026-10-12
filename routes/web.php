@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\EspecieFotoController;
+use App\Http\Controllers\Admin\JornaleroController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
 use App\Http\Controllers\Admin\MortalidadController;
@@ -149,6 +150,18 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
 
         Route::post('/bodega/despachos', [BodegaController::class, 'despachar'])->name('bodega.despachos.store');
         Route::post('/bodega/despachos/{despacho}/revisado', [BodegaController::class, 'marcarRevisado'])->name('bodega.despachos.revisado');
+    });
+
+    // Jornaleros (personas sin cuenta en la app): propietario y administrador; anonimizar, solo el propietario
+    Route::middleware('rol:propietario,administrador')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/jornaleros', [JornaleroController::class, 'index'])->name('jornaleros.index');
+        Route::post('/jornaleros', [JornaleroController::class, 'store'])->name('jornaleros.store');
+        Route::get('/jornaleros/{jornalero}/editar', [JornaleroController::class, 'edit'])->whereNumber('jornalero')->name('jornaleros.edit');
+        Route::put('/jornaleros/{jornalero}', [JornaleroController::class, 'update'])->whereNumber('jornalero')->name('jornaleros.update');
+        Route::post('/jornaleros/{jornalero}/activo', [JornaleroController::class, 'cambiarActivo'])->whereNumber('jornalero')->name('jornaleros.activo');
+    });
+    Route::middleware('rol:propietario')->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/jornaleros/{jornalero}/anonimizar', [JornaleroController::class, 'anonimizar'])->whereNumber('jornalero')->name('jornaleros.anonimizar');
     });
 
     // Consulta de propietario y administrador (el propietario solo lee)

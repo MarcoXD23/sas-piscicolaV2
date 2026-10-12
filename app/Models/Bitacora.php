@@ -19,7 +19,8 @@ class Bitacora extends Model
 {
     use PerteneceATenant;
 
-    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'medicion', 'aprobacion', 'roles', 'dos_pasos', 'exportacion', 'eliminacion', 'eliminacion_anulada'];
+    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'medicion', 'aprobacion', 'roles', 'dos_pasos', 'exportacion', 'eliminacion', 'eliminacion_anulada',
+        'jornalero_creado', 'jornalero_editado', 'jornalero_activado', 'jornalero_inactivo', 'jornalero_anonimo'];
 
     /** Roles de mayor a menor nivel: se guarda el más alto que tenga la persona entre los que permite la acción. */
     private const NIVEL_ROLES = [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR];
@@ -31,7 +32,7 @@ class Bitacora extends Model
 
     public const UPDATED_AT = null;
 
-    protected $fillable = ['user_id', 'persona_id', 'rol', 'accion', 'lago_id', 'detalle', 'ocurrido_at', 'zona_horaria'];
+    protected $fillable = ['user_id', 'persona_id', 'tercero_id', 'rol', 'accion', 'lago_id', 'detalle', 'ocurrido_at', 'zona_horaria'];
 
     protected function casts(): array
     {
@@ -51,8 +52,10 @@ class Bitacora extends Model
      * @param  list<string>  $rolesPermitidos  Roles con los que se puede hacer la acción (los de la ruta)
      * @param  array<string, mixed>  $detalle  Datos de ese momento para mostrar después
      * @param  ?User  $persona  Persona afectada (por ejemplo, a quién se le cambiaron los roles)
+     * @param  ?Tercero  $tercero  Persona sin cuenta afectada (jornalero): se guarda solo su id, nunca su nombre ni su
+     *                             documento; el nombre se resuelve al mostrarlo (así la anonimización también lo cubre)
      */
-    public static function registrar(User $usuario, string $accion, ?Lago $lago, array $rolesPermitidos, array $detalle = [], ?User $persona = null): self
+    public static function registrar(User $usuario, string $accion, ?Lago $lago, array $rolesPermitidos, array $detalle = [], ?User $persona = null, ?Tercero $tercero = null): self
     {
         $roles = $usuario->roles()->pluck('nombre')->all();
         $rol = collect(self::NIVEL_ROLES)->first(fn ($nivel) => in_array($nivel, $rolesPermitidos, true) && in_array($nivel, $roles, true))
@@ -71,6 +74,7 @@ class Bitacora extends Model
         return self::create([
             'user_id' => $usuario->id,
             'persona_id' => $persona?->id,
+            'tercero_id' => $tercero?->id,
             'rol' => $rol,
             'accion' => $accion,
             'lago_id' => $lago?->id,
@@ -95,6 +99,11 @@ class Bitacora extends Model
         return $this->belongsTo(Lago::class);
     }
 
+    public function tercero(): BelongsTo
+    {
+        return $this->belongsTo(Tercero::class);
+    }
+
     /** Fecha y hora exactas en la zona que tenía la finca cuando ocurrió. */
     public function momentoLocal(): CarbonImmutable
     {
@@ -110,6 +119,13 @@ class Bitacora extends Model
             is_int($valor) => Formato::numero($valor),
             default => (string) $valor,
         })->all();
+
+        // Persona sin cuenta: el nombre de hoy (o «Jornalero N» si se anonimizó), nunca uno guardado en el detalle
+        if ($this->tercero_id !== null) {
+            $nombre = $this->tercero?->nombreCompleto() ?? '';
+            $datos['tercero'] = $nombre;
+            $datos['cliente'] ??= $nombre;
+        }
 
         // Registros anteriores a un dato nuevo (por ejemplo, cosechas sin destino) se muestran con "—"
         $datos += collect(self::DATOS_NUEVOS[$this->accion] ?? [])->mapWithKeys(fn ($clave) => [$clave => __('cosechas.sin_dato')])->all();

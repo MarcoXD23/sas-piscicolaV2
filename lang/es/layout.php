@@ -33,6 +33,7 @@ return [
         'conversion' => 'Conversión',
         'especies' => 'Especies',
         'inicio' => 'Inicio',
+        'jornaleros' => 'Jornaleros',
         'lagos' => 'Lagos',
         'mi_trabajo' => 'Mi trabajo',
         'noche' => 'Noche',

@@ -10,6 +10,7 @@ use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tenant;
+use App\Models\Tercero;
 use App\Models\User;
 use App\Notifications\FincaEnEliminacion;
 use App\Support\Datos\EliminadorFinca;
@@ -53,7 +54,7 @@ class EliminarFincaTest extends TestCase
         $this->trabajador = User::query()->whereHas('roles', fn ($q) => $q->where('nombre', Rol::TRABAJADOR))->sole();
     }
 
-    /** Finca con personal, lago, siembra, bitácora, foto y token. */
+    /** Finca con personal, lago, siembra, jornalero, bitácora (que apunta al jornalero), foto y token. */
     private function fincaConDatos(string $nombre, string $codigo): Tenant
     {
         $finca = Tenant::create(['nombre' => $nombre, 'codigo' => $codigo]);
@@ -64,7 +65,9 @@ class EliminarFincaTest extends TestCase
         $lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         Siembra::create(['lago_id' => $lago->id, 'especie_id' => Especie::deClave('mojarra roja')->id, 'fecha' => '2026-09-01', 'cantidad_alevinos' => 10,
             'peso_promedio_inicial_g' => 5, 'peces_vivos' => 10, 'peso_actual_g' => 5, 'biomasa_kg' => 0.05]);
-        Bitacora::registrar($dueno, 'roles', $lago, [Rol::PROPIETARIO], ['persona' => 'x', 'antes' => 'a', 'despues' => 'b']);
+        // La bitácora apunta al jornalero (bitacora.tercero_id): al borrar, la bitácora debe irse antes que terceros
+        $jornalero = Tercero::create(['nombres' => 'Jornalero de prueba', 'es_jornalero' => true]);
+        Bitacora::registrar($dueno, 'roles', $lago, [Rol::PROPIETARIO], ['persona' => 'x', 'antes' => 'a', 'despues' => 'b'], tercero: $jornalero);
         Storage::disk('fotos')->put($finca->id.'/1/foto.jpg', 'x');
         EspecieFoto::create(['especie_id' => Especie::deClave('mojarra roja')->id, 'user_id' => $dueno->id, 'ruta_original' => $finca->id.'/1/foto.jpg',
             'ruta_ligera' => $finca->id.'/1/foto.webp', 'tipo_original' => 'image/jpeg', 'bytes_original' => 1, 'bytes_ligera' => 1, 'ancho' => 1, 'alto' => 1, 'orden' => 1]);
@@ -162,6 +165,10 @@ class EliminarFincaTest extends TestCase
     public function test_el_borrado_definitivo_elimina_todo_lo_de_la_finca_y_nada_de_otra(): void
     {
         $this->assertSame([], TablasFinca::dependientesSinTenant());   // nada sin tenant_id cuelga de una tabla de finca
+        // La bitácora (que apunta a terceros) se borra antes que terceros
+        $orden = TablasFinca::ordenDeBorrado();
+        $this->assertLessThan(array_search('terceros', $orden, true), array_search('bitacora', $orden, true));
+        $this->assertSame(1, DB::table('bitacora')->where('tenant_id', $this->finca->id)->whereNotNull('tercero_id')->count());
         $otraAntes = collect(TablasFinca::todas())->mapWithKeys(fn ($t) => [$t => DB::table($t)->where('tenant_id', $this->otra->id)->count()])->all();
         $usuariosFinca = DB::table('users')->where('tenant_id', $this->finca->id)->pluck('email');
 

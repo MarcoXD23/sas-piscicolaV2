@@ -7,6 +7,7 @@ use App\Models\Abono;
 use App\Models\Bitacora;
 use App\Models\Cosecha;
 use App\Models\Rol;
+use App\Models\Tercero;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\Formato;
@@ -32,12 +33,15 @@ class VentaController extends Controller
             'puedeVender' => $request->user()->tieneRol(Rol::ADMINISTRADOR),
             'disponibles' => Cosecha::query()->with(['lago', 'siembra'])->withSum('ventas', 'kg')->latest('fecha')->limit(50)->get()
                 ->filter(fn (Cosecha $cosecha) => $cosecha->kgDisponibles() > 0)->values(),
-            'creditos' => Venta::query()->with('comprador')->conSaldo()->orderBy('fecha')->get(),
-            'ventas' => Venta::query()->with(['cosecha.lago', 'comprador'])->latest('fecha')->latest('id')->paginate(20),
+            'creditos' => Venta::query()->with(['comprador', 'tercero'])->conSaldo()->orderBy('fecha')->get(),
+            'ventas' => Venta::query()->with(['cosecha.lago', 'comprador', 'tercero'])->latest('fecha')->latest('id')->paginate(20),
             'vendidoMes' => (int) Venta::where('fecha', '>=', $inicioMes)->sum('total'),
             'kgMes' => (float) Venta::where('fecha', '>=', $inicioMes)->sum('kg'),
             'cartera' => (int) Venta::conSaldo()->sum('saldo'),
             'empleados' => User::query()->whereNotNull('aprobado_at')->orderBy('name')->pluck('name', 'id')->all(),
+            // Jornaleros activos que pueden comprar (también a crédito, que se descontará de su pago)
+            'jornaleros' => Tercero::query()->jornaleros()->activos()->orderBy('nombres')->orderBy('apellidos')->get()
+                ->mapWithKeys(fn (Tercero $tercero) => [$tercero->id => $tercero->nombreCompleto()])->all(),
             'formasPago' => Venta::opciones(),
             'medios' => Abono::opciones(),
         ]);
@@ -50,15 +54,20 @@ class VentaController extends Controller
         $datos = $request->validate([
             'cosecha_id' => ['required', 'integer', Rule::exists('cosechas', 'id')->where('tenant_id', $tenant)],
             'comprador_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('tenant_id', $tenant)->whereNotNull('aprobado_at')],
-            'cliente' => ['nullable', 'string', 'max:255', 'required_without:comprador_id'],
+            // Un solo comprador: empleado o jornalero (o solo el nombre escrito)
+            'tercero_id' => ['nullable', 'integer', 'prohibits:comprador_id', Rule::exists('terceros', 'id')->where('tenant_id', $tenant)
+                ->where('es_jornalero', true)->where('activo', true)->whereNull('anonimizado_at')],
+            'cliente' => ['nullable', 'string', 'max:255', 'required_without_all:comprador_id,tercero_id'],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'kg' => ['required', 'numeric', 'min:0.1', 'max:100000'],
             'precio_kg' => ['required', 'integer', 'min:1', 'max:10000000'],
             'forma_pago' => ['required', Rule::in(Venta::FORMAS_PAGO)],
         ], [
             'cosecha_id.required' => __('mensajes.venta.elige_cosecha_sale_pescado'),
-            'cliente.required_without' => __('mensajes.venta.escribe_cliente_elige_empleado'),
+            'cliente.required_without_all' => __('mensajes.venta.escribe_cliente_elige_empleado'),
             'comprador_id.exists' => __('mensajes.venta.ese_empleado_no_pertenece_finca'),
+            'tercero_id.exists' => __('mensajes.venta.ese_jornalero_no_esta_activo'),
+            'tercero_id.prohibits' => __('mensajes.venta.un_solo_comprador'),
             'precio_kg.integer' => __('region.dinero_sin_decimales'),
             'fecha.before_or_equal' => __('mensajes.venta.fecha_no_puede_ser_futura'),
         ]);
@@ -79,12 +88,14 @@ class VentaController extends Controller
 
             $total = (int) round($kg * (int) $datos['precio_kg']);
             $comprador = empty($datos['comprador_id']) ? null : User::find($datos['comprador_id']);
+            $tercero = empty($datos['tercero_id']) ? null : Tercero::find($datos['tercero_id']);
 
             $venta = Venta::create([
                 'cosecha_id' => $cosecha->id,
                 'user_id' => $request->user()->id,
                 'comprador_id' => $comprador?->id,
-                'cliente' => $comprador?->name ?? $datos['cliente'],
+                'tercero_id' => $tercero?->id,
+                'cliente' => $comprador?->name ?? $tercero?->nombreCompleto() ?? $datos['cliente'],
                 'fecha' => $datos['fecha'],
                 'kg' => $kg,
                 'precio_kg' => (int) $datos['precio_kg'],
@@ -93,10 +104,11 @@ class VentaController extends Controller
                 'saldo' => $datos['forma_pago'] === 'credito' ? $total : 0,
             ]);
 
-            Bitacora::registrar($request->user(), 'venta', $cosecha->lago, [Rol::ADMINISTRADOR], [
-                'kg' => (float) $kg, 'cliente' => $venta->cliente, 'total' => Formato::dinero($total),
+            // A un jornalero, la bitácora guarda solo su id: el nombre se resuelve al mostrarla (y se anonimiza con él)
+            Bitacora::registrar($request->user(), 'venta', $cosecha->lago, [Rol::ADMINISTRADOR], array_filter([
+                'kg' => (float) $kg, 'cliente' => $tercero ? null : $venta->cliente, 'total' => Formato::dinero($total),
                 'forma_pago' => __('ventas.formas_pago.'.$venta->forma_pago), 'fecha' => $datos['fecha'],
-            ]);
+            ], fn ($valor) => $valor !== null), tercero: $tercero);
 
             return $venta;
         });

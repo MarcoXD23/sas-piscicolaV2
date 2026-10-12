@@ -53,7 +53,7 @@
             @forelse ($creditos as $credito)
                 <div class="flex items-center justify-between gap-3 border-t border-renglon py-3 first:border-t-0 first:pt-0">
                     <div class="min-w-0">
-                        <p class="font-semibold text-tinta">{{ $credito->cliente }}@if ($credito->comprador_id) <span class="text-sm font-normal text-tinta-suave">{{ __('ventas.empleado') }}</span>@endif</p>
+                        <p class="font-semibold text-tinta">{{ $credito->nombreCliente() }}@if ($credito->comprador_id) <span class="text-sm font-normal text-tinta-suave">{{ __('ventas.empleado') }}</span>@elseif ($credito->tercero_id) <span class="text-sm font-normal text-tinta-suave">{{ __('ventas.jornalero') }}</span>@endif</p>
                         <p class="text-sm text-tinta-suave">{{ __('ventas.detalle_credito', ['fecha' => $credito->fecha->format('d/m/Y'), 'kg' => Formato::numero($credito->kg, 1), 'total' => Formato::dinero($credito->total)]) }}</p>
                     </div>
                     <div class="shrink-0 text-right">
@@ -65,7 +65,7 @@
                 </div>
 
                 @if ($puedeVender)
-                <x-modal id="abono-{{ $credito->id }}" :titulo="__('ventas.abono_de', ['cliente' => $credito->cliente])">
+                <x-modal id="abono-{{ $credito->id }}" :titulo="__('ventas.abono_de', ['cliente' => $credito->nombreCliente()])">
                     <p class="mb-4 text-base text-tinta-suave">{{ __('ventas.saldo_pendiente') }} <strong class="text-tinta">{{ Formato::dinero($credito->saldo) }}</strong></p>
                     <x-formulario :action="route('admin.ventas.abonar', $credito)">
                         <div class="grid grid-cols-2 gap-4">
@@ -92,7 +92,7 @@
             @foreach ($ventas as $venta)
                 <tr>
                     <td data-label="{{ __('comun.fecha') }}">{{ $venta->fecha->format('d/m/Y') }}</td>
-                    <td data-label="{{ __('ventas.cliente') }}" class="font-medium">{{ $venta->cliente }}</td>
+                    <td data-label="{{ __('ventas.cliente') }}" class="font-medium">{{ $venta->nombreCliente() }}</td>
                     <td data-label="{{ __('ventas.pescado') }}">{{ __('lagos.lago_nombre', ['lago' => $venta->cosecha->lago->nombre]) }}</td>
                     <td data-label="{{ __('ventas.kg') }}" class="tabular-nums">{{ Formato::numero($venta->kg, 1) }}</td>
                     <td data-label="{{ __('ventas.precio_por_kg') }}" class="tabular-nums">{{ Formato::dinero($venta->precio_kg) }}</td>
@@ -126,6 +126,9 @@
                              :opciones="$disponibles->mapWithKeys(fn ($c) => [$c->id => __('ventas.opcion_cosecha', ['especie' => $c->siembra->nombre_especie, 'lago' => $c->lago->nombre, 'kg' => Formato::numero($c->kgDisponibles(), 1)])])->all()" />
                 <x-campo nombre="cliente" :etiqueta="__('ventas.cliente')" :placeholder="__('ventas.nombre_comprador')" :ayuda="__('ventas.si_compra_empleado_eligelo_abajo')" />
                 <x-seleccion nombre="comprador_id" :etiqueta="__('ventas.empleado_compra_opcional')" :opciones="['' => __('ventas.no_es_empleado')] + $empleados" />
+                @if ($jornaleros !== [])
+                    <x-seleccion nombre="tercero_id" :etiqueta="__('ventas.jornalero_compra_opcional')" :ayuda="__('ventas.jornalero_compra_ayuda')" :opciones="['' => __('ventas.no_es_jornalero')] + $jornaleros" />
+                @endif
                 <div class="grid grid-cols-2 gap-4">
                     <x-campo nombre="kg" :etiqueta="__('ventas.kg')" tipo="number" step="0.01" min="0.1" inputmode="decimal" required />
                     <x-campo nombre="precio_kg" :etiqueta="__('ventas.precio_kg')" tipo="number" min="1" inputmode="numeric" required />

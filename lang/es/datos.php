@@ -2,6 +2,8 @@
 
 // Datos de la finca: exportarlos y eliminarlos (solo el propietario; también el administrador de plataforma)
 return [
+    // Exportación: documento cifrado con una APP_KEY que ya no está
+    'documento_ilegible' => '[no se pudo descifrar: falta la APP_KEY con que se guardó]',
     'titulo' => 'Datos de la finca',
     'subtitulo' => 'Descarga una copia de los datos de tu finca o pide que se eliminen.',
     'enlace' => 'Datos de la finca',

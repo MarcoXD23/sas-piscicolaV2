@@ -3,6 +3,8 @@
 namespace App\Support\Datos;
 
 use App\Models\Exportacion;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +25,8 @@ final class ExportadorFinca
     private const COLUMNAS_SENSIBLES = [
         'users' => ['password', 'remember_token', 'dos_pasos_clave', 'dos_pasos_recuperacion', 'dos_pasos_ultimo_paso'],
         'especie_fotos' => ['ruta_original', 'ruta_ligera'],
+        // La huella del documento solo sirve para comparar dentro de la app
+        'terceros' => ['documento_huella'],
     ];
 
     /** Genera el ZIP y deja la exportación lista (o en fallo, sin archivos sueltos). */
@@ -89,6 +93,14 @@ final class ExportadorFinca
         }
         if ($tabla === 'especie_fotos') {
             $fila['archivo'] = sprintf('fotos/especie-%d-foto-%d', $fila['especie_id'], $fila['orden']);
+        }
+        // El documento de los terceros va cifrado en la base: la finca lo recibe legible (es su dato)
+        if ($tabla === 'terceros' && $fila['documento'] !== null) {
+            try {
+                $fila['documento'] = Crypt::decryptString($fila['documento']);
+            } catch (DecryptException) {
+                $fila['documento'] = __('datos.documento_ilegible');
+            }
         }
 
         return $fila;
