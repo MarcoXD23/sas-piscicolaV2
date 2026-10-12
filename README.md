@@ -201,6 +201,11 @@ La app se instala en el teléfono (PWA). El service worker (`public/sw.js`) guar
 - **Se guardan en el teléfono:** ración, mortalidad, aviso «listo para pescar», ronda y medición del agua; en Registro rápido, también el muestreo del administrador. Se guardan en IndexedDB, separados por finca y persona (`resources/js/sin-conexion.js`).
   Se envían solos, en orden y con su hora real, al volver la señal o al abrir cualquier pantalla.
   El servidor los revisa al llegar con las reglas de siempre: turno a esa hora, bodega y peces vivos. No acepta los de más de `SIN_CONEXION_HORAS` horas.
+  **Fechas con el día real del registro:** las fechas y horas que escribe la persona se validan contra el momento real del registro, ya corregido con el desfase del reloj y en la zona de la finca (`Region::hoyDelRegistro()` y `Region::ahoraDelRegistro()`, que leen `MomentoRegistro`). No se validan contra la hora de llegada.
+  Así, una ración, mortalidad o muestreo de las 23:50 enviado después de medianoche vale con la fecha de ese día. Una fecha posterior al día real del registro se rechaza con «La fecha no puede ser posterior al día en que se registró».
+  En la medición del agua, la hora no puede ser posterior al momento real del registro.
+  El aviso de pesca y la ronda no tienen fecha que escribir: se guardan a la hora real del registro.
+  Con conexión todo sigue igual.
   **Reloj del teléfono:** cada envío trae también la hora del teléfono en ese instante (`X-Hora-Telefono`; sin ella se rechaza). El servidor calcula el desfase (su hora menos la del teléfono) y lo suma a la hora del registro antes de revisar el turno, el límite de horas y la bitácora. Si el desfase pasa de 5 minutos, la bitácora anota «hora del teléfono corregida en X minutos» y el propietario lo ve.
   **Última hora del servidor:** cada respuesta trae la hora del servidor (cabecera `X-Hora-Servidor`, middleware global `HoraServidor`, también en `/up`, `/campo/token` y `/campo/paquete`). Cada pantalla la trae también en `data-hora-servidor`.
   El teléfono guarda la más reciente por finca y persona. Nunca la baja: una pantalla guardada sin señal trae una vieja.

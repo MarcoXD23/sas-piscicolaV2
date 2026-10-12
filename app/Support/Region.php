@@ -76,6 +76,35 @@ class Region
         return self::ahora()->startOfDay();
     }
 
+    /**
+     * Momento real del registro en la zona de la finca: ahora, o si llegó de la cola sin conexión, la hora en que se
+     * hizo (MomentoRegistro, ya corregida con el desfase del reloj del teléfono). Las fechas y horas que escribe la
+     * persona se validan contra esto, no contra la hora de llegada.
+     */
+    public static function ahoraDelRegistro(): CarbonImmutable
+    {
+        return self::local(MomentoRegistro::actual());
+    }
+
+    /** Inicio del día real del registro en la zona de la finca (ver ahoraDelRegistro()). */
+    public static function hoyDelRegistro(): CarbonImmutable
+    {
+        return self::ahoraDelRegistro()->startOfDay();
+    }
+
+    /**
+     * Mensaje del rechazo de una fecha posterior al día real del registro, solo si llegó sin conexión (con conexión
+     * queda el mensaje de siempre). Para el segundo argumento de validate().
+     *
+     * @return array<string, string>
+     */
+    public static function mensajeFechaDelRegistro(string $campo = 'fecha'): array
+    {
+        return MomentoRegistro::sinConexionActual()
+            ? [$campo.'.before_or_equal' => __('mensajes.sin_conexion.fecha_posterior_al_registro', ['dia' => self::hoyDelRegistro()->format('d/m/Y')])]
+            : [];
+    }
+
     /** Un instante (guardado en UTC) expresado en la zona de la finca, para mostrarlo o compararlo por día. */
     public static function local(?CarbonInterface $instante): ?CarbonImmutable
     {

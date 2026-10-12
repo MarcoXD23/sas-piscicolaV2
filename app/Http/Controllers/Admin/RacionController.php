@@ -19,11 +19,12 @@ class RacionController extends Controller
 {
     public function store(Request $request, Lago $lago): RedirectResponse
     {
+        // La fecha no puede ser posterior al día real del registro (sin conexión, el del teléfono ya corregido)
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoyDelRegistro()->toDateString()],
             'tipo_concentrado' => ['required', 'string', 'max:255'],
             'cantidad_kg' => ['required', 'numeric', 'min:0.1', 'max:100000'],
-        ]);
+        ], Region::mensajeFechaDelRegistro());
 
         if (! $lago->siembrasActivas()->exists()) {
             throw ValidationException::withMessages(['cantidad_kg' => __('mensajes.racion.este_lago_no_tiene_peces')]);

@@ -7,7 +7,6 @@ use App\Models\Bitacora;
 use App\Models\Rol;
 use App\Models\Siembra;
 use App\Support\Formato;
-use App\Support\MomentoRegistro;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,12 +25,12 @@ class MuestreoController extends Controller
     {
         // «Hoy» es el día en que de verdad se registró (sin conexión, la hora real del teléfono ya corregida), en la zona
         // de la finca: un muestreo de las 23:50 enviado después de medianoche conserva su día.
-        $hoy = Region::local(MomentoRegistro::actual())->toDateString();
+        $hoy = Region::hoyDelRegistro()->toDateString();
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.$hoy, 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
             'peces_pesados' => ['required', 'integer', 'min:1', 'max:100000'],
             'peso_total_g' => ['required', 'numeric', 'min:0.1', 'max:999999'],
-        ]);
+        ], Region::mensajeFechaDelRegistro());
 
         $resultado = DB::transaction(function () use ($datos, $siembra, $request) {
             // Bloquea la siembra antes de registrar para evitar condiciones de carrera

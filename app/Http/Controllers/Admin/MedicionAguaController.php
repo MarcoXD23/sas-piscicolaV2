@@ -31,7 +31,8 @@ class MedicionAguaController extends Controller
         $alMenosUno = 'required_without_all:'.implode(',', self::PARAMETROS);
 
         $datos = $request->validate([
-            'medido_at' => ['required', 'date', 'before_or_equal:'.Region::ahora()->format('Y-m-d H:i:s')],
+            // No puede ser posterior al momento real del registro (sin conexión, la hora del teléfono ya corregida)
+            'medido_at' => ['required', 'date', 'before_or_equal:'.Region::ahoraDelRegistro()->format('Y-m-d H:i:s')],
             'temperatura_c' => ['nullable', 'numeric', 'between:0,45', $alMenosUno],
             'oxigeno_mg_l' => ['nullable', 'numeric', 'between:0,30'],
             'ph' => ['nullable', 'numeric', 'between:0,14'],
@@ -41,7 +42,9 @@ class MedicionAguaController extends Controller
             'observaciones' => ['nullable', 'string', 'max:500'],
         ], [
             'temperatura_c.required_without_all' => __('mensajes.medicion_agua.registra_menos_parametro'),
-            'medido_at.before_or_equal' => __('mensajes.medicion_agua.medicion_no_puede_tener_fecha'),
+            'medido_at.before_or_equal' => MomentoRegistro::sinConexionActual()
+                ? __('mensajes.sin_conexion.hora_posterior_al_registro', ['hora' => Region::ahoraDelRegistro()->format('d/m/Y H:i')])
+                : __('mensajes.medicion_agua.medicion_no_puede_tener_fecha'),
             'between' => __('mensajes.medicion_agua.valor_esta_fuera_rango_posible'),
         ]);
 

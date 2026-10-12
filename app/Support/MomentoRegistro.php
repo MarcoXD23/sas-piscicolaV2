@@ -48,4 +48,10 @@ class MomentoRegistro
     {
         return app(self::class)->ahora();
     }
+
+    /** ¿La petición en curso es un registro que llegó de la cola sin conexión? */
+    public static function sinConexionActual(): bool
+    {
+        return app(self::class)->sinConexion();
+    }
 }

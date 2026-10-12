@@ -17,10 +17,11 @@ class MortalidadController extends Controller
 {
     public function store(Request $request, Siembra $siembra): RedirectResponse
     {
+        // La fecha no puede ser posterior al día real del registro (sin conexión, el del teléfono ya corregido)
         $datos = $request->validate([
-            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
+            'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoyDelRegistro()->toDateString(), 'after_or_equal:'.$siembra->fecha->format('Y-m-d')],
             'cantidad' => ['required', 'integer', 'min:1', 'max:10000000'],
-        ]);
+        ], Region::mensajeFechaDelRegistro());
 
         DB::transaction(function () use ($datos, $siembra, $request) {
             $siembraBloqueada = Siembra::where('id', $siembra->id)->lockForUpdate()->first();
