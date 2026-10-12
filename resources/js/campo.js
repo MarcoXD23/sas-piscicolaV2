@@ -9,7 +9,7 @@
  * - Todo texto que llega del paquete se escribe con textContent: nunca se interpreta como HTML.
  */
 import { leerSesionActiva, operacion, PAQUETES } from './almacen';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, factoresMuestreo, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, factoresMuestreo, opcionesLotes, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
 import { centesimasDeGramos, leerRecordada, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 import { leerPaquete } from './paquete';
 import { debeRenovar, paqueteValido } from './paquete-logica';
@@ -164,7 +164,16 @@ export const iniciarCampo = (t, cola) => {
         medicion: Boolean(lago.url_medicion),
     })[seccion]);
 
-    const textoSiembra = (siembra) => t('campo_opcion_lote', { especie: siembra.especie, fecha: fechaCorta(siembra.fecha), vivos: siembra.peces_vivos.toLocaleString(document.documentElement.lang) });
+    // Lotes para elegir: agrupados por especie cuando una especie tiene varios (con su número y su origen)
+    const formatear = { fecha: fechaCorta, numero: (n) => n.toLocaleString(document.documentElement.lang) };
+    const nodosLotes = (siembras) => opcionesLotes(siembras, t, formatear).map(({ grupo, opciones }) => {
+        const nodos = opciones.map(([valor, texto]) => opcion(valor, texto));
+        if (!grupo) return nodos;
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = grupo;
+        optgroup.append(...nodos);
+        return [optgroup];
+    }).flat();
 
     const camposDe = (seccion, formulario) => {
         const lagos = lagosPara(seccion);
@@ -193,7 +202,7 @@ export const iniciarCampo = (t, cola) => {
             selectorLago.addEventListener('change', () => {
                 const lago = lagos.find((uno) => String(uno.id) === selectorLago.value);
                 const siembras = (lago?.siembras ?? []).filter((siembra) => !url || siembra[url]);
-                lote.replaceChildren(opcion('', t(lago ? 'campo_elige' : 'campo_elige_lago_primero')), ...siembras.map((siembra) => opcion(siembra.id, textoSiembra(siembra))));
+                lote.replaceChildren(opcion('', t(lago ? 'campo_elige' : 'campo_elige_lago_primero')), ...nodosLotes(siembras));
                 if (siembras.length === 1) lote.value = String(siembras[0].id);
                 const aviso = formulario.querySelector('[data-campo-aviso-pendiente]');
                 if (aviso) aviso.hidden = !lago?.aviso_pendiente;

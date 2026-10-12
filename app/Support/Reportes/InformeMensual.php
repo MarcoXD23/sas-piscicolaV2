@@ -19,6 +19,7 @@ use App\Models\Traslado;
 use App\Models\Tratamiento;
 use App\Models\User;
 use App\Models\Venta;
+use App\Support\LotesPorEspecie;
 use Carbon\CarbonImmutable;
 
 /**
@@ -119,7 +120,7 @@ class InformeMensual
             new Tabla($t('hoja_lagos'), [[$t('lago'), null], [$t('especies_hoy'), null], [$t('mortalidad'), 0], [$t('alimento_kg'), 1], [$t('muestreos'), 0], [$t('biomasa_kg'), 2]],
                 $d['lagos']->map(fn ($fila) => [
                     $fila['lago']->nombre,
-                    $fila['lago']->siembrasActivas->pluck('nombre_especie')->join(', '),
+                    LotesPorEspecie::nombres($fila['lago']->siembrasActivas),
                     $fila['mortalidad'], $fila['alimento_kg'], $fila['muestreos'],
                     (float) $fila['lago']->siembrasActivas->sum('biomasa_kg'),
                 ])->all()),

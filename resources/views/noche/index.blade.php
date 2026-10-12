@@ -55,7 +55,7 @@
                         <div class="min-w-0">
                             <h3 class="text-xl font-bold">{{ $lago->nombre }}</h3>
                             <p class="text-sm text-tinta-suave">
-                                {{ $lago->siembrasActivas->isEmpty() ? __('noche.sin_peces') : $lago->siembrasActivas->pluck('nombre_especie')->join(', ') }}
+                                {{ $lago->siembrasActivas->isEmpty() ? __('noche.sin_peces') : \App\Support\LotesPorEspecie::nombres($lago->siembrasActivas) }}
                             </p>
                         </div>
                         <x-insignia :tono="$aireacion ? 'info' : 'neutro'" icono="aireador" class="shrink-0">

@@ -183,3 +183,23 @@ test('muestreo con un paquete viejo (sin unidades ni factores): sigue en gramos'
     // En libras no se puede: el paquete viejo no trae el factor
     assert.equal(validar('muestreo', { ...datos, unidad: 'lb' }, viejo, HOY).unidad[0], 'campo_error_unidad');
 });
+
+test('lotes para elegir: agrupados por especie cuando hay varios, como antes si hay uno o el paquete es viejo', async () => {
+    const { opcionesLotes } = await import('../../resources/js/campo-logica.js');
+    const formatear = { fecha: (f) => f, numero: (n) => String(n) };
+    const siembras = [
+        { id: 5, especie: 'Bagre rayado', fecha: '2026-10-07', peces_vivos: 5000, lote: 1, origen: 'Sembrado el 07/10/2026' },
+        { id: 8, especie: 'Bagre rayado', fecha: '2026-10-11', peces_vivos: 300, lote: 2, origen: 'Creado por traslado desde L02 el 11/10/2026' },
+        { id: 9, especie: 'Trucha arcoíris', fecha: '2026-10-01', peces_vivos: 400 },
+    ];
+    assert.deepEqual(opcionesLotes(siembras, t, formatear), [
+        { grupo: 'Bagre rayado', opciones: [
+            [5, 'campo_opcion_lote_numero{"numero":1,"origen":"Sembrado el 07/10/2026","vivos":"5000"}'],
+            [8, 'campo_opcion_lote_numero{"numero":2,"origen":"Creado por traslado desde L02 el 11/10/2026","vivos":"300"}'],
+        ] },
+        { grupo: null, opciones: [[9, 'campo_opcion_lote{"especie":"Trucha arcoíris","fecha":"2026-10-01","vivos":"400"}']] },
+    ]);
+    // Paquete viejo (sin lote ni origen): todo como antes, sin grupos
+    const viejo = siembras.map(({ lote, origen, ...resto }) => resto);
+    assert.ok(opcionesLotes(viejo, t, formatear).every((grupo) => grupo.grupo === null));
+});

@@ -41,6 +41,8 @@
             @php
                 $siembras = $lago->siembrasActivas;
                 $foto = $siembras->first()?->foto_especie;
+                // Con varios lotes de la misma especie, cada lote se nombra con su número y su origen
+                $etiquetasLote = \App\Support\LotesPorEspecie::etiquetas($siembras);
             @endphp
 
             @php
@@ -144,7 +146,7 @@
                     <x-modal id="modal-aviso-pesca-{{ $lago->id }}" :titulo="__('lagos.reportar_listo_pescar_en', ['lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.avisos-pesca.store', $lago)" :data-guardar-sin-conexion="__('layout.cola.resumen_aviso_pesca', ['lago' => $lago->nombre])">
                             @if ($siembras->count() > 1)
-                                <x-seleccion nombre="siembra_id" id="aviso-siembra-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$siembras->pluck('nombre_especie', 'id')->all()" required />
+                                <x-seleccion nombre="siembra_id" id="aviso-siembra-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$etiquetasLote" required />
                             @else
                                 <input type="hidden" name="siembra_id" value="{{ $siembras->first()->id }}">
                             @endif
@@ -157,124 +159,114 @@
                     </x-modal>
                 @endif
 
-                @forelse ($siembras as $siembra)
-                    <div class="border-b border-renglon">
-                        <div class="flex items-center justify-between gap-3 px-5 pt-4">
-                            <h3 class="font-bold">{{ $siembra->nombre_especie }}</h3>
-                            <span class="text-sm text-tinta-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
+                @forelse (\App\Support\LotesPorEspecie::agrupar($siembras) as $grupo)
+                    @if ($grupo['lotes'] === 1)
+                        {{-- Un solo lote de la especie: como siempre --}}
+                        <div class="border-b border-renglon">
+                            @include('admin.lagos.partials.lote-ficha', ['siembra' => $grupo['siembras']->first()])
                         </div>
-
-                        <dl class="mt-3 grid grid-cols-2 gap-px border-y border-renglon bg-renglon">
-                            <div class="bg-ficha px-5 py-2.5">
-                                <dt class="text-sm text-tinta-suave">{{ __('lagos.peces_vivos') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peces_vivos) }}</dd>
+                    @else
+                        {{-- Varios lotes de la misma especie: el total y cada lote como detalle que se abre --}}
+                        <div class="border-b border-renglon" data-especie-lotes="{{ $grupo['lotes'] }}">
+                            <div class="flex items-center justify-between gap-3 px-5 pt-4">
+                                <h3 class="font-bold">{{ $grupo['especie'] }}</h3>
+                                <span class="text-sm text-tinta-suave">{{ __('lagos.lotes.n_lotes', ['lotes' => $grupo['lotes']]) }}</span>
                             </div>
-                            <div class="bg-ficha px-5 py-2.5">
-                                <dt class="text-sm text-tinta-suave">{{ __('lagos.biomasa') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->biomasa_kg, 2) }} <span class="text-sm font-normal text-tinta-suave">kg</span></dd>
-                            </div>
-                            <div class="bg-ficha px-5 py-2.5">
-                                <dt class="text-sm text-tinta-suave">{{ __('lagos.peso_promedio') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $numero($siembra->peso_actual_g, 2) }} <span class="text-sm font-normal text-tinta-suave">g</span></dd>
-                            </div>
-                            <div class="bg-ficha px-5 py-2.5">
-                                <dt class="text-sm text-tinta-suave">{{ __('lagos.dias_cultivo') }}</dt>
-                                <dd class="text-xl font-bold tabular-nums">{{ $siembra->dias_cultivo }}</dd>
-                            </div>
-                        </dl>
-
-                        @unless ($soloLectura)
-                        <div class="space-y-2 p-4">
-                            <x-boton tipo="button" variante="secundario" class="w-full" data-abrir-modal="modal-mortalidad-{{ $siembra->id }}" :disabled="! $puedeRegistrar">
-                                <x-icono nombre="mortalidad" class="h-5 w-5" /> {{ __('lagos.mortalidad') }}
-                            </x-boton>
-                            {{-- Muestreo y Finalizar quedan a un paso: finalizar casi no se deshace y no debe estar junto a la acción diaria --}}
-                            @if ($puedeOperar)
-                                <details class="group">
-                                    <summary class="flex min-h-12 cursor-pointer list-none items-center justify-center gap-1.5 rounded-ficha text-base font-semibold text-marca-700 hover:bg-papel-hondo [&::-webkit-details-marker]:hidden">
-                                        {{ __('lagos.ficha.mas_acciones') }}
-                                        <x-icono nombre="abajo" class="h-5 w-5 transition-transform group-open:rotate-180" />
+                            <dl class="mt-3 grid grid-cols-2 gap-px border-y border-renglon bg-renglon">
+                                <div class="bg-ficha px-5 py-2.5">
+                                    <dt class="text-sm text-tinta-suave">{{ __('lagos.peces_vivos') }}</dt>
+                                    <dd class="text-xl font-bold tabular-nums">{{ $numero($grupo['peces']) }}</dd>
+                                </div>
+                                <div class="bg-ficha px-5 py-2.5">
+                                    <dt class="text-sm text-tinta-suave">{{ __('lagos.biomasa') }}</dt>
+                                    <dd class="text-xl font-bold tabular-nums">{{ $numero($grupo['biomasa_kg'], 2) }} <span class="text-sm font-normal text-tinta-suave">kg</span></dd>
+                                </div>
+                                <div class="col-span-2 bg-ficha px-5 py-2.5">
+                                    <dt class="text-sm text-tinta-suave">{{ __('lagos.peso_promedio') }}</dt>
+                                    <dd class="text-xl font-bold tabular-nums">{{ \App\Support\LotesPorEspecie::textoPeso($grupo) }}</dd>
+                                </div>
+                            </dl>
+                            @foreach ($grupo['siembras'] as $indice => $siembra)
+                                <details class="group/lote border-t border-renglon first-of-type:border-t-0">
+                                    <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-base font-semibold text-tinta hover:bg-papel-hondo [&::-webkit-details-marker]:hidden">
+                                        <span>{{ __('lagos.lotes.resumen', ['numero' => $indice + 1, 'origen' => $siembra->textoOrigen(), 'peces' => $numero($siembra->peces_vivos)]) }}</span>
+                                        <x-icono nombre="abajo" class="h-5 w-5 shrink-0 transition-transform group-open/lote:rotate-180" />
                                     </summary>
-                                    <div class="mt-2 grid grid-cols-2 gap-2">
-                                        <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-muestreo-{{ $siembra->id }}">
-                                            <x-icono nombre="biomasa" class="h-5 w-5" /> {{ __('lagos.muestreo') }}
-                                        </x-boton>
-                                        <x-boton tipo="button" variante="secundario" class="!text-alerta" data-abrir-modal="modal-finalizar-{{ $siembra->id }}">
-                                            <x-icono nombre="ok" class="h-5 w-5" /> {{ __('lagos.finalizar') }}
-                                        </x-boton>
-                                    </div>
+                                    @include('admin.lagos.partials.lote-ficha', ['siembra' => $siembra, 'numero_lote' => $indice + 1])
                                 </details>
-                            @endif
+                            @endforeach
                         </div>
-                        @endunless
-                    </div>
-
-                    @unless ($soloLectura)
-                    <x-modal id="modal-mortalidad-{{ $siembra->id }}" :titulo="__('lagos.mortalidad_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
-                        <x-formulario :action="route('admin.mortalidades.store', $siembra->id)" :data-guardar-sin-conexion="__('layout.cola.resumen_mortalidad', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
-                            <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
-                            <x-campo nombre="cantidad" id="mortalidad-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces_muertos')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
-                                     :ayuda="__('lagos.hay_peces_vivos', ['cantidad' => $numero($siembra->peces_vivos)])" />
-
-                            <div class="grid grid-cols-2 gap-3 pt-2">
-                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                <x-boton>{{ __('lagos.registrar') }}</x-boton>
-                            </div>
-                        </x-formulario>
-                    </x-modal>
-                    @endunless
-
-                    @if ($puedeOperar)
-                        <x-modal id="modal-muestreo-{{ $siembra->id }}" :titulo="__('lagos.muestreo_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
-                            <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
-                                <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
-                                {{-- Peso total en g, kg o lb: el servidor convierte (UnidadesPeso) y guarda en gramos. Los factores van
-                                     aquí para que el promedio en vivo se calcule igual que en el servidor (resources/js/unidades-peso.js) --}}
-                                <div class="grid grid-cols-2 gap-4" data-muestreo
-                                     data-factores='@json(\App\Support\UnidadesPeso::FACTORES)' data-unidad-defecto="{{ $unidadMuestreo }}"
-                                     data-anterior="{{ \App\Support\UnidadesPeso::centesimasDeGramos($siembra->peso_actual_g) }}">
-                                    <div class="col-span-2">
-                                        <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required data-peces />
-                                    </div>
-                                    <x-campo nombre="peso_total" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total')" inputmode="decimal" autocomplete="off" required data-peso-total />
-                                    <x-seleccion nombre="unidad" id="muestreo-unidad-{{ $siembra->id }}" :etiqueta="__('lagos.unidad')" :valor="$unidadMuestreo" :opciones="$unidadesPeso" required data-unidad />
-                                    {{-- Solo informativo: el servidor calcula el promedio que se guarda --}}
-                                    <div class="col-span-2">
-                                        <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.peso_promedio_calculado') }}</label>
-                                        <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
-                                                class="flex min-h-12 w-full items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-xl font-bold tabular-nums text-tinta">—</output>
-                                        <p class="mt-1 text-sm text-tinta-suave" data-anterior-texto>{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                    <x-boton>{{ __('comun.guardar') }}</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
-
-                        <x-modal id="modal-finalizar-{{ $siembra->id }}" :titulo="__('lagos.finalizar_siembra')">
-                            <x-formulario :action="route('admin.siembras.finalizar', $siembra->id)">
-                                <p class="text-base text-tinta">
-                                    {!! __('lagos.confirmar_finalizar', [
-                                        'especie' => '<strong>'.e($siembra->nombre_especie).'</strong>',
-                                        'lago' => '<strong>'.e($lago->nombre).'</strong>',
-                                        'peces' => e($numero($siembra->peces_vivos)),
-                                        'kg' => e($numero($siembra->biomasa_kg, 2)),
-                                    ]) !!}
-                                </p>
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                    <x-boton variante="peligro">{{ __('lagos.finalizar') }}</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
                     @endif
                 @empty
                     <p class="px-5 py-4 text-base text-tinta-suave">{{ __('lagos.este_lago_no_tiene_siembras') }}</p>
                 @endforelse
+
+                {{-- Modales de cada lote (los ids no cambian) --}}
+                @foreach ($siembras as $siembra)
+                @unless ($soloLectura)
+                <x-modal id="modal-mortalidad-{{ $siembra->id }}" :titulo="__('lagos.mortalidad_de', ['especie' => $etiquetasLote[$siembra->id], 'lago' => $lago->nombre])">
+                    <x-formulario :action="route('admin.mortalidades.store', $siembra->id)" :data-guardar-sin-conexion="__('layout.cola.resumen_mortalidad', ['especie' => $etiquetasLote[$siembra->id], 'lago' => $lago->nombre])">
+                        <x-campo nombre="fecha" id="mortalidad-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
+                        <x-campo nombre="cantidad" id="mortalidad-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces_muertos')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
+                                 :ayuda="__('lagos.hay_peces_vivos', ['cantidad' => $numero($siembra->peces_vivos)])" />
+
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                            <x-boton>{{ __('lagos.registrar') }}</x-boton>
+                        </div>
+                    </x-formulario>
+                </x-modal>
+                @endunless
+
+                @if ($puedeOperar)
+                    <x-modal id="modal-muestreo-{{ $siembra->id }}" :titulo="__('lagos.muestreo_de', ['especie' => $etiquetasLote[$siembra->id], 'lago' => $lago->nombre])">
+                        <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
+                            <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
+                            {{-- Peso total en g, kg o lb: el servidor convierte (UnidadesPeso) y guarda en gramos. Los factores van
+                                 aquí para que el promedio en vivo se calcule igual que en el servidor (resources/js/unidades-peso.js) --}}
+                            <div class="grid grid-cols-2 gap-4" data-muestreo
+                                 data-factores='@json(\App\Support\UnidadesPeso::FACTORES)' data-unidad-defecto="{{ $unidadMuestreo }}"
+                                 data-anterior="{{ \App\Support\UnidadesPeso::centesimasDeGramos($siembra->peso_actual_g) }}">
+                                <div class="col-span-2">
+                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required data-peces />
+                                </div>
+                                <x-campo nombre="peso_total" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total')" inputmode="decimal" autocomplete="off" required data-peso-total />
+                                <x-seleccion nombre="unidad" id="muestreo-unidad-{{ $siembra->id }}" :etiqueta="__('lagos.unidad')" :valor="$unidadMuestreo" :opciones="$unidadesPeso" required data-unidad />
+                                {{-- Solo informativo: el servidor calcula el promedio que se guarda --}}
+                                <div class="col-span-2">
+                                    <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.peso_promedio_calculado') }}</label>
+                                    <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
+                                            class="flex min-h-12 w-full items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-xl font-bold tabular-nums text-tinta">—</output>
+                                    <p class="mt-1 text-sm text-tinta-suave" data-anterior-texto>{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                                <x-boton>{{ __('comun.guardar') }}</x-boton>
+                            </div>
+                        </x-formulario>
+                    </x-modal>
+
+                    <x-modal id="modal-finalizar-{{ $siembra->id }}" :titulo="__('lagos.finalizar_siembra')">
+                        <x-formulario :action="route('admin.siembras.finalizar', $siembra->id)">
+                            <p class="text-base text-tinta">
+                                {!! __('lagos.confirmar_finalizar', [
+                                    'especie' => '<strong>'.e($siembra->nombre_especie).'</strong>',
+                                    'lago' => '<strong>'.e($lago->nombre).'</strong>',
+                                    'peces' => e($numero($siembra->peces_vivos)),
+                                    'kg' => e($numero($siembra->biomasa_kg, 2)),
+                                ]) !!}
+                            </p>
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                                <x-boton variante="peligro">{{ __('lagos.finalizar') }}</x-boton>
+                            </div>
+                        </x-formulario>
+                    </x-modal>
+                @endif
+                @endforeach
 
                 <div @class(['mt-auto grid gap-2 p-5', 'grid-cols-2' => $puedeOperar && $siembras->isNotEmpty()])>
                     @if ($siembras->isNotEmpty() && ! $soloLectura)
@@ -326,7 +318,7 @@
                         <x-formulario :action="route('admin.siembras.store', $lago->id)">
                             @if ($siembras->isNotEmpty())
                                 <x-aviso tono="info" icono="pez">
-                                    {{ __('lagos.ayuda_policultivo', ['especies' => $siembras->pluck('nombre_especie')->join(', ', ' '.__('comun.y').' ')]) }}
+                                    {{ __('lagos.ayuda_policultivo', ['especies' => $siembras->pluck('nombre_especie')->unique()->join(', ', ' '.__('comun.y').' ')]) }}
                                 </x-aviso>
                             @endif
                             <x-seleccion nombre="especie_id" id="siembra-especie-{{ $lago->id }}" :etiqueta="__('lagos.especie')" :opciones="$especies" required />

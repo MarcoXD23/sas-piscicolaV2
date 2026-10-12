@@ -167,4 +167,16 @@ return [
         'sin_medicion' => 'Sin medición reciente',
         'mas_acciones' => 'Más acciones',
     ],
+    // Varios lotes de la misma especie en un lago (dos siembras, o un lote creado por un traslado)
+    'lotes' => [
+        'n_lotes' => ':lotes lotes',
+        'lote_numero' => 'Lote :numero',
+        'resumen' => 'Lote :numero · :origen · :peces vivos',
+        'origen_siembra' => 'Sembrado el :fecha',
+        'origen_traslado' => 'Creado por traslado desde :lago el :fecha',
+        'recibio' => 'Recibió :peces peces de :lago el :fecha',
+        'especie_con_lotes' => ':especie (:lotes lotes)',
+        'etiqueta' => ':especie · lote :numero · :origen',
+        'peso_con_rango' => ':promedio · de :min a :max g',
+    ],
 ];

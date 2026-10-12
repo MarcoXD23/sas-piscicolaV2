@@ -253,7 +253,7 @@
                                 <div class="min-w-0">
                                     <a href="{{ route('admin.lagos.show', $item['lago']) }}" class="text-lg font-bold underline decoration-transparent underline-offset-4 hover:decoration-tinta">{{ $item['lago']->nombre }}</a>
                                     <p class="truncate text-sm text-tinta-suave">
-                                        {{ $item['lago']->siembrasActivas->pluck('nombre_especie')->join(', ') }}
+                                        {{ \App\Support\LotesPorEspecie::nombres($item['lago']->siembrasActivas) }}
                                     </p>
                                     @if ($medicion)
                                         <p class="text-sm text-tinta-suave">{{ __('inicio.agua.medido', ['hora' => $medicion->medido_at->format('H:i')]) }}</p>

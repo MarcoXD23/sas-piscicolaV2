@@ -55,6 +55,28 @@ export const enTurno = (turnos, rol, ahora = new Date()) => (turnos ?? []).some(
 export const avisarFueraDeTurno = (paquete, seccion, ahora = new Date()) => Boolean(paquete?.exige_turno?.[seccion])
     && !enTurno(paquete.turnos, rolDeSeccion(seccion), ahora);
 
+/**
+ * Opciones para elegir el lote, agrupadas por especie: [{ grupo, opciones: [[id, texto]] }].
+ * - Especie con un solo lote: sin grupo y con el texto de siempre (especie · desde fecha · vivos).
+ * - Especie con varios lotes (el paquete trae «lote» y «origen»): un grupo con la especie y «Lote 2 · creado por
+ *   traslado desde L02 el 15/10/2026 · 300 vivos». Un paquete viejo, sin esos datos, muestra todo como antes.
+ * formatear: { fecha(texto), numero(n) } para mostrar en el idioma de la página.
+ */
+export const opcionesLotes = (siembras, t, formatear) => {
+    const simple = (siembra) => [siembra.id, t('campo_opcion_lote', { especie: siembra.especie, fecha: formatear.fecha(siembra.fecha), vivos: formatear.numero(siembra.peces_vivos) })];
+    const grupos = [];
+    for (const siembra of siembras ?? []) {
+        if (!siembra.lote) {
+            grupos.push({ grupo: null, opciones: [simple(siembra)] });
+            continue;
+        }
+        let grupo = grupos.find((uno) => uno.grupo === siembra.especie);
+        if (!grupo) grupos.push(grupo = { grupo: siembra.especie, opciones: [] });
+        grupo.opciones.push([siembra.id, t('campo_opcion_lote_numero', { numero: siembra.lote, origen: siembra.origen ?? '', vivos: formatear.numero(siembra.peces_vivos) })]);
+    }
+    return grupos;
+};
+
 const lagoDe = (paquete, id) => (paquete.lagos ?? []).find((lago) => String(lago.id) === String(id));
 const siembraDe = (lago, id) => (lago?.siembras ?? []).find((siembra) => String(siembra.id) === String(id));
 

@@ -299,6 +299,16 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. En el panel de plataforma es obligatoria (ver «Panel de plataforma»).
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Lotes de la misma especie en un lago
+
+Un lago puede tener varios **lotes** (siembras activas) de la misma especie: dos siembras de fechas distintas, o un lote creado por un traslado.
+
+- **Se muestran agrupados por especie**, con el total de peces, la biomasa, el peso promedio **ponderado** por los peces vivos de cada lote y, con más de un lote, el rango («319,23 g · de 50 a 400 g»), más el número de lotes (`App\Support\LotesPorEspecie`).
+- **Cada lote es un detalle que se abre**, con su origen («Sembrado el 07/10/2026» o «Creado por traslado desde L02 el 15/10/2026»), los traslados que le sumaron peces («Recibió 300 peces de L03 el 20/10/2026»), sus cifras y sus botones de siempre. Con un solo lote de la especie se ve como antes, sin desplegable.
+- **Dónde:** detalle del lago, lista de Lagos (también los títulos de sus modales y el selector del aviso «listo para pescar»), inicio, Noche, informe mensual (pantalla, Excel y PDF), Registro rápido (el lote se elige agrupado por especie, con su número y su origen; un paquete viejo se ve como antes) y el asistente (por especie: el total y cada lote con su origen).
+- **Origen guardado:** `siembras.origen` (siembra o traslado) y `siembras.lago_origen_id`. El traslado lo guarda al crear un lote; si suma a un lote existente, ese conserva su origen. Las siembras anteriores se rellenaron en la migración: un lote es «traslado» si su primer traslado recibido se creó en la misma transacción (misma fecha, cantidad y peso inicial, a lo sumo 60 segundos después).
+- **No cambia:** las operaciones siguen siendo por lote (mortalidad, muestreo, cosecha, traslado, finalizar, aviso de pesca), igual que la ración, la conversión, las alertas, el muestreo y la cola sin conexión. Las rutas, los campos y los ids de los modales son los mismos.
+
 ## Unidades del peso en el muestreo
 
 - El peso total del muestreo se escribe en **gramos, kilos o libras**, con un selector junto al campo, en el modal de Lagos y en Registro rápido. **Lo guardado siempre queda en gramos**; el historial y la biomasa siguen en gramos.
@@ -421,6 +431,7 @@ Las fichas de especies, las tablas de alimentación y los umbrales de calidad de
 ## Pendiente
 
 - Superadmin y planes de suscripción para varias fincas.
+- **Traslado a un lago con la misma especie:** hoy suma los peces al lote más antiguo de esa especie con peso promedio ponderado, aunque las tallas sean muy distintas (por ejemplo alevinos de 5 g a un lote de 400 g). Mejorar con un aviso cuando los pesos difieran mucho y la opción «crear lote aparte».
 
 ## Estructura
 

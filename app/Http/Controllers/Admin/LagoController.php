@@ -24,7 +24,8 @@ class LagoController extends Controller
     public function index(Request $request): View
     {
         $lagos = Lago::query()
-            ->with(['siembrasActivas', 'ultimaMedicion', 'avisoPescaPendiente.siembra', 'avisoPescaPendiente.usuario'])
+            // Con el origen de cada lote y los traslados que recibió (para agrupar por especie sin consultas de más)
+            ->with(['siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'avisoPescaPendiente.siembra', 'avisoPescaPendiente.usuario'])
             ->withExists('tratamientosEnRetiro as en_retiro')
             ->orderBy('nombre')
             ->get();
@@ -46,7 +47,7 @@ class LagoController extends Controller
 
     public function show(Lago $lago): View
     {
-        $lago->load(['siembrasActivas', 'ultimaMedicion', 'tratamientosEnRetiro']);
+        $lago->load(['siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'tratamientosEnRetiro']);
 
         return view('admin.lagos.show', [
             'lago' => $lago,

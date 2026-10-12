@@ -10,6 +10,7 @@ use App\Models\Lago;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Ronda;
+use App\Models\Siembra;
 use App\Models\Tarea;
 use App\Models\Turno;
 use App\Models\User;
@@ -18,6 +19,7 @@ use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\Formato;
 use App\Support\Indicadores;
+use App\Support\LotesPorEspecie;
 use App\Support\Region;
 
 /**
@@ -147,7 +149,7 @@ class ContextoFinca
 
     private static function lagos(bool $conProduccion): string
     {
-        $lagos = Lago::query()->with(['siembrasActivas', 'ultimaMedicion', 'aireacionActiva', 'tratamientosEnRetiro'])->orderBy('nombre')->get();
+        $lagos = Lago::query()->with(['siembrasActivas.lagoOrigen', 'ultimaMedicion', 'aireacionActiva', 'tratamientosEnRetiro'])->orderBy('nombre')->get();
         if ($lagos->isEmpty()) {
             return 'Lagos: no hay lagos registrados.';
         }
@@ -158,15 +160,24 @@ class ContextoFinca
             if ($lago->siembrasActivas->isEmpty()) {
                 $partes[] = 'sin peces';
             } elseif ($conProduccion) {
-                foreach ($lago->siembrasActivas as $siembra) {
-                    $partes[] = "{$siembra->nombre_especie}: ".Formato::numero($siembra->peces_vivos).' peces de '
-                        .Formato::numero($siembra->peso_actual_g, 1).' g, '.Formato::numero($siembra->biomasa_kg, 1)." kg, {$siembra->dias_cultivo} días";
+                // Por especie; con varios lotes de la misma especie, el total y cada lote con su origen
+                $lote = fn (Siembra $siembra) => Formato::numero($siembra->peces_vivos).' peces de '
+                    .Formato::numero($siembra->peso_actual_g, 1).' g, '.Formato::numero($siembra->biomasa_kg, 1)." kg, {$siembra->dias_cultivo} días";
+                foreach (LotesPorEspecie::agrupar($lago->siembrasActivas) as $grupo) {
+                    if ($grupo['lotes'] === 1) {
+                        $partes[] = "{$grupo['especie']}: ".$lote($grupo['siembras']->first());
+
+                        continue;
+                    }
+                    $detalle = $grupo['siembras']->values()->map(fn (Siembra $siembra, int $indice) => 'lote '.($indice + 1).' ('.mb_lcfirst($siembra->textoOrigen()).'): '.$lote($siembra));
+                    $partes[] = "{$grupo['especie']}: {$grupo['lotes']} lotes, en total ".Formato::numero($grupo['peces']).' peces, peso promedio '
+                        .LotesPorEspecie::textoPeso($grupo).', '.Formato::numero($grupo['biomasa_kg'], 1).' kg ('.$detalle->implode('; ').')';
                 }
                 $racion = CalculadoraRacion::paraLago($lago);
                 $partes[] = 'ración sugerida '.Formato::numero($racion['total_kg_dia'], 1)." kg/día en {$racion['tomas']} tomas"
                     .($racion['factor'] < 1 ? ' (reducida por la calidad del agua)' : '');
             } else {
-                $partes[] = 'especies: '.$lago->siembrasActivas->pluck('nombre_especie')->join(', ');
+                $partes[] = 'especies: '.LotesPorEspecie::nombres($lago->siembrasActivas);
             }
 
             if ($medicion = $lago->ultimaMedicion) {

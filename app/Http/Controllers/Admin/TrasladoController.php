@@ -82,6 +82,9 @@ class TrasladoController extends Controller
                     'peces_vivos' => $cantidad,
                     'peso_actual_g' => $peso,
                     'biomasa_kg' => ($cantidad * $peso) / 1000,
+                    // El lote nace de este traslado (si se suma a uno existente, ese conserva su origen)
+                    'origen' => Siembra::ORIGEN_TRASLADO,
+                    'lago_origen_id' => $origen->lago_id,
                 ]);
             }
 

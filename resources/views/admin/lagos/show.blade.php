@@ -61,86 +61,91 @@
             <section aria-labelledby="siembras-titulo">
                 <h2 id="siembras-titulo" class="mb-4 text-seccion font-bold">{{ __('lagos.siembras_activas') }}</h2>
 
-                @forelse ($lago->siembrasActivas as $siembra)
-                    <x-tarjeta class="mb-4 overflow-hidden !p-0">
-                        <div class="flex items-center gap-4 px-5 py-4">
-                            @if ($siembra->foto_especie)
-                                <img src="{{ $siembra->foto_especie }}" alt="" loading="lazy" decoding="async" class="h-12 w-12 rounded-ficha object-cover ring-1 ring-renglon">
-                            @else
-                                <span class="flex h-12 w-12 items-center justify-center rounded-ficha bg-papel-hondo text-marca-700"><x-icono nombre="pez" /></span>
-                            @endif
-                            <div class="min-w-0 flex-1">
-                                <h3 class="text-lg font-bold">{{ $siembra->nombre_especie }}</h3>
-                                <p class="text-sm text-tinta-suave">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
-                            </div>
-                        </div>
-
-                        {{-- Cifras de la siembra como renglones de la libreta --}}
-                        <dl class="grid grid-cols-3 gap-px border-y border-renglon bg-renglon">
-                            @foreach ([
-                                [__('lagos.peces_vivos'), $numero($siembra->peces_vivos), null],
-                                [__('lagos.peso_promedio'), $numero($siembra->peso_actual_g, 2), 'g'],
-                                [__('lagos.biomasa'), $numero($siembra->biomasa_kg, 2), 'kg'],
-                            ] as [$etiqueta, $valor, $unidad])
-                                <div class="bg-ficha px-4 py-3 sm:px-5">
-                                    <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
-                                    <dd class="text-lg font-bold tabular-nums sm:text-xl">{{ $valor }}@if ($unidad) <span class="text-sm font-normal text-tinta-suave">{{ $unidad }}</span>@endif</dd>
-                                </div>
-                            @endforeach
-                        </dl>
-
-                        @if ($puedeOperar)
-                            <div class="grid grid-cols-2 gap-2 p-4">
-                                @if ($lago->tratamientosEnRetiro->isNotEmpty())
-                                    <x-boton tipo="button" class="!px-2" disabled :title="__('lagos.lago_en_retiro')">
-                                        <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
-                                    </x-boton>
+                @php
+                    $grupos = \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas);
+                    $etiquetasLote = \App\Support\LotesPorEspecie::etiquetas($lago->siembrasActivas);
+                @endphp
+                @forelse ($grupos as $grupo)
+                    @if ($grupo['lotes'] === 1)
+                        {{-- Un solo lote de la especie: como siempre --}}
+                        <x-tarjeta class="mb-4 overflow-hidden !p-0">
+                            @include('admin.lagos.partials.lote-detalle', ['siembra' => $grupo['siembras']->first()])
+                        </x-tarjeta>
+                    @else
+                        {{-- Varios lotes de la misma especie: el total y cada lote como detalle que se abre --}}
+                        <x-tarjeta class="mb-4 overflow-hidden !p-0" data-especie-lotes="{{ $grupo['lotes'] }}">
+                            <div class="flex items-center gap-4 px-5 py-4">
+                                @if ($grupo['foto'])
+                                    <img src="{{ $grupo['foto'] }}" alt="" loading="lazy" decoding="async" class="h-12 w-12 rounded-ficha object-cover ring-1 ring-renglon">
                                 @else
-                                    {{-- Página de pesaje, con este lago y esta especie ya elegidos --}}
-                                    <x-boton class="!px-2" :href="route('admin.cosechas.create', ['siembra' => $siembra->id])">
-                                        <x-icono nombre="pez" class="h-5 w-5" /> {{ __('lagos.cosechar') }}
-                                    </x-boton>
+                                    <span class="flex h-12 w-12 items-center justify-center rounded-ficha bg-papel-hondo text-marca-700"><x-icono nombre="pez" /></span>
                                 @endif
-                                <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-traslado-{{ $siembra->id }}" :disabled="$otrosLagos === []">
-                                    <x-icono nombre="lagos" class="h-5 w-5" /> {{ __('lagos.trasladar') }}
-                                </x-boton>
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-lg font-bold">{{ $grupo['especie'] }}</h3>
+                                    <p class="text-sm text-tinta-suave">{{ __('lagos.lotes.n_lotes', ['lotes' => $grupo['lotes']]) }}</p>
+                                </div>
                             </div>
-                        @endif
-                    </x-tarjeta>
-
-                    @if ($puedeOperar && $otrosLagos !== [])
-                        <x-modal id="modal-traslado-{{ $siembra->id }}" :titulo="__('lagos.trasladar_especie', ['especie' => $siembra->nombre_especie])">
-                            <x-formulario :action="route('admin.traslados.store', $siembra)">
-                                <x-aviso tono="info" icono="lagos">{{ __('lagos.ayuda_traslado', ['especie' => $siembra->nombre_especie]) }}</x-aviso>
-                                <x-seleccion nombre="lago_destino_id" id="traslado-destino-{{ $siembra->id }}" :etiqueta="__('lagos.lago_destino')" :opciones="$otrosLagos" required />
-                                <x-campo nombre="fecha" id="traslado-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" required />
-                                <div class="grid grid-cols-2 gap-4">
-                                    <x-campo nombre="cantidad" id="traslado-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
-                                             :ayuda="__('lagos.maximo', ['cantidad' => $numero($siembra->peces_vivos)])" />
-                                    <x-campo nombre="peso_promedio_g" id="traslado-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_promedio_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal"
-                                             :valor="$siembra->peso_actual_g" required />
-                                </div>
-                                <x-campo nombre="observaciones" id="traslado-obs-{{ $siembra->id }}" :etiqueta="__('lagos.observaciones_opcional')" />
-                                {{-- Agua fría con cálida en el lago de destino: advertencia que se confirma --}}
-                                <label class="flex min-h-12 items-start gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo p-4 text-base font-semibold text-atencion">
-                                    <input type="checkbox" name="confirmar_clima" value="1" class="mt-0.5 h-5 w-5 shrink-0 rounded">
-                                    <span>{{ __('lagos.confirmar_clima') }}</span>
-                                </label>
-                                @error('confirmar_clima')
-                                    <p class="flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
-                                @enderror
-
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                                    <x-boton>{{ __('lagos.trasladar') }}</x-boton>
-                                </div>
-                            </x-formulario>
-                        </x-modal>
+                            <dl class="grid grid-cols-3 gap-px border-y border-renglon bg-renglon">
+                                @foreach ([
+                                    [__('lagos.peces_vivos'), $numero($grupo['peces'])],
+                                    [__('lagos.peso_promedio'), \App\Support\LotesPorEspecie::textoPeso($grupo)],
+                                    [__('lagos.biomasa'), $numero($grupo['biomasa_kg'], 2).' kg'],
+                                ] as [$etiqueta, $valor])
+                                    <div class="bg-ficha px-4 py-3 sm:px-5">
+                                        <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
+                                        <dd class="text-lg font-bold tabular-nums">{{ $valor }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                            @foreach ($grupo['siembras'] as $indice => $siembra)
+                                <details class="group border-b border-renglon last:border-b-0">
+                                    <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-base font-semibold text-tinta hover:bg-papel-hondo [&::-webkit-details-marker]:hidden">
+                                        <span>{{ __('lagos.lotes.resumen', ['numero' => $indice + 1, 'origen' => $siembra->textoOrigen(), 'peces' => $numero($siembra->peces_vivos)]) }}</span>
+                                        <x-icono nombre="abajo" class="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+                                    </summary>
+                                    <div class="border-t border-renglon">
+                                        @include('admin.lagos.partials.lote-detalle', ['siembra' => $siembra, 'numero_lote' => $indice + 1])
+                                    </div>
+                                </details>
+                            @endforeach
+                        </x-tarjeta>
                     @endif
-
                 @empty
                     <x-vacio icono="lagos" :mensaje="__('lagos.este_lago_no_tiene_siembras')" />
                 @endforelse
+
+                {{-- Traslado: un modal por lote (los ids no cambian) --}}
+                @foreach ($lago->siembrasActivas as $siembra)
+                @if ($puedeOperar && $otrosLagos !== [])
+                    <x-modal id="modal-traslado-{{ $siembra->id }}" :titulo="__('lagos.trasladar_especie', ['especie' => $etiquetasLote[$siembra->id]])">
+                        <x-formulario :action="route('admin.traslados.store', $siembra)">
+                            <x-aviso tono="info" icono="lagos">{{ __('lagos.ayuda_traslado', ['especie' => $siembra->nombre_especie]) }}</x-aviso>
+                            <x-seleccion nombre="lago_destino_id" id="traslado-destino-{{ $siembra->id }}" :etiqueta="__('lagos.lago_destino')" :opciones="$otrosLagos" required />
+                            <x-campo nombre="fecha" id="traslado-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" required />
+                            <div class="grid grid-cols-2 gap-4">
+                                <x-campo nombre="cantidad" id="traslado-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required
+                                         :ayuda="__('lagos.maximo', ['cantidad' => $numero($siembra->peces_vivos)])" />
+                                <x-campo nombre="peso_promedio_g" id="traslado-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_promedio_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal"
+                                         :valor="$siembra->peso_actual_g" required />
+                            </div>
+                            <x-campo nombre="observaciones" id="traslado-obs-{{ $siembra->id }}" :etiqueta="__('lagos.observaciones_opcional')" />
+                            {{-- Agua fría con cálida en el lago de destino: advertencia que se confirma --}}
+                            <label class="flex min-h-12 items-start gap-3 rounded-ficha border border-atencion-borde bg-atencion-fondo p-4 text-base font-semibold text-atencion">
+                                <input type="checkbox" name="confirmar_clima" value="1" class="mt-0.5 h-5 w-5 shrink-0 rounded">
+                                <span>{{ __('lagos.confirmar_clima') }}</span>
+                            </label>
+                            @error('confirmar_clima')
+                                <p class="flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
+                            @enderror
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                                <x-boton>{{ __('lagos.trasladar') }}</x-boton>
+                            </div>
+                        </x-formulario>
+                    </x-modal>
+                @endif
+                @endforeach
             </section>
 
             <section aria-labelledby="historial-titulo">

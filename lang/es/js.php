@@ -34,6 +34,7 @@ return [
     'campo_sin_concentrado' => 'No hay concentrado en bodega según los datos guardados.',
     'campo_lote' => 'Lote',
     'campo_opcion_lote' => ':especie · desde :fecha · :vivos vivos',
+    'campo_opcion_lote_numero' => 'Lote :numero · :origen · :vivos vivos',
     'campo_peces_muertos' => 'Peces muertos',
     'campo_peces_pesados' => 'Peces pesados',
     'muestreo_antes' => 'Peso promedio anterior: :anterior',

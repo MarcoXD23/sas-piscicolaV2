@@ -10,6 +10,7 @@ use App\Models\StockAlimento;
 use App\Models\Turno;
 use App\Models\User;
 use App\Support\CalculadoraRacion;
+use App\Support\LotesPorEspecie;
 use App\Support\Region;
 use App\Support\UnidadesPeso;
 use Illuminate\Support\Collection;
@@ -84,7 +85,7 @@ final class PaqueteTrabajo
         // Celador: todos los lagos (ronda y medición). Ración, mortalidad y aviso: solo lagos con siembra activa.
         $lagos = $secciones === [] ? collect() : Lago::query()
             ->when(! $tiene(self::RONDA, self::MEDICION), fn ($consulta) => $consulta->whereHas('siembrasActivas'))
-            ->with(['siembrasActivas.especie', 'ultimaMedicion'])
+            ->with(['siembrasActivas.especie', 'siembrasActivas.lagoOrigen', 'ultimaMedicion'])
             ->when($tiene(self::AVISO_PESCA), fn ($consulta) => $consulta->withExists('avisoPescaPendiente as aviso_pendiente'))
             ->orderBy('nombre')
             ->limit($maximo + 1)
@@ -125,7 +126,21 @@ final class PaqueteTrabajo
     /** @param  Collection<int, Lago>  $lagos */
     private static function lagos(Collection $lagos, \Closure $tiene): array
     {
-        return $lagos->map(fn (Lago $lago) => array_filter([
+        return $lagos->map(function (Lago $lago) use ($tiene) {
+            // Con varios lotes de la misma especie: número del lote dentro de su especie y su origen, para elegirlo
+            $numeros = LotesPorEspecie::numeros($lago->siembrasActivas);
+            $porEspecie = $lago->siembrasActivas->countBy(fn (Siembra $s) => (string) ($s->especie_id ?? $s->nombre_especie));
+
+            return self::lago($lago, $tiene, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
+                ? ['lote' => $numeros[$siembra->id], 'origen' => $siembra->textoOrigen()]
+                : []);
+        })->values()->all();
+    }
+
+    /** @param  \Closure(Siembra): array<string, mixed>  $lote */
+    private static function lago(Lago $lago, \Closure $tiene, \Closure $lote): array
+    {
+        return array_filter([
             'id' => $lago->id,
             'nombre' => $lago->nombre,
             'siembras' => $lago->siembrasActivas->map(fn (Siembra $siembra) => array_filter([
@@ -133,6 +148,7 @@ final class PaqueteTrabajo
                 'especie' => $siembra->nombre_especie,
                 'fecha' => $siembra->fecha->format('Y-m-d'),
                 'peces_vivos' => (int) $siembra->peces_vivos,
+            ] + $lote($siembra) + [
                 'url_mortalidad' => $tiene(self::MORTALIDAD) ? route('admin.mortalidades.store', $siembra->id, absolute: false) : null,
                 // Muestreo: el peso de ahora (para mostrar la diferencia; la que vale la calcula el servidor al llegar)
                 'peso_actual_g' => $tiene(self::MUESTREO) ? round((float) $siembra->peso_actual_g, 2) : null,
@@ -143,7 +159,7 @@ final class PaqueteTrabajo
             'url_racion' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? route('admin.raciones.store', $lago->id, absolute: false) : null,
             'url_aviso_pesca' => $tiene(self::AVISO_PESCA) && $lago->siembrasActivas->isNotEmpty() ? route('admin.avisos-pesca.store', $lago, absolute: false) : null,
             'url_medicion' => $tiene(self::MEDICION) ? route('noche.mediciones.store', $lago, absolute: false) : null,
-        ], fn ($valor) => $valor !== null))->values()->all();
+        ], fn ($valor) => $valor !== null);
     }
 
     /** Concentrados con existencias (lo recibido en bodega). Solo informativo: el servidor descuenta al llegar. */

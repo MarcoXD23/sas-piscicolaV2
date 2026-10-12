@@ -25,7 +25,7 @@
             @foreach ($lagos as $fila)
                 <tr>
                     <td data-label="{{ __('reportes.lago') }}" class="font-semibold">{{ $fila['lago']->nombre }}</td>
-                    <td data-label="{{ __('reportes.especies_hoy') }}">{{ $fila['lago']->siembrasActivas->pluck('nombre_especie')->join(', ') ?: '—' }}</td>
+                    <td data-label="{{ __('reportes.especies_hoy') }}">{{ \App\Support\LotesPorEspecie::nombres($fila['lago']->siembrasActivas) ?: '—' }}</td>
                     <td data-label="{{ __('reportes.mortalidad_mes') }}" class="tabular-nums">{{ $numero($fila['mortalidad']) }}</td>
                     <td data-label="{{ __('reportes.alimento_mes') }}" class="tabular-nums">{{ $numero($fila['alimento_kg'], 1) }} kg</td>
                     <td data-label="{{ __('reportes.muestreos') }}" class="tabular-nums">{{ $fila['muestreos'] }}</td>
