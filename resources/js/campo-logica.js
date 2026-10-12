@@ -4,6 +4,7 @@
  * revisar todo al llegar (turno, bodega, peces vivos): esto solo evita enviar algo que seguro se rechaza.
  * Los errores son [clave de texto, datos]: la pantalla los traduce con t() (lang/es/js.php).
  */
+import { aCentesimas, FACTORES_GRAMOS, GRAMOS, maximoEnUnidad, promedio, texto as textoPeso } from './unidades-peso.js';
 
 export const SECCIONES = ['racion', 'mortalidad', 'muestreo', 'aviso_pesca', 'ronda', 'medicion'];
 
@@ -15,12 +16,18 @@ export const numero = (valor) => {
 
 const texto = (valor) => String(valor ?? '').trim();
 
-/** Peso promedio del muestreo en gramos, con 2 decimales como lo calcula el servidor; null si falta un dato. */
-export const promedioMuestreo = (peces, pesoTotal) => {
+/** Factores de las unidades del muestreo según el paquete (uno viejo, sin factores: solo gramos). */
+export const factoresMuestreo = (paquete) => paquete?.muestreo?.factores ?? FACTORES_GRAMOS;
+
+/**
+ * Peso promedio por pez del muestreo, en centésimas de gramo, calculado con enteros igual que el servidor
+ * (App\Support\UnidadesPeso); null si falta un dato o no es válido.
+ */
+export const promedioMuestreo = (peces, pesoTotal, unidad = GRAMOS, factores = FACTORES_GRAMOS) => {
     const n = numero(peces);
-    const gramos = numero(pesoTotal);
-    if (!Number.isInteger(n) || n < 1 || !Number.isFinite(gramos) || gramos <= 0) return null;
-    return Math.round((gramos / n) * 100) / 100;
+    const centesimas = aCentesimas(texto(pesoTotal), unidad, factores);
+    if (!Number.isInteger(n) || n < 1 || centesimas === null || centesimas <= 0) return null;
+    return promedio(centesimas, n);
 };
 
 /** Antigüedad del paquete: minutos, horas y si ya es viejo (más de «horasViejo»). */
@@ -94,9 +101,18 @@ export const validar = (seccion, datos, paquete, hoy) => {
         const peces = numero(datos.peces_pesados);
         const [minPeces, maxPeces] = [rangos.peces_pesados?.min ?? 1, rangos.peces_pesados?.max ?? 100000];
         if (!Number.isInteger(peces) || peces < minPeces || peces > maxPeces) errores.peces_pesados = ['campo_error_entero_rango', { min: minPeces, max: maxPeces }];
-        const gramos = numero(datos.peso_total_g);
+        // Peso total: primero que sea un número válido, después convertir y recién ahí el rango en gramos (como el servidor)
+        const factores = factoresMuestreo(paquete);
+        const unidad = texto(datos.unidad) || GRAMOS;
         const [minPeso, maxPeso] = [rangos.peso_total_g?.min ?? 0.1, rangos.peso_total_g?.max ?? 999999];
-        if (!Number.isFinite(gramos) || gramos < minPeso || gramos > maxPeso) errores.peso_total_g = ['campo_error_rango', { min: minPeso, max: maxPeso }];
+        const centesimas = aCentesimas(texto(datos.peso_total), unidad, factores);
+        if (!factores[unidad]) errores.unidad = ['campo_error_unidad', {}];
+        else if (centesimas === null) errores.peso_total = ['campo_error_peso_numero', {}];
+        else if (centesimas < Math.round(minPeso * 100) || centesimas > Math.round(maxPeso * 100)) {
+            errores.peso_total = unidad === GRAMOS
+                ? ['campo_error_rango', { min: minPeso, max: maxPeso }]
+                : ['campo_error_rango_peso', { min: minPeso, max: maxPeso, maximo: maximoEnUnidad(Math.round(maxPeso * 100), unidad, factores), unidad }];
+        }
         fecha('fecha', siembra?.fecha ?? null);
     }
 
@@ -162,12 +178,16 @@ export const armarRegistro = (seccion, datos, paquete, t) => {
     if (seccion === 'muestreo') {
         const siembra = siembraDe(lago, datos.siembra_id);
         const peces = String(numero(datos.peces_pesados));
-        const gramos = decimal(datos.peso_total_g);
+        const factores = factoresMuestreo(paquete);
+        const unidad = texto(datos.unidad) || GRAMOS;
+        const valor = texto(datos.peso_total);
+        // El servidor convierte: se envían el valor tal como se escribió y la unidad
         return {
             url: siembra.url_muestreo,
-            campos: [['fecha', texto(datos.fecha)], ['peces_pesados', peces], ['peso_total_g', gramos]],
+            campos: [['fecha', texto(datos.fecha)], ['peces_pesados', peces], ['peso_total', valor], ['unidad', unidad]],
             detalle: [[t('campo_lago'), lago.nombre], [t('campo_lote'), siembra.especie], [t('campo_fecha'), texto(datos.fecha)],
-                [t('campo_peces_pesados'), peces], [t('campo_peso_total_g'), gramos], [t('campo_peso_promedio_g'), String(promedioMuestreo(peces, gramos))]],
+                [t('campo_peces_pesados'), peces], [t('campo_peso_total'), `${valor} ${unidad}`],
+                [t('campo_peso_promedio'), textoPeso(promedioMuestreo(peces, valor, unidad, factores), unidad, factores)]],
             resumen: t('campo_resumen_muestreo', { especie: siembra.especie, lago: lago.nombre }),
         };
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\PrimerUso;
 use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\Region;
+use App\Support\UnidadesPeso;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,7 @@ class AjustesFincaController extends Controller
                 ...($finca->pais ? Region::zonasDelPais($finca->pais) : []),
                 ...Region::zonasValidas(),
             ])),
+            'unidadesPeso' => UnidadesPeso::opciones(),
             'idiomas' => collect(Region::IDIOMAS)->mapWithKeys(fn ($idioma) => [$idioma => __("region.idiomas.{$idioma}")])->all(),
         ]);
     }
@@ -47,6 +49,8 @@ class AjustesFincaController extends Controller
             'alerta_mortalidad_porcentaje' => ['sometimes', 'required', 'numeric', 'min:0.1', 'max:100'],
             'alerta_mortalidad_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:60'],
             'alerta_despacho_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:30'],
+            // Unidad que sale primero en el muestreo (lo guardado sigue en gramos)
+            'unidad_peso_muestreo' => ['sometimes', 'required', Rule::in(UnidadesPeso::UNIDADES)],
         ], [
             'zona_horaria.in' => __('region.ajustes.zona_invalida'),
             'idioma.in' => __('region.ajustes.idioma_invalido'),

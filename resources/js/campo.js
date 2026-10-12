@@ -9,7 +9,8 @@
  * - Todo texto que llega del paquete se escribe con textContent: nunca se interpreta como HTML.
  */
 import { leerSesionActiva, operacion, PAQUETES } from './almacen';
-import { antiguedad, armarRegistro, avisarFueraDeTurno, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
+import { antiguedad, armarRegistro, avisarFueraDeTurno, factoresMuestreo, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
+import { centesimasDeGramos, leerRecordada, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 import { leerPaquete } from './paquete';
 import { debeRenovar, paqueteValido } from './paquete-logica';
 import { desplazar } from './sin-conexion';
@@ -202,30 +203,41 @@ export const iniciarCampo = (t, cola) => {
                 campos.push(grupo('cantidad', t('campo_peces_muertos'), entrada('text', { inputmode: 'numeric', autocomplete: 'off' })), fecha());
             } else if (seccion === 'muestreo') {
                 const peces = entrada('text', { inputmode: 'numeric', autocomplete: 'off' });
-                const gramos = entrada('text', { inputmode: 'decimal', autocomplete: 'off' });
-                const medidas = el('div', 'grid grid-cols-2 gap-4');
-                medidas.append(grupo('peces_pesados', t('campo_peces_pesados'), peces), grupo('peso_total_g', t('campo_peso_total_g'), gramos));
-                // Promedio en vivo y diferencia con el peso del paquete (la que vale la calcula el servidor al llegar)
+                const peso = entrada('text', { inputmode: 'decimal', autocomplete: 'off' });
+                // Unidad del peso total: la última que eligió esta persona, la de la finca o gramos. Con un paquete viejo
+                // (sin unidades) no hay selector: todo en gramos, como antes.
+                const factores = factoresMuestreo(paquete);
+                const unidades = (paquete.muestreo?.unidades ?? ['g']).filter((unidad) => factores[unidad]);
+                const unidad = lista(unidades.map((codigo) => [codigo, t(`campo_unidad_${codigo}`)]));
+                unidad.value = unidadInicial(leerRecordada(clave), paquete.muestreo?.unidad_defecto, factores);
+                unidad.addEventListener('change', () => recordar(clave, unidad.value));
+                const grupoUnidad = grupo('unidad', t('campo_unidad'), unidad);
+                grupoUnidad.hidden = unidades.length < 2;
+                const pesoYUnidad = el('div', 'grid grid-cols-[1fr_auto] items-start gap-3');
+                pesoYUnidad.append(grupo('peso_total', t('campo_peso_total'), peso), grupoUnidad);
+                // Promedio en vivo en gramos y en la unidad elegida, y diferencia con el peso del paquete
+                // (con enteros, igual que el servidor; la que vale la calcula el servidor al llegar)
                 const promedio = el('p', 'rounded-ficha bg-papel-hondo p-4 text-base text-tinta', t('campo_promedio_vacio'));
                 promedio.setAttribute('aria-live', 'polite');
-                const formato = (n) => n.toLocaleString(document.documentElement.lang, { maximumFractionDigits: 2 });
+                const idioma = document.documentElement.lang;
                 const calcular = () => {
-                    const valor = promedioMuestreo(peces.value, gramos.value);
+                    const valor = promedioMuestreo(peces.value, peso.value, unidad.value, factores);
                     const siembra = lagos.find((uno) => String(uno.id) === selectorLago.value)?.siembras?.find((una) => String(una.id) === lote.value);
+                    const enTexto = (centesimas) => textoPeso(centesimas, unidad.value, factores, idioma);
                     if (valor === null) {
                         promedio.textContent = t('campo_promedio_vacio');
                     } else if (siembra) {
-                        const signo = valor >= siembra.peso_actual_g ? '+' : '−';
+                        const anterior = centesimasDeGramos(siembra.peso_actual_g);
                         promedio.textContent = t('campo_promedio_diferencia', {
-                            promedio: formato(valor), anterior: formato(siembra.peso_actual_g), diferencia: signo + formato(Math.abs(valor - siembra.peso_actual_g)),
+                            promedio: enTexto(valor), anterior: enTexto(anterior), diferencia: (valor >= anterior ? '+' : '−') + enTexto(Math.abs(valor - anterior)),
                         });
                     } else {
-                        promedio.textContent = t('campo_promedio', { promedio: formato(valor) });
+                        promedio.textContent = t('campo_promedio', { promedio: enTexto(valor) });
                     }
                 };
-                [peces, gramos].forEach((campo) => campo.addEventListener('input', calcular));
-                [selectorLago, lote].forEach((campo) => campo.addEventListener('change', calcular));
-                campos.push(medidas, promedio, fecha());
+                [peces, peso].forEach((campo) => campo.addEventListener('input', calcular));
+                [selectorLago, lote, unidad].forEach((campo) => campo.addEventListener('change', calcular));
+                campos.push(grupo('peces_pesados', t('campo_peces_pesados'), peces), pesoYUnidad, promedio, fecha());
             } else {
                 const pendiente = el('p', CLASE_AVISO, t('campo_error_aviso_pendiente'));
                 pendiente.dataset.campoAvisoPendiente = '';

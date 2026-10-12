@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'unidades_peso' => [
+        'g' => 'Gramos (g)',
+        'kg' => 'Kilos (kg)',
+        'lb' => 'Libras (lb)',
+    ],
     'anteriores' => 'Anteriores',
     'cancelar' => 'Cancelar',
     'desde' => 'Desde',

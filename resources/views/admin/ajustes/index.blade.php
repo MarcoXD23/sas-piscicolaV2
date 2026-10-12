@@ -31,6 +31,9 @@
                          :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
             </fieldset>
 
+            <x-seleccion nombre="unidad_peso_muestreo" :etiqueta="__('region.ajustes.unidad_peso_muestreo')" :valor="$finca->unidad_peso_muestreo"
+                         :opciones="$unidadesPeso" :ayuda="__('region.ajustes.unidad_peso_muestreo_ayuda')" required />
+
             <x-boton>{{ __('region.ajustes.guardar') }}</x-boton>
         </x-formulario>
     </x-tarjeta>

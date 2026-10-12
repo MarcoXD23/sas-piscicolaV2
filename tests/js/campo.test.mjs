@@ -22,7 +22,8 @@ const paquete = {
         { campo: 'temperatura_c', etiqueta: 'Temperatura (°C)', min: 0, max: 45, paso: 0.1 },
         { campo: 'transparencia_cm', etiqueta: 'Transparencia (cm)', min: 0, max: 500, paso: 1 },
     ],
-    muestreo: { peces_pesados: { min: 1, max: 100000 }, peso_total_g: { min: 0.1, max: 999999 } },
+    muestreo: { peces_pesados: { min: 1, max: 100000 }, peso_total_g: { min: 0.1, max: 999999 },
+        unidades: ['g', 'kg', 'lb'], factores: { g: [100, 1], kg: [100000, 1], lb: [45359237, 1000] }, unidad_defecto: 'g' },
     urls: { ronda: '/noche/rondas' },
     turnos: [{ rol: 'trabajador', inicia_at: '2026-10-08T11:00:00Z', termina_at: '2026-10-08T19:00:00Z' }],
     exige_turno: { racion: true, mortalidad: true, aviso_pesca: true, ronda: true, medicion: true },
@@ -123,15 +124,15 @@ test('el resumen de errores sigue el orden de los campos en pantalla', () => {
 });
 
 test('muestreo: mismos límites que el servidor, lote del lago y no antes de la siembra', () => {
-    const bien = { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total_g: '1250,5', fecha: HOY };
+    const bien = { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total: '1250,5', unidad: 'g', fecha: HOY };
     assert.deepEqual(validar('muestreo', bien, paquete, HOY), {});
     // Límites: peces enteros de 1 a 100.000; peso de 0,1 a 999.999 g
-    assert.deepEqual(claves(validar('muestreo', { ...bien, peces_pesados: '0', peso_total_g: '0,05' }, paquete, HOY)),
-        { peces_pesados: 'campo_error_entero_rango', peso_total_g: 'campo_error_rango' });
+    assert.deepEqual(claves(validar('muestreo', { ...bien, peces_pesados: '0', peso_total: '0,09' }, paquete, HOY)),
+        { peces_pesados: 'campo_error_entero_rango', peso_total: 'campo_error_rango' });
     assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '100001' }, paquete, HOY).peces_pesados, ['campo_error_entero_rango', { min: 1, max: 100000 }]);
     assert.equal(validar('muestreo', { ...bien, peces_pesados: '2.5' }, paquete, HOY).peces_pesados[0], 'campo_error_entero_rango');
-    assert.deepEqual(validar('muestreo', { ...bien, peso_total_g: '1000000' }, paquete, HOY).peso_total_g, ['campo_error_rango', { min: 0.1, max: 999999 }]);
-    assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '100000', peso_total_g: '0,1' }, paquete, HOY), {});
+    assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '100000', peso_total: '0,1' }, paquete, HOY), {});
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '999999' }, paquete, HOY), {});
     // Como el servidor: los peces pesados pueden ser más que los vivos del paquete
     assert.deepEqual(validar('muestreo', { ...bien, peces_pesados: '5000' }, paquete, HOY), {});
     assert.equal(validar('muestreo', { ...bien, fecha: '2026-10-09' }, paquete, HOY).fecha[0], 'campo_error_fecha_futura');
@@ -140,18 +141,45 @@ test('muestreo: mismos límites que el servidor, lote del lago y no antes de la 
     assert.equal(validar('muestreo', { ...bien, lago_id: '2', siembra_id: '8' }, paquete, HOY).siembra_id[0], 'campo_error_siembra');
 });
 
-test('muestreo: promedio con 2 decimales como el servidor', () => {
-    assert.equal(promedioMuestreo('20', '1250,5'), 62.53);   // 62,525 → 62,53
-    assert.equal(promedioMuestreo('3', '100'), 33.33);
+test('muestreo: primero un número válido, después convertir y el rango en gramos, en cada unidad', () => {
+    const bien = { lago_id: '1', siembra_id: '7', peces_pesados: '10', fecha: HOY };
+    for (const valor of ['abc', '1e3', '-1', '1.2345', '1234567', 'Infinity', '']) {
+        assert.equal(validar('muestreo', { ...bien, peso_total: valor, unidad: 'kg' }, paquete, HOY).peso_total[0], 'campo_error_peso_numero', valor);
+    }
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '999.999', unidad: 'kg' }, paquete, HOY), {});
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '1000', unidad: 'kg' }, paquete, HOY).peso_total,
+        ['campo_error_rango_peso', { min: 0.1, max: 999999, maximo: 999.999, unidad: 'kg' }]);
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '2204.620', unidad: 'lb' }, paquete, HOY), {});
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '2204.622', unidad: 'lb' }, paquete, HOY).peso_total,
+        ['campo_error_rango_peso', { min: 0.1, max: 999999, maximo: 2204.62, unidad: 'lb' }]);
+    assert.deepEqual(validar('muestreo', { ...bien, peso_total: '0,5', unidad: 'lb' }, paquete, HOY), {});
+    assert.equal(validar('muestreo', { ...bien, peso_total: '1', unidad: 'onzas' }, paquete, HOY).unidad[0], 'campo_error_unidad');
+});
+
+test('muestreo: promedio por pez con enteros, como el servidor', () => {
+    assert.equal(promedioMuestreo('20', '1250,5'), 6253);   // 62,525 g → 62,53 g (centésimas)
+    assert.equal(promedioMuestreo('3', '100'), 3333);
+    assert.equal(promedioMuestreo('1', '1', 'lb', paquete.muestreo.factores), 45359);
+    assert.equal(promedioMuestreo('2', '0,5', 'lb', paquete.muestreo.factores), 11340);
     assert.equal(promedioMuestreo('', '100'), null);
     assert.equal(promedioMuestreo('0', '100'), null);
     assert.equal(promedioMuestreo('2,5', '100'), null);
 });
 
-test('muestreo: el registro armado va a la siembra con los tres campos', () => {
-    const registro = armarRegistro('muestreo', { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total_g: '1250,5', fecha: HOY }, paquete, t);
+test('muestreo: el registro lleva el valor escrito y la unidad (el servidor convierte)', () => {
+    const registro = armarRegistro('muestreo', { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total: '2,5', unidad: 'lb', fecha: HOY }, paquete, t);
     assert.equal(registro.url, '/admin/siembras/7/muestreos');
-    assert.deepEqual(registro.campos, [['fecha', HOY], ['peces_pesados', '20'], ['peso_total_g', '1250.5']]);
-    assert.deepEqual(registro.detalle.at(-1), ['campo_peso_promedio_g', '62.53']);
+    assert.deepEqual(registro.campos, [['fecha', HOY], ['peces_pesados', '20'], ['peso_total', '2,5'], ['unidad', 'lb']]);
+    assert.deepEqual(registro.detalle.at(-2), ['campo_peso_total', '2,5 lb']);
+    assert.match(registro.detalle.at(-1)[1], /^56[.,]70 g \(0[.,]125 lb\)$/);   // 1.133,98 g ÷ 20
     assert.equal(registro.resumen, 'campo_resumen_muestreo{"especie":"Cachama blanca","lago":"L01"}');
+});
+
+test('muestreo con un paquete viejo (sin unidades ni factores): sigue en gramos', () => {
+    const viejo = { ...paquete, muestreo: { peces_pesados: { min: 1, max: 100000 }, peso_total_g: { min: 0.1, max: 999999 } } };
+    const datos = { lago_id: '1', siembra_id: '7', peces_pesados: '20', peso_total: '1250,5', fecha: HOY };
+    assert.deepEqual(validar('muestreo', datos, viejo, HOY), {});
+    assert.deepEqual(armarRegistro('muestreo', datos, viejo, t).campos, [['fecha', HOY], ['peces_pesados', '20'], ['peso_total', '1250,5'], ['unidad', 'g']]);
+    // En libras no se puede: el paquete viejo no trae el factor
+    assert.equal(validar('muestreo', { ...datos, unidad: 'lb' }, viejo, HOY).unidad[0], 'campo_error_unidad');
 });

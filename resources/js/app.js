@@ -3,6 +3,7 @@ import pesaje from './pesaje';
 import { iniciarCampo } from './campo';
 import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
+import { aCentesimas, leerRecordada, promedio as promedioPeso, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 
 window.Alpine = Alpine;
 Alpine.data('pesaje', pesaje);   // tabla de pesadas de la cosecha
@@ -45,26 +46,43 @@ document.addEventListener('submit', (evento) => {
 
 document.querySelectorAll('dialog[data-abrir-al-cargar]').forEach((ventana) => ventana.showModal());
 
-// Muestreo: peso promedio en vivo (peso total ÷ peces pesados). Solo informativo: lo que se guarda lo calcula el servidor.
+// Muestreo: peso promedio por pez en vivo, en gramos y en la unidad elegida, con el «antes» y la diferencia. Se calcula
+// con enteros igual que el servidor (resources/js/unidades-peso.js). Solo informativo: lo que se guarda lo calcula el
+// servidor. La unidad elegida se recuerda por persona (la primera vez, la de la finca).
 document.querySelectorAll('[data-muestreo]').forEach((muestreo) => {
     const peces = muestreo.querySelector('[data-peces]');
     const pesoTotal = muestreo.querySelector('[data-peso-total]');
+    const unidad = muestreo.querySelector('[data-unidad]');
     const promedio = muestreo.querySelector('[data-promedio]');
-    const leer = (campo) => Number.parseFloat(String(campo.value).replace(',', '.'));
+    const anteriorTexto = muestreo.querySelector('[data-anterior-texto]');
+    const factores = JSON.parse(muestreo.dataset.factores || '{"g":[100,1]}');
+    const anterior = Number(muestreo.dataset.anterior) || 0;
+    const clave = document.body.dataset.colaClave;
+    const idioma = document.documentElement.lang;
+    unidad.value = unidadInicial(leerRecordada(clave), muestreo.dataset.unidadDefecto, factores);
 
     const calcular = () => {
-        const cantidad = leer(peces);
-        const total = leer(pesoTotal);
+        const cantidad = Number(String(peces.value).trim());
+        const centesimas = aCentesimas(String(pesoTotal.value).trim(), unidad.value, factores);
         // Sin datos, con cero peces o valores no válidos no se divide
-        if (!Number.isFinite(cantidad) || !Number.isFinite(total) || cantidad <= 0 || total <= 0) {
+        if (!Number.isInteger(cantidad) || cantidad <= 0 || centesimas === null || centesimas <= 0) {
             promedio.textContent = '—';
+            anteriorTexto.textContent = t('muestreo_antes', { anterior: textoPeso(anterior, unidad.value, factores, idioma) });
             return;
         }
-        const valor = (total / cantidad).toLocaleString(document.documentElement.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        promedio.textContent = t('gramos', { valor });
+        const valor = promedioPeso(centesimas, cantidad);
+        promedio.textContent = textoPeso(valor, unidad.value, factores, idioma);
+        anteriorTexto.textContent = t('muestreo_antes_y_diferencia', {
+            anterior: textoPeso(anterior, unidad.value, factores, idioma),
+            diferencia: (valor >= anterior ? '+' : '−') + textoPeso(Math.abs(valor - anterior), unidad.value, factores, idioma),
+        });
     };
 
     [peces, pesoTotal].forEach((campo) => campo.addEventListener('input', calcular));
+    unidad.addEventListener('change', () => {
+        recordar(clave, unidad.value);
+        calcular();
+    });
     calcular();
 });
 

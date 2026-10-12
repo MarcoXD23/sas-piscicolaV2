@@ -23,6 +23,8 @@ return [
         'idioma' => 'Idioma',
         'guardar' => 'Guardar ajustes',
         'guardados' => 'Ajustes de la finca guardados.',
+        'unidad_peso_muestreo' => 'Unidad del peso en el muestreo',
+        'unidad_peso_muestreo_ayuda' => 'La que aparece primero al registrar un muestreo; cada persona puede elegir otra y el teléfono la recuerda. Lo guardado siempre queda en gramos.',
         'hora_actual' => 'Hora actual en la finca: :hora',
         'pais_invalido' => 'Elige un país válido.',
         'zona_invalida' => 'Elige una zona horaria válida.',

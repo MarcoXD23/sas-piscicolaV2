@@ -80,6 +80,7 @@ return [
     'alertas_medicion' => '{1} 1 alerta|[2,*] :cantidad alertas',
     'sin_conexion' => 'registrado sin conexión, recibido el :llegada',
     'reloj_corregido' => 'hora del teléfono corregida en :minutos minutos',
+    'escrito' => 'peso total escrito: :valor',
     'solo_insercion' => 'La bitácora es de solo inserción: sus registros no se editan ni se borran.',
     'subtitulo' => 'Quién hizo qué, en qué lago y cuándo. Los registros no se pueden editar ni borrar.',
     'titulo' => 'Bitácora',

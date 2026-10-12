@@ -86,7 +86,8 @@ class RegistroRapidoMuestreoTest extends TestCase
 
         $this->assertContains(PaqueteTrabajo::MUESTREO, $paquete['secciones']);
         $this->assertFalse($paquete['exige_turno'][PaqueteTrabajo::MUESTREO]);
-        $this->assertSame(['peces_pesados' => ['min' => 1, 'max' => 100000], 'peso_total_g' => ['min' => 0.1, 'max' => 999999]], $paquete['muestreo']);
+        $this->assertSame(['peces_pesados' => ['min' => 1, 'max' => 100000], 'peso_total_g' => ['min' => 0.1, 'max' => 999999],
+            'unidades' => ['g', 'kg', 'lb'], 'factores' => ['g' => [100, 1], 'kg' => [100000, 1], 'lb' => [45359237, 1000]], 'unidad_defecto' => 'g'], $paquete['muestreo']);
         $siembra = $paquete['lagos'][0]['siembras'][0];
         $this->assertEquals(40, $siembra['peso_actual_g']);
         $this->assertSame(route('admin.muestreos.store', $this->siembra->id, absolute: false), $siembra['url_muestreo']);

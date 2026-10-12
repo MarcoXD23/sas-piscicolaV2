@@ -11,6 +11,7 @@ use App\Models\Turno;
 use App\Models\User;
 use App\Support\CalculadoraRacion;
 use App\Support\Region;
+use App\Support\UnidadesPeso;
 use Illuminate\Support\Collection;
 
 /**
@@ -105,7 +106,13 @@ final class PaqueteTrabajo
             'tipos_ronda' => $tiene(self::RONDA) ? collect(Ronda::opciones())->map(fn ($texto, $codigo) => ['codigo' => $codigo, 'texto' => $texto])->values()->all() : [],
             'sin_novedad' => Ronda::SIN_NOVEDAD,
             'medicion' => $tiene(self::MEDICION) ? self::medicion() : [],
-            'muestreo' => $tiene(self::MUESTREO) ? collect(self::RANGOS_MUESTREO)->map(fn (array $rango) => ['min' => $rango[0], 'max' => $rango[1]])->all() : [],
+            // Límites en gramos (después de convertir), unidades con sus factores exactos (los mismos de UnidadesPeso) y la
+            // unidad por defecto de la finca. Un teléfono con un paquete viejo, sin unidades, sigue en gramos.
+            'muestreo' => $tiene(self::MUESTREO) ? collect(self::RANGOS_MUESTREO)->map(fn (array $rango) => ['min' => $rango[0], 'max' => $rango[1]])->all() + [
+                'unidades' => UnidadesPeso::UNIDADES,
+                'factores' => UnidadesPeso::FACTORES,
+                'unidad_defecto' => UnidadesPeso::valida($usuario->tenant?->unidad_peso_muestreo) ? $usuario->tenant->unidad_peso_muestreo : UnidadesPeso::GRAMOS,
+            ] : [],
             'turnos' => self::turnos($usuario, $secciones),
             // Secciones que exigen turno a esta persona (el administrador registra ración, mortalidad y muestreo sin turno)
             'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! (in_array($seccion, self::SIN_TURNO_ADMINISTRADOR, true) && $usuario->tieneRol(Rol::ADMINISTRADOR))])->all(),

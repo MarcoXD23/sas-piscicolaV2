@@ -92,7 +92,7 @@ class EtapaBTest extends TestCase
 
         // El cálculo en vivo no divide con campos vacíos o en cero
         $js = file_get_contents(resource_path('js/app.js'));
-        $this->assertStringContainsString('cantidad <= 0 || total <= 0', $js);
+        $this->assertStringContainsString('cantidad <= 0 || centesimas === null || centesimas <= 0', $js);
     }
 
     // --- 2. Aviso «listo para pescar» ---

@@ -237,8 +237,8 @@ Para registrar sin señal no hace falta haber abierto antes ninguna pantalla:
 - **Registro rápido (`/campo`):** una sola página sin datos, que el service worker guarda al instalarse. Arma los formularios con el paquete y valida en el teléfono con las reglas del servidor.
   Muestra «Datos del … (hace …)», en ámbar si pasan de 12 horas, y avisa si según los turnos guardados la persona no está en turno.
   Se abre desde el menú (administrador, trabajador y celador), desde la franja «Sin conexión» y desde la página «Sin conexión» (`offline.html`).
-- **Muestreo (administrador):** junto al lago, sin señal. Lago, lote, fecha, peces pesados y peso total en gramos. El teléfono muestra el promedio en vivo (2 decimales, como el servidor) y la diferencia con el peso del paquete; la que vale es la que calcula el servidor al llegar.
-  Valida con las reglas del servidor: peces enteros de 1 a 100.000, peso de 0,1 a 999.999 g, fecha no posterior a hoy ni anterior a la siembra. Si la siembra se finalizó mientras tanto, el registro queda en «Rechazados».
+- **Muestreo (administrador):** junto al lago, sin señal. Lago, lote, fecha, peces pesados y peso total en gramos, kilos o libras (ver **Unidades del peso en el muestreo**). El teléfono muestra el promedio en vivo y la diferencia con el peso del paquete; la que vale es la que calcula el servidor al llegar.
+  Valida con las reglas del servidor: peces enteros de 1 a 100.000, peso de 0,1 a 999.999 g después de convertir, fecha no posterior a hoy ni anterior a la siembra. Si la siembra se finalizó mientras tanto, el registro queda en «Rechazados».
   El muestreo siempre queda en el historial. El peso actual y la biomasa solo cambian si es el más reciente por fecha de la siembra; con la misma fecha, gana el que llega después. Si no es el más reciente, la respuesta dice «Guardado en el historial. El peso actual sigue siendo X g».
   La fecha se compara con el día en que de verdad se registró (`MomentoRegistro`): un muestreo de las 23:50 enviado después de medianoche conserva su día. El modal de muestreo en Lagos sigue necesitando conexión.
 - **Envío:** los registros van a la misma cola: uuid, hora real, corrección del reloj y bitácora. Antes de enviar se pide un token vigente (`GET /campo/token`), nunca el de una página guardada. Al volver la señal salen solos y la app avisa «Se enviaron N registros».
@@ -298,6 +298,20 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Teléfono perdido:** el propietario quita los dos pasos a una persona de su personal desde **Personal** (queda en la bitácora); para el propietario: `php artisan piscicola:quitar-dos-pasos correo@…`.
 - El inicio de propietario y administrador avisa mientras no la tengan activa. En el panel de plataforma es obligatoria (ver «Panel de plataforma»).
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
+
+## Unidades del peso en el muestreo
+
+- El peso total del muestreo se escribe en **gramos, kilos o libras**, con un selector junto al campo, en el modal de Lagos y en Registro rápido. **Lo guardado siempre queda en gramos**; el historial y la biomasa siguen en gramos.
+- **El servidor convierte** (`App\Support\UnidadesPeso`: 1 kg = 1000 g, 1 lb = 453,59237 g) y no confía en la conversión del teléfono. Valida en este orden:
+  1. la unidad;
+  2. que el valor sea un número con hasta 6 cifras enteras y 3 decimales (numérico, finito y de tamaño razonable);
+  3. si llegan `peso_total` y `peso_total_g`, que coincidan en gramos;
+  4. recién después convierte y aplica el rango de 0,1 a 999.999 g. El mensaje de error dice el máximo también en la unidad elegida (999,999 kg o 2.204,620 lb).
+- **Mismo redondeo en el servidor y en el teléfono:** los dos usan aritmética entera en centésimas de gramo (BigInt en JavaScript, `resources/js/unidades-peso.js`) con redondeo a la mitad hacia arriba; nada de flotantes. Una tabla de casos compartida (`tests/fixtures/unidades-peso.json`, generada con aritmética decimal exacta) la usan la prueba de PHP y la de JavaScript.
+- **Compatibilidad:** un registro viejo de la cola, que solo trae `peso_total_g`, se toma en gramos. Un teléfono con un paquete de trabajo viejo, sin unidades ni factores, sigue registrando en gramos hasta que baja el paquete nuevo.
+- **Unidad que aparece primero:** la última que eligió esa persona en ese teléfono (por finca y persona, en `localStorage`); si no hay, la de la finca, que el propietario elige en **Ajustes** (`tenants.unidad_peso_muestreo`, gramos por defecto).
+- **Pantalla:** el promedio por pez, el «antes» y la diferencia se muestran en gramos y, entre paréntesis, en la unidad elegida: «56,70 g (0,125 lb)». La bitácora guarda los gramos y, si se escribió en otra unidad, lo escrito («peso total escrito: 2,5 lb»).
+- **Para otros formularios:** `UnidadesPeso` y `unidades-peso.js` sirven también para ración o cosecha; por ahora solo los usa el muestreo.
 
 ## Jornaleros y personas sin cuenta
 

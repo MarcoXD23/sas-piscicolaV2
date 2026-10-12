@@ -1,0 +1,239 @@
+{
+  "nota": "Generado con aritmética decimal exacta (redondeo mitad hacia arriba). Lo usan tests/Unit/UnidadesPesoTest.php y tests/js/unidades-peso.test.mjs.",
+  "conversiones": [
+    {
+      "valor": "1",
+      "unidad": "g",
+      "centesimas": 100,
+      "en_rango": true
+    },
+    {
+      "valor": "1,005",
+      "unidad": "g",
+      "centesimas": 101,
+      "en_rango": true
+    },
+    {
+      "valor": "1.005",
+      "unidad": "g",
+      "centesimas": 101,
+      "en_rango": true
+    },
+    {
+      "valor": "1,005",
+      "unidad": "kg",
+      "centesimas": 100500,
+      "en_rango": true
+    },
+    {
+      "valor": "1.005",
+      "unidad": "lb",
+      "centesimas": 45586,
+      "en_rango": true
+    },
+    {
+      "valor": "0,5",
+      "unidad": "lb",
+      "centesimas": 22680,
+      "en_rango": true
+    },
+    {
+      "valor": "0.5",
+      "unidad": "kg",
+      "centesimas": 50000,
+      "en_rango": true
+    },
+    {
+      "valor": "1",
+      "unidad": "lb",
+      "centesimas": 45359,
+      "en_rango": true
+    },
+    {
+      "valor": "1",
+      "unidad": "kg",
+      "centesimas": 100000,
+      "en_rango": true
+    },
+    {
+      "valor": "0.1",
+      "unidad": "g",
+      "centesimas": 10,
+      "en_rango": true
+    },
+    {
+      "valor": "999999",
+      "unidad": "g",
+      "centesimas": 99999900,
+      "en_rango": true
+    },
+    {
+      "valor": "999.999",
+      "unidad": "kg",
+      "centesimas": 99999900,
+      "en_rango": true
+    },
+    {
+      "valor": "2204.620",
+      "unidad": "lb",
+      "centesimas": 99999881,
+      "en_rango": true
+    },
+    {
+      "valor": "1250.5",
+      "unidad": "g",
+      "centesimas": 125050,
+      "en_rango": true
+    },
+    {
+      "valor": "2,5",
+      "unidad": "lb",
+      "centesimas": 113398,
+      "en_rango": true
+    },
+    {
+      "valor": "0.001",
+      "unidad": "lb",
+      "centesimas": 45,
+      "en_rango": true
+    },
+    {
+      "valor": "0.001",
+      "unidad": "kg",
+      "centesimas": 100,
+      "en_rango": true
+    },
+    {
+      "valor": "12",
+      "unidad": "lb",
+      "centesimas": 544311,
+      "en_rango": true
+    },
+    {
+      "valor": "0.09",
+      "unidad": "g",
+      "centesimas": 9,
+      "en_rango": false
+    },
+    {
+      "valor": "0",
+      "unidad": "g",
+      "centesimas": 0,
+      "en_rango": false
+    },
+    {
+      "valor": "1000",
+      "unidad": "kg",
+      "centesimas": 100000000,
+      "en_rango": false
+    },
+    {
+      "valor": "2204.622",
+      "unidad": "lb",
+      "centesimas": 99999972,
+      "en_rango": false
+    }
+  ],
+  "invalidos": [
+    "",
+    "abc",
+    "1e3",
+    "-1",
+    "1.2345",
+    "0.0001",
+    "1,2,3",
+    "1.000,5",
+    "1000000.5",
+    "1234567",
+    " ",
+    ".5",
+    "5.",
+    "NaN",
+    "Infinity",
+    "0x10"
+  ],
+  "promedios": [
+    {
+      "centesimas": 125050,
+      "peces": 20,
+      "promedio": 6253
+    },
+    {
+      "centesimas": 10000,
+      "peces": 3,
+      "promedio": 3333
+    },
+    {
+      "centesimas": 45359,
+      "peces": 1,
+      "promedio": 45359
+    },
+    {
+      "centesimas": 22680,
+      "peces": 2,
+      "promedio": 11340
+    },
+    {
+      "centesimas": 15,
+      "peces": 2,
+      "promedio": 8
+    },
+    {
+      "centesimas": 99999900,
+      "peces": 100000,
+      "promedio": 1000
+    }
+  ],
+  "en_unidad": [
+    {
+      "centesimas": 45359,
+      "unidad": "lb",
+      "milesimas": 1000
+    },
+    {
+      "centesimas": 100000,
+      "unidad": "kg",
+      "milesimas": 1000
+    },
+    {
+      "centesimas": 6253,
+      "unidad": "lb",
+      "milesimas": 138
+    },
+    {
+      "centesimas": 6253,
+      "unidad": "kg",
+      "milesimas": 63
+    },
+    {
+      "centesimas": 4000,
+      "unidad": "lb",
+      "milesimas": 88
+    },
+    {
+      "centesimas": 2253,
+      "unidad": "lb",
+      "milesimas": 50
+    },
+    {
+      "centesimas": 100,
+      "unidad": "g",
+      "milesimas": 1000
+    },
+    {
+      "centesimas": 99999900,
+      "unidad": "lb",
+      "milesimas": 2204620
+    },
+    {
+      "centesimas": 10,
+      "unidad": "lb",
+      "milesimas": 0
+    }
+  ],
+  "maximos": {
+    "g": "999999.000",
+    "kg": "999.999",
+    "lb": "2204.620"
+  }
+}

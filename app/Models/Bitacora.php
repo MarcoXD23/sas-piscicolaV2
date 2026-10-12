@@ -136,6 +136,11 @@ class Bitacora extends Model
             $texto .= ' · '.__('bitacora.sin_conexion', ['llegada' => $llegada]);
         }
 
+        // Peso escrito en otra unidad (kilos o libras): lo guardado está en gramos
+        if (isset($this->detalle['escrito'])) {
+            $texto .= ' · '.__('bitacora.escrito', ['valor' => $this->detalle['escrito']]);
+        }
+
         if (isset($this->detalle['reloj_corregido_min'])) {
             $texto .= ' · '.__('bitacora.reloj_corregido', ['minutos' => Formato::numero((int) $this->detalle['reloj_corregido_min'])]);
         }

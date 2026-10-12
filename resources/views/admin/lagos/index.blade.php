@@ -7,6 +7,9 @@
         // Solo el administrador (o el propietario que también lo es) opera los lagos; el propietario consulta
         $puedeOperar = auth()->user()->tieneRol('administrador');
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero($valor, $decimales);
+        // Muestreo: unidad del peso total por defecto de la finca (gramos si no la eligió) y las opciones
+        $unidadMuestreo = \App\Support\UnidadesPeso::valida(auth()->user()->tenant?->unidad_peso_muestreo) ? auth()->user()->tenant->unidad_peso_muestreo : 'g';
+        $unidadesPeso = collect(\App\Support\UnidadesPeso::UNIDADES)->mapWithKeys(fn ($unidad) => [$unidad => $unidad])->all();
     @endphp
 
     <x-encabezado :titulo="__('lagos.lagos_siembras')" :subtitulo="__('lagos.estanques_finca_ciclos_productivos')">
@@ -225,15 +228,22 @@
                         <x-modal id="modal-muestreo-{{ $siembra->id }}" :titulo="__('lagos.muestreo_de', ['especie' => $siembra->nombre_especie, 'lago' => $lago->nombre])">
                             <x-formulario :action="route('admin.muestreos.store', $siembra->id)">
                                 <x-campo nombre="fecha" id="muestreo-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
-                                <div class="grid grid-cols-2 gap-4" data-muestreo>
-                                    <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required data-peces />
-                                    <x-campo nombre="peso_total_g" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required data-peso-total />
+                                {{-- Peso total en g, kg o lb: el servidor convierte (UnidadesPeso) y guarda en gramos. Los factores van
+                                     aquí para que el promedio en vivo se calcule igual que en el servidor (resources/js/unidades-peso.js) --}}
+                                <div class="grid grid-cols-2 gap-4" data-muestreo
+                                     data-factores='@json(\App\Support\UnidadesPeso::FACTORES)' data-unidad-defecto="{{ $unidadMuestreo }}"
+                                     data-anterior="{{ \App\Support\UnidadesPeso::centesimasDeGramos($siembra->peso_actual_g) }}">
+                                    <div class="col-span-2">
+                                        <x-campo nombre="peces_pesados" id="muestreo-peces-{{ $siembra->id }}" :etiqueta="__('lagos.peces_pesados')" tipo="number" min="1" inputmode="numeric" required data-peces />
+                                    </div>
+                                    <x-campo nombre="peso_total" id="muestreo-peso-{{ $siembra->id }}" :etiqueta="__('lagos.peso_total')" inputmode="decimal" autocomplete="off" required data-peso-total />
+                                    <x-seleccion nombre="unidad" id="muestreo-unidad-{{ $siembra->id }}" :etiqueta="__('lagos.unidad')" :valor="$unidadMuestreo" :opciones="$unidadesPeso" required data-unidad />
                                     {{-- Solo informativo: el servidor calcula el promedio que se guarda --}}
                                     <div class="col-span-2">
                                         <label for="muestreo-promedio-{{ $siembra->id }}" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.peso_promedio_calculado') }}</label>
                                         <output id="muestreo-promedio-{{ $siembra->id }}" data-promedio aria-live="polite"
                                                 class="flex min-h-12 w-full items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-xl font-bold tabular-nums text-tinta">—</output>
-                                        <p class="mt-1 text-sm text-tinta-suave">{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
+                                        <p class="mt-1 text-sm text-tinta-suave" data-anterior-texto>{{ __('lagos.peso_anterior', ['gramos' => $numero($siembra->peso_actual_g, 2)]) }}</p>
                                     </div>
                                 </div>
 
