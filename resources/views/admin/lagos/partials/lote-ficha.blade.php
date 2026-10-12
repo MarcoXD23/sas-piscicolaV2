@@ -11,7 +11,7 @@
 @else
     <div class="flex items-center justify-between gap-3 px-5 pt-4">
         <h3 class="font-bold">{{ $siembra->nombre_especie }}</h3>
-        <span class="text-sm text-tinta-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
+        <span class="shrink-0 whitespace-nowrap text-sm text-tinta-suave">{{ __('lagos.desde_fecha', ['fecha' => $siembra->fecha->format('d/m/Y')]) }}</span>
     </div>
 @endisset
 

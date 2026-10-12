@@ -21,15 +21,16 @@
 </div>
 
 {{-- Cifras de la siembra como renglones de la libreta --}}
-<dl class="grid grid-cols-3 gap-px border-y border-renglon bg-renglon">
+{{-- En el teléfono, dos columnas (la biomasa en la fila de abajo) para que las cifras con su unidad no se partan; desde sm, tres --}}
+<dl class="grid grid-cols-2 gap-px border-y border-renglon bg-renglon sm:grid-cols-3">
     @foreach ([
         [__('lagos.peces_vivos'), $numero($siembra->peces_vivos), null],
         [__('lagos.peso_promedio'), $numero($siembra->peso_actual_g, 2), 'g'],
         [__('lagos.biomasa'), $numero($siembra->biomasa_kg, 2), 'kg'],
-    ] as [$etiqueta, $valor, $unidad])
-        <div class="bg-ficha px-4 py-3 sm:px-5">
+    ] as $posicion => [$etiqueta, $valor, $unidad])
+        <div @class(['bg-ficha px-4 py-3 sm:px-5', 'col-span-2 sm:col-span-1' => $posicion === 2])>
             <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
-            <dd class="text-lg font-bold tabular-nums sm:text-xl">{{ $valor }}@if ($unidad) <span class="text-sm font-normal text-tinta-suave">{{ $unidad }}</span>@endif</dd>
+            <dd class="whitespace-nowrap text-lg font-bold tabular-nums sm:text-xl">{{ $valor }}@if ($unidad) <span class="text-sm font-normal text-tinta-suave">{{ $unidad }}</span>@endif</dd>
         </div>
     @endforeach
 </dl>

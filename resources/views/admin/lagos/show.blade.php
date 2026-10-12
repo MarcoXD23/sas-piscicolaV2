@@ -27,7 +27,7 @@
     </a>
 
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
-                  :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => $lago->siembrasActivas->count()]))">
+                  :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]))">
         @if ($puedeOperar)
             <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
                 <x-icono nombre="gota" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
@@ -85,13 +85,14 @@
                                     <p class="text-sm text-tinta-suave">{{ __('lagos.lotes.n_lotes', ['lotes' => $grupo['lotes']]) }}</p>
                                 </div>
                             </div>
-                            <dl class="grid grid-cols-3 gap-px border-y border-renglon bg-renglon">
+                            {{-- Peces y biomasa arriba; el peso con su rango en una fila completa (no cabe en una columna del teléfono) --}}
+                            <dl class="grid grid-cols-2 gap-px border-y border-renglon bg-renglon">
                                 @foreach ([
                                     [__('lagos.peces_vivos'), $numero($grupo['peces'])],
-                                    [__('lagos.peso_promedio'), \App\Support\LotesPorEspecie::textoPeso($grupo)],
                                     [__('lagos.biomasa'), $numero($grupo['biomasa_kg'], 2).' kg'],
-                                ] as [$etiqueta, $valor])
-                                    <div class="bg-ficha px-4 py-3 sm:px-5">
+                                    [__('lagos.peso_promedio'), \App\Support\LotesPorEspecie::textoPeso($grupo)],
+                                ] as $posicion => [$etiqueta, $valor])
+                                    <div @class(['bg-ficha px-4 py-3 sm:px-5', 'col-span-2' => $posicion === 2])>
                                         <dt class="text-sm text-tinta-suave">{{ $etiqueta }}</dt>
                                         <dd class="text-lg font-bold tabular-nums">{{ $valor }}</dd>
                                     </div>
@@ -245,7 +246,7 @@
                             <div class="py-2.5">
                                 <dt class="flex justify-between gap-3 text-base font-bold">
                                     <span>{{ $fila['especie'] }}</span>
-                                    <span class="tabular-nums">{{ __('lagos.kg_por_dia', ['kg' => $numero($fila['kg_dia'], 1)]) }}</span>
+                                    <span class="shrink-0 whitespace-nowrap tabular-nums">{{ __('lagos.kg_por_dia', ['kg' => $numero($fila['kg_dia'], 1)]) }}</span>
                                 </dt>
                                 <dd class="text-tinta-suave">
                                     {{ __('lagos.porcentaje_de_biomasa', ['porcentaje' => $numero($fila['porcentaje'], 1), 'kg' => $numero($fila['biomasa_kg'], 1)]) }}

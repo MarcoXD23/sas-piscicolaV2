@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/atkinson-hyperlegible-next';
+@import '@fontsource-variable/nunito-sans';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -23,9 +23,10 @@
 }
 
 @theme {
-    /* Atkinson Hyperlegible Next (Braille Institute): distingue 1/l/I y 0/O, se lee al sol y con baja visión.
+    /* Nunito Sans (licencia SIL OFL 1.1): letra grande a igual tamaño (se lee al sol), cifras tabulares con
+       tabular-nums (columnas alineadas), la l con cola (no se confunde con la I) y el 0 más angosto que la O, sin raya.
        Alojada en el proyecto (paquete @fontsource-variable), sin CDN; si aún no cargó, se ve la del sistema. */
-    --font-sans: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Nunito Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
     /* ── Libreta de campo ───────────────────────────────────────────────────────────────────────────
        La app es el cuaderno de la finca: papel frío, fichas blancas, renglones finos y tinta verde muy oscura.

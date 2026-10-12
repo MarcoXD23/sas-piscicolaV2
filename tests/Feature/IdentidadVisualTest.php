@@ -68,9 +68,43 @@ class IdentidadVisualTest extends TestCase
         $sw = file_get_contents(public_path('sw.js'));
 
         // Cada versión borra las copias anteriores (la v9 retiró los fondos SVG; la v10 agregó Registro rápido; la v11, su acceso en offline.html;
-        // la v12 estrena la libreta de campo)
-        $this->assertStringContainsString("const VERSION = 'v12'", $sw);
+        // la v12 estrena la libreta de campo; la v13, la tipografía Nunito Sans)
+        $this->assertStringContainsString("const VERSION = 'v13'", $sw);
         $this->assertStringContainsString("const ESTATICOS = ['/build/', '/images/', '/icons/'];", $sw);
+    }
+
+    public function test_la_tipografia_es_nunito_sans_alojada_en_el_proyecto_y_liviana(): void
+    {
+        $css = (string) file_get_contents(resource_path('css/app.css'));
+        $paquete = (string) file_get_contents(base_path('package.json'));
+
+        // Del paquete del proyecto, nunca de un CDN; la anterior ya no está
+        $this->assertStringContainsString("@import '@fontsource-variable/nunito-sans';", $css);
+        $this->assertMatchesRegularExpression("/--font-sans: 'Nunito Sans Variable', system-ui/", $css);
+        $this->assertStringContainsString('"@fontsource-variable/nunito-sans"', $paquete);
+        foreach ([$css, $paquete, (string) file_get_contents(resource_path('views/layouts/app.blade.php'))] as $fuente) {
+            $this->assertStringNotContainsStringIgnoringCase('atkinson', $fuente);
+            $this->assertStringNotContainsString('fonts.googleapis', $fuente);
+            $this->assertDoesNotMatchRegularExpression('/@import\s+url\(\s*[\'"]?https?:/i', $fuente);
+        }
+
+        // El CSS compilado trae la fuente desde /build, y el archivo latino (el que baja una página en español) es liviano
+        $manifiesto = json_decode((string) file_get_contents(public_path('build/manifest.json')), true);
+        $compilado = (string) file_get_contents(public_path('build/'.$manifiesto['resources/css/app.css']['file']));
+        $this->assertStringContainsString('Nunito Sans Variable', $compilado);
+        $this->assertMatchesRegularExpression('#/build/assets/nunito-sans-latin-wght-normal-[\w-]+\.woff2#', $compilado);
+        preg_match('#/build/assets/(nunito-sans-latin-wght-normal-[\w-]+\.woff2)#', $compilado, $latino);
+        $this->assertLessThan(40 * 1024, filesize(public_path('build/assets/'.$latino[1])));
+
+        // Las cifras siguen alineadas en columna, la impresión conserva su regla y los PDF siguen con DejaVu Sans (dompdf)
+        $this->assertGreaterThan(50, substr_count(implode('', array_map('file_get_contents', glob(resource_path('views/**/*.blade.php')) ?: [])).implode('', array_map('file_get_contents', glob(resource_path('views/*/*/*.blade.php')) ?: [])), 'tabular-nums'));
+        $this->assertStringContainsString('@media print', $css);
+        $this->assertStringContainsString("font-family: 'DejaVu Sans'", (string) file_get_contents(resource_path('views/pdf/reporte.blade.php')));
+
+        // Licencia anotada en la marca
+        $leeme = (string) file_get_contents(base_path('docs/marca/LEEME.md'));
+        $this->assertStringContainsString('Nunito Sans', $leeme);
+        $this->assertStringContainsString('SIL Open Font License 1.1', $leeme);
     }
 
     public function test_los_fondos_son_fotos_libres_livianas_y_anotadas(): void

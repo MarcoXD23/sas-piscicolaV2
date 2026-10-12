@@ -24,6 +24,10 @@ Resultado medido (lo verifica `tests/Feature/MarcaTest.php`): a 16 px, 34 % de f
 
 Si el diseñador entrega un favicon simplificado (silueta de la trucha con la corona, pocos colores, revisado a 16 px), basta con reemplazar `favicon-16.png`, `favicon-32.png` y `favicon-48.png` y volver a armar `public/favicon.ico`.
 
+## Tipografía
+
+**Nunito Sans** (variable, pesos 200 a 1000), de The Nunito Sans Project Authors, con licencia **SIL Open Font License 1.1** (uso, copia y distribución libres, también comercial; no se vende sola). Alojada en el proyecto con el paquete `@fontsource-variable/nunito-sans` (sin CDN); la licencia completa viene en `node_modules/@fontsource-variable/nunito-sans/LICENSE`. Reemplazó a Atkinson Hyperlegible Next el 2026-10-12. Los PDF usan DejaVu Sans (la de dompdf).
+
 ## Imágenes de la app (`public/images/`)
 
 Toda imagen que traiga la app debe tener origen claro y anotarse aquí: archivo, peso, autor, fuente, licencia y fecha de descarga. No se agregan imágenes sin esos datos.

@@ -299,6 +299,12 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - El inicio de propietario y administrador avisa mientras no la tengan activa. En el panel de plataforma es obligatoria (ver «Panel de plataforma»).
 - **Importante:** si cambia `APP_KEY`, las claves cifradas ya no se pueden leer y cada persona debe volver a activarla (o quitarla con el comando).
 
+## Diseño: libreta de campo y tipografía
+
+- Estilos en `resources/css/app.css` (Tailwind 4, tokens de la «libreta de campo»), compilados con Vite.
+- **Tipografía: Nunito Sans** (variable, licencia SIL OFL 1.1), alojada en el proyecto con `@fontsource-variable/nunito-sans`, sin CDN. Se eligió por leerse bien al sol (letra grande a igual tamaño), alinear las cifras en columna con `tabular-nums`, distinguir la l (con cola) de la I y el 0 (más angosto, sin raya) de la O. Una página en español descarga solo su archivo latino (unos 31 KB), y el service worker lo guarda. Reemplazó a Atkinson Hyperlegible Next, cuyo cero con raya no se puede desactivar. Los PDF siguen con DejaVu Sans (dompdf). Ver `docs/marca/LEEME.md`.
+- **Revisado a 360 px:** en el teléfono, las cifras con su unidad no se parten (`whitespace-nowrap`). El detalle del lote usa dos columnas y pasa a tres desde `sm`. El peso con rango ocupa una fila completa.
+
 ## Lotes de la misma especie en un lago
 
 Un lago puede tener varios **lotes** (siembras activas) de la misma especie: dos siembras de fechas distintas, o un lote creado por un traslado.

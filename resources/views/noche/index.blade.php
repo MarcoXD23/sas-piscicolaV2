@@ -51,16 +51,17 @@
                 <x-tarjeta @class(['relative flex flex-col !pt-7', '!ring-alerta-borde' => $estado === 'alerta'])>
                     <x-insignia :tono="['sin_medicion' => 'info'][$estado] ?? $estado" pestana como="p">{{ __('inicio.estado_agua.'.$estado) }}</x-insignia>
 
-                    <div class="mb-4 flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h3 class="text-xl font-bold">{{ $lago->nombre }}</h3>
-                            <p class="text-sm text-tinta-suave">
-                                {{ $lago->siembrasActivas->isEmpty() ? __('noche.sin_peces') : \App\Support\LotesPorEspecie::nombres($lago->siembrasActivas) }}
-                            </p>
+                    {{-- Nombre y aireador en una fila; las especies debajo, a todo el ancho (en el teléfono no caben al lado) --}}
+                    <div class="mb-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="min-w-0 text-xl font-bold">{{ $lago->nombre }}</h3>
+                            <x-insignia :tono="$aireacion ? 'info' : 'neutro'" icono="aireador" class="shrink-0">
+                                {{ $aireacion ? __('noche.aireador_encendido') : __('noche.aireador_apagado') }}
+                            </x-insignia>
                         </div>
-                        <x-insignia :tono="$aireacion ? 'info' : 'neutro'" icono="aireador" class="shrink-0">
-                            {{ $aireacion ? __('noche.aireador_encendido') : __('noche.aireador_apagado') }}
-                        </x-insignia>
+                        <p class="mt-1 text-sm text-tinta-suave">
+                            {{ $lago->siembrasActivas->isEmpty() ? __('noche.sin_peces') : \App\Support\LotesPorEspecie::nombres($lago->siembrasActivas) }}
+                        </p>
                     </div>
 
                     <div class="mb-5 border-y border-renglon py-4">
