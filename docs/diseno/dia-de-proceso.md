@@ -297,8 +297,11 @@ Cada tema separa:
 
 **Reglas fijas, iguales en todas las fincas:**
 
-- Nadie aprueba sus propias horas extra ni su propia nómina.
+- Nadie aprueba sus propias horas extra, sus propios permisos ni su propio pago. La regla es sobre el pago de cada uno, no sobre la nómina de los demás.
 - El administrador no puede cambiar su propio sueldo.
+- Si el sueldo del administrador va en la nómina, su fila la aprueba siempre el propietario.
+- No se puede aprobar una nómina con horas extra si los recargos no están configurados. El sistema muestra el aviso para configurarlos.
+- El cupo de pescado sigue siendo semanal, aunque la nómina sea mensual. En la planilla mensual, el descuento de pescado se muestra semana por semana (kilos dentro del cupo y del exceso, con su precio) y luego el total del mes.
 - Los sueldos base y las tarifas los cambia solo el propietario.
 - Todo queda en la bitácora: quién preparó, quién aprobó y qué cambió.
 
@@ -313,15 +316,23 @@ Cada tema separa:
 **Configurable por finca:**
 
 - Quién prepara la nómina: el administrador o el propietario.
-- Si hace falta el visto bueno del propietario antes de cerrarla.
+- Si hace falta el visto bueno del propietario antes de cerrarla. Solo aplica cuando la prepara el administrador; si la prepara el propietario, no necesita visto bueno. Por eso una finca pequeña, donde una sola persona es propietario y administrador, puede preparar y cerrar la nómina de los demás.
 - Quién aprueba las horas extra: el administrador, el propietario o cualquiera de los dos.
 - El período: semanal, quincenal o mensual.
+- Quién aprueba los permisos (días libres): el administrador, el propietario o cualquiera de los dos, con la misma regla de no aprobarse a sí mismo.
+
+**Cómo se construye (decidido):**
+
+- Los cambios en la base de datos se hacen con columnas nuevas, sin borrar ni rehacer la tabla de liquidaciones. Las semanas ya liquidadas se siguen leyendo igual.
+- Las planillas firmadas se guardan privadas y separadas por finca.
 
 **Para más adelante:** exportar los datos para que el contador reporte la nómina electrónica de la DIAN, si a la finca le aplica.
 
 **Pendiente:**
 
 - La estructura de la nómina mensual de la finca piloto. Se recibe en foto, sin nombres ni valores.
+- En la finca piloto, quién aprueba los permisos: ¿el administrador o el propietario?
+- En la finca piloto, ¿el sueldo del administrador va en la nómina?
 - **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir quién prepara la nómina y quién aprueba las horas extra según la configuración de cada finca, con las reglas fijas de arriba. Se hace en una fase aparte, después de Jornaleros.
 
 **Estado actual del sistema:**
@@ -465,4 +476,5 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
 - cambiar en AGENTS.md las reglas de la nómina y de las horas extra antes de construirlo (tema 11);
 - la estructura de la nómina mensual de la finca piloto, en foto y sin nombres ni valores (tema 11);
+- en la finca piloto, quién aprueba los permisos y si el sueldo del administrador va en la nómina (tema 11);
 - la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
