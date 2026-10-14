@@ -57,6 +57,10 @@ return [
     // Proxies de confianza (Nginx o Cloudflare delante de la app), separados por coma. Vacío = ninguno.
     'proxies_confianza' => array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))),
 
+    // Dirección para registrar una finca nueva (la página o el contacto de ventas). Vacía = el ingreso no muestra
+    // «Registra tu finca»: la app no tiene registro de fincas propio (se crean con piscicola:crear-propietario).
+    'registro_fincas_url' => env('REGISTRO_FINCAS_URL') ?: null,
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

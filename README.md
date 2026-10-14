@@ -87,6 +87,7 @@ Edita `.env`:
 | `DB_*` | Tu PostgreSQL. La base por defecto es `sas_piscicola_v2`. |
 | `ASISTENTE_PROVEEDOR` | Proveedor del asistente IA: `claude` o `gemini`. Vacío = `claude`. |
 | `ANTHROPIC_API_KEY` | Clave de Claude, en [console.anthropic.com](https://console.anthropic.com). |
+| `REGISTRO_FINCAS_URL` | Opcional. Dirección para registrar una finca nueva (tu página o contacto de ventas). Si tiene valor, el ingreso muestra «Registra tu finca» bajo la ayuda del error de correo o contraseña. Vacía = no se muestra; la app no tiene registro de fincas propio. |
 | `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-haiku-5-5` (el más económico; las preguntas de finca son cortas). |
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.5-flash-lite` (el anterior, `gemini-3.8-flash`, se saturaba con errores 503). |

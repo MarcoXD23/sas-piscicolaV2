@@ -12,6 +12,21 @@
     <x-tarjeta class="!shadow-levantada !ring-0">
         <x-formulario :action="route('login')">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" autocomplete="username" inputmode="email" required autofocus />
+            {{-- Ayuda solo con el error común de correo o contraseña (igual si el correo existe o no): nunca con la
+                 suspensión ni con la cuenta sin aprobar, que solo salen con la contraseña correcta --}}
+            @if ($errors->first('email') === __('mensajes.login.correo_contrasena_no_son_correctos'))
+                <div class="-mt-2 space-y-1 text-base text-tinta-suave" data-ayuda-ingreso>
+                    <p>
+                        {{ __('acceso.ayuda_sin_cuenta') }}
+                        <a href="{{ route('registro') }}" class="py-3 font-semibold text-marca-700 underline underline-offset-4">{{ __('acceso.solicita_acceso_aqui') }}</a>.
+                    </p>
+                    @if (config('app.registro_fincas_url'))
+                        <p>
+                            <a href="{{ config('app.registro_fincas_url') }}" class="inline-flex min-h-12 items-center font-semibold text-marca-700 underline underline-offset-4" data-registra-finca>{{ __('acceso.registra_tu_finca') }}</a>
+                        </p>
+                    @endif
+                </div>
+            @endif
             <x-contrasena nombre="password" :etiqueta="__('acceso.contrasena')" autocomplete="current-password" required />
 
             <label class="flex min-h-12 items-center gap-3 text-base text-tinta">

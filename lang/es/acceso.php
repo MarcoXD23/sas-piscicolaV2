@@ -18,6 +18,10 @@ return [
     ],
     'enviar_solicitud' => 'Enviar solicitud',
     'eres_nuevo_finca' => '¿Eres nuevo en la finca?',
+    // Ayuda bajo el error de ingreso: no revela si el correo existe ni nombra roles
+    'ayuda_sin_cuenta' => '¿No tienes cuenta? Pide el código de tu finca a quien la maneja y',
+    'solicita_acceso_aqui' => 'solicita acceso aquí',
+    'registra_tu_finca' => 'Registra tu finca',
     'gestion_tu_finca_piscicola' => 'Gestión de tu finca piscícola',
     'ingresar' => 'Ingresar',
     'mantener_sesion_iniciada' => 'Mantener la sesión iniciada',
