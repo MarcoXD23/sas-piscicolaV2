@@ -12,7 +12,7 @@
     <x-tarjeta class="!shadow-levantada !ring-0">
         <x-formulario :action="route('plataforma.login')">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" autocomplete="username" inputmode="email" required autofocus />
-            <x-campo nombre="password" :etiqueta="__('acceso.contrasena')" tipo="password" autocomplete="current-password" required />
+            <x-contrasena nombre="password" :etiqueta="__('acceso.contrasena')" autocomplete="current-password" required />
 
             <x-boton class="w-full">{{ __('acceso.ingresar') }}</x-boton>
         </x-formulario>

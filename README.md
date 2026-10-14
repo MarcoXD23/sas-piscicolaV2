@@ -286,6 +286,9 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Cabeceras** en todas las respuestas: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy: camera=(self), microphone=(), geolocation=()` y HSTS solo con HTTPS.
 - **Límites de intentos con contador propio**: ingreso (5 por minuto por correo y 20 por IP), registro, API y panel de plataforma. Una persona bloqueada no bloquea a las demás de la misma red.
 - **Registro** con un mensaje único para código de finca inexistente o correo ya registrado (con enlace a «¿Olvidaste tu contraseña?»). La contraseña no puede ser el correo.
+- **Ver la contraseña:** todo campo de contraseña usa `<x-contrasena>`, con un botón de ojo para mostrar u ocultar lo escrito (`resources/js/contrasena.js`, en el bundle y sin scripts en línea). Está en el ingreso, el ingreso de plataforma, el registro, restablecer y cambiar la contraseña, y las confirmaciones con contraseña (eliminar la finca, quitar los dos pasos); no en los códigos de verificación en dos pasos.
+  - El botón es `<button type="button">` de 48 × 48 px, con `aria-pressed` y `aria-label` («Mostrar contraseña» / «Ocultar contraseña»). No le quita el foco al campo y conserva el `autocomplete` de los administradores de contraseñas.
+  - La contraseña vuelve a ocultarse sola al enviar el formulario, al salir de la pantalla y al volver con «atrás».
 - **Topes numéricos** en todos los formularios (un valor enorme recibe un mensaje y no un error 500).
 - **Tokens de la API** que vencen (`SANCTUM_TOKEN_MINUTOS`, 30 días por defecto) y **topes diarios del asistente** (`ASISTENTE_LIMITE_DIARIO_PERSONA` y `ASISTENTE_LIMITE_DIARIO_FINCA`).
 - Pruebas generales de aislamiento: todos los modelos de finca y todas las rutas con ids (`AislamientoFincasTest`).

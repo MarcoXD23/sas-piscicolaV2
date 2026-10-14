@@ -64,7 +64,7 @@
             <x-formulario :action="route('plataforma.fincas.eliminar', $finca)">
                 <x-aviso tono="alerta">{{ __('datos.eliminar.ayuda', ['dias' => config('datos.dias_gracia')]) }}</x-aviso>
                 <x-campo nombre="codigo" id="eliminar-codigo-{{ $finca->id }}" :etiqueta="__('datos.eliminar.codigo', ['codigo' => $finca->codigo])" autocomplete="off" required />
-                <x-campo nombre="actual" id="eliminar-clave-{{ $finca->id }}" :etiqueta="__('datos.eliminar.tu_contrasena_plataforma')" tipo="password" autocomplete="current-password" required />
+                <x-contrasena nombre="actual" id="eliminar-clave-{{ $finca->id }}" :etiqueta="__('datos.eliminar.tu_contrasena_plataforma')" autocomplete="current-password" required />
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
                     <x-boton variante="peligro">{{ __('datos.eliminar.boton') }}</x-boton>

@@ -3,6 +3,7 @@ import pesaje from './pesaje';
 import { iniciarCampo } from './campo';
 import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
+import { iniciarVerContrasena } from './contrasena';
 import { aCentesimas, leerRecordada, promedio as promedioPeso, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 
 window.Alpine = Alpine;
@@ -100,6 +101,8 @@ const cola = iniciarCola(t);
 const paquete = iniciarPaquete();
 // Pantalla Registro rápido (/campo): solo si la página la trae (resources/js/campo.js)
 iniciarCampo(t, cola);
+// Botón de ojo de los campos de contraseña (<x-contrasena>): mostrar u ocultar, y volver a ocultar al enviar o salir
+iniciarVerContrasena();
 
 const hayConexion = async () => {
     if (!navigator.onLine) return false;

@@ -12,8 +12,8 @@
         <x-formulario :action="route('password.update')">
             <input type="hidden" name="token" value="{{ $token }}">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" :valor="old('email', $email)" autocomplete="username" inputmode="email" required />
-            <x-campo nombre="password" :etiqueta="__('acceso.recuperar.nueva')" tipo="password" autocomplete="new-password" :ayuda="__('acceso.minimo_8_caracteres')" required autofocus />
-            <x-campo nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" tipo="password" autocomplete="new-password" required />
+            <x-contrasena nombre="password" :etiqueta="__('acceso.recuperar.nueva')" autocomplete="new-password" :ayuda="__('acceso.minimo_8_caracteres')" required autofocus />
+            <x-contrasena nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" autocomplete="new-password" required />
 
             <x-boton class="w-full">{{ __('acceso.recuperar.guardar') }}</x-boton>
         </x-formulario>

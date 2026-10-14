@@ -42,7 +42,7 @@
             <p class="mt-3 text-sm text-tinta-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
             <x-formulario :action="route('admin.datos.eliminar')" class="mt-5">
                 <x-campo nombre="codigo" :etiqueta="__('datos.eliminar.codigo', ['codigo' => $finca->codigo])" autocomplete="off" autocapitalize="none" required />
-                <x-campo nombre="actual" :etiqueta="__('datos.eliminar.actual')" tipo="password" autocomplete="current-password" required />
+                <x-contrasena nombre="actual" :etiqueta="__('datos.eliminar.actual')" autocomplete="current-password" required />
                 <x-boton variante="peligro">{{ __('datos.eliminar.boton') }}</x-boton>
             </x-formulario>
         </x-tarjeta>

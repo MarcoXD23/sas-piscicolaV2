@@ -21,9 +21,9 @@
                      :ayuda="__('acceso.pideselo_propietario_finca')" />
             <x-campo nombre="name" :etiqueta="__('acceso.nombre_completo')" autocomplete="name" required />
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" autocomplete="email" inputmode="email" required />
-            <x-campo nombre="password" :etiqueta="__('acceso.contrasena')" tipo="password" autocomplete="new-password" required
+            <x-contrasena nombre="password" :etiqueta="__('acceso.contrasena')" autocomplete="new-password" required
                      :ayuda="__('acceso.minimo_8_caracteres')" />
-            <x-campo nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" tipo="password" autocomplete="new-password" required />
+            <x-contrasena nombre="password_confirmation" :etiqueta="__('acceso.confirma_contrasena')" autocomplete="new-password" required />
 
             {{-- Aceptar los términos y la privacidad es obligatorio para registrarse --}}
             <label class="flex items-start gap-3 text-base text-tinta">

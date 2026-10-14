@@ -12,7 +12,7 @@
     <x-tarjeta class="!shadow-levantada !ring-0">
         <x-formulario :action="route('login')">
             <x-campo nombre="email" :etiqueta="__('acceso.correo')" tipo="email" autocomplete="username" inputmode="email" required autofocus />
-            <x-campo nombre="password" :etiqueta="__('acceso.contrasena')" tipo="password" autocomplete="current-password" required />
+            <x-contrasena nombre="password" :etiqueta="__('acceso.contrasena')" autocomplete="current-password" required />
 
             <label class="flex min-h-12 items-center gap-3 text-base text-tinta">
                 <input type="checkbox" name="recordarme" value="1" class="h-5 w-5 rounded border-renglon-fuerte accent-marca-600">

@@ -10,7 +10,7 @@
         <p class="mt-3 text-sm text-tinta-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
 
         <x-formulario :action="route('admin.datos.cancelar')" class="mt-5">
-            <x-campo nombre="actual" :etiqueta="__('datos.eliminar.actual')" tipo="password" autocomplete="current-password" required />
+            <x-contrasena nombre="actual" :etiqueta="__('datos.eliminar.actual')" autocomplete="current-password" required />
             <x-boton class="w-full">{{ __('datos.eliminar.cancelar_boton') }}</x-boton>
         </x-formulario>
     </x-tarjeta>

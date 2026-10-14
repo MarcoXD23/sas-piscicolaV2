@@ -4,6 +4,8 @@ return [
     'codigo_finca' => 'Código de la finca',
     'confirma_contrasena' => 'Confirma la contraseña',
     'contrasena' => 'Contraseña',
+    'mostrar_contrasena' => 'Mostrar contraseña',
+    'ocultar_contrasena' => 'Ocultar contraseña',
     'correo' => 'Correo',
     'correo_recuperar' => [
         'asunto' => 'Restablecer contraseña – :app',
