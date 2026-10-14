@@ -484,6 +484,6 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 **Otras decisiones abiertas:**
 
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
-- cambiar en AGENTS.md las reglas de la nómina y de las horas extra antes de construirlo (tema 11);
+- cambiar en AGENTS.md las reglas del personal, los permisos, las horas extra y la nómina antes de construirlo (tema 11);
 - la estructura de la nómina mensual de la finca piloto, en foto y sin nombres ni valores (tema 11);
 - la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
