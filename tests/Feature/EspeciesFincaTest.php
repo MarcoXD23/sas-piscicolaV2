@@ -308,7 +308,7 @@ class EspeciesFincaTest extends TestCase
     private function enMenu(string $html, string $url): array
     {
         $sinPestanas = preg_replace('#<nav[^<]*?aria-label="'.__('componentes.secciones').'"[^<]*?>.*?</nav>#s', '', $html);
-        preg_match_all('#<a href="'.preg_quote($url, '#').'"\s*(aria-current="page")?#', $sinPestanas, $enlaces, PREG_SET_ORDER);
+        preg_match_all('#<a href="'.preg_quote($url, '#').'"\s*(?:data-area="[a-z]+"\s*)?(aria-current="page")?#', $sinPestanas, $enlaces, PREG_SET_ORDER);
 
         return ['enlaces' => count($enlaces), 'activos' => collect($enlaces)->filter(fn ($e) => ! empty($e[1] ?? ''))->count()];
     }

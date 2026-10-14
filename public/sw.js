@@ -13,8 +13,8 @@
  *   las 40 pantallas (no se pierde al navegar). Con señal se renueva; sin señal se sirve la guardada. Cada paquete de
  *   trabajo nuevo pide renovarla ({tipo: 'actualizar-campo'}). Nunca se guarda nada de /campo/ (paquete y token).
  */
-// v13: tipografía Nunito Sans; los teléfonos borran los estilos y la fuente guardados de la versión anterior
-const VERSION = 'v13';
+// v14: íconos de Lucide y color por área; los teléfonos borran los estilos y las pantallas guardados de la versión anterior
+const VERSION = 'v14';
 const CACHE_ESTATICOS = `sas-piscicola-estaticos-${VERSION}`;
 const CACHE_PAGINAS = `sas-piscicola-paginas-${VERSION}`;
 const MAXIMO_PAGINAS = 40;

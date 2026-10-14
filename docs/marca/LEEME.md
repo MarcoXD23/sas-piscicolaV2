@@ -28,6 +28,10 @@ Si el diseñador entrega un favicon simplificado (silueta de la trucha con la co
 
 **Nunito Sans** (variable, pesos 200 a 1000), de The Nunito Sans Project Authors, con licencia **SIL Open Font License 1.1** (uso, copia y distribución libres, también comercial; no se vende sola). Alojada en el proyecto con el paquete `@fontsource-variable/nunito-sans` (sin CDN); la licencia completa viene en `node_modules/@fontsource-variable/nunito-sans/LICENSE`. Reemplazó a Atkinson Hyperlegible Next el 2026-10-12. Los PDF usan DejaVu Sans (la de dompdf).
 
+## Íconos
+
+**Lucide 1.56** (https://lucide.dev), de Lucide Contributors, con licencia **ISC** (uso, copia y modificación libres, también comercial, conservando el aviso de copyright). El texto completo de la licencia está en `licencia-iconos.txt`, junto a este archivo. Los dibujos van copiados en `resources/views/components/icono.blade.php` (sin paquete instalado), solo los 30 que usa la app, con los nombres de siempre. Reemplazaron a los dibujados a mano el 2026-10-13.
+
 ## Imágenes de la app (`public/images/`)
 
 Toda imagen que traiga la app debe tener origen claro y anotarse aquí: archivo, peso, autor, fuente, licencia y fecha de descarga. No se agregan imágenes sin esos datos.

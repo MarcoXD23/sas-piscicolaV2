@@ -1,7 +1,8 @@
 @props(['titulo' => null, 'subtitulo' => null])
 
-{{-- Ficha de la libreta: blanca, borde de renglón y sombra de papel. El título queda sobre un renglón. --}}
-<section {{ $attributes->class('rounded-ficha bg-ficha p-5 shadow-ficha ring-1 ring-renglon sm:p-6') }}>
+{{-- Ficha de la libreta: blanca, borde de renglón y sombra de papel. El título queda sobre un renglón.
+     En una pantalla con área lleva una raya de su color arriba (.ficha-area en app.css). --}}
+<section {{ $attributes->class('ficha-area rounded-ficha bg-ficha p-5 shadow-ficha ring-1 ring-renglon sm:p-6') }}>
     @if ($titulo)
         <header class="mb-4 border-b border-renglon pb-3">
             <h2 class="text-lg font-bold text-tinta">{{ $titulo }}</h2>

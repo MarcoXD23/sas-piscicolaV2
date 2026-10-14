@@ -57,6 +57,15 @@
     --color-trucha: #c2416a;
     --color-corona: #8a6417;
 
+    /* Acento por área (App\Support\Areas): ícono del menú, recuadro del ícono del título y raya de las fichas.
+       Lejos de los tonos de estado; Campo es el verde de la marca. Nunca es la única señal (el estado lleva texto o
+       ícono). Todos ≥ 6:1 sobre papel y ficha; las variantes oscuras (Noche y cabecera) ≥ 8,6:1. */
+    --color-area-campo: #0f655f;
+    --color-area-bodega: #56631a;
+    --color-area-ventas: #5b3fa6;
+    --color-area-personal: #8a2a63;
+    --color-area-reportes: #36495e;
+
     /* Esquinas: fichas y controles de 10 px; insignias redondas */
     --radius-ficha: 0.625rem;
 
@@ -333,6 +342,11 @@ body:has(.tema-noche) :is(main, body > nav, dialog) {
     --color-info: #a9c4ff;
     --color-info-fondo: #15284a;
     --color-info-borde: #37548c;
+    --color-area-campo: #7fd8c9;
+    --color-area-bodega: #c9d77a;
+    --color-area-ventas: #c9b8ff;
+    --color-area-personal: #f2a8d4;
+    --color-area-reportes: #b9c8d9;
     --shadow-ficha: 0 1px 0 rgb(0 0 0 / 0.3);
     --shadow-levantada: 0 10px 30px -10px rgb(0 0 0 / 0.7);
 }
@@ -340,6 +354,37 @@ body:has(.tema-noche) :is(main, body > nav, dialog) {
 /* Enlaces y textos en verde de marca: sobre el fondo oscuro se aclaran para leerse (8,9:1) */
 body:has(.tema-noche) :is(main, body > nav, dialog) :is(.text-marca-700, .text-marca-800) {
     color: var(--color-marca-300);
+}
+
+/* Acento por área: [data-area] en el <main> de la pantalla y en cada entrada del menú (sin área = estilo neutro) */
+[data-area='campo'] { --acento: var(--color-area-campo); }
+[data-area='bodega'] { --acento: var(--color-area-bodega); }
+[data-area='ventas'] { --acento: var(--color-area-ventas); }
+[data-area='personal'] { --acento: var(--color-area-personal); }
+[data-area='reportes'] { --acento: var(--color-area-reportes); }
+
+/* La cabecera es oscura: ahí van las variantes claras del acento */
+.cabecera {
+    --color-area-campo: #7fd8c9;
+    --color-area-bodega: #c9d77a;
+    --color-area-ventas: #c9b8ff;
+    --color-area-personal: #f2a8d4;
+    --color-area-reportes: #b9c8d9;
+}
+
+.icono-area {
+    color: var(--acento, inherit);
+}
+
+/* Recuadro tenue detrás del ícono del título */
+.chip-area {
+    background-color: color-mix(in oklab, var(--acento) 14%, transparent);
+    color: var(--acento);
+}
+
+/* Raya superior de las fichas de las pantallas con área */
+[data-area] .ficha-area {
+    border-top: 4px solid var(--acento);
 }
 
 /* Cambio entre páginas: fundido corto en los navegadores que lo permiten (la cabecera y el menú se quedan quietos) */

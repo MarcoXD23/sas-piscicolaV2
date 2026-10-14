@@ -96,7 +96,7 @@
                 ['ruta' => 'especies.index', 'activa' => ['especies.*', 'admin.especies.*'], 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador', 'celador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)))
-                ->map(fn ($enlace) => $enlace + ['es_actual' => request()->routeIs($enlace['activa'] ?? $enlace['ruta'])])
+                ->map(fn ($enlace) => $enlace + ['es_actual' => request()->routeIs($enlace['activa'] ?? $enlace['ruta']), 'area' => \App\Support\Areas::deRuta($enlace['ruta'])])
                 ->values();
             $conMenuInferior = $enlaces->count() > 1;
             // En celular caben 5 botones: si hay más, se muestran 4 y el resto va en "Más"
@@ -140,14 +140,14 @@
                 <nav class="hidden border-t border-white/10 md:block" aria-label="{{ __('layout.principal') }}">
                     <div class="mx-auto flex max-w-6xl flex-wrap gap-x-1 px-3">
                         @foreach ($enlaces as $enlace)
-                            <a href="{{ route($enlace['ruta']) }}"
+                            <a href="{{ route($enlace['ruta']) }}" @if ($enlace['area']) data-area="{{ $enlace['area'] }}" @endif
                                @if ($enlace['es_actual']) aria-current="page" @endif
                                @class([
                                    'flex min-h-11 items-center gap-2 px-3 text-[0.9375rem] transition-colors',
                                    'font-bold text-white shadow-[inset_0_-3px_0_var(--color-marca-300)]' => $enlace['es_actual'],
                                    'text-white/75 hover:bg-white/10 hover:text-white' => ! $enlace['es_actual'],
                                ])>
-                                <x-icono :nombre="$enlace['icono']" class="h-5 w-5" />
+                                <x-icono :nombre="$enlace['icono']" class="icono-area h-5 w-5" />
                                 {{ $enlace['texto'] }}
                             </a>
                         @endforeach
@@ -162,14 +162,14 @@
                 <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
                     @foreach ($enlacesInferiores as $enlace)
                         <li>
-                            <a href="{{ route($enlace['ruta']) }}"
+                            <a href="{{ route($enlace['ruta']) }}" @if ($enlace['area']) data-area="{{ $enlace['area'] }}" @endif
                                @if ($enlace['es_actual']) aria-current="page" @endif
                                @class([
                                    'flex min-h-16 flex-col items-center justify-center gap-1 text-[0.8125rem] leading-tight transition-colors',
                                    'font-bold text-tinta shadow-[inset_0_3px_0_var(--color-marca-700)]' => $enlace['es_actual'],
                                    'text-tinta-suave active:bg-papel-hondo' => ! $enlace['es_actual'],
                                ])>
-                                <x-icono :nombre="$enlace['icono']" @class(['text-marca-700' => $enlace['es_actual']]) />
+                                <x-icono :nombre="$enlace['icono']" @class(['icono-area', 'text-marca-700' => $enlace['es_actual'] && ! $enlace['area']]) />
                                 {{ $enlace['texto'] }}
                             </a>
                         </li>
@@ -196,12 +196,12 @@
                     <ul class="-my-2 divide-y divide-renglon">
                         @foreach ($enlacesMas as $enlace)
                             <li>
-                                <a href="{{ route($enlace['ruta']) }}" @if ($enlace['es_actual']) aria-current="page" @endif @class([
+                                <a href="{{ route($enlace['ruta']) }}" @if ($enlace['area']) data-area="{{ $enlace['area'] }}" @endif @if ($enlace['es_actual']) aria-current="page" @endif @class([
                                     '-mx-2 flex min-h-14 items-center gap-4 rounded-ficha px-2 text-lg transition-colors',
                                     'font-bold text-marca-700' => $enlace['es_actual'],
                                     'text-tinta hover:bg-papel-hondo' => ! $enlace['es_actual'],
                                 ])>
-                                    <x-icono :nombre="$enlace['icono']" /> {{ $enlace['texto'] }}
+                                    <x-icono :nombre="$enlace['icono']" class="icono-area" /> {{ $enlace['texto'] }}
                                 </a>
                             </li>
                         @endforeach
@@ -236,7 +236,9 @@
         </x-modal>
     @endif
 
-    <main id="contenido" @class([
+    {{-- Área de la pantalla (App\Support\Areas): acento del título y de las fichas; sin área, estilo neutro --}}
+    @php $areaPantalla = \App\Support\Areas::actual(); @endphp
+    <main id="contenido" @if ($areaPantalla) data-area="{{ $areaPantalla }}" @endif @class([
         'mx-auto w-full px-4 py-6',
         'max-w-6xl sm:py-8' => $conSesion,
         'pb-28 md:pb-8' => $enFinca && $conMenuInferior,
