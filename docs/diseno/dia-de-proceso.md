@@ -248,7 +248,7 @@ Cada tema separa:
 
 ---
 
-## 10. Procesadores, pescador, rayador y fijos (horas extra con aprobación del propietario)
+## 10. Procesadores, pescador, rayador y fijos (horas extra)
 
 **Confirmado en la finca piloto:**
 
@@ -256,7 +256,11 @@ Cada tema separa:
 - **Rayador:** cobra igual, con una bonificación opcional.
 - **Fijos:** el día de proceso es para ellos un día normal de trabajo; no cobran por kilo.
   - La asistencia de la jornada registra la hora de salida de cada fijo.
-  - Si se pasa de su horario, el sistema calcula las horas extra. **Las aprueba el propietario**, y solo entonces entran a la nómina. Coincide con las reglas del proyecto, donde el propietario conserva la nómina y las solicitudes.
+  - Si se pasa de su horario, el sistema calcula las horas extra. Quedan propuestas hasta que alguien las aprueba; solo entonces entran a la nómina.
+  - En la finca piloto las aprueba el **administrador**.
+  - La nómina sigue siendo del propietario: el administrador aprueba las horas, y el propietario las ve al liquidar la nómina.
+  - Nadie aprueba sus propias horas extra: las del administrador las aprueba el propietario.
+  - En la bitácora queda quién las propuso y quién las aprobó.
 - Las horas extra en Colombia llevan recargos distintos: diurna, nocturna, dominical y festiva. La reforma laboral reciente cambió la hora de inicio de la jornada nocturna y la jornada semanal.
 
 **Configurable por finca:**
@@ -266,10 +270,12 @@ Cada tema separa:
 - La hora límite y el valor de la hora extra del pescador.
 - El período de la nómina.
 - Los porcentajes de recargo, la hora de inicio de la jornada nocturna y la jornada semanal. Nunca van fijos en el código.
+- Quién aprueba las horas extra: el administrador, el propietario o cualquiera de los dos.
 
 **Pendiente:**
 
 - Los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador.
+- **Antes de construirlo hay que cambiar una regla del proyecto.** Hoy AGENTS.md dice que aprobar horas extra es exclusivo del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir que quién aprueba las horas extra se configura por finca, y que nadie aprueba las suyas.
 
 **Estado actual del sistema:**
 
@@ -401,4 +407,5 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 **Otras decisiones abiertas:**
 
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
+- cambiar en AGENTS.md la regla de quién aprueba las horas extra antes de construirlo (tema 10);
 - la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
