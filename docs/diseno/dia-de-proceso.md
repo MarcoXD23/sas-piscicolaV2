@@ -294,6 +294,7 @@ Cada tema separa:
 - El propietario da el visto bueno antes de cerrarla y pagarla. Si no está de acuerdo, la devuelve con un comentario.
 - Las horas extra las aprueba el administrador (tema 10).
 - Los permisos (días libres) de los trabajadores los aprueba el administrador; los del administrador, el propietario.
+- El sueldo del administrador va en la misma nómina de los trabajadores. El administrador prepara la nómina de todos, pero su propia fila la aprueba siempre el propietario.
 - La nómina de los fijos es mensual.
 
 **Reglas fijas, iguales en todas las fincas:**
@@ -332,7 +333,6 @@ Cada tema separa:
 **Pendiente:**
 
 - La estructura de la nómina mensual de la finca piloto. Se recibe en foto, sin nombres ni valores.
-- En la finca piloto, ¿el sueldo del administrador va en la nómina?
 - **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir quién prepara la nómina y quién aprueba las horas extra según la configuración de cada finca, con las reglas fijas de arriba. Se hace en una fase aparte, después de Jornaleros.
 
 **Estado actual del sistema:**
@@ -476,5 +476,4 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
 - cambiar en AGENTS.md las reglas de la nómina y de las horas extra antes de construirlo (tema 11);
 - la estructura de la nómina mensual de la finca piloto, en foto y sin nombres ni valores (tema 11);
-- en la finca piloto, si el sueldo del administrador va en la nómina (tema 11);
 - la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
