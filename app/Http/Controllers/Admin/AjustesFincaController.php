@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\PrimerUso;
 use App\Support\Alertas\EvaluadorAlertas;
+use App\Support\Hora;
 use App\Support\Region;
 use App\Support\UnidadesPeso;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +31,8 @@ class AjustesFincaController extends Controller
                 ...Region::zonasValidas(),
             ])),
             'unidadesPeso' => UnidadesPeso::opciones(),
+            'formatosHora' => ['' => __('region.ajustes.formato_hora_del_pais', ['formato' => __('region.formatos_hora_corto.'.Hora::delPais($finca->pais))])]
+                + collect(Hora::FORMATOS)->mapWithKeys(fn (string $f) => [$f => __('region.formatos_hora.'.$f)])->all(),
             'idiomas' => collect(Region::IDIOMAS)->mapWithKeys(fn ($idioma) => [$idioma => __("region.idiomas.{$idioma}")])->all(),
         ]);
     }
@@ -51,6 +54,8 @@ class AjustesFincaController extends Controller
             'alerta_despacho_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:30'],
             // Unidad que sale primero en el muestreo (lo guardado sigue en gramos)
             'unidad_peso_muestreo' => ['sometimes', 'required', Rule::in(UnidadesPeso::UNIDADES)],
+            // Formato de hora de la finca; vacío = el del país
+            'formato_hora' => ['sometimes', 'nullable', Rule::in(Hora::FORMATOS)],
         ], [
             'zona_horaria.in' => __('region.ajustes.zona_invalida'),
             'idioma.in' => __('region.ajustes.idioma_invalido'),

@@ -136,10 +136,10 @@ class InformeMensual
             new Tabla($t('hoja_sanidad'), [[$t('fecha'), null], [$t('lago'), null], [$t('motivo'), null], [$t('producto'), null]],
                 $d['tratamientos']->map(fn ($tr) => [$fecha($tr->fecha_inicio), $tr->lago->nombre, $tr->motivo, $tr->producto])->all()),
             new Tabla($t('hoja_avisos_pesca'), [[$t('momento'), null], [$t('lago'), null], [$t('especie'), null], [$t('reportado_por'), null], [$t('estado'), null], [$t('nota'), null]],
-                $d['avisosPesca']->map(fn ($a) => [$a->reportado_at->format('d/m/Y H:i'), $a->lago->nombre, $a->siembra->nombre_especie, $a->usuario->name,
-                    $a->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $a->atendido_at->format('d/m H:i')]), (string) $a->nota])->all()),
+                $d['avisosPesca']->map(fn ($a) => [$a->reportado_at, $a->lago->nombre, $a->siembra->nombre_especie, $a->usuario->name,
+                    $a->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $a->atendido_at->formatoHora('d/m H:i')]), (string) $a->nota])->all()),
             new Tabla($t('hoja_novedades'), [[$t('momento'), null], [$t('tipo'), null], [$t('lago'), null], [$t('descripcion'), null]],
-                $d['novedades']->map(fn ($n) => [$n->registrada_at->format('d/m/Y H:i'), $n->textoTipo(), $n->lago?->nombre ?? '', (string) $n->descripcion])->all()),
+                $d['novedades']->map(fn ($n) => [$n->registrada_at, $n->textoTipo(), $n->lago?->nombre ?? '', (string) $n->descripcion])->all()),
         ];
 
         if ($d['entradasBodega'] !== null) {

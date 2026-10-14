@@ -308,6 +308,16 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Tipografía: Nunito Sans** (variable, licencia SIL OFL 1.1), alojada en el proyecto con `@fontsource-variable/nunito-sans`, sin CDN. Se eligió por leerse bien al sol (letra grande a igual tamaño), alinear las cifras en columna con `tabular-nums`, distinguir la l (con cola) de la I y el 0 (más angosto, sin raya) de la O. Una página en español descarga solo su archivo latino (unos 31 KB), y el service worker lo guarda. Reemplazó a Atkinson Hyperlegible Next, cuyo cero con raya no se puede desactivar. Los PDF siguen con DejaVu Sans (dompdf). Ver `docs/marca/LEEME.md`.
 - **Revisado a 360 px:** en el teléfono, las cifras con su unidad no se parten (`whitespace-nowrap`). El detalle del lote usa dos columnas y pasa a tres desde `sm`. El peso con rango ocupa una fila completa.
 
+## Formato de hora (12 o 24 horas)
+
+- Cada persona elige en **Mi cuenta** cómo ve las horas: 12 horas («10:24 p. m.») o 24 horas («22:24»). Si no elige, se usa el de la finca (**Ajustes**, solo propietario). Si la finca tampoco eligió, el del país (`config/region.php`: 12 horas en CO, MX, US, VE, PE, PH, IN, CA y AU). Sin país, 24 horas.
+- **Solo cambia cómo se muestra la hora:** lo guardado sigue en UTC, la fecha no cambia y los cálculos tampoco.
+- **Un solo ayudante,** `App\Support\Hora`, con el macro de Carbon `->formatoHora('d/m/Y H:i')`. Hace lo mismo que `format()`, pero la parte de la hora sale en el formato de la persona. Los formatos técnicos (campos de formulario, ISO) siguen con `format()`. Una prueba barre vistas y código para que ninguna pantalla escriba la hora a mano.
+- **«a. m.» y «p. m.»** salen de lang/es, con espacios que no se parten. Una frase que termina en una hora no deja punto doble («a las 5:24 a. m.»): lo resuelven el traductor (`App\Support\Traductor`) y `t()` en el JavaScript.
+- **Sin conexión:** el formato ya resuelto viaja en `<body data-formato-hora>` y en el paquete de trabajo. `resources/js/hora.js` escribe igual que el servidor; una tabla de casos compartida (`tests/fixtures/horas.json`) lo comprueba en PHP y en JS. Un paquete viejo usa 24 horas.
+- **Campos donde se escribe una hora** (turnos, agenda, medición): el selector del teléfono, con una ayuda debajo que repite la hora elegida en el formato de la persona.
+- **Excel:** las fechas con hora son valores de fecha y hora de Excel (se pueden ordenar y calcular), con el formato elegido. El texto «AM/PM» lo escribe Excel según su idioma. **PDF:** texto en el formato elegido. **Correos:** en el formato de quien los recibe.
+
 ## Lotes de la misma especie en un lago
 
 Un lago puede tener varios **lotes** (siembras activas) de la misma especie: dos siembras de fechas distintas, o un lote creado por un traslado.

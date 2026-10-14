@@ -129,7 +129,7 @@
                     <div data-aviso-pesca class="flex flex-wrap items-center justify-between gap-2 border-b border-renglon bg-trucha/5 px-5 py-3">
                         <p class="min-w-0 text-sm">
                             <span class="inline-flex items-center gap-1.5 font-bold text-trucha"><x-icono nombre="pez" class="h-4 w-4" />{{ __('lagos.aviso_pesca_listo', ['especie' => $aviso->siembra->nombre_especie]) }}</span>
-                            <span class="block text-tinta-suave">{{ __('lagos.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                            <span class="block text-tinta-suave">{{ __('lagos.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->formatoHora('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
                         </p>
                         @if ($puedeOperar)
                             <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">

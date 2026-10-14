@@ -145,7 +145,7 @@ class AgendaController extends Controller
         EventoAgenda::query()->with('lago')->whereBetween('inicia_at', [$desde, $hasta])->orderBy('inicia_at')->get()
             ->each(fn (EventoAgenda $evento) => $elementos->push([
                 'fecha' => $evento->inicia_at->toDateString(),
-                'hora' => $evento->todo_el_dia ? null : $evento->inicia_at->format('H:i'),
+                'hora' => $evento->todo_el_dia ? null : $evento->inicia_at->formatoHora('H:i'),
                 'titulo' => $evento->titulo.($evento->lago ? " · {$evento->lago->nombre}" : ''),
                 'color' => $evento->tipo,
                 'evento' => $evento,

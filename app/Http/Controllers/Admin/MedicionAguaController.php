@@ -43,7 +43,7 @@ class MedicionAguaController extends Controller
         ], [
             'temperatura_c.required_without_all' => __('mensajes.medicion_agua.registra_menos_parametro'),
             'medido_at.before_or_equal' => MomentoRegistro::sinConexionActual()
-                ? __('mensajes.sin_conexion.hora_posterior_al_registro', ['hora' => Region::ahoraDelRegistro()->format('d/m/Y H:i')])
+                ? __('mensajes.sin_conexion.hora_posterior_al_registro', ['hora' => Region::ahoraDelRegistro()->formatoHora('d/m/Y H:i')])
                 : __('mensajes.medicion_agua.medicion_no_puede_tener_fecha'),
             'between' => __('mensajes.medicion_agua.valor_esta_fuera_rango_posible'),
         ]);

@@ -9,6 +9,14 @@ return [
     'nombre' => 'Nombre',
     'correo' => 'Correo',
 
+    'formato_hora' => [
+        'titulo' => 'Formato de hora',
+        'ayuda' => 'Cómo ves las horas en la app y en tus reportes. Lo guardado no cambia.',
+        'etiqueta' => 'Mostrar las horas en',
+        'de_la_finca' => 'El de la finca (:formato)',
+        'guardar' => 'Guardar formato',
+        'guardado' => 'Formato de hora guardado.',
+    ],
     'contrasena' => [
         'titulo' => 'Cambiar la contraseña',
         'ayuda' => 'Al cambiarla se cierran tus sesiones en otros equipos y se desconecta la app móvil.',

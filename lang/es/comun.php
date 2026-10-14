@@ -22,8 +22,9 @@ return [
     'formatos' => [
         'mes_anio' => 'F \\d\\e Y',
         'dia_mes' => 'l j \\d\\e F',
-        'dia_mes_hora' => 'l j \\d\\e F, H:i',
-        'fecha_larga' => 'l j \\d\\e F \\d\\e Y, H:i',
+        // Solo la fecha: la hora se agrega con App\Support\Hora (12 o 24 horas) y el texto fecha_y_hora
+        'fecha_larga' => 'l j \\d\\e F \\d\\e Y',
+        'fecha_y_hora' => ':fecha, :hora',
     ],
     'guardar' => 'Guardar',
     'guardar_cambios' => 'Guardar cambios',

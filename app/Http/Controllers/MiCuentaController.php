@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Rules\NoIgualAlCorreo;
 use App\Support\DosPasos;
+use App\Support\Hora;
 use App\Support\Totp;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -30,7 +32,23 @@ class MiCuentaController extends Controller
 
     public function index(Request $request): View
     {
-        return view('mi-cuenta.index', ['usuario' => $request->user()]);
+        $usuario = $request->user();
+
+        return view('mi-cuenta.index', [
+            'usuario' => $usuario,
+            // «El de la finca» (vacío) dice cuál es, para elegir sabiendo
+            'formatosHora' => ['' => __('cuenta.formato_hora.de_la_finca', ['formato' => __('region.formatos_hora_corto.'.Hora::deFinca($usuario->tenant))])]
+                + collect(Hora::FORMATOS)->mapWithKeys(fn (string $f) => [$f => __('region.formatos_hora.'.$f)])->all(),
+        ]);
+    }
+
+    /** Formato de hora de esta persona (12 o 24 horas); vacío = el de la finca. Solo cambia cómo se muestran las horas. */
+    public function formatoHora(Request $request): RedirectResponse
+    {
+        $datos = $request->validate(['formato_hora' => ['nullable', Rule::in(Hora::FORMATOS)]]);
+        $request->user()->forceFill(['formato_hora' => $datos['formato_hora'] ?? null])->save();
+
+        return back()->with('estado', __('cuenta.formato_hora.guardado'));
     }
 
     /** Al cambiarla se cierran las demás sesiones, se invalida «recordarme» y se revocan los tokens de la API. */

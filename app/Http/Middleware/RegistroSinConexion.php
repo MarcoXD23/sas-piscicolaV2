@@ -167,8 +167,8 @@ class RegistroSinConexion
 
         if ($momento->lessThan($servidor->subMinutes((int) config('sin_conexion.margen_hora_servidor_minutos')))) {
             return $this->rechazo(__('mensajes.sin_conexion.antes_de_hora_servidor', [
-                'momento' => Region::local($momento)->format('d/m/Y H:i'),
-                'servidor' => Region::local($servidor)->format('d/m/Y H:i'),
+                'momento' => Region::local($momento)->formatoHora('d/m/Y H:i'),
+                'servidor' => Region::local($servidor)->formatoHora('d/m/Y H:i'),
             ]));
         }
 

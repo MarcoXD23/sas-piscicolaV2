@@ -88,7 +88,7 @@ class ExportarReportesTest extends TestCase
 
         // Encabezado con la finca y la hora de generación en la zona de la finca
         $this->assertSame('Finca Norte', $hojas['Resumen'][0][0]);
-        $this->assertSame('Generado el 20/10/2026 10:00 por Marta.', $hojas['Resumen'][3][0]);
+        $this->assertSame("Generado el 20/10/2026 10:00\u{00A0}a.\u{00A0}m. por Marta.", $hojas['Resumen'][3][0]);   // finca de Colombia: 12 horas
 
         // Los números van como números (se pueden sumar en Excel)
         $this->assertSame(['L01', 'Mojarra roja', 0, 12.5, 0, 7.5], $hojas['Lagos'][1]);
@@ -96,7 +96,10 @@ class ExportarReportesTest extends TestCase
         $this->assertSame([__('reportes.exportar.peces_sembrados'), 1500], $hojas['Resumen'][5]);
 
         // La novedad sale con la hora de la finca, no la de UTC
-        $this->assertSame(['15/10/2026 23:30', 'Intrusión o robo', 'L01', 'Malla rota'], $hojas['Novedades'][1]);
+        // La hora va como fecha y hora de Excel (no como texto)
+        $this->assertInstanceOf(\DateTimeInterface::class, $hojas['Novedades'][1][0]);
+        $this->assertSame('2026-10-15 23:30', $hojas['Novedades'][1][0]->format('Y-m-d H:i'));
+        $this->assertSame(['Intrusión o robo', 'L01', 'Malla rota'], array_slice($hojas['Novedades'][1], 1));
         $this->assertSame(['03/10/2026', 'Engorde', 400, 'Proveedor Uno', 'LT-9'], $hojas['Entradas a bodega'][1]);
 
         $this->assertFalse($this->contiene($hojas, 'LagoAjeno'));
@@ -128,7 +131,7 @@ class ExportarReportesTest extends TestCase
         $this->assertStringContainsString('<html lang="es-CO">', $html);
         $this->assertStringContainsString('1.500', $html);
         $this->assertStringContainsString('12,5', $html);
-        $this->assertStringContainsString('15/10/2026 23:30', $html);
+        $this->assertStringContainsString("15/10/2026 11:30\u{00A0}p.\u{00A0}m.", $html);   // finca de Colombia: 12 horas
         $this->assertStringNotContainsString('LagoAjeno', $html);
     }
 

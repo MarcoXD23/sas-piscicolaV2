@@ -208,7 +208,7 @@ class BitacoraTest extends TestCase
         $ver(['rol' => Rol::ADMINISTRADOR])->assertDontSee('5 kg de Engorde')->assertSee('promedio 250 g');
         $ver(['lago_id' => $otro->id])->assertDontSee('5 kg de Engorde')->assertSee('promedio 250 g');
         // Los días son de la finca: el 16 a las 23:50 en Bogotá cuenta como 16
-        $ver(['desde' => '2026-10-16', 'hasta' => '2026-10-16'])->assertDontSee('5 kg de Engorde')->assertSee('promedio 250 g')->assertSee('16/10/2026 23:50:00');
+        $ver(['desde' => '2026-10-16', 'hasta' => '2026-10-16'])->assertDontSee('5 kg de Engorde')->assertSee('promedio 250 g')->assertSee("16/10/2026 11:50:00\u{00A0}p.\u{00A0}m.");   // finca de Colombia: 12 horas
         $ver(['desde' => '2026-10-15', 'hasta' => '2026-10-15'])->assertSee('5 kg de Engorde')->assertDontSee('promedio 250 g');
     }
 

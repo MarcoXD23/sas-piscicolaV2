@@ -9,6 +9,10 @@ return [
     // Registro rápido (/campo, resources/js/campo.js y campo-logica.js)
     'campo_quien' => 'Registrando como :nombre · :finca',
     'campo_datos_del' => 'Datos del :momento (:hace).',
+    // Formato de hora (resources/js/hora.js; los mismos de lang/es/region.php)
+    'hora_am' => 'a. m.',
+    'hora_pm' => 'p. m.',
+    'hora_elegida' => 'Hora elegida: :hora',
     'campo_datos_viejos' => 'Son de hace mucho: actualízalos cuando tengas señal.',
     'campo_hace_instante' => 'hace un momento',
     'campo_hace_minutos' => 'hace :n min',

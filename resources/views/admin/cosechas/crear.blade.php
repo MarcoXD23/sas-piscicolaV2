@@ -61,8 +61,8 @@
                              :ayuda="__('cosechas.fecha_ayuda')" required />
                     <div>
                         <p class="mb-1.5 block text-base font-semibold text-tinta">{{ __('cosechas.hora') }}</p>
-                        <p class="flex min-h-12 items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-base font-bold tabular-nums text-tinta">{{ Region::ahora()->format('H:i') }}</p>
-                        <p class="mt-1.5 text-sm text-tinta-suave">{{ __('cosechas.hora_ayuda', ['hora' => Region::ahora()->format('H:i')]) }}</p>
+                        <p class="flex min-h-12 items-center rounded-ficha border border-renglon bg-papel-hondo px-4 text-base font-bold tabular-nums text-tinta">{{ Region::ahora()->formatoHora('H:i') }}</p>
+                        <p class="mt-1.5 text-sm text-tinta-suave">{{ __('cosechas.hora_ayuda', ['hora' => Region::ahora()->formatoHora('H:i')]) }}</p>
                     </div>
                     <x-seleccion nombre="despachado_por_id" :etiqueta="__('cosechas.despacho')" :opciones="$personal->pluck('name', 'id')->all()"
                                  :valor="auth()->id()" :ayuda="__('cosechas.despacho_ayuda')" />

@@ -5,7 +5,7 @@
 @section('contenido')
     @php
         $horario = function ($turno) {
-            $texto = $turno->inicia_at->format('H:i').' – '.$turno->termina_at->format('H:i');
+            $texto = $turno->inicia_at->formatoHora('H:i').' – '.$turno->termina_at->formatoHora('H:i');
 
             return $turno->termina_at->isSameDay($turno->inicia_at) ? $texto : $texto.' '.__('turnos.mas_un_dia');
         };
@@ -33,7 +33,7 @@
                     <span class="truncate font-semibold text-tinta">{{ $turno->user->name }}</span>
                     <span class="rounded-full bg-papel-hondo px-2.5 py-0.5 text-sm font-semibold capitalize text-tinta">{{ $turno->rol }}</span>
                 </div>
-                <span class="shrink-0 text-sm text-tinta-suave">{{ __('turnos.hasta', ['hora' => $turno->termina_at->format('H:i')]) }}</span>
+                <span class="shrink-0 text-sm text-tinta-suave">{{ __('turnos.hasta', ['hora' => $turno->termina_at->formatoHora('H:i')]) }}</span>
             </div>
         @empty
             <p class="text-base text-tinta-suave">{{ __('turnos.nadie_esta_turno_este_momento') }}</p>
@@ -120,8 +120,8 @@
                 </fieldset>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <x-campo nombre="hora_inicio" :etiqueta="__('turnos.entrada')" tipo="time" valor="06:00" required />
-                    <x-campo nombre="hora_fin" :etiqueta="__('turnos.salida')" tipo="time" valor="14:00" required
+                    <x-campo nombre="hora_inicio" :etiqueta="__('turnos.entrada')" tipo="time" valor="06:00" required data-ver-hora />
+                    <x-campo nombre="hora_fin" :etiqueta="__('turnos.salida')" tipo="time" valor="14:00" required data-ver-hora
                              :ayuda="__('turnos.si_es_antes_entrada_termina')" />
                 </div>
 

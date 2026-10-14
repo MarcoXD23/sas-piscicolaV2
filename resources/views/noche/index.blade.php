@@ -24,7 +24,7 @@
         </x-encabezado>
 
         @if ($turno)
-            <x-aviso tono="bien" icono="luna" class="mb-6">{{ __('noche.turno_hasta') }} <strong class="font-bold">{{ $turno->termina_at->format('H:i') }}</strong>.</x-aviso>
+            <x-aviso tono="bien" icono="luna" class="mb-6">{!! __('noche.turno_hasta', ['hora' => '<strong class="font-bold">'.e($turno->termina_at->formatoHora('H:i')).'</strong>']) !!}</x-aviso>
         @elseif ($soloLectura)
             <x-aviso tono="info" icono="luna" class="mb-6">{{ __('noche.solo_lectura') }}</x-aviso>
         @elseif (! $puedeRegistrar)
@@ -66,7 +66,7 @@
 
                     <div class="mb-5 border-y border-renglon py-4">
                         @if ($conOxigeno)
-                            <p class="text-sm text-tinta-suave">{{ __('noche.oxigeno_a_las', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}</p>
+                            <p class="text-sm text-tinta-suave">{{ __('noche.oxigeno_a_las', ['momento' => $medicion->medido_at->formatoHora('d/m H:i')]) }}</p>
                             <p @class(['mt-1 text-cifra-grande font-bold tabular-nums', 'text-alerta' => $alertas !== []])>
                                 {{ $numero($medicion->oxigeno_mg_l) }} <span class="text-lg font-normal tracking-normal text-tinta-suave">mg/L</span>
                             </p>
@@ -81,7 +81,7 @@
                             <p class="mt-2 flex items-start gap-1.5 text-base font-bold text-alerta"><x-icono nombre="aireador" class="mt-0.5 h-5 w-5" /> {{ __('noche.enciende_aireador_vuelve_medir') }}</p>
                         @endif
                         @if ($aireacion)
-                            <p class="mt-2 text-sm text-info">{{ __('noche.aireador_encendido_desde', ['hora' => $aireacion->encendido_at->format('H:i')]) }}</p>
+                            <p class="mt-2 text-sm text-info">{{ __('noche.aireador_encendido_desde', ['hora' => $aireacion->encendido_at->formatoHora('H:i')]) }}</p>
                         @endif
                     </div>
 
@@ -158,7 +158,7 @@
                         @endforeach
                     </nav>
 
-                    <p class="mb-4 text-sm text-tinta-suave">{{ __('noche.turno_detalle', ['nombre' => $turnoElegido->user->name, 'desde' => $turnoElegido->inicia_at->format('d/m H:i'), 'hasta' => $turnoElegido->termina_at->format('d/m H:i')]) }}</p>
+                    <p class="mb-4 text-sm text-tinta-suave">{{ __('noche.turno_detalle', ['nombre' => $turnoElegido->user->name, 'desde' => $turnoElegido->inicia_at->formatoHora('d/m H:i'), 'hasta' => $turnoElegido->termina_at->formatoHora('d/m H:i')]) }}</p>
 
                     @if ($reporteTurno->isEmpty())
                         <x-vacio icono="luna" :mensaje="__('noche.turno_sin_registros')" />

@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Tenant;
+use App\Models\User;
+use App\Support\Hora;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -22,7 +24,9 @@ class FincaEnEliminacion extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $fecha = $this->finca->eliminacion_programada_at->setTimezone($this->finca->zona_horaria)->format('d/m/Y H:i');
+        // En el formato de hora de quien lo recibe (si no es una persona de la finca, el de la finca)
+        $fecha = Hora::formatear($this->finca->eliminacion_programada_at->setTimezone($this->finca->zona_horaria), 'd/m/Y H:i',
+            $notifiable instanceof User ? Hora::de($notifiable) : Hora::deFinca($this->finca));
 
         return (new MailMessage)
             ->subject(__('datos.correo_eliminacion.asunto', ['finca' => $this->finca->nombre]))

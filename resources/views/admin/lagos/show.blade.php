@@ -47,7 +47,7 @@
 
     @if ($alertasAgua !== [])
         <x-aviso tono="alerta" class="mb-3">
-            <p>{{ __('lagos.alertas_ultima_medicion', ['momento' => $medicion->medido_at->format('d/m H:i')]) }}</p>
+            <p>{{ __('lagos.alertas_ultima_medicion', ['momento' => $medicion->medido_at->formatoHora('d/m H:i')]) }}</p>
             <ul class="mt-1 list-disc space-y-0.5 pl-5 font-normal">
                 @foreach ($alertasAgua as $alerta)
                     <li>{{ $alerta }}</li>
@@ -184,7 +184,7 @@
         {{-- En celular la columna lateral (agua y ración) va primero: es lo urgente del lago; en pantallas anchas queda a la derecha --}}
         <aside class="order-first space-y-8 lg:order-none">
             {{-- Calidad del agua: la lectura del lago, con su pestaña de estado (ícono y texto) --}}
-            <x-tarjeta :titulo="__('lagos.calidad_agua')" :subtitulo="$medicion ? __('lagos.ultima_medicion', ['momento' => $medicion->medido_at->format('d/m/Y H:i')]) : null"
+            <x-tarjeta :titulo="__('lagos.calidad_agua')" :subtitulo="$medicion ? __('lagos.ultima_medicion', ['momento' => $medicion->medido_at->formatoHora('d/m/Y H:i')]) : null"
                        @class(['relative mt-3.5 !pt-7', '!ring-alerta-borde' => $estadoAgua === 'alerta', '!ring-atencion-borde' => $estadoAgua === 'atencion'])>
                 <x-insignia :tono="['sin_medicion' => 'info'][$estadoAgua] ?? $estadoAgua" pestana como="p">{{ __('inicio.estado_agua.'.$estadoAgua) }}</x-insignia>
 
@@ -297,7 +297,7 @@
     @if ($puedeOperar)
         <x-modal id="modal-medicion" :titulo="__('lagos.calidad_agua_de', ['lago' => $lago->nombre])">
             <x-formulario :action="route('admin.mediciones-agua.store', $lago)">
-                <x-campo nombre="medido_at" :etiqueta="__('lagos.fecha_hora')" tipo="datetime-local" :valor="\App\Support\Region::ahora()->format('Y-m-d\TH:i')" required />
+                <x-campo nombre="medido_at" :etiqueta="__('lagos.fecha_hora')" tipo="datetime-local" data-ver-hora :valor="\App\Support\Region::ahora()->format('Y-m-d\TH:i')" required />
                 <div class="grid grid-cols-2 gap-4">
                     <x-campo nombre="temperatura_c" :etiqueta="__('lagos.temperatura_c')" tipo="number" step="0.1" inputmode="decimal" />
                     <x-campo nombre="oxigeno_mg_l" :etiqueta="__('lagos.oxigeno_mg_l')" tipo="number" step="0.01" inputmode="decimal" />

@@ -21,7 +21,7 @@
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.especie') }}</dt><dd class="font-semibold">{{ $cosecha->siembra->nombre_especie }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.destino') }}</dt><dd class="font-semibold">{{ $cosecha->destino ?: __('cosechas.sin_dato') }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.fecha') }}</dt><dd class="font-semibold tabular-nums">{{ $cosecha->fecha->format('d/m/Y') }}</dd></div>
-            <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.hora') }}</dt><dd class="font-semibold tabular-nums">{{ Region::local($cosecha->created_at)?->format('H:i') }}</dd></div>
+            <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.hora') }}</dt><dd class="font-semibold tabular-nums">{{ Region::local($cosecha->created_at)?->formatoHora('H:i') }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.despacho') }}</dt><dd class="font-semibold">{{ $cosecha->despachadoPor?->name ?? __('cosechas.sin_dato') }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.registro') }}</dt><dd>{{ $cosecha->usuario?->name }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.peces') }}</dt><dd class="tabular-nums">{{ Formato::numero($cosecha->peces) }}</dd></div>

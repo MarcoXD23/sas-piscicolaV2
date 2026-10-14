@@ -65,7 +65,7 @@
                                 @endif
                             </p>
                             <p class="text-sm text-tinta-suave">
-                                {{ collect([$solicitud->revisor?->name, $solicitud->revisado_at?->format('d/m/Y H:i'), $solicitud->respuesta])->filter()->join(' · ') }}
+                                {{ collect([$solicitud->revisor?->name, $solicitud->revisado_at?->formatoHora('d/m/Y H:i'), $solicitud->respuesta])->filter()->join(' · ') }}
                             </p>
                         </div>
                         <span class="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $chips[$solicitud->estado] }}">{{ $solicitud->textoEstado() }}</span>

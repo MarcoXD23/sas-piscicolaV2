@@ -10,6 +10,7 @@ use App\Models\StockAlimento;
 use App\Models\Turno;
 use App\Models\User;
 use App\Support\CalculadoraRacion;
+use App\Support\Hora;
 use App\Support\LotesPorEspecie;
 use App\Support\Region;
 use App\Support\UnidadesPeso;
@@ -98,6 +99,8 @@ final class PaqueteTrabajo
             'clave' => $usuario->tenant_id.'|'.$usuario->id,
             'finca' => ['nombre' => $usuario->tenant?->nombre, 'zona_horaria' => Region::zona()],
             'usuario' => ['nombre' => $usuario->name],
+            // Formato de hora de la persona (12 o 24), ya resuelto: el teléfono lo usa sin conexión
+            'formato_hora' => Hora::de($usuario),
             'secciones' => $secciones,
             'horas_limite' => (int) config('sin_conexion.horas'),
             'lagos' => self::lagos($lagos->take($maximo), $tiene),

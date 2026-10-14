@@ -46,7 +46,7 @@
                         @endif
                         @if ($tarea->estaCompletada())
                             <p class="mt-2 text-sm font-medium text-marca-700">
-                                {{ __('tareas.hecha_el', ['momento' => $tarea->completada_at->format('d/m/Y H:i')]) }}@if ($tarea->nota_cierre): {{ $tarea->nota_cierre }}@endif
+                                {{ __('tareas.hecha_el', ['momento' => $tarea->completada_at->formatoHora('d/m/Y H:i')]) }}@if ($tarea->nota_cierre): {{ $tarea->nota_cierre }}@endif
                             </p>
                         @endif
                     </div>

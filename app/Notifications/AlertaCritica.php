@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Alerta;
+use App\Models\User;
+use App\Support\Hora;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -26,7 +28,8 @@ class AlertaCritica extends Notification
             ->subject(__('alertas.correo.asunto', ['tipo' => __('alertas.tipos.'.$this->alerta->tipo), 'app' => config('app.name')]))
             ->greeting(__('alertas.correo.saludo', ['nombre' => $notifiable->name]))
             ->line($this->alerta->mensaje())
-            ->line(__('alertas.correo.momento', ['momento' => $this->alerta->abierta_at->format('d/m/Y H:i')]));
+            // En el formato de hora de quien lo recibe (12 o 24 horas)
+            ->line(__('alertas.correo.momento', ['momento' => Hora::formatear($this->alerta->abierta_at, 'd/m/Y H:i', $notifiable instanceof User ? Hora::de($notifiable) : null)]));
 
         if ($enlace = $this->alerta->enlace()) {
             $correo->action(__('alertas.correo.boton'), $enlace);

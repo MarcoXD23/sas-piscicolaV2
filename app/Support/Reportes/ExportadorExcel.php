@@ -2,6 +2,9 @@
 
 namespace App\Support\Reportes;
 
+use App\Support\Hora;
+use DateTimeImmutable;
+use DateTimeInterface;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Style;
@@ -9,8 +12,9 @@ use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Genera un .xlsx con una hoja por tabla (openspout). Los números van como números (se pueden sumar en Excel);
- * las fechas ya vienen como texto en la zona y el formato de la finca.
+ * Genera un .xlsx con una hoja por tabla (openspout). Los números van como números (se pueden sumar en Excel).
+ * Las fechas con hora (un DateTimeInterface en la fila, ya en la zona de la finca) van como fecha y hora de Excel, con
+ * el formato de hora de la persona (12 o 24 horas): se pueden ordenar y calcular. Las fechas sin hora siguen como texto.
  */
 class ExportadorExcel
 {
@@ -41,15 +45,23 @@ class ExportadorExcel
                 $celdas = [];
                 foreach (array_values($fila) as $posicion => $valor) {
                     $decimales = $tabla->columnas[$posicion][1] ?? null;
-                    $celdas[] = is_int($valor) || is_float($valor)
-                        ? Cell::fromValue($valor, (new Style)->withFormat(self::formato($decimales, $valor)))
-                        : Cell::fromValue((string) $valor);
+                    $celdas[] = match (true) {
+                        is_int($valor) || is_float($valor) => Cell::fromValue($valor, (new Style)->withFormat(self::formato($decimales, $valor))),
+                        $valor instanceof DateTimeInterface => Cell::fromValue(DateTimeImmutable::createFromInterface($valor), (new Style)->withFormat(self::formatoFechaHora())),
+                        default => Cell::fromValue((string) $valor),
+                    };
                 }
                 $escritor->addRow(new Row($celdas));
             }
         }
 
         $escritor->close();
+    }
+
+    /** Formato de Excel de una fecha con hora: «15/10/2026 10:24 PM» (12 horas) o «15/10/2026 22:24» (24 horas). */
+    public static function formatoFechaHora(): string
+    {
+        return Hora::de() === Hora::DOCE ? 'dd/mm/yyyy h:mm AM/PM' : 'dd/mm/yyyy hh:mm';
     }
 
     /**

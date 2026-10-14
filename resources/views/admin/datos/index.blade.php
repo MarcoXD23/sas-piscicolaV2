@@ -18,11 +18,11 @@
             @forelse ($exportaciones as $exportacion)
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-renglon py-3 text-base">
                     <div>
-                        <p class="font-medium text-tinta">{{ __('datos.exportar.pedida', ['fecha' => $exportacion->created_at->setTimezone(\App\Support\Region::zona())->format('d/m/Y H:i')]) }}</p>
+                        <p class="font-medium text-tinta">{{ __('datos.exportar.pedida', ['fecha' => $exportacion->created_at->setTimezone(\App\Support\Region::zona())->formatoHora('d/m/Y H:i')]) }}</p>
                         <p class="text-sm text-tinta-suave">
                             {{ __('datos.exportar.estados.'.$exportacion->estado) }}
                             @if ($exportacion->vence_at)
-                                · {{ $exportacion->descargable() ? __('datos.exportar.disponible_hasta', ['fecha' => $exportacion->vence_at->format('d/m/Y H:i')]) : __('datos.exportar.vencio') }}
+                                · {{ $exportacion->descargable() ? __('datos.exportar.disponible_hasta', ['fecha' => $exportacion->vence_at->formatoHora('d/m/Y H:i')]) : __('datos.exportar.vencio') }}
                             @endif
                         </p>
                     </div>

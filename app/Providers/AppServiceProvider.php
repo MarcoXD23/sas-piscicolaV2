@@ -15,8 +15,10 @@ use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\GeminiAsistente;
+use App\Support\Hora;
 use App\Support\MomentoRegistro;
 use App\Support\TenantActual;
+use App\Support\Traductor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Translation\Translator;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +39,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Traductor sin punto doble tras «a. m.» / «p. m.» (frases que terminan en una hora de 12 horas)
+        $this->app->extend('translator', function (Translator $traductor) {
+            $nuevo = new Traductor($traductor->getLoader(), $traductor->getLocale());
+            $nuevo->setFallback($traductor->getFallback());
+
+            return $nuevo;
+        });
         $this->app->scoped(TenantActual::class);
         // Hora real del registro de la petición (la del teléfono si se hizo sin conexión)
         $this->app->scoped(MomentoRegistro::class);
@@ -86,6 +96,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Horas en el formato de cada persona (12 o 24 horas): $instante->formatoHora('d/m/Y H:i')
+        Hora::registrar();
+
         // El filtro de finca falla cerrado: la identidad (login, sesión, recuperar contraseña y tokens de la API)
         // se busca sin él, antes de que EstablecerTenant fije la finca
         Auth::provider('usuarios_finca', fn ($app, array $config) => new ProveedorUsuarios($app['hash'], $config['model']));

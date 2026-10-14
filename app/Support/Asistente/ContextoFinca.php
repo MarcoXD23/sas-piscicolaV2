@@ -186,12 +186,12 @@ class ContextoFinca
                     $medicion->temperatura_c !== null ? Formato::numero($medicion->temperatura_c, 1).' °C' : null,
                     $medicion->ph !== null ? 'pH '.Formato::numero($medicion->ph, 2) : null,
                 ]);
-                $partes[] = 'última medición '.$medicion->medido_at->format('d/m H:i').': '.implode(', ', $valores);
+                $partes[] = 'última medición '.$medicion->medido_at->formatoHora('d/m H:i').': '.implode(', ', $valores);
                 foreach ($medicion->alertas($lago->siembrasActivas->pluck('especie')) as $alerta) {
                     $partes[] = "ALERTA: {$alerta}";
                 }
             }
-            $partes[] = $lago->aireacionActiva ? 'aireador encendido desde las '.$lago->aireacionActiva->encendido_at->format('H:i') : 'aireador apagado';
+            $partes[] = $lago->aireacionActiva ? 'aireador encendido desde las '.$lago->aireacionActiva->encendido_at->formatoHora('H:i') : 'aireador apagado';
             foreach ($lago->tratamientosEnRetiro as $tratamiento) {
                 $partes[] = "en retiro sanitario hasta el {$tratamiento->finRetiro()->format('d/m/Y')} (no cosechar)";
             }
@@ -209,7 +209,7 @@ class ContextoFinca
         $tareas = Tarea::query()->with('lago')->where('asignada_a', $usuario->id)->pendientes()->orderBy('fecha')->limit(10)->get();
 
         $texto = $turno
-            ? "Está en turno de {$turno->rol} hasta las {$turno->termina_at->format('H:i')}."
+            ? "Está en turno de {$turno->rol} hasta las {$turno->termina_at->formatoHora('H:i')}."
             : 'Está fuera de turno.'.($proximo ? " Próximo turno: {$proximo->inicia_at->translatedFormat('l j, H:i')} ({$proximo->rol})." : '');
 
         $texto .= $tareas->isEmpty()
@@ -226,7 +226,7 @@ class ContextoFinca
 
         return $novedades->isEmpty()
             ? 'Seguridad: sin novedades en las últimas 24 horas.'
-            : "Novedades de seguridad (24 horas):\n".$novedades->map(fn (Ronda $r) => "- {$r->registrada_at->format('d/m H:i')} {$r->textoTipo()}"
+            : "Novedades de seguridad (24 horas):\n".$novedades->map(fn (Ronda $r) => "- {$r->registrada_at->formatoHora('d/m H:i')} {$r->textoTipo()}"
                 .($r->lago ? " en {$r->lago->nombre}" : '').": {$r->descripcion}")->implode("\n");
     }
 

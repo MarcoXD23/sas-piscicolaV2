@@ -115,8 +115,8 @@
                     <dt class="text-tinta-suave">{{ __('agenda.cuando') }}</dt>
                     <dd class="text-right font-semibold first-letter:uppercase">
                         {{ $evento->inicia_at->translatedFormat(__('comun.formatos.dia_mes'))
-                            .($evento->todo_el_dia ? '' : ', '.$evento->inicia_at->format('H:i'))
-                            .($evento->termina_at ? ' a '.$evento->termina_at->format('H:i') : '') }}
+                            .($evento->todo_el_dia ? '' : ', '.$evento->inicia_at->formatoHora('H:i'))
+                            .($evento->termina_at ? ' a '.$evento->termina_at->formatoHora('H:i') : '') }}
                     </dd>
                 </div>
                 @if ($evento->lago)
@@ -131,7 +131,7 @@
             @endif
 
             @if ($evento->estaCompletado())
-                <p class="mt-4 text-base font-medium text-marca-700">{{ __('agenda.hecho_el', ['momento' => $evento->completado_at->format('d/m/Y H:i')]) }}</p>
+                <p class="mt-4 text-base font-medium text-marca-700">{{ __('agenda.hecho_el', ['momento' => $evento->completado_at->formatoHora('d/m/Y H:i')]) }}</p>
             @else
                 <div class="mt-5 grid grid-cols-3 gap-2">
                     <x-formulario :action="route('admin.agenda.destroy', $evento)" metodo="DELETE" class="!space-y-0">
@@ -160,9 +160,9 @@
                 <div class="grid grid-cols-2 gap-4">
                     <x-seleccion nombre="tipo" id="tipo{{ $sufijo }}" :etiqueta="__('agenda.tipo')" :opciones="$tipos" :valor="$editar?->tipo" required />
                     <x-campo nombre="fecha" id="fecha{{ $sufijo }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="($editar?->inicia_at ?? \App\Support\Region::hoy())->toDateString()" required />
-                    <x-campo nombre="hora" id="hora{{ $sufijo }}" :etiqueta="__('agenda.hora_opcional')" tipo="time"
+                    <x-campo nombre="hora" id="hora{{ $sufijo }}" :etiqueta="__('agenda.hora_opcional')" tipo="time" data-ver-hora
                              :valor="$editar && ! $editar->todo_el_dia ? $editar->inicia_at->format('H:i') : null" />
-                    <x-campo nombre="hora_fin" id="hora-fin{{ $sufijo }}" :etiqueta="__('agenda.hasta_opcional')" tipo="time" :valor="$editar?->termina_at?->format('H:i')" />
+                    <x-campo nombre="hora_fin" id="hora-fin{{ $sufijo }}" :etiqueta="__('agenda.hasta_opcional')" tipo="time" data-ver-hora :valor="$editar?->termina_at?->format('H:i')" />
                     <x-seleccion nombre="lago_id" id="lago{{ $sufijo }}" :etiqueta="__('comun.lago_opcional')" :opciones="['' => __('comun.ninguno')] + $lagos" :valor="$editar?->lago_id" />
                     <x-campo nombre="recordar_dias_antes" id="aviso{{ $sufijo }}" :etiqueta="__('agenda.avisar_dias_antes')" tipo="number" min="0" max="60" inputmode="numeric"
                              :valor="$editar?->recordar_dias_antes ?? 1" required />

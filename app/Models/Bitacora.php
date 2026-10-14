@@ -132,7 +132,7 @@ class Bitacora extends Model
         $texto = __('bitacora.detalles.'.$this->accion, $datos);
 
         if (! empty($this->detalle['sin_conexion']) && isset($this->detalle['recibido_at'])) {
-            $llegada = CarbonImmutable::parse($this->detalle['recibido_at'])->setTimezone($this->zona_horaria)->format('d/m/Y H:i');
+            $llegada = CarbonImmutable::parse($this->detalle['recibido_at'])->setTimezone($this->zona_horaria)->formatoHora('d/m/Y H:i');
             $texto .= ' · '.__('bitacora.sin_conexion', ['llegada' => $llegada]);
         }
 

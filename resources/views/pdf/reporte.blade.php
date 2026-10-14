@@ -50,6 +50,9 @@
                                 @php $decimales = $tabla->columnas[$posicion][1] ?? null; @endphp
                                 @if (is_int($valor) || is_float($valor))
                                     <td class="numero">{{ \App\Support\Formato::numero($valor, $decimales ?? (is_int($valor) ? 0 : 2)) }}</td>
+                                @elseif ($valor instanceof \DateTimeInterface)
+                                    {{-- Fecha con hora: en el formato de hora de la persona (12 o 24 horas) --}}
+                                    <td>{{ \App\Support\Hora::formatear(\Carbon\CarbonImmutable::instance($valor), 'd/m/Y H:i') }}</td>
                                 @else
                                     <td>{{ $valor }}</td>
                                 @endif

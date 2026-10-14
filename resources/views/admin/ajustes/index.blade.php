@@ -14,7 +14,7 @@
                          :valor="$finca->zona_horaria" :ayuda="__('region.ajustes.zona_ayuda')" required />
             <x-seleccion nombre="idioma" :etiqueta="__('region.ajustes.idioma')" :opciones="$idiomas" :valor="$finca->idioma" required />
 
-            <p class="text-sm text-tinta-suave">{{ __('region.ajustes.hora_actual', ['hora' => \App\Support\Region::ahora()->format('d/m/Y H:i')]) }}</p>
+            <p class="text-sm text-tinta-suave">{{ __('region.ajustes.hora_actual', ['hora' => \App\Support\Region::ahora()->formatoHora('d/m/Y H:i')]) }}</p>
 
             <fieldset class="space-y-5 border-t border-renglon pt-5">
                 <legend class="mb-1 text-lg font-semibold text-tinta">{{ __('alertas.ajustes.titulo') }}</legend>
@@ -30,6 +30,9 @@
                 <x-campo nombre="alerta_despacho_dias" :etiqueta="__('alertas.ajustes.despacho_dias')" tipo="number" min="1" max="30" inputmode="numeric"
                          :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
             </fieldset>
+
+            <x-seleccion nombre="formato_hora" :etiqueta="__('region.ajustes.formato_hora')" :valor="$finca->formato_hora"
+                         :opciones="$formatosHora" :ayuda="__('region.ajustes.formato_hora_ayuda')" />
 
             <x-seleccion nombre="unidad_peso_muestreo" :etiqueta="__('region.ajustes.unidad_peso_muestreo')" :valor="$finca->unidad_peso_muestreo"
                          :opciones="$unidadesPeso" :ayuda="__('region.ajustes.unidad_peso_muestreo_ayuda')" required />

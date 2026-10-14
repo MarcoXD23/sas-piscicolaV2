@@ -14,6 +14,7 @@
  */
 import { leerHoraServidor, leerSesionActiva, operacion as operacionBase, recordarDeRespuesta, recordarHoraServidor, REGISTROS } from './almacen';
 import { estadoToken } from './paquete-logica';
+import { diaMesHora, formatoPagina, textosHora } from './hora';
 import { camposParaGuardar, clasificar, fechaLocal, motivoRechazo, porVencer } from './sin-conexion-logica';
 
 const operacion = (modo, accion) => operacionBase(REGISTROS, modo, accion);
@@ -110,7 +111,7 @@ export const iniciarCola = (t) => {
     const tarjeta = (registro) => {
         const li = elemento('li', 'rounded-ficha border border-renglon bg-ficha p-4');
         li.appendChild(elemento('p', 'text-base font-bold text-tinta', registro.resumen));
-        const momento = new Date(registro.registradoEn).toLocaleString(document.documentElement.lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const momento = diaMesHora(new Date(registro.registradoEn), formatoPagina(), textosHora(t));
         li.appendChild(elemento('p', 'text-base text-tinta-suave', t('cola_registrado', { momento })));
 
         const lista = elemento('ul', 'mt-2 space-y-1 text-base text-tinta');

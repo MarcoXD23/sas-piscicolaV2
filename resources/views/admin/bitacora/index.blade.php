@@ -27,7 +27,7 @@
         @foreach ($registros as $registro)
             <tr>
                 <td data-label="{{ __('bitacora.momento') }}" class="whitespace-nowrap tabular-nums">
-                    <time datetime="{{ $registro->momentoLocal()->toIso8601String() }}">{{ $registro->momentoLocal()->format('d/m/Y H:i:s') }}</time>
+                    <time datetime="{{ $registro->momentoLocal()->toIso8601String() }}">{{ $registro->momentoLocal()->formatoHora('d/m/Y H:i:s') }}</time>
                 </td>
                 <td data-label="{{ __('bitacora.persona') }}">
                     <p class="font-medium text-tinta">{{ $registro->usuario->name }}</p>

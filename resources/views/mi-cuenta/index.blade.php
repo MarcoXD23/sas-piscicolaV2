@@ -13,6 +13,13 @@
             </dl>
         </x-tarjeta>
 
+        <x-tarjeta :titulo="__('cuenta.formato_hora.titulo')" :subtitulo="__('cuenta.formato_hora.ayuda')">
+            <x-formulario :action="route('mi-cuenta.formato-hora')" metodo="PUT">
+                <x-seleccion nombre="formato_hora" :etiqueta="__('cuenta.formato_hora.etiqueta')" :valor="$usuario->formato_hora" :opciones="$formatosHora" />
+                <x-boton variante="secundario">{{ __('cuenta.formato_hora.guardar') }}</x-boton>
+            </x-formulario>
+        </x-tarjeta>
+
         <x-tarjeta :titulo="__('cuenta.contrasena.titulo')" :subtitulo="__('cuenta.contrasena.ayuda')">
             <x-formulario :action="route('mi-cuenta.contrasena')" metodo="PUT">
                 <x-contrasena nombre="actual" :etiqueta="__('cuenta.contrasena.actual')" autocomplete="current-password" required :ayuda="__('cuenta.contrasena.actual_ayuda')" />

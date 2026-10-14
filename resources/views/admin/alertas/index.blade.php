@@ -28,7 +28,7 @@
                     ])>{{ __('alertas.tipos.'.$alerta->tipo) }} · {{ __('alertas.severidades.'.$alerta->severidad) }}</span>
                     <p class="text-tinta">{{ $alerta->mensaje() }}</p>
                     @if ($alerta->notificada_at)
-                        <p class="text-sm text-tinta-suave">{{ __('alertas.notificada', ['momento' => $alerta->notificada_at->format('d/m/Y H:i')]) }}</p>
+                        <p class="text-sm text-tinta-suave">{{ __('alertas.notificada', ['momento' => $alerta->notificada_at->formatoHora('d/m/Y H:i')]) }}</p>
                     @endif
                 </td>
                 <td data-label="{{ __('alertas.estado') }}">
@@ -38,8 +38,8 @@
                         'bg-papel-hondo text-tinta-suave' => ! $alerta->estaAbierta(),
                     ])>{{ $alerta->estaAbierta() ? __('alertas.abierta_estado') : __('alertas.cerrada_estado') }}</span>
                 </td>
-                <td data-label="{{ __('alertas.abierta') }}" class="whitespace-nowrap tabular-nums">{{ $alerta->abierta_at->format('d/m/Y H:i') }}</td>
-                <td data-label="{{ __('alertas.cerrada') }}" class="whitespace-nowrap tabular-nums">{{ $alerta->cerrada_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                <td data-label="{{ __('alertas.abierta') }}" class="whitespace-nowrap tabular-nums">{{ $alerta->abierta_at->formatoHora('d/m/Y H:i') }}</td>
+                <td data-label="{{ __('alertas.cerrada') }}" class="whitespace-nowrap tabular-nums">{{ $alerta->cerrada_at?->formatoHora('d/m/Y H:i') ?? '—' }}</td>
             </tr>
         @endforeach
     </x-tabla>

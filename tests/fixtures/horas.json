@@ -1,0 +1,125 @@
+{
+  "nota": "Lo usan tests/Feature/FormatoHoraTest.php y tests/js/hora.test.mjs: el servidor y el teléfono escriben igual cada hora.",
+  "casos": [
+    {
+      "horas": 0,
+      "minutos": 0,
+      "formato": "12",
+      "texto": "12:00 a. m."
+    },
+    {
+      "horas": 0,
+      "minutos": 0,
+      "formato": "24",
+      "texto": "00:00"
+    },
+    {
+      "horas": 0,
+      "minutos": 5,
+      "formato": "12",
+      "texto": "12:05 a. m."
+    },
+    {
+      "horas": 0,
+      "minutos": 5,
+      "formato": "24",
+      "texto": "00:05"
+    },
+    {
+      "horas": 1,
+      "minutos": 0,
+      "formato": "12",
+      "texto": "1:00 a. m."
+    },
+    {
+      "horas": 1,
+      "minutos": 0,
+      "formato": "24",
+      "texto": "01:00"
+    },
+    {
+      "horas": 9,
+      "minutos": 7,
+      "formato": "12",
+      "texto": "9:07 a. m."
+    },
+    {
+      "horas": 9,
+      "minutos": 7,
+      "formato": "24",
+      "texto": "09:07"
+    },
+    {
+      "horas": 11,
+      "minutos": 59,
+      "formato": "12",
+      "texto": "11:59 a. m."
+    },
+    {
+      "horas": 11,
+      "minutos": 59,
+      "formato": "24",
+      "texto": "11:59"
+    },
+    {
+      "horas": 12,
+      "minutos": 0,
+      "formato": "12",
+      "texto": "12:00 p. m."
+    },
+    {
+      "horas": 12,
+      "minutos": 0,
+      "formato": "24",
+      "texto": "12:00"
+    },
+    {
+      "horas": 12,
+      "minutos": 30,
+      "formato": "12",
+      "texto": "12:30 p. m."
+    },
+    {
+      "horas": 12,
+      "minutos": 30,
+      "formato": "24",
+      "texto": "12:30"
+    },
+    {
+      "horas": 13,
+      "minutos": 45,
+      "formato": "12",
+      "texto": "1:45 p. m."
+    },
+    {
+      "horas": 13,
+      "minutos": 45,
+      "formato": "24",
+      "texto": "13:45"
+    },
+    {
+      "horas": 22,
+      "minutos": 24,
+      "formato": "12",
+      "texto": "10:24 p. m."
+    },
+    {
+      "horas": 22,
+      "minutos": 24,
+      "formato": "24",
+      "texto": "22:24"
+    },
+    {
+      "horas": 23,
+      "minutos": 59,
+      "formato": "12",
+      "texto": "11:59 p. m."
+    },
+    {
+      "horas": 23,
+      "minutos": 59,
+      "formato": "24",
+      "texto": "23:59"
+    }
+  ]
+}

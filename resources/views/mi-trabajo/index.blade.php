@@ -63,7 +63,7 @@
                     @foreach ($completadas as $tarea)
                         <li class="py-2.5">
                             <p class="font-bold">{{ $tarea->titulo }}</p>
-                            <p class="text-sm text-tinta-suave">{{ $tarea->completada_at->format('d/m/Y H:i') }}@if ($tarea->nota_cierre) · {{ $tarea->nota_cierre }}@endif</p>
+                            <p class="text-sm text-tinta-suave">{{ $tarea->completada_at->formatoHora('d/m/Y H:i') }}@if ($tarea->nota_cierre) · {{ $tarea->nota_cierre }}@endif</p>
                         </li>
                     @endforeach
                 </ul>

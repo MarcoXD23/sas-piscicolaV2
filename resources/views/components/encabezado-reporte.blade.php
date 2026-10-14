@@ -25,5 +25,5 @@
             <p class="text-base text-tinta-suave">{{ $periodo }}</p>
         </div>
     </div>
-    <p class="mt-2 text-xs text-tinta-suave">{{ __('componentes.generado_el', ['momento' => \App\Support\Region::ahora()->format('d/m/Y H:i'), 'nombre' => auth()->user()->name]) }}</p>
+    <p class="mt-2 text-xs text-tinta-suave">{{ __('componentes.generado_el', ['momento' => \App\Support\Region::ahora()->formatoHora('d/m/Y H:i'), 'nombre' => auth()->user()->name]) }}</p>
 </header>

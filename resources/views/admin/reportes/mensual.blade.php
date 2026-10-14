@@ -108,15 +108,15 @@
             <p class="py-1">{{ __('reportes.horas_extra_aprobadas', ['horas' => $numero($horasExtraAprobadas, 1)]) }}</p>
             <p class="py-1">{{ __('reportes.novedades_seguridad', ['cantidad' => $novedades->count()]) }}</p>
             @foreach ($novedades as $novedad)
-                <p class="text-sm text-tinta-suave">{{ $novedad->registrada_at->format('d/m H:i') }} · {{ $novedad->textoTipo() }}: {{ $novedad->descripcion }}</p>
+                <p class="text-sm text-tinta-suave">{{ $novedad->registrada_at->formatoHora('d/m H:i') }} · {{ $novedad->textoTipo() }}: {{ $novedad->descripcion }}</p>
             @endforeach
         </x-tarjeta>
 
         <x-tarjeta :titulo="__('reportes.avisos_pesca')" class="break-inside-avoid">
             @forelse ($avisosPesca as $aviso)
                 <p class="border-t border-renglon py-2 first:border-t-0">
-                    {{ __('reportes.detalle_aviso_pesca', ['fecha' => $aviso->reportado_at->format('d/m H:i'), 'lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie, 'nombre' => $aviso->usuario->name]) }}
-                    <span class="block text-sm text-tinta-suave">{{ $aviso->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $aviso->atendido_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
+                    {{ __('reportes.detalle_aviso_pesca', ['fecha' => $aviso->reportado_at->formatoHora('d/m H:i'), 'lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie, 'nombre' => $aviso->usuario->name]) }}
+                    <span class="block text-sm text-tinta-suave">{{ $aviso->estaPendiente() ? __('reportes.aviso_pendiente') : __('reportes.aviso_atendido', ['fecha' => $aviso->atendido_at->formatoHora('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</span>
                 </p>
             @empty
                 <p class="text-tinta-suave">{{ __('reportes.sin_avisos_pesca') }}</p>

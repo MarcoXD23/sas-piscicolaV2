@@ -101,6 +101,7 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     Route::prefix('mi-cuenta')->name('mi-cuenta.')->group(function () {
         Route::get('/', [MiCuentaController::class, 'index'])->name('index');
         Route::put('/contrasena', [MiCuentaController::class, 'cambiarContrasena'])->middleware('throttle:cambiar-contrasena')->name('contrasena');
+        Route::put('/formato-hora', [MiCuentaController::class, 'formatoHora'])->name('formato-hora');
         Route::get('/dos-pasos/activar', [MiCuentaController::class, 'activar'])->name('dos-pasos.activar');
         Route::post('/dos-pasos/activar', [MiCuentaController::class, 'confirmar'])->middleware('throttle:cambiar-contrasena')->name('dos-pasos.confirmar');
         Route::get('/dos-pasos/codigos', [MiCuentaController::class, 'codigos'])->name('dos-pasos.codigos');

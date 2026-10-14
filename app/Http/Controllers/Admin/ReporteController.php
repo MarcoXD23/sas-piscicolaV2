@@ -115,7 +115,7 @@ class ReporteController extends Controller
 
     private function generado(Request $request): string
     {
-        return __('componentes.generado_el', ['momento' => Region::ahora()->format('d/m/Y H:i'), 'nombre' => $request->user()->name]);
+        return __('componentes.generado_el', ['momento' => Region::ahora()->formatoHora('d/m/Y H:i'), 'nombre' => $request->user()->name]);
     }
 
     /** @return list<string> */

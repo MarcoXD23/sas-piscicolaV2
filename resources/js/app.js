@@ -4,6 +4,7 @@ import { iniciarCampo } from './campo';
 import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
 import { iniciarVerContrasena } from './contrasena';
+import { iniciarAyudaHora } from './hora';
 import { aCentesimas, leerRecordada, promedio as promedioPeso, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 
 window.Alpine = Alpine;
@@ -11,7 +12,9 @@ Alpine.data('pesaje', pesaje);   // tabla de pesadas de la cosecha
 Alpine.start();
 
 // Textos de la interfaz (lang/es/js.php, publicados por el layout en window.textos). Reemplaza :marcadores.
-const t = (clave, datos = {}) => (window.textos?.[clave] ?? clave).replace(/:(\w+)/g, (marca, nombre) => datos[nombre] ?? marca);
+// Como el traductor del servidor (App\Support\Traductor): sin punto doble tras «a. m.» / «p. m.» al final de una frase
+const t = (clave, datos = {}) => (window.textos?.[clave] ?? clave).replace(/:(\w+)/g, (marca, nombre) => datos[nombre] ?? marca)
+    .replace(/([ap])\.\u00A0m\.((?:<\/[a-z]+>)*)\./g, '$1.\u00A0m.$2');
 
 // Ventanas emergentes (<x-modal>)
 document.addEventListener('click', (evento) => {
@@ -103,6 +106,8 @@ const paquete = iniciarPaquete();
 iniciarCampo(t, cola);
 // Botón de ojo de los campos de contraseña (<x-contrasena>): mostrar u ocultar, y volver a ocultar al enviar o salir
 iniciarVerContrasena();
+// Bajo los campos donde se escribe una hora: la hora elegida en el formato de la persona (12 o 24 horas)
+iniciarAyudaHora(t);
 
 const hayConexion = async () => {
     if (!navigator.onLine) return false;

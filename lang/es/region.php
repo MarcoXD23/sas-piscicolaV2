@@ -11,6 +11,18 @@ return [
     'aviso_libro_campo' => 'Formato de apoyo para la trazabilidad del cultivo. Verifica con la autoridad sanitaria o agropecuaria de tu país los datos y la firma que exige la norma vigente.',
     'dinero_sin_decimales' => 'Escribe el valor sin decimales.',
 
+    // Formato de hora (App\Support\Hora): «10:24 p. m.» o «22:24»
+    'am' => 'a. m.',
+    'pm' => 'p. m.',
+    // Nombre corto, para «El de la finca (12 horas)» y «El del país (12 horas)»
+    'formatos_hora_corto' => [
+        '12' => '12 horas',
+        '24' => '24 horas',
+    ],
+    'formatos_hora' => [
+        '12' => '12 horas (10:24 p. m.)',
+        '24' => '24 horas (22:24)',
+    ],
     'ajustes' => [
         'titulo' => 'Ajustes de la finca',
         'subtitulo' => 'País, zona horaria e idioma. Las fechas y horas se muestran en la zona de la finca.',
@@ -23,6 +35,9 @@ return [
         'idioma' => 'Idioma',
         'guardar' => 'Guardar ajustes',
         'guardados' => 'Ajustes de la finca guardados.',
+        'formato_hora' => 'Formato de hora',
+        'formato_hora_del_pais' => 'El del país (:formato)',
+        'formato_hora_ayuda' => 'Cómo se muestran las horas en la finca. Cada persona puede elegir otro en Mi cuenta.',
         'unidad_peso_muestreo' => 'Unidad del peso en el muestreo',
         'unidad_peso_muestreo_ayuda' => 'La que aparece primero al registrar un muestreo; cada persona puede elegir otra y el teléfono la recuerda. Lo guardado siempre queda en gramos.',
         'hora_actual' => 'Hora actual en la finca: :hora',

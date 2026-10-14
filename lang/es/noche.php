@@ -43,7 +43,7 @@ return [
     'toda_la_finca' => 'Toda la finca',
     'todavia_no_hay_registros_esta' => 'Todavía no hay registros esta noche.',
     'turno_detalle' => 'Turno de :nombre, del :desde al :hasta.',
-    'turno_hasta' => 'En turno hasta las',
+    'turno_hasta' => 'En turno hasta las :hora.',
     'turno_opcion' => ':fecha · :nombre',
     'turno_sin_registros' => 'En este turno no se registraron rondas, mediciones ni aireadores.',
     'ultimas_horas' => 'Últimas :horas horas de la noche',

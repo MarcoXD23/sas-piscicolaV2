@@ -12,6 +12,7 @@ import { leerSesionActiva, operacion, PAQUETES } from './almacen';
 import { antiguedad, armarRegistro, avisarFueraDeTurno, factoresMuestreo, opcionesLotes, promedioMuestreo, resumenErrores, SECCIONES, textoHace, validar } from './campo-logica';
 import { centesimasDeGramos, leerRecordada, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 import { leerPaquete } from './paquete';
+import { diaMesHora, formatoPagina, normalizar, textosHora } from './hora';
 import { debeRenovar, paqueteValido } from './paquete-logica';
 import { desplazar } from './sin-conexion';
 import { fechaLocal } from './sin-conexion-logica';
@@ -93,8 +94,9 @@ export const iniciarCampo = (t, cola) => {
 
         $('[data-campo-quien]').textContent = t('campo_quien', { nombre: paquete.usuario?.nombre ?? '', finca: paquete.finca?.nombre ?? '' });
         const edad = antiguedad(paquete.generado_at, horasViejo);
-        const generado = new Date(paquete.generado_at);
-        const cuando = generado.toLocaleString(document.documentElement.lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        // Esta página no tiene sesión: el formato de hora de la persona viaja en el paquete (uno viejo: 24 horas)
+        document.body.dataset.formatoHora = normalizar(paquete.formato_hora);
+        const cuando = diaMesHora(new Date(paquete.generado_at), formatoPagina(), textosHora(t));
         const [claveHace, datosHace] = textoHace(edad);
         const caja = $('[data-campo-antiguedad]');
         caja.textContent = `${t('campo_datos_del', { momento: cuando, hace: t(claveHace, datosHace) })}${edad.vieja ? ` ${t('campo_datos_viejos')}` : ''}`;

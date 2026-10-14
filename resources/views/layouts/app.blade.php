@@ -22,11 +22,11 @@
     $conMenuInferior = false;
 @endphp
 {{-- Registros sin conexión (resources/js/sin-conexion.js): la cola del teléfono va separada por finca y persona --}}
-<body class="min-h-screen" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" data-paquete-minutos="{{ config('sin_conexion.minutos_paquete') }}" data-hora-servidor="{{ now()->utc()->format('Y-m-d\TH:i:s.v\Z') }}" @endif>
+<body class="min-h-screen" data-formato-hora="{{ \App\Support\Hora::de() }}" @if ($enFinca) data-cola-clave="{{ auth()->user()->tenant_id }}|{{ auth()->id() }}" data-cola-horas="{{ config('sin_conexion.horas') }}" data-paquete-minutos="{{ config('sin_conexion.minutos_paquete') }}" data-hora-servidor="{{ now()->utc()->format('Y-m-d\TH:i:s.v\Z') }}" @endif>
 
     {{-- Sin conexión: la página puede ser una copia guardada (solo consulta). Lleva la hora en que se generó. --}}
     <div data-sin-conexion hidden role="status" class="sticky top-0 z-40 animate-aparecer bg-amber-400 px-4 py-2 text-center text-sm font-bold text-amber-950 print:hidden">
-        {{ __('layout.sin_conexion', ['momento' => \App\Support\Region::ahora()->format('d/m H:i')]) }}
+        {{ __('layout.sin_conexion', ['momento' => \App\Support\Region::ahora()->formatoHora('d/m H:i')]) }}
         @auth
             <a href="{{ route('campo') }}" class="ml-1 underline underline-offset-2">{{ __('layout.abrir_registro_rapido') }}</a>
         @endauth

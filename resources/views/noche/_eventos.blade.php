@@ -8,7 +8,7 @@
             <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-baseline justify-between gap-x-3">
                     <p class="font-bold">{{ $evento['titulo'] }}</p>
-                    <time class="text-sm tabular-nums text-tinta-suave" datetime="{{ $evento['momento']->toIso8601String() }}">{{ $evento['momento']->format(($con_fecha ?? false) ? 'd/m H:i' : 'H:i') }}</time>
+                    <time class="text-sm tabular-nums text-tinta-suave" datetime="{{ $evento['momento']->toIso8601String() }}">{{ $evento['momento']->formatoHora(($con_fecha ?? false) ? 'd/m H:i' : 'H:i') }}</time>
                 </div>
                 @if ($evento['detalle'] !== '')
                     <p class="text-sm text-tinta-suave">{{ $evento['detalle'] }}</p>

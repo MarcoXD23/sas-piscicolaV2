@@ -99,7 +99,7 @@ class HistorialLago
                 $c->usuario?->name, 'positivo', route('admin.cosechas.show', $c)));
 
         $filtrar(MedicionAgua::where('lago_id', $lago->id)->with('usuario'), 'medido_at', conHora: true)
-            ->each(fn (MedicionAgua $m) => $agregar($m->medido_at, $m->medido_at, 'reloj', $t('actividades.calidad_agua'), $t('calidad_agua', ['hora' => $m->medido_at->format('H:i')]),
+            ->each(fn (MedicionAgua $m) => $agregar($m->medido_at, $m->medido_at, 'reloj', $t('actividades.calidad_agua'), $t('calidad_agua', ['hora' => $m->medido_at->formatoHora('H:i')]),
                 $unir(
                     $m->temperatura_c !== null ? "{$numero($m->temperatura_c, 1)} °C" : null,
                     $m->oxigeno_mg_l !== null ? $t('oxigeno', ['valor' => $numero($m->oxigeno_mg_l, 2)]) : null,

@@ -55,7 +55,7 @@
                             @else
                                 <span class="font-semibold">{{ $alerta->mensaje() }}</span>
                             @endif
-                            <p class="text-sm text-tinta-suave">{{ __('alertas.desde', ['momento' => $alerta->abierta_at->format('d/m H:i')]) }}</p>
+                            <p class="text-sm text-tinta-suave">{{ __('alertas.desde', ['momento' => $alerta->abierta_at->formatoHora('d/m H:i')]) }}</p>
                         </div>
                     </li>
                 @endforeach
@@ -85,7 +85,7 @@
             <ul class="divide-y divide-renglon">
                 @foreach ($novedadesNoche as $novedad)
                     <li class="flex gap-3 py-2.5 text-base">
-                        <span class="shrink-0 font-bold tabular-nums">{{ $novedad->registrada_at->format('H:i') }}</span>
+                        <span class="shrink-0 font-bold tabular-nums">{{ $novedad->registrada_at->formatoHora('H:i') }}</span>
                         <span class="min-w-0">
                             <span class="font-semibold">{{ $novedad->textoTipo() }}@if ($novedad->lago) {{ __('inicio.en_lago', ['lago' => $novedad->lago->nombre]) }}@endif:</span>
                             {{ $novedad->descripcion }} <span class="text-tinta-suave">({{ $novedad->usuario?->name }})</span>
@@ -106,7 +106,7 @@
                     <li class="flex flex-wrap items-center justify-between gap-3 py-3">
                         <div class="min-w-0">
                             <a href="{{ route('admin.lagos.show', $aviso->lago) }}" class="font-bold underline decoration-renglon-fuerte underline-offset-4 hover:decoration-tinta">{{ __('inicio.aviso_pesca', ['lago' => $aviso->lago->nombre, 'especie' => $aviso->siembra->nombre_especie]) }}</a>
-                            <p class="text-sm text-tinta-suave">{{ __('inicio.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->format('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</p>
+                            <p class="text-sm text-tinta-suave">{{ __('inicio.aviso_pesca_reportado', ['nombre' => $aviso->usuario->name, 'momento' => $aviso->reportado_at->formatoHora('d/m H:i')]) }}@if ($aviso->nota) · {{ $aviso->nota }}@endif</p>
                         </div>
                         <x-formulario :action="route('admin.avisos-pesca.atender', $aviso)" class="!space-y-0">
                             <x-boton variante="secundario">{{ __('inicio.marcar_atendido') }}</x-boton>
@@ -144,9 +144,9 @@
             <x-icono nombre="reloj" @class(['h-8 w-8', 'text-bien' => $turnoActual, 'text-tinta-suave' => ! $turnoActual]) />
             <p class="text-xl font-bold">
                 @if ($turnoActual)
-                    <span class="capitalize">{{ $turnoActual->rol }}</span> {{ __('inicio.hasta_las', ['hora' => $turnoActual->termina_at->format('H:i')]) }}
+                    <span class="capitalize">{{ $turnoActual->rol }}</span> {{ __('inicio.hasta_las', ['hora' => $turnoActual->termina_at->formatoHora('H:i')]) }}
                 @elseif ($proximoTurno)
-                    {{ __('inicio.proximo_turno') }} <span class="first-letter:uppercase">{{ $proximoTurno->inicia_at->translatedFormat(__('comun.formatos.dia_mes_hora')) }}</span>
+                    {{ __('inicio.proximo_turno') }} <span class="first-letter:uppercase">{{ __('comun.formatos.fecha_y_hora', ['fecha' => $proximoTurno->inicia_at->translatedFormat(__('comun.formatos.dia_mes')), 'hora' => \App\Support\Hora::hora($proximoTurno->inicia_at)]) }}</span>
                     <span class="capitalize">({{ $proximoTurno->rol }})</span>
                 @else
                     {{ __('inicio.sin_turnos') }}
@@ -256,7 +256,7 @@
                                         {{ \App\Support\LotesPorEspecie::nombres($item['lago']->siembrasActivas) }}
                                     </p>
                                     @if ($medicion)
-                                        <p class="text-sm text-tinta-suave">{{ __('inicio.agua.medido', ['hora' => $medicion->medido_at->format('H:i')]) }}</p>
+                                        <p class="text-sm text-tinta-suave">{{ __('inicio.agua.medido', ['hora' => $medicion->medido_at->formatoHora('H:i')]) }}</p>
                                     @endif
                                 </div>
                                 <span class="sm:hidden"><x-insignia :tono="$tonoEstado">{{ __('inicio.estado_agua.'.$estado) }}</x-insignia></span>

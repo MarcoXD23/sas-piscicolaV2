@@ -5,7 +5,7 @@
 @section('contenido')
     <x-tarjeta class="mx-auto max-w-xl ring-2 ring-alerta-borde" :titulo="__('datos.eliminar.pantalla_titulo')">
         <x-aviso tono="alerta">
-            {{ __('datos.eliminar.pantalla_texto', ['finca' => $finca->nombre, 'fecha' => $finca->eliminacion_programada_at->format('d/m/Y H:i')]) }}
+            {{ __('datos.eliminar.pantalla_texto', ['finca' => $finca->nombre, 'fecha' => $finca->eliminacion_programada_at->formatoHora('d/m/Y H:i')]) }}
         </x-aviso>
         <p class="mt-3 text-sm text-tinta-suave">{{ __('datos.eliminar.copias', ['dias' => config('respaldos.dias')]) }}</p>
 

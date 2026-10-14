@@ -5,7 +5,7 @@
         <ol class="mt-1 space-y-1.5 border-l-2 border-renglon pl-3">
             @foreach ($registros as $registro)
                 <li>
-                    <time class="tabular-nums text-tinta-suave" datetime="{{ $registro->momentoLocal()->toIso8601String() }}">{{ $registro->momentoLocal()->format('d/m/Y H:i') }}</time>
+                    <time class="tabular-nums text-tinta-suave" datetime="{{ $registro->momentoLocal()->toIso8601String() }}">{{ $registro->momentoLocal()->formatoHora('d/m/Y H:i') }}</time>
                     <span class="text-tinta">· {{ $registro->textoDetalle() }}</span>
                     <span class="block text-sm text-tinta-suave">{{ __('personal.hecho_por', ['nombre' => $registro->usuario->name]) }}</span>
                 </li>
