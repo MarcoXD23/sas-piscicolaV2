@@ -48,7 +48,7 @@ Cada tema separa:
 - cultivo en jaulas flotantes (tilapia roja en represas) o en canales (trucha), no solo en estanques;
 - venta directa en el estanque cualquier día.
 
-**Pendiente:** validar el diseño con 2 o 3 piscicultores más de la zona antes de cerrarlo.
+**Pendiente:** comparar el diseño con la información de otras fincas antes de cerrarlo (ver «Validación con otras fincas»).
 
 ---
 
@@ -127,7 +127,7 @@ Cada tema separa:
 
 ---
 
-## 5. Alimentación y ayuno
+## 5. Ayuno y día de proceso sin alimentación
 
 **Confirmado en la finca piloto:**
 
@@ -248,7 +248,7 @@ Cada tema separa:
 
 ---
 
-## 10. Procesadores, pescador, rayador y fijos (horas extra)
+## 10. Procesadores, pescador, rayador y fijos (horas extra con aprobación del propietario)
 
 **Confirmado en la finca piloto:**
 
@@ -256,7 +256,7 @@ Cada tema separa:
 - **Rayador:** cobra igual, con una bonificación opcional.
 - **Fijos:** el día de proceso es para ellos un día normal de trabajo; no cobran por kilo.
   - La asistencia de la jornada registra la hora de salida de cada fijo.
-  - Si se pasa de su horario, el sistema calcula las horas extra y, una vez confirmadas, entran a la nómina.
+  - Si se pasa de su horario, el sistema calcula las horas extra. **Las aprueba el propietario**, y solo entonces entran a la nómina. Coincide con las reglas del proyecto, donde el propietario conserva la nómina y las solicitudes.
 - Las horas extra en Colombia llevan recargos distintos: diurna, nocturna, dominical y festiva. La reforma laboral reciente cambió la hora de inicio de la jornada nocturna y la jornada semanal.
 
 **Configurable por finca:**
@@ -270,7 +270,6 @@ Cada tema separa:
 **Pendiente:**
 
 - Los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador.
-- Quién confirma las horas extra de los fijos que calcula la jornada. Se pidió que sea el administrador, pero hoy la nómina y las solicitudes, incluidas las horas extra, son del propietario según las reglas del proyecto. Hay que decidir si las confirma el administrador, el propietario, o si el administrador las propone y el propietario las aprueba.
 
 **Estado actual del sistema:**
 
@@ -359,6 +358,23 @@ No hay que renombrar el lago en el código: rompería los registros guardados si
 
 ---
 
+## Validación con otras fincas
+
+Antes de cerrar el diseño se compara con fincas distintas de la piloto. En este repositorio nunca van nombres de personas ni de empresas, solo la región.
+
+**En camino:**
+
+- Información de tres fincas de otras regiones: una del Huila, una del Putumayo y una de los Llanos. Llega en una semana, más o menos.
+- Conocimiento general, de hace unos años, de una empresa grande con jaulas en el Huila. Servirá para el caso de las jaulas (tema 13).
+
+**Cuando llegue**, se compara con este diseño y se anota, por cada diferencia:
+
+- qué ya cubre el diseño;
+- qué debe ser configurable por finca;
+- qué sería una función nueva. Se construye solo si un cliente real la necesita (tema 1).
+
+---
+
 ## Pendiente
 
 **Números de un día real de proceso** (los trae el usuario después de ir a la finca):
@@ -378,8 +394,11 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - si se han perdido o dañado bultos;
 - quién saca los bultos para alimentar y si se anota.
 
+**Preguntas para el trabajador y el celador:** por definir.
+
+**Qué días se pesca:** si hay días fijos de proceso en la semana o se decide según los pedidos.
+
 **Otras decisiones abiertas:**
 
-- quién confirma las horas extra de los fijos (tema 10);
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
-- validar el diseño con 2 o 3 piscicultores más antes de cerrarlo (tema 1).
+- la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
