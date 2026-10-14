@@ -286,7 +286,7 @@ Cada tema separa:
 
 ---
 
-## 11. Nómina
+## 11. Nómina, permisos y personal
 
 **Confirmado en la finca piloto:**
 
@@ -296,6 +296,7 @@ Cada tema separa:
 - Los permisos (días libres) de los trabajadores los aprueba el administrador; los del administrador, el propietario.
 - El sueldo del administrador va en la misma nómina de los trabajadores. El administrador prepara la nómina de todos, pero su propia fila la aprueba siempre el propietario.
 - La nómina de los fijos es mensual.
+- El administrador también aprueba al personal nuevo.
 
 **Reglas fijas, iguales en todas las fincas:**
 
@@ -322,6 +323,14 @@ Cada tema separa:
 - Quién aprueba las horas extra: el administrador, el propietario o cualquiera de los dos.
 - El período: semanal, quincenal o mensual.
 - Quién aprueba los permisos (días libres): el administrador, el propietario o cualquiera de los dos, con la misma regla de no aprobarse a sí mismo.
+- Si el administrador puede aprobar personal. Si puede:
+  - solo asigna los roles trabajador y celador, nunca administrador ni propietario;
+  - no cambia sus propios roles;
+  - puede quitar el acceso a trabajadores y celadores;
+  - el propietario recibe un aviso;
+  - todo queda en la bitácora.
+
+  Todo se comprueba en el servidor, no solo escondiendo botones.
 
 **Cómo se construye (decidido):**
 
@@ -333,11 +342,12 @@ Cada tema separa:
 **Pendiente:**
 
 - La estructura de la nómina mensual de la finca piloto. Se recibe en foto, sin nombres ni valores.
-- **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir quién prepara la nómina y quién aprueba las horas extra según la configuración de cada finca, con las reglas fijas de arriba. Se hace en una fase aparte, después de Jornaleros.
+- **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que el personal, la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir, según la configuración de cada finca, quién prepara la nómina, quién aprueba los permisos y las horas extra, y si el administrador puede aprobar personal, con las reglas fijas de arriba. Se hace en una sola fase de permisos y nómina, después de Jornaleros.
 
 **Estado actual del sistema:**
 
 - La nómina, las tarifas y las solicitudes (permisos y horas extra) son solo del propietario.
+- Personal (aprobar a las personas nuevas, asignar y quitar roles) también es solo del propietario.
 - La nómina es semanal fija, por persona y por semana. No hay estado de borrador, devolución con comentario ni visto bueno.
 - Solo entran en la nómina el trabajador y el celador. El administrador no tiene nómina en el sistema.
 - La liquidación guarda horas, tarifas, bruto, descuento de pescado y total. No guarda días ni anticipos.
