@@ -22,14 +22,18 @@ Decisiones sobre el asistente IA (botón flotante), por fases. La memoria de tra
    - Usa los datos de la finca sin inventarlos, y prefiere los valores de las fichas.
    - En medicamentos y enfermedades: orientación general **sin dosis exactas ni marcas**, y siempre remite al técnico o al veterinario.
    - Las preguntas fuera de tema se responden breve y con amabilidad.
-   - El aviso de rol no cambia.
+   - El aviso de rol no cambia. Después del aviso, el asistente dice la parte del tema que la persona sí ve. No lo deduce el modelo: el código arma la frase junto a cada tema oculto, según el menú de la persona (`ContextoFinca::PARTES_PROPIAS`). El modelo la repite tal cual. Hoy hay dos frases:
+     - nómina: «no la puede ver, pero sí ve sus propios pagos de nómina en Mi trabajo»;
+     - ventas y dinero: «no las puede ver, pero sí ve su propio saldo de pescado en Mi trabajo», porque el saldo de pescado es la parte de las ventas que le toca al trabajador.
+
+     Quien no tiene Mi trabajo en su menú (administrador, propietario) recibe solo el tema oculto, sin la frase. Las instrucciones no nombran ninguna pantalla. Con la regla sola, sin la frase del código, Gemini Flash-Lite a veces la omitía y una vez le sugirió Mi trabajo al administrador.
    - Va el país de la finca; **sin país configurado no asume ninguno**.
    - La guía de la app es por rol, sale de `App\Support\Menu` (el menú se ve igual) y cuida la caché de las instrucciones.
-3. **Prueba de modelos.**
-   - 5 preguntas por rol (20 en total). El usuario cambia el borrador por preguntas reales de la finca.
-   - Se comparan Haiku 5.5, Sonnet 5.5 y Gemini 3.5 Flash-Lite: calidad, tiempo y costo por pregunta.
-   - Se califica a ciegas.
-   - Solo corre con la aprobación del costo y fuera de las pruebas automáticas.
+3. **Prueba de modelos.** Espera a que el usuario traiga las preguntas reales de la finca.
+   - 5 preguntas por rol (20 en total). El borrador se cambia por preguntas reales de la finca.
+   - Solo con Gemini, en el nivel gratuito, y con los datos de demostración: la finca de demostración o una finca de prueba de la base local, nunca datos reales. En el nivel gratuito Google puede usar lo que se envía.
+   - Ya no se comparan Haiku ni Sonnet.
+   - Corre fuera de las pruebas automáticas.
 
 ## Política de datos: textos libres que pueden llevar nombres
 

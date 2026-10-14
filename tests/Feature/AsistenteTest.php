@@ -276,6 +276,43 @@ class AsistenteTest extends TestCase
         $this->assertStringContainsString(__('asistente.temas.nomina'), $contexto);
     }
 
+    public function test_el_tema_oculto_trae_la_parte_propia_solo_si_la_persona_tiene_mi_trabajo(): void
+    {
+        $miTrabajo = __('layout.menu.mi_trabajo');
+        $pagos = '- '.__('asistente.temas.nomina').': no la puede ver, pero sí ve sus propios pagos de nómina en '.$miTrabajo.'.';
+        $saldo = '- '.__('asistente.temas.dinero').': no las puede ver, pero sí ve su propio saldo de pescado en '.$miTrabajo.'.';
+
+        // El aviso de rol no cambia; la regla dice que se repita tal cual la parte que trae el tema, sin nombrar pantallas
+        $this->assertSame('No tengo esa información para tu rol.', __('asistente.avisos.sin_acceso_rol'));
+        $instrucciones = ContextoFinca::instrucciones();
+        $this->assertStringContainsString('si el tema trae lo que la persona sí puede ver, después del aviso díselo tal cual', $instrucciones);
+        $this->assertStringContainsString('Si el tema no lo trae, da solo el aviso, sin sugerir pantallas.', $instrucciones);
+        $this->assertStringNotContainsString($miTrabajo, $instrucciones);
+
+        // Al trabajador y al celador siempre les llega la frase con Mi trabajo, en nómina y en ventas y dinero
+        foreach ([Rol::TRABAJADOR, Rol::CELADOR] as $indice => $rol) {
+            $this->preguntar($this->persona($rol), '¿Cuánto se pagó de nómina?')->assertOk();
+            $contexto = $this->falso->llamadas[$indice]['contexto'];
+            $this->assertStringContainsString("Datos que existen en la finca pero tu rol no puede ver:\n", $contexto, $rol);
+            $this->assertStringContainsString($pagos, $contexto, $rol);
+            $this->assertStringContainsString($saldo, $contexto, $rol);
+            // Los demás temas ocultos van solos, sin frase
+            $this->assertStringContainsString('- '.__('asistente.temas.bodega').'.', $contexto, $rol);
+        }
+
+        // Al administrador nunca: la nómina va sola, sin Mi trabajo ni en los datos ni en las instrucciones
+        $administrador = $this->persona(Rol::ADMINISTRADOR);
+        $this->preguntar($administrador, '¿Cuánto se pagó de nómina?')->assertOk();
+        $enviado = $this->falso->llamadas[2];
+        $this->assertStringContainsString('- '.__('asistente.temas.nomina').'.', $enviado['contexto']);
+        $this->assertStringNotContainsString($miTrabajo, $enviado['contexto']);
+        $this->assertStringNotContainsString($miTrabajo, $enviado['instrucciones']);
+        $this->assertStringNotContainsString('sí ve', $enviado['contexto']);
+
+        // El propietario lo ve todo: no hay temas ocultos ni frases
+        $this->assertSame([], ContextoFinca::temasOcultos($this->persona(Rol::PROPIETARIO)));
+    }
+
     public function test_preguntas_fuera_de_tema_y_precios_de_mercado_tienen_su_regla(): void
     {
         $this->preguntar($this->persona(Rol::PROPIETARIO), '¿A cómo está el kilo de cachama?')->assertOk();

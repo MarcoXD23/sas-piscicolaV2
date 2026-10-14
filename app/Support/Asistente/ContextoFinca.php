@@ -30,6 +30,12 @@ use App\Support\Region;
  */
 class ContextoFinca
 {
+    /** Temas ocultos de los que la persona ve su propia parte, y la pantalla del menú donde la ve. */
+    private const PARTES_PROPIAS = [
+        'nomina' => 'mi-trabajo.index',   // sus propios pagos de nómina
+        'dinero' => 'mi-trabajo.index',   // su propio saldo de pescado
+    ];
+
     /**
      * Instrucciones de la finca activa para quien pregunta (por defecto, la persona con sesión). No cambian entre sus
      * preguntas (prefijo cacheable): solo con el catálogo de la finca, su país o los roles de la persona.
@@ -142,6 +148,28 @@ class ContextoFinca
         ]));
     }
 
+    /**
+     * Un tema oculto por línea. Si la persona ve su propia parte del tema en una pantalla de su menú (PARTES_PROPIAS),
+     * la línea la dice con el nombre real de esa pantalla: lo arma el código, el modelo solo lo repite.
+     *
+     * @param  list<string>  $ocultos
+     */
+    private static function lineasOcultas(User $usuario, array $ocultos): string
+    {
+        $menu = Menu::para($usuario)->keyBy('ruta');
+
+        return collect($ocultos)->map(function (string $tema) use ($menu) {
+            $ruta = self::PARTES_PROPIAS[$tema] ?? null;
+
+            return $ruta !== null && $menu->has($ruta)
+                ? __('asistente.tema_oculto_con_parte', [
+                    'tema' => __('asistente.temas.'.$tema),
+                    'parte' => __('asistente.partes_propias.'.$tema, ['pantalla' => $menu[$ruta]['texto']]),
+                ])
+                : __('asistente.tema_oculto', ['tema' => __('asistente.temas.'.$tema)]);
+        })->implode("\n");
+    }
+
     /** Estado actual de la finca, filtrado por el rol. */
     public static function para(User $usuario): string
     {
@@ -184,9 +212,7 @@ class ContextoFinca
 
         $ocultos = self::temasOcultos($usuario);
         if ($ocultos !== []) {
-            $secciones[] = __('asistente.ocultos_por_rol', [
-                'temas' => collect($ocultos)->map(fn (string $tema) => __('asistente.temas.'.$tema))->join(', '),
-            ]);
+            $secciones[] = __('asistente.ocultos_por_rol')."\n".self::lineasOcultas($usuario, $ocultos);
         }
 
         return "DATOS ACTUALES DE LA FINCA\n\n".implode("\n\n", array_filter($secciones));

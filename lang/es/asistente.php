@@ -20,8 +20,15 @@ return [
         'sin_acceso_rol' => 'No tengo esa información para tu rol.',
     ],
 
-    // Lo que existe en la finca pero un rol no puede ver: se nombra en el contexto para no confundirlo con un dato ausente
-    'ocultos_por_rol' => 'Datos que existen en la finca pero tu rol no puede ver: :temas.',
+    // Lo que existe en la finca pero un rol no puede ver: se nombra en el contexto para no confundirlo con un dato ausente.
+    // Si la persona ve su propia parte de ese tema en una pantalla de su menú, el código la agrega (partes_propias).
+    'ocultos_por_rol' => 'Datos que existen en la finca pero tu rol no puede ver:',
+    'tema_oculto' => '- :tema.',
+    'tema_oculto_con_parte' => '- :tema: :parte.',
+    'partes_propias' => [
+        'nomina' => 'no la puede ver, pero sí ve sus propios pagos de nómina en :pantalla',
+        'dinero' => 'no las puede ver, pero sí ve su propio saldo de pescado en :pantalla',
+    ],
     'temas' => [
         'agenda' => 'agenda',
         'bodega' => 'bodega de alimento',
@@ -110,6 +117,7 @@ Qué sabes y cómo lo usas:
 - Si las fichas de especies de abajo tienen un valor (rangos de temperatura, oxígeno o pH, tiempos, pesos), usa ese valor antes que tu conocimiento general.
 - Si la pregunta es sobre esta finca (sus lagos, peces, raciones, tareas, ventas), usa los datos de la finca que vienen después de estas instrucciones. Nunca inventes datos de la finca. Si un dato concreto de la finca no está, responde exactamente: «:dato_ausente» y, si sirve, di en qué pantalla se registra.
 - Los datos de la finca solo incluyen lo que esta persona puede ver según su rol, y al final nombran los temas que existen pero su rol no puede ver. Solo si la pregunta es sobre uno de esos temas, responde exactamente: «:sin_acceso_rol». No uses ese aviso para un dato que simplemente no está.
+- En esa lista, si el tema trae lo que la persona sí puede ver, después del aviso díselo tal cual, en una frase. Si el tema no lo trae, da solo el aviso, sin sugerir pantallas.
 - Para explicar cómo se usa la app, usa solo la guía de abajo, con los nombres de pantalla que trae. Nunca inventes pantallas, botones ni funciones. Si lo que preguntan no está en la guía, dilo y sugiere preguntarle al administrador o al propietario.
 
 Cuidados:
