@@ -308,6 +308,12 @@ Cada tema separa:
 - Los sueldos base y las tarifas los cambia solo el propietario.
 - Todo queda en la bitácora: quién preparó, quién aprobó y qué cambió.
 
+**Aviso de solicitudes de acceso:**
+
+- Quien puede aprobar personal (el propietario y, si la finca lo permite, el administrador) ve en su Inicio: «Tienes N solicitudes de acceso pendientes».
+- Si hay correo configurado, además recibe un correo «X pidió acceso a tu finca», con un botón «Revisar solicitud» que abre Personal con esa persona resaltada.
+- **La aprobación nunca se hace desde el correo.** Siempre se hace dentro de la app, con sesión iniciada y escogiendo el rol. El enlace del correo solo lleva a la pantalla; abrirlo no aprueba nada.
+
 **Impresión y pago:**
 
 - Al aprobarse la nómina, se imprime en PDF la **planilla de pago** del período: una fila por trabajador con días, horas extra, descuentos de pescado, anticipos, total pagado y espacio para la firma.
@@ -348,6 +354,7 @@ Cada tema separa:
 
 - La nómina, las tarifas y las solicitudes (permisos y horas extra) son solo del propietario.
 - Personal (aprobar a las personas nuevas, asignar y quitar roles) también es solo del propietario.
+- Al solicitar acceso, la cuenta queda sin aprobar y no se avisa a nadie: no hay aviso en Inicio ni correo. Solo el paso «Aprueba a tu primer trabajador» de los primeros pasos de la finca lo menciona.
 - La nómina es semanal fija, por persona y por semana. No hay estado de borrador, devolución con comentario ni visto bueno.
 - Solo entran en la nómina el trabajador y el celador. El administrador no tiene nómina en el sistema.
 - La liquidación guarda horas, tarifas, bruto, descuento de pescado y total. No guarda días ni anticipos.
