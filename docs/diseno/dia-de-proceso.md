@@ -159,6 +159,7 @@ Cada tema separa:
 - Procesos: lavado con escamas, descamado y embolsado.
 - El limpio total de la jornada es la suma de las pesadas por presentación. Nadie lo digita.
 - Los pedidos y las remisiones usan las mismas presentaciones.
+- Tara: cada canasta pesa 2,5 kg *(ejemplo de la finca piloto)* y se descuenta al pesar.
 
 **Configurable por finca:**
 
@@ -166,9 +167,9 @@ Cada tema separa:
 - Cada finca define sus procesos.
 - La presentación se arma con especie + tamaño + proceso, sin escribir cada combinación a mano.
 - El catálogo de presentaciones puede llevar especie, tamaño, tipo de proceso y color de cabuya.
-- La tara de la canasta.
+- La tara de la canasta (y la de la canastilla).
 
-**Estado actual del sistema:** hoy la cosecha guarda solo el pescado entero; no hay limpio, rendimiento ni presentaciones. **Ojo con el nombre:** en el pesaje actual de la cosecha, «limpio» quiere decir peso neto sin canastas, o sea pescado entero, no procesado. En el diseño hay que cambiarle el nombre a uno de los dos para no confundirlos.
+**Estado actual del sistema:** la tara de la canasta y la de la canastilla ya se configuran por finca (Ajustes de pesaje), y el pesaje por pesadas ya las descuenta. El sistema trae 2,00 kg por defecto para la canasta, así que la finca piloto tiene que poner sus 2,5 kg. Hoy la cosecha guarda solo el pescado entero; no hay limpio, rendimiento ni presentaciones. **Ojo con el nombre:** en el pesaje actual de la cosecha, «limpio» quiere decir peso neto sin canastas, o sea pescado entero, no procesado. En el diseño hay que cambiarle el nombre a uno de los dos para no confundirlos.
 
 ---
 
@@ -258,7 +259,7 @@ Cada tema separa:
   - La asistencia de la jornada registra la hora de salida de cada fijo.
   - Si se pasa de su horario, el sistema calcula las horas extra. Quedan propuestas hasta que alguien las aprueba; solo entonces entran a la nómina.
   - En la finca piloto las aprueba el **administrador**.
-  - La nómina sigue siendo del propietario: el administrador aprueba las horas, y el propietario las ve al liquidar la nómina.
+  - El propietario las ve al revisar la nómina (tema 11).
   - Nadie aprueba sus propias horas extra: las del administrador las aprueba el propietario.
   - En la bitácora queda quién las propuso y quién las aprobó.
 - Las horas extra en Colombia llevan recargos distintos: diurna, nocturna, dominical y festiva. La reforma laboral reciente cambió la hora de inicio de la jornada nocturna y la jornada semanal.
@@ -275,7 +276,7 @@ Cada tema separa:
 **Pendiente:**
 
 - Los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador.
-- **Antes de construirlo hay que cambiar una regla del proyecto.** Hoy AGENTS.md dice que aprobar horas extra es exclusivo del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir que quién aprueba las horas extra se configura por finca, y que nadie aprueba las suyas.
+- **Antes de construirlo hay que cambiar una regla del proyecto** (ver el tema 11).
 
 **Estado actual del sistema:**
 
@@ -285,7 +286,57 @@ Cada tema separa:
 
 ---
 
-## 11. Rendimiento y cuadre
+## 11. Nómina
+
+**Confirmado en la finca piloto:**
+
+- El administrador hace la nómina, y el propietario la ve y la revisa.
+- El propietario da el visto bueno antes de cerrarla y pagarla. Si no está de acuerdo, la devuelve con un comentario.
+- Las horas extra las aprueba el administrador (tema 10).
+- La nómina de los fijos es mensual.
+
+**Reglas fijas, iguales en todas las fincas:**
+
+- Nadie aprueba sus propias horas extra ni su propia nómina.
+- El administrador no puede cambiar su propio sueldo.
+- Los sueldos base y las tarifas los cambia solo el propietario.
+- Todo queda en la bitácora: quién preparó, quién aprobó y qué cambió.
+
+**Impresión y pago:**
+
+- Al aprobarse la nómina, se imprime en PDF la **planilla de pago** del período: una fila por trabajador con días, horas extra, descuentos de pescado, anticipos, total pagado y espacio para la firma.
+- También se imprime un **comprobante individual** por trabajador, con el detalle y espacio para las dos firmas.
+- Sin aprobar, solo se imprime con la marca «BORRADOR».
+- Después de pagar, se sube la foto o el escaneo de la planilla firmada, y la nómina se marca como pagada, con la fecha y quién pagó.
+- La planilla del proceso de los jornaleros también se imprime, para firmar al recibir el pago.
+
+**Configurable por finca:**
+
+- Quién prepara la nómina: el administrador o el propietario.
+- Si hace falta el visto bueno del propietario antes de cerrarla.
+- Quién aprueba las horas extra: el administrador, el propietario o cualquiera de los dos.
+- El período: semanal, quincenal o mensual.
+
+**Para más adelante:** exportar los datos para que el contador reporte la nómina electrónica de la DIAN, si a la finca le aplica.
+
+**Pendiente:**
+
+- La estructura de la nómina mensual de la finca piloto. Se recibe en foto, sin nombres ni valores.
+- **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir quién prepara la nómina y quién aprueba las horas extra según la configuración de cada finca, con las reglas fijas de arriba. Se hace en una fase aparte, después de Jornaleros.
+
+**Estado actual del sistema:**
+
+- La nómina, las tarifas y las solicitudes (permisos y horas extra) son solo del propietario.
+- La nómina es semanal fija, por persona y por semana. No hay estado de borrador, devolución con comentario ni visto bueno.
+- Solo entran en la nómina el trabajador y el celador. El administrador no tiene nómina en el sistema.
+- La liquidación guarda horas, tarifas, bruto, descuento de pescado y total. No guarda días ni anticipos.
+- «Pagada» guarda solo la fecha: ni quién pagó ni la planilla firmada.
+- La nómina y las solicitudes no dejan registro en la bitácora.
+- No hay PDF de la nómina. Sí hay un generador de PDF para los reportes, que se puede reutilizar.
+
+---
+
+## 12. Rendimiento y cuadre
 
 Son dos comparaciones distintas.
 
@@ -306,7 +357,7 @@ Son dos comparaciones distintas.
 
 ---
 
-## 12. Bodega: recepción de concentrado
+## 13. Bodega: recepción de concentrado
 
 **Confirmado en la finca piloto (cómo es hoy):** cuando llega el concentrado, los trabajadores bajan y cuentan los bultos. El administrador a veces está mirando y a veces no. Los trabajadores le dicen cuántos llegaron, y el administrador se lo comenta al propietario. Todo es de palabra.
 
@@ -340,7 +391,7 @@ Son dos comparaciones distintas.
 
 ---
 
-## 13. «Lago» como unidad de cultivo
+## 14. «Lago» como unidad de cultivo
 
 **Para no cerrarles la puerta** a las jaulas flotantes y a los canales. No se construye hasta que una finca real lo pida.
 
@@ -371,7 +422,7 @@ Antes de cerrar el diseño se compara con fincas distintas de la piloto. En este
 **En camino:**
 
 - Información de tres fincas de otras regiones: una del Huila, una del Putumayo y una de los Llanos. Llega en una semana, más o menos.
-- Conocimiento general, de hace unos años, de una empresa grande con jaulas en el Huila. Servirá para el caso de las jaulas (tema 13).
+- Conocimiento general, de hace unos años, de una empresa grande con jaulas en el Huila. Servirá para el caso de las jaulas (tema 14).
 
 **Cuando llegue**, se compara con este diseño y se anota, por cada diferencia:
 
@@ -400,12 +451,18 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - si se han perdido o dañado bultos;
 - quién saca los bultos para alimentar y si se anota.
 
-**Preguntas para el trabajador y el celador:** por definir.
+**Preguntas para el trabajador y el celador:**
+
+- ¿Cómo es el día normal de un trabajador y el de un celador, de la entrada a la salida?
+- ¿Se mide el oxígeno? ¿Quién, cada cuánto y con qué?
+- ¿Hay portería? ¿Quién controla quién entra y sale?
+- ¿Qué se olvida entre turnos?
 
 **Qué días se pesca:** si hay días fijos de proceso en la semana o se decide según los pedidos.
 
 **Otras decisiones abiertas:**
 
 - los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador (tema 10);
-- cambiar en AGENTS.md la regla de quién aprueba las horas extra antes de construirlo (tema 10);
+- cambiar en AGENTS.md las reglas de la nómina y de las horas extra antes de construirlo (tema 11);
+- la estructura de la nómina mensual de la finca piloto, en foto y sin nombres ni valores (tema 11);
 - la comparación con las fincas del Huila, el Putumayo y los Llanos (ver «Validación con otras fincas»).
