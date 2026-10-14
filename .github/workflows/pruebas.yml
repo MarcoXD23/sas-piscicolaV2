@@ -1,0 +1,145 @@
+# Integración continua: pruebas de PHP y JS contra un PostgreSQL 17 de servicio, y auditorías de dependencias.
+# Sin secretos: la base es solo de prueba y se destruye al terminar; el .env sale de .env.example con su propia
+# APP_KEY (las pruebas usan la clave fija de phpunit.xml). Las acciones van fijadas por commit.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md']
+  schedule:
+    - cron: '0 11 * * 1' # auditoría semanal: lunes 11:00 UTC (6:00 en Colombia)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# En un pull request, un push nuevo cancela la ejecución anterior. En main cada commit tiene su propio grupo:
+# ninguno queda sin probar.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pruebas:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sas_piscicola_v2_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      # pg_dump y pg_restore 17 para la prueba de respaldo de punta a punta (el runner trae los de la 16)
+      PG_BIN: /usr/lib/postgresql/17/bin
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, gd, zip, intl, bcmath, mbstring, sodium, exif
+          coverage: none
+          tools: composer:v2
+
+      - name: Carpeta de caché de Composer
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Dependencias de Composer
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Dependencias de npm
+        run: npm ci --no-audit --no-fund
+
+      - name: .env de prueba (desde .env.example, con APP_KEY generada aquí)
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+
+      - name: Build de Vite
+        run: npm run build
+
+      - name: Cliente de PostgreSQL 17
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          "$PG_BIN/pg_dump" --version
+
+      - name: Pruebas de PHP
+        run: php artisan test
+
+      - name: Pruebas de JS
+        if: ${{ !cancelled() }}
+        run: npm run test:js
+
+      - name: Auditoría de Composer
+        if: ${{ !cancelled() }}
+        run: composer audit --locked --abandoned=report
+
+      - name: Auditoría de npm (altas y críticas hacen fallar)
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=high
+
+      - name: Subir laravel.log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: laravel-log
+          path: storage/logs/laravel.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Las vulnerabilidades nuevas aparecen sin que haya push: cada semana, solo las auditorías (leen los archivos lock)
+  auditoria-semanal:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Auditoría de Composer
+        run: composer audit --locked --abandoned=report
+
+      - name: Auditoría de npm (altas y críticas hacen fallar)
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=high

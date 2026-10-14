@@ -1,5 +1,7 @@
 # El SAS Piscícola
 
+[![Pruebas](https://github.com/MarcoXD23/sas-piscicolaV2/actions/workflows/pruebas.yml/badge.svg?branch=main)](https://github.com/MarcoXD23/sas-piscicolaV2/actions/workflows/pruebas.yml)
+
 SaaS multi-tenant para la gestión de fincas piscícolas: lagos, siembras y policultivo, alimentación y bodega, calidad del agua y sanidad, turnos y nómina, seguridad nocturna, cosecha y ventas, reportes y un asistente con IA.
 
 - **Stack:** Laravel 13 · PostgreSQL · Blade + Tailwind 4 (compilado con Vite, sin CDN) · Alpine.js · Sanctum (API) · SDK oficial de Anthropic (asistente).
@@ -444,6 +446,17 @@ npm run build      # las vistas necesitan el manifest de Vite
 composer test
 npm run test:js    # reglas de la cola sin conexión (node --test, sin paquetes)
 ```
+
+### Integración continua (GitHub Actions)
+
+`.github/workflows/pruebas.yml` corre en cada push y en cada pull request a `main`. El estado se ve en el distintivo de arriba.
+
+- **Qué hace:** instala Composer y npm con caché, hace el build y corre `php artisan test` contra un PostgreSQL 17 de servicio. Después corre `npm run test:js`, `composer audit` y `npm audit`. Tarda unos 4 a 5 minutos.
+- **Sin secretos:** la base es solo de prueba y se destruye al terminar. El `.env` sale de `.env.example` con una APP_KEY generada en la ejecución, y las pruebas usan la clave fija de `phpunit.xml`. El flujo solo puede leer el repositorio (`permissions: contents: read`), y cada acción está fijada por su commit.
+- **Ejecuciones:** en un pull request, un push nuevo cancela la ejecución anterior. En `main` cada commit tiene su propia ejecución, así que ninguno queda sin probar.
+- **Auditoría semanal:** cada lunes a las 11:00 UTC se corren solo las dos auditorías, porque aparecen vulnerabilidades nuevas aunque nadie haga push.
+- **Si una auditoría encuentra algo:** actualizar solo ese paquete dentro de su versión permitida (`composer update vendor/paquete` o `npm audit fix`, nunca `--force`), como una fase aparte y con todas las pruebas. Si no hay corrección, anotar aquí con fecha si afecta o no a la app. En npm, los avisos bajos y moderados se muestran pero no hacen fallar.
+- **Si una prueba falla solo en GitHub:** descargar el `laravel.log` que el flujo sube al fallar (se guarda 7 días). Comparar las versiones de PHP, ICU y PostgreSQL, y revisar las mayúsculas de los nombres de archivo (Linux las distingue). Si falla por la hora, por ejemplo cerca de medianoche UTC, el arreglo es fijar la hora en la prueba (`$this->travelTo(...)`), nunca repetir la ejecución hasta que pase. Nunca se salta ni se borra una prueba para que quede en verde.
 
 ## Valores de referencia
 
