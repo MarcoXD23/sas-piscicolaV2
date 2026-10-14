@@ -16,10 +16,12 @@ use App\Models\Turno;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\CalculadoraRacion;
+use App\Support\Campo\PaqueteTrabajo;
 use App\Support\CoberturaBodega;
 use App\Support\Formato;
 use App\Support\Indicadores;
 use App\Support\LotesPorEspecie;
+use App\Support\Menu;
 use App\Support\Region;
 
 /**
@@ -29,19 +31,61 @@ use App\Support\Region;
 class ContextoFinca
 {
     /**
-     * Instrucciones de la finca activa: no cambian entre preguntas (prefijo cacheable) mientras no cambie su catálogo.
+     * Instrucciones de la finca activa para quien pregunta (por defecto, la persona con sesión). No cambian entre sus
+     * preguntas (prefijo cacheable): solo con el catálogo de la finca, su país o los roles de la persona.
      * Las fichas son las de las especies de ESTA finca; lo que falta va como «sin dato» para que no se invente.
      */
-    public static function instrucciones(): string
+    public static function instrucciones(?User $usuario = null): string
     {
+        $usuario ??= auth()->user();
         $especies = Especie::query()->activas()->orderBy('nombre')->get()->map(fn (Especie $especie) => self::ficha($especie->ficha()))->implode("\n");
+        $pais = Region::pais();
 
-        // Solo fichas y datos de la finca; dos avisos distintos: dato ausente y dato oculto para el rol
+        // Dos avisos distintos: dato de la finca ausente y dato oculto para el rol
         return __('asistente.instrucciones', [
             'dato_ausente' => __('asistente.avisos.dato_ausente'),
             'sin_acceso_rol' => __('asistente.avisos.sin_acceso_rol'),
+            // Sin país configurado no se asume ninguno
+            'pais' => $pais ? __('asistente.pais', ['pais' => Region::nombrePais($pais)]) : __('asistente.sin_pais'),
+            'guia' => $usuario ? "\n".self::guia($usuario)."\n" : '',
             'especies' => $especies,
         ]);
+    }
+
+    /**
+     * Guía de la app: una línea por cada entrada del menú que ve la persona (App\Support\Menu), con su nombre real y lo
+     * que su rol hace ahí. Nunca nombra una pantalla que la persona no tiene.
+     */
+    public static function guia(User $usuario): string
+    {
+        $usuario->loadMissing('roles');
+        $roles = $usuario->roles->pluck('nombre');
+        // Las claves son nombres de ruta (con puntos): se lee el arreglo completo, no con notación de puntos
+        $pantallas = __('asistente.guia.pantallas');
+
+        $lineas = Menu::para($usuario)->map(function (array $enlace) use ($usuario, $roles, $pantallas) {
+            if ($enlace['ruta'] === 'campo') {
+                return "- {$enlace['texto']}: ".self::registroRapido($usuario);
+            }
+            $texto = $pantallas[$enlace['ruta']];
+            // Un texto por rol: los de los roles de la persona, en el orden de la guía
+            if (is_array($texto)) {
+                $texto = collect($texto)->filter(fn (string $linea, string $rol) => $roles->contains($rol))->unique()->implode(' ');
+            }
+
+            return "- {$enlace['texto']}: {$texto}";
+        });
+
+        return __('asistente.guia.titulo')."\n".$lineas->implode("\n");
+    }
+
+    /** Lo que la persona puede registrar en Registro rápido (las mismas secciones del paquete de trabajo). */
+    private static function registroRapido(User $usuario): string
+    {
+        $acciones = collect(PaqueteTrabajo::secciones($usuario))->map(fn (string $seccion) => __('asistente.guia.acciones.'.$seccion));
+        $texto = __('asistente.guia.registro_rapido', ['acciones' => $acciones->join(', ', ' y ')]);
+
+        return $usuario->tieneRol(...Turno::ROLES) ? $texto.' '.__('asistente.guia.en_turno') : $texto;
     }
 
     /** Una línea por especie con los datos de su ficha; cada dato ausente se escribe como «sin dato». */

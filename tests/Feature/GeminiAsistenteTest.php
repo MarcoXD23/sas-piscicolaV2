@@ -81,8 +81,9 @@ class GeminiAsistenteTest extends TestCase
             return $peticion->url() === 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent'
                 && $peticion->hasHeader('x-goog-api-key', self::CLAVE)
                 && ! str_contains($peticion->url(), self::CLAVE)
-                // Mismas instrucciones (con la regla de no asumir país) y mismo contexto de la finca
-                && str_contains($cuerpo['systemInstruction']['parts'][0]['text'], 'No asumas el país')
+                // Mismas instrucciones (sin país configurado no asume ninguno) y mismo contexto de la finca
+                && str_contains($cuerpo['systemInstruction']['parts'][0]['text'], __('asistente.sin_pais'))
+                && str_contains($cuerpo['systemInstruction']['parts'][0]['text'], 'Puedes responder cualquier pregunta con tu conocimiento general.')
                 && str_contains($cuerpo['systemInstruction']['parts'][1]['text'], 'Lago L01')
                 && $cuerpo['contents'][0] === ['role' => 'user', 'parts' => [['text' => '¿Cuánto alimento doy hoy?']]];
         });

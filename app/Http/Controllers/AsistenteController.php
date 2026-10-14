@@ -40,7 +40,7 @@ class AsistenteController extends Controller
         $mensajes = $this->recortar([...$historial, ['role' => 'user', 'content' => trim($datos['mensaje'])]]);
 
         try {
-            $respuesta = $this->cliente->responder(ContextoFinca::instrucciones(), ContextoFinca::para($request->user()), $mensajes);
+            $respuesta = $this->cliente->responder(ContextoFinca::instrucciones($request->user()), ContextoFinca::para($request->user()), $mensajes);
         } catch (AsistenteNoDisponible $e) {
             // La pregunta no se guarda: así la conversación sigue alternando usuario/asistente
             return response()->json(['error' => $e->getMessage()], 503);

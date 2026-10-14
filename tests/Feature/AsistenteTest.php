@@ -12,6 +12,7 @@ use App\Support\Asistente\AsistenteNoDisponible;
 use App\Support\Asistente\ClaudeAsistente;
 use App\Support\Asistente\ClienteAsistente;
 use App\Support\Asistente\ContextoFinca;
+use App\Support\Menu;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -188,30 +189,156 @@ class AsistenteTest extends TestCase
     {
         $instrucciones = ContextoFinca::instrucciones();
 
-        $this->assertStringContainsString('No lo inventes', $instrucciones);
+        $this->assertStringContainsString('Nunca inventes datos de la finca', $instrucciones);
         $this->assertStringContainsString('Pseudoplatystoma magdaleniatum', $instrucciones);
-        // No asume país ni normativa: remite a la autoridad del país del usuario
+        // Sin país configurado no asume ninguno; leyes y trámites, a la autoridad de su país
+        $this->assertStringContainsString(__('asistente.sin_pais'), $instrucciones);
         $this->assertStringNotContainsString('Tolima', $instrucciones);
         $this->assertStringNotContainsString('Colombia', $instrucciones);
-        $this->assertStringContainsString('No asumas el país', $instrucciones);
-        $this->assertStringContainsString('autoridad sanitaria o agropecuaria de su país', $instrucciones);
+        $this->assertStringContainsString('remite a la autoridad correspondiente de su país', $instrucciones);
         // Las instrucciones no cambian entre preguntas (prefijo cacheable)
         $this->assertSame($instrucciones, ContextoFinca::instrucciones());
+        $trabajador = $this->persona(Rol::TRABAJADOR);
+        $this->assertSame(ContextoFinca::instrucciones($trabajador), ContextoFinca::instrucciones($trabajador));
     }
 
-    public function test_las_instrucciones_prohiben_el_conocimiento_general_y_separan_los_dos_avisos(): void
+    public function test_con_pais_configurado_las_instrucciones_llevan_el_pais_de_la_finca(): void
+    {
+        $this->tenant->update(['pais' => 'CO']);
+
+        $instrucciones = ContextoFinca::instrucciones();
+
+        $this->assertStringContainsString('La finca está en Colombia.', $instrucciones);
+        $this->assertStringNotContainsString(__('asistente.sin_pais'), $instrucciones);
+    }
+
+    public function test_las_instrucciones_permiten_el_conocimiento_general_y_separan_los_dos_avisos(): void
     {
         $instrucciones = ContextoFinca::instrucciones();
 
-        $this->assertStringContainsString('No uses conocimiento general', $instrucciones);
-        $this->assertStringContainsString('color, aspecto, alimentación, dosis', $instrucciones);
-        // Dato ausente: aviso propio y sugerencia de consultar al técnico o al veterinario
-        $this->assertStringContainsString('responde exactamente: «'.__('asistente.avisos.dato_ausente').'» y sugiere consultar al asistente técnico o al veterinario', $instrucciones);
-        // Aviso de rol: solo para los temas que existen pero el rol no ve, nunca para un dato ausente
+        // Conocimiento general, con la piscicultura como especialidad, y las fichas primero
+        $this->assertStringContainsString('Puedes responder cualquier pregunta con tu conocimiento general.', $instrucciones);
+        $this->assertStringContainsString('Tu especialidad es la piscicultura', $instrucciones);
+        $this->assertStringContainsString('aireadores, bombas, oxímetros, redes, balanzas', $instrucciones);
+        $this->assertStringContainsString('usa ese valor antes que tu conocimiento general', $instrucciones);
+        $this->assertStringNotContainsString('No uses conocimiento general', $instrucciones);
+        // Medicamentos: orientación general, sin dosis exactas ni marcas, y siempre al técnico o al veterinario
+        $this->assertStringContainsString('sin dosis exactas ni marcas comerciales', $instrucciones);
+        $this->assertStringContainsString('asistente técnico o al veterinario', $instrucciones);
+        // Dato ausente: solo para un dato concreto de la finca
+        $this->assertSame('No tengo ese dato registrado en la finca.', __('asistente.avisos.dato_ausente'));
+        $this->assertStringContainsString('Si un dato concreto de la finca no está, responde exactamente: «'.__('asistente.avisos.dato_ausente').'»', $instrucciones);
+        // Aviso de rol: no cambia, y nunca para un dato ausente
+        $this->assertSame('No tengo esa información para tu rol.', __('asistente.avisos.sin_acceso_rol'));
         $this->assertStringContainsString('Solo si la pregunta es sobre uno de esos temas, responde exactamente: «'.__('asistente.avisos.sin_acceso_rol').'»', $instrucciones);
         $this->assertStringContainsString('No uses ese aviso para un dato que simplemente no está', $instrucciones);
-        $this->assertNotSame(__('asistente.avisos.dato_ausente'), __('asistente.avisos.sin_acceso_rol'));
-        $this->assertStringContainsString('No tengo ese dato en la ficha de esa especie', __('asistente.avisos.dato_ausente'));
+        // Respuestas cortas para el celular, sin tablas ni Markdown pesado
+        $this->assertStringContainsString('No uses tablas ni Markdown', $instrucciones);
+    }
+
+    public function test_una_pregunta_general_de_piscicultura_va_con_la_especialidad_y_las_fichas(): void
+    {
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Qué oxígeno necesita la mojarra roja y qué hago si baja?')->assertOk();
+        $instrucciones = $this->falso->llamadas[0]['instrucciones'];
+
+        $this->assertStringContainsString('Tu especialidad es la piscicultura', $instrucciones);
+        $this->assertStringContainsString('- Mojarra roja (nombre científico: Oreochromis sp. (híbrido)).', $instrucciones);
+    }
+
+    public function test_una_pregunta_de_uso_de_la_app_va_con_la_guia_de_su_rol(): void
+    {
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Cómo registro una mortalidad?')->assertOk();
+        $instrucciones = $this->falso->llamadas[0]['instrucciones'];
+
+        $this->assertStringContainsString(__('asistente.guia.titulo'), $instrucciones);
+        $this->assertStringContainsString('- Registro rápido: registrar desde el celular, también sin conexión: la ración de un lago, los peces muertos y el aviso de que un lago está listo para pescar. '.__('asistente.guia.en_turno'), $instrucciones);
+        $this->assertStringContainsString('Nunca inventes pantallas, botones ni funciones.', $instrucciones);
+    }
+
+    public function test_un_dato_de_la_finca_que_no_existe_lleva_el_aviso_de_dato_ausente(): void
+    {
+        $this->preguntar($this->persona(Rol::ADMINISTRADOR), '¿Cuánto le toca hoy al lago precian1?')->assertOk();
+        $enviado = $this->falso->llamadas[0];
+
+        // El lago no existe: no está en los datos, y no es un tema oculto para el administrador
+        $this->assertStringNotContainsStringIgnoringCase('precian1', $enviado['contexto']);
+        $this->assertStringContainsString('Lago L01', $enviado['contexto']);
+        $this->assertStringContainsString('Nunca inventes datos de la finca', $enviado['instrucciones']);
+        $this->assertStringContainsString(__('asistente.avisos.dato_ausente'), $enviado['instrucciones']);
+    }
+
+    public function test_la_nomina_es_un_tema_oculto_para_el_trabajador(): void
+    {
+        $this->preguntar($this->persona(Rol::TRABAJADOR), '¿Cuánto se pagó de nómina?')->assertOk();
+        $contexto = $this->falso->llamadas[0]['contexto'];
+
+        $this->assertStringContainsString('Datos que existen en la finca pero tu rol no puede ver:', $contexto);
+        $this->assertStringContainsString(__('asistente.temas.nomina'), $contexto);
+    }
+
+    public function test_preguntas_fuera_de_tema_y_precios_de_mercado_tienen_su_regla(): void
+    {
+        $this->preguntar($this->persona(Rol::PROPIETARIO), '¿A cómo está el kilo de cachama?')->assertOk();
+        $instrucciones = $this->falso->llamadas[0]['instrucciones'];
+
+        // Precios y datos que cambian: no se inventan
+        $this->assertStringContainsString('Precios de mercado, cotizaciones y datos que cambian con el tiempo (precio del pescado, del concentrado, del dólar): no los inventes ni des cifras.', $instrucciones);
+        $this->assertStringContainsString('Di que no tienes datos actuales', $instrucciones);
+        // Fuera de tema: breve y amable, sin negarse
+        $this->assertStringContainsString('responde breve y amable, sin negarte', $instrucciones);
+    }
+
+    public function test_la_guia_de_cada_rol_solo_nombra_las_pantallas_de_su_menu(): void
+    {
+        foreach ([Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR] as $rol) {
+            $persona = $this->persona($rol);
+            $guia = ContextoFinca::guia($persona);
+            preg_match_all('/^- ([^:]+):/m', $guia, $nombradas);
+
+            // Exactamente las entradas de su menú, en el mismo orden y con su nombre real
+            $this->assertSame(Menu::para($persona)->pluck('texto')->all(), $nombradas[1], $rol);
+        }
+
+        // El trabajador no ve Bodega, Ventas ni Personal: su guía no las nombra
+        $trabajador = ContextoFinca::guia($this->persona(Rol::TRABAJADOR));
+        foreach (['layout.menu.bodega', 'layout.menu.ventas', 'layout.menu.personal', 'layout.menu.noche'] as $clave) {
+            $this->assertStringNotContainsString('- '.__($clave).':', $trabajador, $clave);
+        }
+        // Registro rápido: lo mismo que el paquete de trabajo de cada rol
+        $this->assertStringContainsString('las rondas de seguridad y la medición del agua', ContextoFinca::guia($this->persona(Rol::CELADOR)));
+        $this->assertStringContainsString('el muestreo de peso', ContextoFinca::guia($this->persona(Rol::ADMINISTRADOR)));
+        $this->assertStringNotContainsString(__('asistente.guia.en_turno'), ContextoFinca::guia($this->persona(Rol::ADMINISTRADOR)));
+        $this->assertStringNotContainsString('- '.__('layout.menu.registro_rapido').':', ContextoFinca::guia($this->persona(Rol::PROPIETARIO)));
+
+        // Sin persona (por ejemplo, fuera de una petición) no va guía
+        $this->assertStringNotContainsString(__('asistente.guia.titulo'), ContextoFinca::instrucciones());
+    }
+
+    public function test_cada_entrada_del_menu_tiene_su_texto_en_la_guia(): void
+    {
+        $pantallas = __('asistente.guia.pantallas');
+        foreach (Menu::entradas() as $entrada) {
+            if ($entrada['ruta'] === 'campo') {
+                // Registro rápido se arma con las secciones del paquete de trabajo: cada una tiene su texto
+                foreach (['racion', 'mortalidad', 'muestreo', 'aviso_pesca', 'ronda', 'medicion'] as $seccion) {
+                    $this->assertNotSame('asistente.guia.acciones.'.$seccion, __('asistente.guia.acciones.'.$seccion), $seccion);
+                }
+
+                continue;
+            }
+
+            $this->assertArrayHasKey($entrada['ruta'], $pantallas, 'Falta el texto de la guía para '.$entrada['ruta']);
+            $texto = $pantallas[$entrada['ruta']];
+            if (is_array($texto)) {
+                // Un texto por rol: cada rol que ve la entrada tiene el suyo
+                $this->assertNotNull($entrada['roles'], $entrada['ruta']);
+                foreach ($entrada['roles'] as $rol) {
+                    $this->assertArrayHasKey($rol, $texto, "Falta el texto de {$entrada['ruta']} para {$rol}");
+                }
+            }
+        }
+        // Y no hay textos de pantallas que no están en el menú
+        $this->assertSame([], array_values(array_diff(array_keys($pantallas), array_column(Menu::entradas(), 'ruta'))));
     }
 
     public function test_una_pregunta_de_dinero_de_un_rol_sin_acceso_lleva_el_tema_como_oculto_para_su_rol(): void

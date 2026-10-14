@@ -38,7 +38,7 @@ Solo existen cuatro roles. Una persona puede tener varios (por ejemplo trabajado
 | Seguridad & Noche | `/noche` | El celador, en su turno: rondas con o sin novedad, aireadores y oxígeno nocturno. Propietario y administrador lo consultan en solo lectura, con los reportes de cada turno. |
 | Agenda | `/admin/agenda` | Calendario de la finca con recordatorios; muestra retiros sanitarios y permisos aprobados. |
 | Reportes | `/admin/reportes` | Informe mensual y libro de campo por lago (imprimibles o PDF desde el navegador). |
-| Asistente IA | botón flotante | Preguntas sobre la finca con Claude o Gemini. Responde solo con las fichas de especies y los datos que el rol puede ver, sin conocimiento general. Si el dato no está, lo dice ("No tengo ese dato…"). Si existe pero el rol no lo ve, responde "No tengo esa información para tu rol". |
+| Asistente IA | botón flotante | Preguntas con Claude o Gemini, con las mismas instrucciones (`lang/es/asistente.php`). Responde con conocimiento general, con la piscicultura como especialidad, y prefiere los valores de las fichas de especies. Sobre la finca usa solo los datos que el rol puede ver y nunca los inventa: si un dato de la finca no está, dice «No tengo ese dato registrado en la finca»; si existe pero el rol no lo ve, «No tengo esa información para tu rol». Conoce la app con una guía de las pantallas del menú de cada rol (`App\Support\Menu`). Medicamentos y enfermedades: orientación general, sin dosis exactas ni marcas, y remite al técnico o al veterinario. No inventa precios ni cotizaciones. Va el país de la finca; sin país configurado, no asume ninguno. |
 
 Todo movimiento de stock, peces, biomasa o dinero se hace en una transacción y queda como registro histórico (nunca se sobrescribe solo un saldo).
 
