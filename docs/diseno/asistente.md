@@ -17,7 +17,7 @@ Decisiones sobre el asistente IA (botón flotante), por fases. La memoria de tra
 ## Fases
 
 1. **Modelo, respaldo y privacidad.** Hecha.
-2. **Instrucciones nuevas y guía de la app.**
+2. **Instrucciones nuevas y guía de la app.** Hecha.
    - Responde con conocimiento general, con la piscicultura como especialidad.
    - Usa los datos de la finca sin inventarlos, y prefiere los valores de las fichas.
    - En medicamentos y enfermedades: orientación general **sin dosis exactas ni marcas**, y siempre remite al técnico o al veterinario.
