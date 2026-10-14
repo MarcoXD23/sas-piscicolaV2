@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Ventas de pescado y créditos (exclusivo del propietario).
+ * Ventas de pescado, créditos y abonos: los registra el administrador; el propietario consulta.
  */
 class VentaController extends Controller
 {

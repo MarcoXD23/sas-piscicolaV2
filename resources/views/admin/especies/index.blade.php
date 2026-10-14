@@ -13,6 +13,7 @@
             <x-boton data-abrir-modal="modal-especie"><x-icono nombre="mas" class="h-5 w-5" /> {{ __('especies.catalogo_finca.nueva') }}</x-boton>
         @endif
     </x-encabezado>
+    <x-pestanas-especies />
 
     @unless ($puedeEditar)
         <x-aviso tono="info" class="mb-6">{{ __('especies.catalogo_finca.solo_lectura') }}</x-aviso>

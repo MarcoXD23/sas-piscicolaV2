@@ -292,4 +292,62 @@ class EspeciesFincaTest extends TestCase
         $this->actingAs($this->administrador)->get(route('especies.index'))->assertOk()
             ->assertSee('Sábalo')->assertDontSee('Bocachico')->assertDontSee('Pez de la otra finca');
     }
+
+    /** Pestañas de Especies (nav «Secciones») de la página: [ruta => ¿activa?]. */
+    private function pestanasDe(string $html): array
+    {
+        if (! preg_match('#<nav[^<]*?aria-label="'.__('componentes.secciones').'"[^<]*?>(.*?)</nav>#s', $html, $nav)) {
+            return [];
+        }
+        preg_match_all('#<a href="([^"]+)"\s*(aria-current="page")?#', $nav[1], $enlaces, PREG_SET_ORDER);
+
+        return collect($enlaces)->mapWithKeys(fn ($e) => [$e[1] => ! empty($e[2] ?? '')])->all();
+    }
+
+    /** Enlaces del menú principal (sin las pestañas) hacia una URL, y cuántos de ellos están activos. */
+    private function enMenu(string $html, string $url): array
+    {
+        $sinPestanas = preg_replace('#<nav[^<]*?aria-label="'.__('componentes.secciones').'"[^<]*?>.*?</nav>#s', '', $html);
+        preg_match_all('#<a href="'.preg_quote($url, '#').'"\s*(aria-current="page")?#', $sinPestanas, $enlaces, PREG_SET_ORDER);
+
+        return ['enlaces' => count($enlaces), 'activos' => collect($enlaces)->filter(fn ($e) => ! empty($e[1] ?? ''))->count()];
+    }
+
+    public function test_especies_es_una_sola_entrada_con_pestanas_guia_y_catalogo(): void
+    {
+        $guia = route('especies.index');
+        $catalogo = route('admin.especies.index');
+
+        foreach ([$this->propietario, $this->administrador] as $persona) {
+            // En la guía: las dos pestañas, la guía activa
+            $html = $this->actingAs($persona)->get($guia)->assertOk()->getContent();
+            $this->assertSame([$guia => true, $catalogo => false], $this->pestanasDe($html));
+            $this->assertStringContainsString(__('especies.pestanas.guia'), $html);
+            $this->assertStringContainsString(__('especies.pestanas.catalogo'), $html);
+            // En el catálogo: el catálogo activo
+            $html = $this->actingAs($persona)->get($catalogo)->assertOk()->getContent();
+            $this->assertSame([$guia => false, $catalogo => true], $this->pestanasDe($html));
+
+            // El menú: ningún enlace propio al catálogo; la entrada «Especies» (la guía) activa en las dos pantallas
+            foreach ([$guia, $catalogo] as $pantalla) {
+                $html = $this->actingAs($persona)->get($pantalla)->getContent();
+                $this->assertSame(0, $this->enMenu($html, $catalogo)['enlaces'], $pantalla);
+                $menu = $this->enMenu($html, $guia);
+                $this->assertGreaterThan(0, $menu['enlaces'], $pantalla);
+                $this->assertSame($menu['enlaces'], $menu['activos'], $pantalla.': la entrada «Especies» queda activa');
+            }
+        }
+    }
+
+    public function test_el_trabajador_y_el_celador_van_directo_a_la_guia_sin_pestanas(): void
+    {
+        foreach ([Rol::TRABAJADOR, Rol::CELADOR] as $rol) {
+            $persona = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([$rol]);
+            $html = $this->actingAs($persona)->get(route('especies.index'))->assertOk()->getContent();
+            $this->assertSame([], $this->pestanasDe($html), $rol);
+            $this->assertStringNotContainsString(route('admin.especies.index'), $html, $rol);
+            $this->assertGreaterThan(0, $this->enMenu($html, route('especies.index'))['activos'], $rol);
+            $this->actingAs($persona)->get(route('admin.especies.index'))->assertForbidden();
+        }
+    }
 }

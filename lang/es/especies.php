@@ -187,11 +187,15 @@ return [
             ],
         ],
     ],
+    // Pestañas de Especies (una sola entrada del menú)
+    'pestanas' => [
+        'guia' => 'Guía',
+        'catalogo' => 'Catálogo de la finca',
+    ],
     // Catálogo de especies de la finca (lo edita el administrador)
     'catalogo_finca' => [
         'titulo' => 'Especies de la finca',
         'subtitulo' => 'Las especies que se pueden sembrar en esta finca, con sus rangos de agua y su tipo de alimentación.',
-        'enlace' => 'Especies',
         'solo_lectura' => 'Las agrega y edita el administrador.',
         'nueva' => 'Agregar especie',
         'editar' => 'Editar',

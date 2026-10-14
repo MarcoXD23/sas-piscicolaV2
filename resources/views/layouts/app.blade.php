@@ -89,11 +89,11 @@
                 ['ruta' => 'admin.conversion.index', 'activa' => 'admin.conversion.*', 'texto' => __('layout.menu.conversion'), 'icono' => 'biomasa', 'roles' => ['propietario', 'administrador']],
                 ['ruta' => 'admin.bitacora.index', 'activa' => 'admin.bitacora.*', 'texto' => __('layout.menu.bitacora'), 'icono' => 'reloj', 'roles' => ['propietario']],
                 ['ruta' => 'admin.reportes.index', 'activa' => 'admin.reportes.*', 'texto' => __('layout.menu.reportes'), 'icono' => 'reporte', 'roles' => ['propietario', 'administrador']],
-                ['ruta' => 'admin.especies.index', 'activa' => 'admin.especies.*', 'texto' => __('especies.catalogo_finca.enlace'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador']],
                 ['ruta' => 'admin.ajustes-pesaje.edit', 'activa' => 'admin.ajustes-pesaje.*', 'texto' => __('cosechas.ajustes.enlace'), 'icono' => 'ajustes', 'roles' => ['administrador']],
                 ['ruta' => 'admin.ajustes.edit', 'activa' => 'admin.ajustes.*', 'texto' => __('region.ajustes.enlace'), 'icono' => 'ajustes', 'roles' => ['propietario']],
                 ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => __('layout.menu.mi_trabajo'), 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
-                ['ruta' => 'especies.index', 'activa' => 'especies.*', 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador', 'celador']],
+                // Una sola entrada: la guía (todos) y, en pestañas, el catálogo de la finca (propietario y administrador)
+                ['ruta' => 'especies.index', 'activa' => ['especies.*', 'admin.especies.*'], 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador', 'celador']],
             ])->filter(fn ($enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn ($rol) => $usuarioActual->tieneRol($rol)))
                 ->map(fn ($enlace) => $enlace + ['es_actual' => request()->routeIs($enlace['activa'] ?? $enlace['ruta'])])

@@ -4,6 +4,7 @@
 
 @section('contenido')
     <x-encabezado :titulo="__('especies.guia_especies')" :subtitulo="__('especies.fichas_tecnicas_referencia_especies_pueden')" />
+    <x-pestanas-especies />
 
     {{-- Una ficha por especie: foto, nombre, clima y los datos de cultivo que más se consultan en el campo --}}
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
