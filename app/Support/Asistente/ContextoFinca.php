@@ -101,16 +101,17 @@ class ContextoFinca
     /** Estado actual de la finca, filtrado por el rol. */
     public static function para(User $usuario): string
     {
-        $usuario->loadMissing('roles', 'tenant');
+        $usuario->loadMissing('roles');
         $roles = $usuario->roles->pluck('nombre');
         $esPropietario = $usuario->tieneRol(Rol::PROPIETARIO);
         $esTecnico = $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR);
         $veLagos = $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR);
         $esCelador = $usuario->tieneRol(Rol::CELADOR);
 
+        // Sin el nombre de la persona ni el de la finca: al asistente le basta el rol
         $secciones = [
-            "Finca: {$usuario->tenant->nombre}. Ahora: ".Region::ahora()->translatedFormat('l j \d\e F \d\e Y, H:i').'.',
-            "Quien pregunta: {$usuario->name}, rol: {$roles->join(' y ')}.",
+            'Ahora: '.Region::ahora()->translatedFormat('l j \d\e F \d\e Y, H:i').'.',
+            "Rol de quien pregunta: {$roles->join(' y ')}.",
         ];
 
         if ($veLagos || $esCelador) {

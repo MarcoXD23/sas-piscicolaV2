@@ -87,7 +87,7 @@ Edita `.env`:
 | `DB_*` | Tu PostgreSQL. La base por defecto es `sas_piscicola_v2`. |
 | `ASISTENTE_PROVEEDOR` | Proveedor del asistente IA: `claude` o `gemini`. Vacío = `claude`. |
 | `ANTHROPIC_API_KEY` | Clave de Claude, en [console.anthropic.com](https://console.anthropic.com). |
-| `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5`. |
+| `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-haiku-5-5` (el más económico; las preguntas de finca son cortas). |
 | `GEMINI_API_KEY` | Clave de Gemini, en [aistudio.google.com](https://aistudio.google.com). |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.5-flash-lite` (el anterior, `gemini-3.8-flash`, se saturaba con errores 503). |
 | `GEMINI_MODEL_RESPALDO` | Opcional. Modelo que se prueba una vez si el principal sigue respondiendo 500 o 503 después de 2 reintentos (1 s y 3 s). Vacío = sin respaldo. Sugerido: `gemini-flash-lite-latest`. |
@@ -102,6 +102,10 @@ El asistente funciona con **Claude** (Anthropic) o con **Gemini** (Google). Las 
 3. Si cambiaste el `.env` con la configuración en caché, ejecuta `php artisan config:clear`.
 
 Gemini tiene un nivel gratuito: la clave se saca en [aistudio.google.com](https://aistudio.google.com).
+
+**Modelo de Claude:** por defecto `claude-haiku-5-5`; se cambia con `ANTHROPIC_MODEL`. El respaldo del servidor (si el modelo declina una pregunta, la API la reintenta con otro) solo se pide a los modelos que lo admiten, que están en la lista `services.anthropic.modelos_con_respaldo`. Haiku no lo admite: si declina, se muestra el aviso «El asistente no puede responder esa pregunta».
+
+**Privacidad:** al asistente no se le envían el nombre de la persona ni el de la finca, solo su rol. Sí van textos libres que escribe la gente (títulos de tareas, novedades de seguridad y, para el propietario, la agenda), que pueden llevar nombres. Ver `docs/diseno/asistente.md`.
 
 > **Advertencia sobre el nivel gratuito de Gemini:** según las condiciones de Google, en el nivel gratuito lo que envías **puede usarse para mejorar sus productos y modelos**. Cada pregunta al asistente envía datos de la finca (lagos, producción y, para el propietario, bodega y ventas). **No uses el nivel gratuito si manejas datos de clientes o información que no deba compartirse**; para eso usa el nivel de pago de Gemini o Claude.
 

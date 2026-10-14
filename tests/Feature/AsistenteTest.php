@@ -134,8 +134,10 @@ class AsistenteTest extends TestCase
 
         $contexto = ContextoFinca::para($this->persona(Rol::PROPIETARIO));
 
-        $this->assertStringContainsString('Finca El Lago', $contexto);
+        // Los lagos son los de su finca (el nombre de la finca ya no se envía)
+        $this->assertStringContainsString('Lago L01', $contexto);
         $this->assertStringNotContainsString('LAGO-AJENO', $contexto);
+        $this->assertStringNotContainsString('Otra finca', $contexto);
     }
 
     public function test_la_conversacion_enviada_se_limita_y_empieza_por_el_usuario(): void
@@ -270,5 +272,60 @@ class AsistenteTest extends TestCase
         auth()->logout();
         $this->get(route('login'))->assertDontSee('data-asistente-formulario', false);
         $this->postJson(route('asistente.enviar'), ['mensaje' => 'hola'])->assertUnauthorized();
+    }
+
+    public function test_no_se_envian_el_nombre_de_la_persona_ni_el_de_la_finca(): void
+    {
+        foreach ([Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR] as $indice => $rol) {
+            $persona = tap($this->persona($rol))->update(['name' => 'Persona Muy Única '.$indice]);
+            $this->preguntar($persona)->assertOk();
+            $enviado = $this->falso->llamadas[$indice];
+
+            // Al asistente le basta el rol
+            $this->assertStringContainsString('Rol de quien pregunta: '.$rol, $enviado['contexto'], $rol);
+            foreach (['Persona Muy Única', 'Finca El Lago', $persona->email] as $dato) {
+                $this->assertStringNotContainsString($dato, $enviado['contexto'], "{$rol}: {$dato}");
+                $this->assertStringNotContainsString($dato, $enviado['instrucciones'], "{$rol}: {$dato}");
+            }
+        }
+    }
+
+    public function test_el_respaldo_del_servidor_solo_va_con_los_modelos_que_lo_admiten(): void
+    {
+        // Haiku no admite fallbacks: con él la petición se rechazaría
+        $this->assertSame([], (new ClaudeAsistente('clave', 'claude-haiku-5-5'))->opcionesRespaldo());
+        $this->assertSame([], (new ClaudeAsistente('clave', 'un-modelo-nuevo'))->opcionesRespaldo());
+
+        foreach (config('services.anthropic.modelos_con_respaldo') as $modelo) {
+            $this->assertSame(['fallbacks' => 'default', 'betas' => ['server-side-fallback-2026-07-01']],
+                (new ClaudeAsistente('clave', $modelo))->opcionesRespaldo(), $modelo);
+        }
+        $this->assertContains('claude-opus-5-5', config('services.anthropic.modelos_con_respaldo'));
+        $this->assertNotContains('claude-haiku-5-5', config('services.anthropic.modelos_con_respaldo'));
+    }
+
+    public function test_el_modelo_de_claude_por_defecto_es_haiku(): void
+    {
+        // Sin ANTHROPIC_MODEL (vacío) la configuración usa Haiku, sea cual sea el .env local
+        $antes = [getenv('ANTHROPIC_MODEL'), $_ENV['ANTHROPIC_MODEL'] ?? null, $_SERVER['ANTHROPIC_MODEL'] ?? null];
+        putenv('ANTHROPIC_MODEL=');
+        $_ENV['ANTHROPIC_MODEL'] = $_SERVER['ANTHROPIC_MODEL'] = '';
+
+        try {
+            $modelo = (require config_path('services.php'))['anthropic']['modelo'];
+        } finally {
+            $antes[0] === false ? putenv('ANTHROPIC_MODEL') : putenv('ANTHROPIC_MODEL='.$antes[0]);
+            foreach (['_ENV' => $antes[1], '_SERVER' => $antes[2]] as $global => $valor) {
+                if ($valor === null) {
+                    unset($GLOBALS[$global]['ANTHROPIC_MODEL']);
+                } else {
+                    $GLOBALS[$global]['ANTHROPIC_MODEL'] = $valor;
+                }
+            }
+        }
+
+        $this->assertSame('claude-haiku-5-5', $modelo);
+        // Y Haiku va sin el respaldo del servidor
+        $this->assertSame([], (new ClaudeAsistente('clave', $modelo))->opcionesRespaldo());
     }
 }

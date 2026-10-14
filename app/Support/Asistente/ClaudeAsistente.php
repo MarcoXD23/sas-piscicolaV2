@@ -33,21 +33,18 @@ class ClaudeAsistente implements ClienteAsistente
         try {
             $cliente = new Client(apiKey: $this->clave, requestOptions: ['timeout' => 60.0, 'maxRetries' => 2]);
 
-            $respuesta = $cliente->beta->messages->create(
-                model: $this->modelo,
-                maxTokens: 8000,
+            $respuesta = $cliente->beta->messages->create(...[
+                'model' => $this->modelo,
+                'maxTokens' => 8000,
                 // Las instrucciones fijas van primero (prefijo cacheable); los datos de la finca cambian en cada pregunta
-                system: [
+                'system' => [
                     ['type' => 'text', 'text' => $instrucciones, 'cacheControl' => ['type' => 'ephemeral']],
                     ['type' => 'text', 'text' => $contexto],
                 ],
-                messages: $mensajes,
+                'messages' => $mensajes,
                 // Conversación sencilla: esfuerzo bajo para respuestas rápidas y económicas
-                outputConfig: ['effort' => 'low'],
-                // Si el modelo declina por política, el servidor reintenta con el respaldo por defecto
-                fallbacks: 'default',
-                betas: ['server-side-fallback-2026-07-01'],
-            );
+                'outputConfig' => ['effort' => 'low'],
+            ] + $this->opcionesRespaldo());
         } catch (AuthenticationException $e) {
             Log::error('Asistente IA: clave de Anthropic inválida', ['error' => $e->getMessage()]);
             throw new AsistenteNoDisponible(__('asistente.errores.clave_invalida'));
@@ -74,5 +71,20 @@ class ClaudeAsistente implements ClienteAsistente
         }
 
         return trim($texto);
+    }
+
+    /**
+     * Si el modelo declina por política, el servidor reintenta con el respaldo por defecto. Solo se envía con los
+     * modelos que lo admiten (services.anthropic.modelos_con_respaldo): con otro, la petición se rechazaría.
+     *
+     * @return array{fallbacks?: string, betas?: list<string>}
+     */
+    public function opcionesRespaldo(): array
+    {
+        if (! in_array($this->modelo, config('services.anthropic.modelos_con_respaldo', []), true)) {
+            return [];
+        }
+
+        return ['fallbacks' => 'default', 'betas' => ['server-side-fallback-2026-07-01']];
     }
 }

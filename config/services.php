@@ -38,7 +38,11 @@ return [
 
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
-        'modelo' => env('ANTHROPIC_MODEL') ?: 'claude-opus-5-5',
+        // Por defecto el más económico: las preguntas de finca son cortas. Se cambia con ANTHROPIC_MODEL.
+        'modelo' => env('ANTHROPIC_MODEL') ?: 'claude-haiku-5-5',
+        // Modelos que admiten el respaldo del servidor (fallbacks): solo con estos se envía. Los demás
+        // (por ejemplo Haiku) no lo admiten: si el modelo declina, se muestra el aviso de pregunta bloqueada.
+        'modelos_con_respaldo' => ['claude-opus-5-5', 'claude-opus-5', 'claude-fable-5-1', 'claude-sonnet-5-5'],
     ],
 
     'gemini' => [
