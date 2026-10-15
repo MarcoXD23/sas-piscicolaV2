@@ -140,6 +140,7 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
 
         Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
         Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
+        Route::put('/ajustes/operacion', [AjustesFincaController::class, 'guardarOperacion'])->name('ajustes.operacion');
 
         Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');

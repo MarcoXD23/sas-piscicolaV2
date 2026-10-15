@@ -3,6 +3,7 @@
 return [
     'accion' => 'Acción',
     'acciones' => [
+        'ajustes' => 'Ajustes',
         'aprobacion' => 'Aprobación',
         'aviso_atendido' => 'Aviso atendido',
         'aviso_pesca' => 'Listo para pescar',
@@ -30,6 +31,7 @@ return [
     ],
     'detalle' => 'Detalle',
     'detalles' => [
+        'ajustes' => 'Ajuste «:ajuste»: :antes → :despues',
         'aprobacion' => ':persona aprobado como :roles',
         'aviso_atendido' => 'Aviso de pesca de :especie atendido',
         'aviso_pesca' => ':especie lista para pescar. :nota',

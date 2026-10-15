@@ -62,6 +62,15 @@ Nada está atado a un país. Cada finca define en **Ajustes** (solo el propietar
 
 La lógica de zona, "hoy" y formatos está en [`App\Support\Region`](app/Support/Region.php); el cast [`InstanteLocal`](app/Casts/InstanteLocal.php) y la conexión [`ConexionPostgresUtc`](app/Database/ConexionPostgresUtc.php) garantizan que todo instante llegue a la base en UTC.
 
+### Operación de la finca
+
+En **Ajustes › Operación de la finca** el propietario define cómo trabaja su finca. Hoy hay un ajuste, **«Quién mide el agua»** (el celador, el administrador o los dos).
+
+- Los ajustes, sus opciones y su valor por defecto están en [`CatalogoAjustes`](app/Support/Ajustes/CatalogoAjustes.php).
+- El valor por defecto conserva cómo funciona la app hoy.
+- Lo que la finca cambia se guarda en `ajustes_finca` y cada cambio queda en la bitácora.
+- Un ajuste nuevo se agrega al catálogo, con sus textos en `lang/es/ajustes_finca.php`, sin migración. Solo se agregan los que usa alguna función.
+
 **Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca una copia con `php artisan piscicola:respaldar`, que guarda fuera del proyecto (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)).
 
 ## Requisitos

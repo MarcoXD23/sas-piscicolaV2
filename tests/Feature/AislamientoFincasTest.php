@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Abono;
+use App\Models\AjusteFinca;
 use App\Models\AceptacionLegal;
 use App\Models\Aireacion;
 use App\Models\Alerta;
@@ -132,6 +133,7 @@ class AislamientoFincasTest extends TestCase
             Venta::class => $venta,
             Liquidacion::class => $liquidacion,
             DespachoAlimento::class => $despacho,
+            AjusteFinca::class => AjusteFinca::create(['clave' => \App\Support\Ajustes\CatalogoAjustes::AGUA_QUIEN_MIDE, 'valor' => 'administrador', 'cambiado_por' => $persona->id]),
             Abono::class => Abono::create(['venta_id' => $venta->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'valor' => 100, 'medio' => 'efectivo']),
             Aireacion::class => Aireacion::create(['lago_id' => $lago->id, 'user_id' => $persona->id, 'encendido_at' => now()]),
             Alerta::class => Alerta::create(['tipo' => Alerta::AGUA, 'referencia' => (string) $lago->id, 'severidad' => Alerta::ADVERTENCIA, 'datos' => [], 'abierta_at' => now()]),

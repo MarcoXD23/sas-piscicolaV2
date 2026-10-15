@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\PrimerUso;
 use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\Hora;
@@ -14,7 +16,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * País, zona horaria, idioma y umbrales de alerta de la finca (exclusivo del propietario).
+ * País, zona horaria, idioma y umbrales de alerta de la finca, y los ajustes de operación (CatalogoAjustes).
+ * Exclusivo del propietario.
  */
 class AjustesFincaController extends Controller
 {
@@ -34,6 +37,9 @@ class AjustesFincaController extends Controller
             'formatosHora' => ['' => __('region.ajustes.formato_hora_del_pais', ['formato' => __('region.formatos_hora_corto.'.Hora::delPais($finca->pais))])]
                 + collect(Hora::FORMATOS)->mapWithKeys(fn (string $f) => [$f => __('region.formatos_hora.'.$f)])->all(),
             'idiomas' => collect(Region::IDIOMAS)->mapWithKeys(fn ($idioma) => [$idioma => __("region.idiomas.{$idioma}")])->all(),
+            // Operación de la finca: cada ajuste del catálogo con su valor actual (o el de por defecto)
+            'ajustesOperacion' => AjustesFinca::todos(),
+            'seccionesOperacion' => CatalogoAjustes::porSeccion(),
         ]);
     }
 
@@ -70,5 +76,15 @@ class AjustesFincaController extends Controller
         EvaluadorAlertas::paraFinca($finca->id);
 
         return redirect()->route('admin.ajustes.edit')->with('estado', __('region.ajustes.guardados'));
+    }
+
+    /** Ajustes de operación: guarda los que cambiaron y deja cada cambio en la bitácora. */
+    public function guardarOperacion(Request $request): RedirectResponse
+    {
+        $datos = $request->validate(AjustesFinca::reglas());
+        $cambios = AjustesFinca::guardar($request->user(), $datos);
+
+        return redirect()->route('admin.ajustes.edit')
+            ->with('estado', __($cambios > 0 ? 'ajustes_finca.guardados' : 'ajustes_finca.sin_cambios'));
     }
 }

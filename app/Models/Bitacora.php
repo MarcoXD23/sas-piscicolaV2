@@ -19,7 +19,7 @@ class Bitacora extends Model
 {
     use PerteneceATenant;
 
-    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'medicion', 'aprobacion', 'roles', 'dos_pasos', 'exportacion', 'eliminacion', 'eliminacion_anulada',
+    public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'medicion', 'aprobacion', 'roles', 'dos_pasos', 'exportacion', 'eliminacion', 'eliminacion_anulada', 'ajustes',
         'jornalero_creado', 'jornalero_editado', 'jornalero_activado', 'jornalero_inactivo', 'jornalero_anonimo'];
 
     /** Roles de mayor a menor nivel: se guarda el más alto que tenga la persona entre los que permite la acción. */

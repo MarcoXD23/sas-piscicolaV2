@@ -41,6 +41,24 @@
         </x-formulario>
     </x-tarjeta>
 
+    {{-- Operación de la finca: ajustes del catálogo (App\Support\Ajustes\CatalogoAjustes), cada uno con su valor por defecto --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('ajustes_finca.titulo')" :subtitulo="__('ajustes_finca.subtitulo')">
+        <x-formulario :action="route('admin.ajustes.operacion')" metodo="PUT">
+            @foreach ($seccionesOperacion as $seccion => $claves)
+                <fieldset class="space-y-5">
+                    <legend class="mb-1 text-lg font-semibold text-tinta">{{ __('ajustes_finca.secciones.'.$seccion) }}</legend>
+                    @foreach ($claves as $clave)
+                        <x-seleccion :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
+                                     :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required
+                                     :opciones="collect(\App\Support\Ajustes\CatalogoAjustes::definicion($clave)['opciones'])->mapWithKeys(fn ($opcion) => [$opcion => \App\Support\Ajustes\AjustesFinca::textoOpcion($clave, $opcion)])->all()" />
+                    @endforeach
+                </fieldset>
+            @endforeach
+
+            <x-boton>{{ __('ajustes_finca.guardar') }}</x-boton>
+        </x-formulario>
+    </x-tarjeta>
+
     {{-- Exportar o eliminar los datos de la finca --}}
     <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('datos.titulo')" :subtitulo="__('datos.subtitulo')">
         <x-boton variante="secundario" :href="route('admin.datos.index')">{{ __('datos.enlace') }}</x-boton>
