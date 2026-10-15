@@ -11,7 +11,7 @@ Cada tema separa:
 
 > Las cifras marcadas *(ejemplo de la finca piloto)* son de esa finca. El sistema no las trae fijas: van en la configuración de cada finca.
 
-Última actualización: 2026-10-14.
+Última actualización: 2026-10-15.
 
 ---
 
@@ -443,6 +443,227 @@ No hay que renombrar el lago en el código: rompería los registros guardados si
 
 ---
 
+## 15. Lo que enseñan los registros de la finca piloto
+
+Revisión de los registros en papel y en Excel de la finca piloto (2026-10-15). Cada punto dice qué está **confirmado**, qué es **configurable por finca**, qué está **pendiente** y qué **ya existe en el código**. Nada de esto está construido todavía, salvo lo que se indica como existente.
+
+### 15.1 Lagos y fases (lo más importante)
+
+**Confirmado en la finca piloto:**
+
+- Cada lago tiene su nombre (por ejemplo, «Levante 3») y su **fase**: alevinaje (albercas), precría, levante o engorde. Dos lagos de la finca son albercas.
+- La fase define las reglas del lago:
+  - **Peso:** el peso esperado al entrar y al salir, los días de la fase y la supervivencia esperada. *(Ejemplo de la finca piloto: precría 60 días hasta 30 g; levante 90 días hasta 150 g; engorde 90 días hasta 850 g la cachama y 600 g la tilapia.)*
+  - **Comida:** qué concentrado le corresponde y cuánta ración, según la tabla de alimentación por peso (15.3).
+  - **Densidad de referencia:** la real de la finca, no la de un plan presentado a la autoridad. *(Ejemplo de la finca piloto: en engorde, de 15 a 24 peces por m².)*
+- El pescado pasa de una fase a otra con traslados: precría → levante → engorde.
+- La app compara lo real con las reglas de la fase (atraso en días, peso y supervivencia). Es la base de la proyección de cosecha y de las alertas.
+
+**Configurable por finca:**
+
+- La lista de fases.
+- Las reglas, por fase y por especie: peso de entrada y salida, días, supervivencia, concentrado, ración y densidad.
+
+**Estado actual del sistema:**
+
+- El lago tiene solo nombre y `tipo`, que es el **material** (tierra, geomembrana o concreto). **No hay fase.** Será un campo nuevo; el campo `tipo` no se toca (ver tema 14).
+- Lo más parecido a reglas por especie es el catálogo de referencia de las 6 especies por defecto: proteína por etapa, meses a cosecha y peso comercial. Son orientativos, por especie y no por fase, y no se comparan con lo real.
+- La densidad solo aparece como texto en la ficha de cultivo de cada especie. No hay área del lago para calcularla.
+- No hay proyección de cosecha ni alertas de atraso.
+
+### 15.2 Lotes y trazabilidad
+
+**Confirmado en la finca piloto:**
+
+- Cada lote lleva número, proveedor de alevinos y su recorrido por los lagos.
+- Un lago de engorde recibe peces de varios lotes y de varios lagos.
+- Los días acumulados y el alimento acumulado se arrastran en cada traslado, para que la conversión total sea la de toda la vida del pez.
+- Se quieren comparar los proveedores de alevinos por crecimiento, supervivencia y conversión.
+- Las especies cambian con los años: la finca empezó con mojarra roja y hoy cultiva cachama, mojarra negra y bocachico. Una especie que ya no se cultiva se desactiva y su historia se conserva.
+
+**Configurable por finca:** el catálogo de proveedores de alevinos, para no escribir el nombre distinto cada vez.
+
+**Pendiente:** quién pone el número de lote, la finca o el proveedor.
+
+**Estado actual del sistema:**
+
+- La siembra guarda `proveedor_alevinos` y `lote_alevinos` como **texto libre**. Ya existe un catálogo de terceros con la marca «proveedor», pero la siembra no lo usa.
+- Cada traslado guarda la siembra de origen y la de destino. El lote que nace de un traslado guarda el lago de origen y conserva el proveedor y el lote. El recorrido se puede reconstruir.
+- **El traslado NO arrastra los días ni el alimento acumulado:**
+  - si en el lago de destino ya hay una siembra de la misma especie, los peces se suman a ella (peso promedio ponderado) y quedan con la fecha y el origen de esa siembra;
+  - si no, nace una siembra nueva con la fecha del traslado, así que los días vuelven a cero.
+
+  La conversión se calcula por siembra y por período: descuenta lo trasladado y lo recibido, pero no da la conversión de toda la vida del pez. **Queda anotado para construirlo.**
+- No hay comparación de proveedores.
+- Las especies ya se desactivan sin borrar su historia: una especie con siembras no se borra, se desactiva.
+
+### 15.3 Alimentación
+
+**Confirmado en la finca piloto:**
+
+- **Tabla de ración por peso:** porcentaje de la biomasa al día, proteína, tamaño del pellet y raciones al día. *(Ejemplo de la finca piloto: de 1 a 5 g, 8 % y harina de 45 %; de 6 a 20 g, 4,1 % y 36 %; de 251 a 300 g, 1,5 % y 24 %; de 401 a 500 g, 1,3 %.)*
+- Con la fase del lago y su último muestreo, la app sugiere qué concentrado le toca y cuánta ración. También avisa cuándo empezar el cambio de concentrado.
+- **El cambio de concentrado es gradual:** ¼, ½ y ¾ durante 3 días. Un lago puede comer dos concentrados el mismo día.
+- Cada concentrado tiene un **nombre corto** con el que lo reconoce la finca, además de su proteína y tamaño del pellet. *(En la finca piloto, el color del hilo del bulto: azul, blanco…)* En Registro rápido se escoge por ese nombre corto.
+- La ración se registra en kilos o en bultos. En precría y en albercas se usan pocos kilos.
+- Muestreo cada 30 días: la app avisa si un lago pasa de ese plazo sin muestreo.
+- Vista mensual de la ración como la planilla de papel de la finca: días por lagos, una por concentrado, con entrada, salida y saldo de bodega, imprimible.
+
+**Configurable por finca:**
+
+- La tabla de ración, por finca y por especie.
+- El nombre corto de cada concentrado.
+- El peso del bulto *(40 kg en la finca piloto)*.
+- El plazo del muestreo *(30 días en la finca piloto)*.
+- Los días y las proporciones del cambio gradual.
+
+**Pendiente:** qué color de hilo corresponde a cada concentrado.
+
+**Estado actual del sistema:**
+
+- La ración sugerida existe (`CalculadoraRacion`), pero con **tablas fijas en el código** por perfil de alimentación (cálido, detritívoro, frío): porcentaje de la biomasa y tomas al día por peso. No es configurable por finca. No tiene proteína ni pellet, y no sugiere qué concentrado.
+- La ración se reduce a la mitad si la última medición del agua tiene alertas.
+- El concentrado es solo un nombre libre en la bodega (`tipo_concentrado`), con sus kilos. No tiene nombre corto, proteína ni pellet.
+- No hay cambio gradual ni dos concentrados planeados el mismo día. Sí se pueden registrar dos raciones distintas el mismo día.
+- La ración se registra solo en kilos. Los bultos y el peso del bulto existen solo en la recepción de la bodega.
+- No hay alerta de muestreo vencido.
+- Reportes tiene el Libro de campo y el Informe mensual, pero no la planilla de días por lagos.
+
+### 15.4 Calidad del agua
+
+**Confirmado en la finca piloto:** el oxígeno no lo mide el trabajador ni el celador: lo mide el **administrador**.
+
+**Configurable por finca:** quién mide el agua (administrador, celador o ambos).
+
+**Estado actual del sistema:**
+
+- **El administrador ya puede registrar mediciones con señal**, desde el detalle del lago (Lagos), con fecha y hora.
+- **Sin conexión no:** la ruta que acepta registros sin conexión y la sección «Medición del agua» de Registro rápido son solo del celador.
+- No es configurable quién mide.
+- Cada medición queda en la bitácora, con la nota de sin conexión y la corrección del reloj (desde 2026-10-08).
+
+### 15.5 Día de proceso
+
+**Confirmado en la finca piloto:**
+
+- **Pesaje:** es por talla de cada especie y por recipiente. Se pesan varias canastas a la vez: cada pesada anota cuántas canastas y cuántas canastillas lleva, para descontar su tara.
+- **Rendimiento:** hoy se pesan solo el entero y el limpio. Las vísceras no se pesan: se calculan como entero menos limpio. *(Referencia inicial de la finca piloto: cerca del 86 %, de registros viejos.)* Después se reemplaza por el promedio real que vaya calculando la app.
+- **«Reproducción»:** peces demasiado pequeños que se separan antes del proceso. En la finca piloto ya no se pesan.
+- **Esperado contra real en cada cosecha:** población, peso promedio y kilos. La diferencia de población es mortalidad que nadie registró.
+- **Nombre de la especie:** en remisiones, informes y documentos para la autoridad va como «Nombre común (nombre científico)». En el celular, solo el nombre común.
+- **Despacho:** la remisión va a una ciudad y un cliente, no a un turbo. Se habla de «despacho» o «pedido» (no «despacho a turbos»), con la ciudad de destino como dato principal. Esto reemplaza la palabra «turbos» de los temas 7 y 8.
+- **La remisión lleva:**
+  - consecutivo;
+  - líneas por presentación, con canastas y kilos;
+  - total;
+  - quién despachó y el transportador;
+  - el lago de origen;
+  - «recibí a satisfacción».
+
+**Configurable por finca:**
+
+- Las taras de la canasta y la canastilla (ya existe en Ajustes de pesaje).
+- Las tallas de cada especie (ver presentaciones, tema 6).
+- El rendimiento de referencia inicial.
+- «Reproducción»: opción que se enciende o se apaga *(apagada en la finca piloto)*.
+- La placa en la remisión: opcional y oculta *(oculta en la finca piloto)*.
+
+**Estado actual del sistema:**
+
+- **Ya existe** el pesaje por pesadas: cada pesada dice canasta o canastilla, cuántas lleva y su tara, con las taras de la finca en Ajustes de pesaje (`CalculoPesaje`).
+- No hay tallas ni recipientes por talla.
+- La cosecha guarda el **limpio** (por pesadas o por total). El entero no se guarda, así que tampoco hay rendimiento.
+- No hay «reproducción».
+- No hay comparación entre lo esperado y lo real.
+- La especie tiene nombre científico, pero los documentos no lo muestran como «Nombre común (nombre científico)».
+- No hay despacho ni remisión al cliente. Las alertas «despacho» que existen hoy son de la llegada del concentrado a la bodega, no de ventas.
+
+### 15.6 Canastas prestadas
+
+**Confirmado en la finca piloto:** la finca lo lleva hoy. Las canastas y canastillas salen con cada despacho y deben volver. La app lleva el saldo por destino o por transportador, y avisa cuando no regresan.
+
+**Configurable por finca:** encender o apagar el control, y el plazo para el aviso.
+
+**Estado actual del sistema:** no existe.
+
+### 15.7 Bodega
+
+**Confirmado en la finca piloto:**
+
+- **La recepción lleva:**
+  - número de factura y número de remisión;
+  - entrega total o parcial;
+  - cada concentrado con su cantidad y precio por bulto;
+  - quién recibió.
+- Con el precio se calcula el costo del alimento por lago y el costo por kilo producido.
+
+**Estado actual del sistema:**
+
+- **La recepción existe** (`despachos_alimento`): fecha, proveedor (texto), concentrado, bultos, peso del bulto, kilos, lote, revisión y quién la registró.
+- No tiene factura, remisión, entrega total o parcial ni precio.
+- No hay costos por lago ni por kilo producido.
+- Ver también el tema 13.
+
+### 15.8 Gastos e ingresos
+
+**Confirmado en la finca piloto:**
+
+- **Categorías de gasto** para la plantilla del módulo de Gastos: alimento, harina, reversarina, luz, agua, nómina, seguro, parafiscales, retención, IVA, fletes del concentrado, hielo, guantes, esponjillas, ACPM, procesos y otros.
+- El alimento es más de la mitad del gasto mensual.
+- La finca también **vende alevinos**: es otro tipo de venta.
+- Se pesca de 2 a 3 veces al mes.
+
+**Configurable por finca:** las categorías de gasto. Las de la finca piloto son una plantilla.
+
+**Estado actual del sistema:**
+
+- No hay módulo de Gastos.
+- Ventas existe solo para pescado que sale de una cosecha (kilos, precio por kilo, forma de pago, saldo y abonos). No hay venta de alevinos.
+- Ya existe un catálogo de terceros (clientes y proveedores).
+
+### 15.9 Buenas prácticas (BPPA)
+
+**Confirmado en la finca piloto:** la autoridad pide estos registros, y la app puede generarlos. Es un argumento fuerte de venta.
+
+**Lo que ya existe en la app:**
+
+- mortalidad diaria;
+- consumo diario de alimento por lago;
+- calidad del agua;
+- tratamientos (producto, dosis, vía, días de retiro y registro ICA);
+- trazabilidad de lotes (en parte, ver 15.2);
+- el Libro de campo en Reportes.
+
+**Lo que falta:**
+
+- registro de visitantes;
+- disposición de la mortalidad;
+- control de plagas;
+- monitoreo sanitario;
+- cuarentena;
+- la supervisión del veterinario en los tratamientos.
+
+Los tratamientos y medicamentos van solo con registro ICA y con supervisión del veterinario.
+
+### 15.10 Equipos para el futuro módulo de mantenimiento
+
+**Equipos de la finca piloto:** aireadores de paleta, planta eléctrica, transformador, tractor, oxímetros y pHmetros.
+
+**Estado actual del sistema:** existen los aireadores por lago (encender y apagar, desde Seguridad & Noche). No hay registro de equipos ni de mantenimiento.
+
+### 15.11 Importar la historia
+
+**Confirmado en la finca piloto:** los registros en Excel tienen casi 5 años por lago: siembras, muestreos, alimento y conversión.
+
+**Propuesta para más adelante:** un importador desde Excel, con revisión antes de guardar.
+
+**Estado actual del sistema:**
+
+- No hay importador. Sí hay exportación de todos los datos de la finca.
+- En esos Excel la conversión sale negativa cuando hay cosechas parciales. **La app ya lo calcula bien:** la biomasa ganada suma los kilos cosechados y la biomasa trasladada a otro lago, y si la ganancia es cero o negativa no da un número (`ConversionAlimenticia`).
+
+---
+
 ## Validación con otras fincas
 
 Antes de cerrar el diseño se compara con fincas distintas de la piloto. En este repositorio nunca van nombres de personas ni de empresas, solo la región.
@@ -487,6 +708,12 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - ¿Qué se olvida entre turnos?
 
 **Qué días se pesca:** si hay días fijos de proceso en la semana o se decide según los pedidos.
+
+**Pendientes de la finca piloto (tema 15):**
+
+- la foto de la nómina mensual;
+- quién pone el número de lote: la finca o el proveedor de alevinos;
+- qué color de hilo corresponde a cada concentrado.
 
 **Otras decisiones abiertas:**
 
