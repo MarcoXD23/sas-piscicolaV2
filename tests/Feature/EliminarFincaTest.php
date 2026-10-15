@@ -16,6 +16,7 @@ use App\Notifications\FincaEnEliminacion;
 use App\Support\Datos\EliminadorFinca;
 use App\Support\Datos\TablasFinca;
 use App\Support\TenantActual;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -80,9 +81,14 @@ class EliminarFincaTest extends TestCase
         return $this->actingAs($this->propietario)->post(route('admin.datos.eliminar'), $datos + ['codigo' => 'NORTE', 'actual' => 'clave-segura-123']);
     }
 
-    /** El plazo de gracia vence. Con la hora de la base: la función borrar_bitacora_finca la usa, y las pruebas congelan la hora de PHP. */
+    /**
+     * El plazo de gracia vence. PHP y la base usan la misma hora, como en producción: la función borrar_bitacora_finca
+     * revisa el plazo con la hora de la base y el comando busca las vencidas con la de PHP, que las pruebas congelan.
+     * Por eso el reloj de PHP se pone en la hora real de la base; así la prueba sirve en cualquier fecha real.
+     */
     private function vencerPlazo(): void
     {
+        $this->travelTo(CarbonImmutable::parse(DB::selectOne("SELECT (now() AT TIME ZONE 'UTC') AS ahora")->ahora, 'UTC'));
         DB::table('tenants')->where('id', $this->finca->id)->update(['eliminacion_programada_at' => DB::raw("(now() AT TIME ZONE 'UTC') - interval '1 minute'")]);
     }
 
