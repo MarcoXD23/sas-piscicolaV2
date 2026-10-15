@@ -26,7 +26,7 @@
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.registro') }}</dt><dd>{{ $cosecha->usuario?->name }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.peces') }}</dt><dd class="tabular-nums">{{ Formato::numero($cosecha->peces) }}</dd></div>
             <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.peso_promedio') }}</dt><dd class="tabular-nums">{{ __('cosechas.gramos', ['gramos' => Formato::numero($cosecha->peso_promedio_g)]) }}</dd></div>
-            <div><dt class="text-sm font-bold text-tinta">{{ __('cosechas.kg_limpios') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800">{{ CalculoPesaje::kg($cosecha->kg) }}</dd></div>
+            <div><dt class="text-sm font-bold text-tinta">{{ __('cosechas.kg_enteros') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800">{{ CalculoPesaje::kg($cosecha->kg) }}</dd></div>
             @if ($cosecha->observaciones)
                 <div class="sm:col-span-2 lg:col-span-3"><dt class="text-sm text-tinta-suave">{{ __('cosechas.observaciones') }}</dt><dd>{{ $cosecha->observaciones }}</dd></div>
             @endif

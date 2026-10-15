@@ -11,7 +11,7 @@ Cada tema separa:
 
 > Las cifras marcadas *(ejemplo de la finca piloto)* son de esa finca. El sistema no las trae fijas: van en la configuración de cada finca.
 
-Última actualización: 2026-10-15.
+Última actualización: 2026-10-15 (fase F0: «entero» como nombre único).
 
 ---
 
@@ -169,7 +169,7 @@ Cada tema separa:
 - El catálogo de presentaciones puede llevar especie, tamaño, tipo de proceso y color de cabuya.
 - La tara de la canasta (y la de la canastilla).
 
-**Estado actual del sistema:** la tara de la canasta y la de la canastilla ya se configuran por finca (Ajustes de pesaje), y el pesaje por pesadas ya las descuenta. El sistema trae 2,00 kg por defecto para la canasta, así que la finca piloto tiene que poner sus 2,5 kg. Hoy la cosecha guarda solo el pescado entero; no hay limpio, rendimiento ni presentaciones. **Ojo con el nombre:** en el pesaje actual de la cosecha, «limpio» quiere decir peso neto sin canastas, o sea pescado entero, no procesado. En el diseño hay que cambiarle el nombre a uno de los dos para no confundirlos.
+**Estado actual del sistema:** la tara de la canasta y la de la canastilla ya se configuran por finca (Ajustes de pesaje), y el pesaje por pesadas ya las descuenta. El sistema trae 2,00 kg por defecto para la canasta, así que la finca piloto tiene que poner sus 2,5 kg. Hoy la cosecha guarda solo el pescado entero; no hay limpio, rendimiento ni presentaciones. **Nombre único (resuelto el 2026-10-15, fase F0):** ese peso se llama **«entero»** en toda la app: el pescado sin procesar, ya sin el peso de las canastas o canastillas. Así lo dicen en la finca: en la mañana se pesa el entero y después del proceso el limpio. Antes la app lo llamaba «limpio». «Limpio» queda solo para el pescado procesado, y el rendimiento es limpio ÷ entero. En la base de datos la columna sigue llamándose `neto_kg`, pero guarda el entero.
 
 ---
 
@@ -572,7 +572,7 @@ Revisión de los registros en papel y en Excel de la finca piloto (2026-10-15). 
 
 - **Ya existe** el pesaje por pesadas: cada pesada dice canasta o canastilla, cuántas lleva y su tara, con las taras de la finca en Ajustes de pesaje (`CalculoPesaje`).
 - No hay tallas ni recipientes por talla.
-- La cosecha guarda el **limpio** (por pesadas o por total). El entero no se guarda, así que tampoco hay rendimiento.
+- La cosecha guarda el **entero** (por pesadas o por total): el pescado sin procesar, ya sin canastas. Hasta la fase F0 la app lo llamaba «limpio» por error de nombre (ver tema 6). Lo que no existe es el **limpio** procesado, así que tampoco hay rendimiento.
 - No hay «reproducción».
 - No hay comparación entre lo esperado y lo real.
 - La especie tiene nombre científico, pero los documentos no lo muestran como «Nombre común (nombre científico)».

@@ -71,9 +71,9 @@ return [
         'peso_promedio_irreal' => 'Con esos kilos cada pez pesaría :gramos g en promedio (el máximo es :maximo g). Revisa los kilos o la cantidad de peces.',
         'peso_vacia' => 'El peso de una :tipo vacía debe ser mayor que 0 y de máximo 20 kg.',
         'registra_peso_cosechado' => 'Registra el peso cosechado.',
-        'registra_peso_limpio_o_pesadas' => 'Registra las pesadas o el peso limpio total.',
-        'registrada' => ':kg kg limpios cosechados (:peces peces de :gramos g en promedio).',
-        'registrada_pesadas' => ':kg kg limpios cosechados en :pesadas pesadas (:peces peces de :gramos g en promedio).',
+        'registra_peso_entero_o_pesadas' => 'Registra las pesadas o el peso entero total.',
+        'registrada' => ':kg kg enteros cosechados (:peces peces de :gramos g en promedio).',
+        'registrada_pesadas' => ':kg kg enteros cosechados en :pesadas pesadas (:peces peces de :gramos g en promedio).',
     ],
     'lago' => [
         'registrado' => 'Lago «:nombre» registrado.',

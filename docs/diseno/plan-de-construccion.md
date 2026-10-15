@@ -53,7 +53,7 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
 ### F0. Correcciones (0,5 día)
 
 - Corregir el tema 15.5 del diseño y la memoria: el «limpio» del pesaje actual es el peso neto sin canastas, o sea el **pescado entero**. Lo que no existe es el limpio procesado.
-- Cambiar el nombre visible de ese «limpio» del pesaje (por ejemplo «neto»), para no confundirlo con el limpio procesado del día de proceso.
+- Cambiar ese «limpio» del pesaje por **«entero»**, el nombre que usa la finca y el diseño (rendimiento = limpio ÷ entero): textos y claves internas. La columna `neto_kg` no cambia. Así «limpio» queda solo para el pescado procesado del día de proceso.
 - **Toca:** el documento de diseño, `lang/es` y los textos del pesaje de la cosecha. No cambia la base de datos.
 - **Riesgo:** ninguno.
 

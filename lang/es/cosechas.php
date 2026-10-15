@@ -27,9 +27,9 @@ return [
     // Modo de pesaje
     'como_se_peso' => 'Cómo se pesó',
     'modo_pesadas' => 'Por pesadas',
-    'modo_total' => 'Solo el total limpio',
-    'total_limpio_kg' => 'Peso limpio total (kg)',
-    'total_limpio_ayuda' => 'Lo que pesó el pescado, ya sin el peso de las canastas o canastillas.',
+    'modo_total' => 'Solo el total entero',
+    'total_entero_kg' => 'Peso entero total (kg)',
+    'total_entero_ayuda' => 'Pescado entero, ya sin el peso de las canastas o canastillas.',
 
     // Tabla de pesadas
     'peso_canasta_vacia' => 'Peso de una canasta vacía (kg)',
@@ -40,7 +40,7 @@ return [
     'cantidad' => 'Cantidad',
     'peso_pesado' => 'Peso pesado (kg)',
     'descuento' => 'Descuento (kg)',
-    'peso_limpio' => 'Peso limpio (kg)',
+    'peso_entero' => 'Peso entero (kg)',
     'anadir_pesada' => 'Añadir pesada',
     'quitar_pesada' => 'Quitar la pesada :numero',
     'tipos' => [
@@ -63,23 +63,23 @@ return [
     'cantidad_por_tipo' => ':canastas canastas y :canastillas canastillas',
     'total_pesado' => 'Total pesado (kg)',
     'total_descuento' => 'Total de descuento (kg)',
-    'total_limpio' => 'Total limpio (kg)',
+    'total_entero' => 'Total entero (kg)',
     'cuenta' => [
         'grupo_canasta' => '{1} :cantidad canasta × :kg kg|[0,*] :cantidad canastas × :kg kg',
         'grupo_canastilla' => '{1} :cantidad canastilla × :kg kg|[0,*] :cantidad canastillas × :kg kg',
-        'linea' => ':grupos = :descuento kg de descuento; :pesado kg − :descuento kg = :limpio kg limpios',
+        'linea' => ':grupos = :descuento kg de descuento; :pesado kg − :descuento kg = :entero kg enteros',
     ],
     'registrar' => 'Registrar cosecha',
 
     // Detalle
-    'kg_limpios' => 'Kg limpios',
+    'kg_enteros' => 'Kg enteros',
     'peso_promedio' => 'Peso promedio',
     'gramos' => ':gramos g',
     'especie' => 'Especie',
     'lago' => 'Lago',
     'registro' => 'Registró',
     'sin_dato' => '—',
-    'sin_pesadas' => 'Esta cosecha se registró con el total limpio, sin tabla de pesadas.',
+    'sin_pesadas' => 'Esta cosecha se registró con el total entero, sin tabla de pesadas.',
     'ver_detalle' => 'Ver detalle',
     'volver_lago' => 'Volver al lago',
     'pesadas' => 'Pesadas',

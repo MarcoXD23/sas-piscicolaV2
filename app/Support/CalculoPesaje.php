@@ -9,8 +9,8 @@ use App\Models\PesajeCosecha;
  * Cuentas del pesaje de una cosecha, como en el cuaderno de la finca.
  * Cada PESADA es un montón de pescado en varias canastas o canastillas:
  *   descuento = cantidad × peso de UNA vacía (se MULTIPLICA, nunca se divide)
- *   peso limpio = peso pesado − descuento
- * Ejemplo: 20 canastas de 2 kg = 40 kg de descuento; 655 kg pesados − 40 kg = 615 kg limpios.
+ *   peso entero = peso pesado − descuento
+ * Ejemplo: 20 canastas de 2 kg = 40 kg de descuento; 655 kg pesados − 40 kg = 615 kg enteros.
  * Las cuentas se hacen en centésimas de kg (enteros) para que sean exactas, igual que el CHECK de la base.
  * La usan el servidor al guardar, el detalle de la cosecha, el historial y las exportaciones.
  */
@@ -34,7 +34,7 @@ final class CalculoPesaje
 
     /**
      * @param  list<array{tipo: string, cantidad: int|string, peso_pesado: float|string}>  $pesadas
-     * @return array{filas: list<array{numero: int, tipo: string, cantidad: int, peso_vacia: float, peso_pesado: float, descuento: float, limpio: float}>, totales: array<string, mixed>}
+     * @return array{filas: list<array{numero: int, tipo: string, cantidad: int, peso_vacia: float, peso_pesado: float, descuento: float, entero: float}>, totales: array<string, mixed>}
      */
     public static function calcular(array $pesadas, float $pesoCanasta, float $pesoCanastilla): array
     {
@@ -68,13 +68,14 @@ final class CalculoPesaje
             'tara_unitaria_kg' => $fila['peso_vacia'],
             'bruto_kg' => $fila['peso_pesado'],
             'tara_kg' => $fila['descuento'],
-            'neto_kg' => $fila['limpio'],
+            // La columna se llama neto_kg, pero guarda el peso ENTERO (pescado sin procesar, ya sin canastas)
+            'neto_kg' => $fila['entero'],
         ];
     }
 
     /**
      * La cuenta en números, por ejemplo:
-     * "11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg limpios".
+     * "11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg enteros".
      */
     public static function lineaCuenta(array $totales): string
     {
@@ -87,7 +88,7 @@ final class CalculoPesaje
             'grupos' => $partes,
             'descuento' => self::kg($totales['descuento']),
             'pesado' => self::kg($totales['pesado']),
-            'limpio' => self::kg($totales['limpio']),
+            'entero' => self::kg($totales['entero']),
         ]);
     }
 
@@ -108,7 +109,7 @@ final class CalculoPesaje
             'peso_vacia' => $vaciaCent / 100,
             'peso_pesado' => $pesadoCent / 100,
             'descuento' => $descuentoCent / 100,
-            'limpio' => ($pesadoCent - $descuentoCent) / 100,
+            'entero' => ($pesadoCent - $descuentoCent) / 100,
         ];
     }
 
@@ -136,7 +137,7 @@ final class CalculoPesaje
             'grupos' => array_values($grupos),
             'pesado' => $suma('peso_pesado'),
             'descuento' => $suma('descuento'),
-            'limpio' => $suma('limpio'),
+            'entero' => $suma('entero'),
         ];
     }
 

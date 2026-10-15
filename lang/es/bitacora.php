@@ -33,7 +33,7 @@ return [
         'aprobacion' => ':persona aprobado como :roles',
         'aviso_atendido' => 'Aviso de pesca de :especie atendido',
         'aviso_pesca' => ':especie lista para pescar. :nota',
-        'cosecha' => ':peces peces de :especie, :kg kg limpios, destino: :destino (fecha :fecha)',
+        'cosecha' => ':peces peces de :especie, :kg kg enteros, destino: :destino (fecha :fecha)',
         'dos_pasos' => 'Verificación en dos pasos quitada a :persona',
         'eliminacion' => 'Pidió eliminar la finca',
         'eliminacion_anulada' => 'Canceló la eliminación de la finca',

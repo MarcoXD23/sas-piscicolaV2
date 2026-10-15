@@ -22,7 +22,7 @@ use Tests\TestCase;
 
 /**
  * Pesaje de la cosecha como en el cuaderno: cada PESADA es un montón de pescado en varias canastas o canastillas.
- * descuento = cantidad × peso de UNA vacía (se multiplica); peso limpio = peso pesado − descuento.
+ * descuento = cantidad × peso de UNA vacía (se multiplica); peso entero = peso pesado − descuento.
  */
 class PesajesCosechaTest extends TestCase
 {
@@ -69,19 +69,19 @@ class PesajesCosechaTest extends TestCase
 
     // --- Cuentas ---
 
-    public function test_el_ejemplo_del_cuaderno_da_los_descuentos_y_el_total_limpio(): void
+    public function test_el_ejemplo_del_cuaderno_da_los_descuentos_y_el_total_entero(): void
     {
         $this->cosechar()->assertSessionHasNoErrors()->assertRedirect(route('admin.cosechas.show', Cosecha::sole()));
 
         $cosecha = Cosecha::sole();
-        $this->assertSame(619.5, $cosecha->kg);   // el total limpio es el kg de la cosecha
+        $this->assertSame(619.5, $cosecha->kg);   // el total entero es el kg de la cosecha
 
         $pesajes = $cosecha->pesajes;
         $this->assertSame([1, 2, 3], $pesajes->pluck('numero')->all());
         $this->assertSame(['canasta', 'canasta', 'canastilla'], $pesajes->pluck('tipo')->all());
         $this->assertSame([6, 5, 9], $pesajes->pluck('canastas')->all());
         $this->assertSame([12.0, 10.0, 13.5], $pesajes->pluck('tara_kg')->all());      // descuentos
-        $this->assertSame([208.0, 175.0, 236.5], $pesajes->pluck('neto_kg')->all());   // pesos limpios
+        $this->assertSame([208.0, 175.0, 236.5], $pesajes->pluck('neto_kg')->all());   // pesos enteros
 
         $totales = CalculoPesaje::deCosecha($cosecha)['totales'];
         $this->assertSame(3, $totales['pesadas']);
@@ -89,24 +89,24 @@ class PesajesCosechaTest extends TestCase
         $this->assertSame(['canasta' => 11, 'canastilla' => 9], $totales['por_tipo']);
         $this->assertEquals(655, $totales['pesado']);
         $this->assertEquals(35.5, $totales['descuento']);
-        $this->assertEquals(619.5, $totales['limpio']);
-        $this->assertSame('11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg limpios',
+        $this->assertEquals(619.5, $totales['entero']);
+        $this->assertSame('11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg enteros',
             CalculoPesaje::lineaCuenta($totales));
     }
 
     public function test_el_descuento_se_multiplica_nunca_se_divide(): void
     {
-        // 20 canastas de 2 kg = 40 kg de descuento; 655 − 40 = 615 kg limpios
+        // 20 canastas de 2 kg = 40 kg de descuento; 655 − 40 = 615 kg enteros
         $calculo = CalculoPesaje::calcular([['tipo' => 'canasta', 'cantidad' => 20, 'peso_pesado' => 655]], 2, 1.5);
 
         $this->assertEquals(40, $calculo['filas'][0]['descuento']);
-        $this->assertEquals(615, $calculo['filas'][0]['limpio']);
-        $this->assertNotEquals(655 - 2 / 20, $calculo['filas'][0]['limpio']);
+        $this->assertEquals(615, $calculo['filas'][0]['entero']);
+        $this->assertNotEquals(655 - 2 / 20, $calculo['filas'][0]['entero']);
     }
 
     public function test_el_servidor_rehace_las_cuentas_y_no_confia_en_totales_del_navegador(): void
     {
-        $this->cosechar(['kg' => 9999, 'total_limpio' => 9999, 'descuento' => 0, 'meta' => 1000])->assertSessionHasNoErrors();
+        $this->cosechar(['kg' => 9999, 'total_entero' => 9999, 'descuento' => 0, 'meta' => 1000])->assertSessionHasNoErrors();
 
         $cosecha = Cosecha::sole();
         $this->assertSame(619.5, $cosecha->kg);
@@ -245,9 +245,9 @@ class PesajesCosechaTest extends TestCase
         $this->assertArrayNotHasKey('meta', Cosecha::sole()->getAttributes());
     }
 
-    // --- Modo total limpio ---
+    // --- Modo total entero ---
 
-    public function test_el_modo_total_limpio_sigue_funcionando_y_pide_el_encabezado(): void
+    public function test_el_modo_total_entero_sigue_funcionando_y_pide_el_encabezado(): void
     {
         $this->cosechar(['pesadas' => null, 'kg' => 48.5])->assertSessionHasNoErrors();
         $this->assertSame(48.5, Cosecha::sole()->kg);
@@ -294,7 +294,7 @@ class PesajesCosechaTest extends TestCase
         $cosecha = Cosecha::sole();
         $this->actingAs($this->propietario)->get(route('admin.cosechas.show', $cosecha))->assertOk()
             ->assertSee('Restaurante El Río')->assertSee('619,5')
-            ->assertSee('11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg limpios')
+            ->assertSee('11 canastas × 2 kg + 9 canastillas × 1,5 kg = 35,5 kg de descuento; 655 kg − 35,5 kg = 619,5 kg enteros')
             ->assertDontSee(__('cosechas.registrar'));
         $this->actingAs($trabajador)->get(route('admin.cosechas.show', $cosecha))->assertForbidden();
     }
@@ -323,7 +323,7 @@ class PesajesCosechaTest extends TestCase
         $this->actingAs($this->propietario)->get(route('admin.cosechas.show', $cosecha))->assertOk()->assertSee('—');
     }
 
-    public function test_los_kg_disponibles_para_vender_usan_el_total_limpio(): void
+    public function test_los_kg_disponibles_para_vender_usan_el_total_entero(): void
     {
         $this->cosechar()->assertSessionHasNoErrors();
 
@@ -336,7 +336,7 @@ class PesajesCosechaTest extends TestCase
 
         $registro = Bitacora::where('accion', 'cosecha')->sole();
         $this->assertSame('Restaurante El Río', $registro->detalle['destino']);
-        $this->assertStringContainsString('619,5 kg limpios, destino: Restaurante El Río', $registro->textoDetalle());
+        $this->assertStringContainsString('619,5 kg enteros, destino: Restaurante El Río', $registro->textoDetalle());
     }
 
     // --- Historial y exportaciones ---
@@ -347,24 +347,24 @@ class PesajesCosechaTest extends TestCase
         $cosecha = Cosecha::sole();
 
         $this->actingAs($this->administrador)->get(route('admin.lagos.show', $this->lago))->assertOk()
-            ->assertSee('1.200 peces, 619,50 kg limpios')->assertSee('en 3 pesadas · destino: Restaurante El Río')
+            ->assertSee('1.200 peces, 619,50 kg enteros')->assertSee('en 3 pesadas · destino: Restaurante El Río')
             ->assertSee(route('admin.cosechas.show', $cosecha));
 
         $this->actingAs($this->administrador)->get(route('admin.reportes.mensual', ['mes' => '2026-10']))->assertOk()
-            ->assertSee('destino: Restaurante El Río')->assertSee('655 kg − 35,5 kg = 619,5 kg limpios');
+            ->assertSee('destino: Restaurante El Río')->assertSee('655 kg − 35,5 kg = 619,5 kg enteros');
 
         $libro = ['lago_id' => $this->lago->id, 'desde' => '2026-10-01', 'hasta' => '2026-10-20'];
         $this->actingAs($this->administrador)->get(route('admin.reportes.libro-campo', $libro))->assertOk()
-            ->assertSee(__('cosechas.peso_limpio'))->assertSee('236,5')->assertSee('Restaurante El Río');
+            ->assertSee(__('cosechas.peso_entero'))->assertSee('236,5')->assertSee('Restaurante El Río');
 
         // Excel: hoja de cosechas con encabezado y totales, y hoja de pesadas con su fila de totales
         $hojas = $this->leerExcel($this->actingAs($this->administrador)->get(route('admin.reportes.mensual.excel', ['mes' => '2026-10']))->assertOk());
-        $this->assertContains(['Fecha', 'Lago', 'Especie', 'Destino del pedido', 'Despachó', 'Peces', 'Pesadas', 'Total pesado (kg)', 'Total de descuento (kg)', 'Kg limpios'], $hojas['Cosechas']);
+        $this->assertContains(['Fecha', 'Lago', 'Especie', 'Destino del pedido', 'Despachó', 'Peces', 'Pesadas', 'Total pesado (kg)', 'Total de descuento (kg)', 'Kg enteros'], $hojas['Cosechas']);
         $this->assertContains(['20/10/2026', 'L01', 'Mojarra roja', 'Restaurante El Río', 'Ana Admin', 1200, 3, 655, 35.5, 619.5], $hojas['Cosechas']);
         $this->assertContains(['20/10/2026', 'L01', 'Restaurante El Río', '3', 'Canastilla', 9, 1.5, 250, 13.5, 236.5, ''], $hojas['Pesadas']);
         $total = collect($hojas['Pesadas'])->firstWhere(3, 'Total');
         $this->assertSame([20, 655, 35.5, 619.5], [$total[5], $total[7], $total[8], $total[9]]);
-        $this->assertStringContainsString('= 619,5 kg limpios', $total[10]);
+        $this->assertStringContainsString('= 619,5 kg enteros', $total[10]);
 
         $libroExcel = $this->leerExcel($this->actingAs($this->administrador)->get(route('admin.reportes.libro-campo.excel', $libro))->assertOk());
         $this->assertCount(5, $libroExcel['Pesadas']);   // encabezado, 3 pesadas y el total

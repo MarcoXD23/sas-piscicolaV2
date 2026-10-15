@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Una PESADA de la cosecha: un montón de pescado en varias canastas o canastillas (ver CalculoPesaje).
  * En la base: canastas = Cantidad, tara_unitaria_kg = peso de una vacía, bruto_kg = peso pesado,
- * tara_kg = descuento (canastas × tara_unitaria_kg) y neto_kg = peso limpio. En pantalla nunca se usan bruto, tara ni neto.
+ * tara_kg = descuento (canastas × tara_unitaria_kg) y neto_kg = peso ENTERO (pescado sin procesar, ya sin canastas): la columna conserva el nombre neto_kg, pero guarda el entero. En pantalla nunca se usan bruto, tara ni neto.
  */
 class PesajeCosecha extends Model
 {

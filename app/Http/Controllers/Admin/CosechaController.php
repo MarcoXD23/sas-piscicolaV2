@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Cosechas: el administrador las registra con la tabla de pesadas (como en el cuaderno) o con el total limpio;
+ * Cosechas: el administrador las registra con la tabla de pesadas (como en el cuaderno) o con el total entero;
  * el propietario las consulta. Todas las cuentas las rehace el servidor con CalculoPesaje.
  */
 class CosechaController extends Controller
@@ -60,7 +60,7 @@ class CosechaController extends Controller
             'despachado_por_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('tenant_id', $tenantId)->whereNotNull('aprobado_at')],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'peces' => ['required', 'integer', 'min:1', 'max:10000000'],
-            // Dos modos: tabla de pesadas, o solo el total limpio (kg)
+            // Dos modos: tabla de pesadas, o solo el total entero (kg)
             'kg' => ['nullable', 'required_without:pesadas', 'numeric', 'min:0.1', 'max:9999999'],
             'pesadas' => ['nullable', 'array', 'min:1', 'max:'.CalculoPesaje::MAX_PESADAS],
             'pesadas.*.tipo' => ['required', 'string', Rule::in(CalculoPesaje::TIPOS)],
@@ -100,8 +100,8 @@ class CosechaController extends Controller
                 throw ValidationException::withMessages(['peces' => __('mensajes.comun.solo_hay_peces', ['cantidad' => Formato::numero($bloqueada->peces_vivos)])]);
             }
 
-            // Con pesadas, el total limpio lo calcula el servidor (nunca se confía en un total enviado por el navegador)
-            $kg = $pesaje !== null ? $pesaje['totales']['limpio'] : round((float) $datos['kg'], 2);
+            // Con pesadas, el total entero lo calcula el servidor (nunca se confía en un total enviado por el navegador)
+            $kg = $pesaje !== null ? $pesaje['totales']['entero'] : round((float) $datos['kg'], 2);
             if ($kg <= 0) {
                 throw ValidationException::withMessages(['kg' => __('mensajes.cosecha.registra_peso_cosechado')]);
             }
@@ -165,7 +165,7 @@ class CosechaController extends Controller
     }
 
     /**
-     * Rehace las cuentas de las pesadas. Null si la cosecha se registra con el total limpio.
+     * Rehace las cuentas de las pesadas. Null si la cosecha se registra con el total entero.
      *
      * @param  array<string, mixed>  $datos
      */
@@ -203,7 +203,7 @@ class CosechaController extends Controller
             'despachado_por_id.exists' => __('mensajes.cosecha.despacho_no_es_personal'),
             'fecha.before_or_equal' => __('mensajes.cosecha.fecha_no_puede_ser_futura'),
             'peces.min' => __('mensajes.cosecha.cosecha_menos_pez'),
-            'kg.required_without' => __('mensajes.cosecha.registra_peso_limpio_o_pesadas'),
+            'kg.required_without' => __('mensajes.cosecha.registra_peso_entero_o_pesadas'),
             'kg.min' => __('mensajes.cosecha.registra_peso_cosechado'),
             'pesadas.max' => __('mensajes.cosecha.maximo_pesadas', ['maximo' => CalculoPesaje::MAX_PESADAS]),
             'pesadas.*.tipo.required' => __('mensajes.cosecha.pesada_tipo'),

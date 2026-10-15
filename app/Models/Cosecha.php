@@ -48,7 +48,7 @@ class Cosecha extends Model
         return $this->hasMany(Venta::class);
     }
 
-    /** Pesadas de la cosecha (vacío si se registró con el total limpio). */
+    /** Pesadas de la cosecha (vacío si se registró con el total entero). */
     public function pesajes(): HasMany
     {
         return $this->hasMany(PesajeCosecha::class)->orderBy('numero');

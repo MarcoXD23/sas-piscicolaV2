@@ -71,7 +71,7 @@
                 <x-aviso tono="info" icono="pez" class="mt-5">{{ __('cosechas.si_cosechas_todo') }}</x-aviso>
             </x-tarjeta>
 
-            {{-- Modo: tabla de pesadas o solo el total limpio --}}
+            {{-- Modo: tabla de pesadas o solo el total entero --}}
             <x-tarjeta>
                 <fieldset>
                     <legend class="mb-1.5 text-base font-semibold text-tinta">{{ __('cosechas.como_se_peso') }}</legend>
@@ -86,8 +86,8 @@
                 </fieldset>
 
                 <div x-show="modo === 'total'" x-cloak class="mt-5">
-                    <x-campo nombre="kg" :etiqueta="__('cosechas.total_limpio_kg')" tipo="number" step="0.01" min="0.1" inputmode="decimal"
-                             :ayuda="__('cosechas.total_limpio_ayuda')" x-bind:disabled="modo !== 'total'" x-bind:required="modo === 'total'" />
+                    <x-campo nombre="kg" :etiqueta="__('cosechas.total_entero_kg')" tipo="number" step="0.01" min="0.1" inputmode="decimal"
+                             :ayuda="__('cosechas.total_entero_ayuda')" x-bind:disabled="modo !== 'total'" x-bind:required="modo === 'total'" />
                 </div>
 
                 {{-- B. Tabla de pesadas --}}
@@ -111,7 +111,7 @@
                     {{-- En el celular cada pesada es un bloque; en pantallas anchas, una fila de tabla --}}
                     <div class="hidden grid-cols-[4rem_9rem_1fr_1fr_1fr_1fr_3rem] gap-2 px-2 text-sm font-bold text-tinta ancho:grid" aria-hidden="true">
                         <span>{{ __('cosechas.pesada') }}</span><span>{{ __('cosechas.tipo') }}</span><span>{{ __('cosechas.cantidad') }}</span>
-                        <span>{{ __('cosechas.peso_pesado') }}</span><span>{{ __('cosechas.descuento') }}</span><span>{{ __('cosechas.peso_limpio') }}</span><span></span>
+                        <span>{{ __('cosechas.peso_pesado') }}</span><span>{{ __('cosechas.descuento') }}</span><span>{{ __('cosechas.peso_entero') }}</span><span></span>
                     </div>
                     <ol class="space-y-3">
                         <template x-for="(fila, indice) in filas" :key="indice">
@@ -145,8 +145,8 @@
                                     <span class="text-base tabular-nums text-tinta-suave" x-text="kg(descuentoC(fila))"></span>
                                 </p>
                                 <p class="ancho:self-center">
-                                    <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_limpio') }}</span>
-                                    <span class="text-base font-bold tabular-nums" x-text="kg(limpioC(fila))"></span>
+                                    <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_entero') }}</span>
+                                    <span class="text-base font-bold tabular-nums" x-text="kg(enteroC(fila))"></span>
                                 </p>
                                 <button type="button" x-on:click="quitar(indice)" :aria-label="@js(__('cosechas.quitar_pesada', ['numero' => '__N__'])).replace('__N__', indice + 1)"
                                         class="col-span-2 flex h-12 items-center justify-center rounded-ficha text-tinta-suave ring-1 ring-renglon transition-colors hover:bg-alerta-fondo hover:text-alerta ancho:col-span-1 ancho:w-12 ancho:ring-0">
@@ -183,7 +183,7 @@
                             <dd class="text-lg font-bold tabular-nums" x-text="@js(__('cosechas.cantidad_por_tipo')).replace(':canastas', totales.porTipo.canasta).replace(':canastillas', totales.porTipo.canastilla)"></dd></div>
                         <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_pesado') }}</dt><dd class="text-lg font-bold tabular-nums" x-text="kg(totales.pesado)"></dd></div>
                         <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_descuento') }}</dt><dd class="text-lg font-bold tabular-nums" x-text="kg(totales.descuento)"></dd></div>
-                        <div class="col-span-2 sm:col-span-1"><dt class="text-sm font-bold text-tinta">{{ __('cosechas.total_limpio') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800" x-text="kg(totales.limpio)"></dd></div>
+                        <div class="col-span-2 sm:col-span-1"><dt class="text-sm font-bold text-tinta">{{ __('cosechas.total_entero') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800" x-text="kg(totales.entero)"></dd></div>
                     </dl>
                     <p class="text-base font-semibold" x-show="linea" x-text="linea"></p>
                 </div>

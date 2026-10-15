@@ -1,6 +1,6 @@
 /*
  * Pesaje de la cosecha, como en el cuaderno (Alpine: x-data="pesaje({...})").
- * Cada pesada: descuento = cantidad × peso de UNA vacía (se multiplica); peso limpio = peso pesado − descuento.
+ * Cada pesada: descuento = cantidad × peso de UNA vacía (se multiplica); peso entero = peso pesado − descuento.
  * Todo se calcula en vivo y en centésimas de kg (enteros), igual que el servidor, que vuelve a hacer las cuentas al guardar.
  */
 const t = (clave, datos = {}) => (window.textos?.[clave] ?? clave).replace(/:(\w+)/g, (marca, nombre) => datos[nombre] ?? marca);
@@ -31,7 +31,7 @@ export default (config) => ({
         const vacia = this.centesimas(this.vacias[fila.tipo]);
         return cantidad === null || vacia === null ? null : cantidad * vacia;
     },
-    limpioC(fila) {
+    enteroC(fila) {
         const pesado = this.centesimas(fila.peso);
         const descuento = this.descuentoC(fila);
         return pesado === null || descuento === null ? null : pesado - descuento;
@@ -47,7 +47,7 @@ export default (config) => ({
     },
 
     get completas() {
-        return this.filas.filter((fila) => this.limpioC(fila) !== null);
+        return this.filas.filter((fila) => this.enteroC(fila) !== null);
     },
     get totales() {
         const suma = (calculo) => this.completas.reduce((total, fila) => total + calculo(fila), 0);
@@ -68,7 +68,7 @@ export default (config) => ({
             grupos: [...grupos.values()],
             pesado: suma((fila) => this.centesimas(fila.peso)),
             descuento: suma((fila) => this.descuentoC(fila)),
-            limpio: suma((fila) => this.limpioC(fila)),
+            entero: suma((fila) => this.enteroC(fila)),
         };
     },
     get linea() {
@@ -77,29 +77,29 @@ export default (config) => ({
         const grupos = totales.grupos
             .map((g) => t(`pesaje_grupo_${g.tipo}_${g.cantidad === 1 ? 'uno' : 'varios'}`, { cantidad: g.cantidad, kg: this.kg(g.vacia) }))
             .join(' + ');
-        return t('pesaje_linea', { grupos, descuento: this.kg(totales.descuento), pesado: this.kg(totales.pesado), limpio: this.kg(totales.limpio) });
+        return t('pesaje_linea', { grupos, descuento: this.kg(totales.descuento), pesado: this.kg(totales.pesado), entero: this.kg(totales.entero) });
     },
 
-    // Meta opcional: se compara con el total LIMPIO; solo ayuda en pantalla
+    // Meta opcional: se compara con el total ENTERO; solo ayuda en pantalla
     get metaC() {
         const meta = this.centesimas(this.meta);
         return meta !== null && meta > 0 ? meta : null;
     },
     get avance() {
-        return this.metaC === null ? 0 : Math.min(100, Math.max(0, (this.totales.limpio / this.metaC) * 100));
+        return this.metaC === null ? 0 : Math.min(100, Math.max(0, (this.totales.entero / this.metaC) * 100));
     },
     get metaTexto() {
         const meta = this.metaC;
         if (meta === null) return [];
-        const { limpio, pesadas } = this.totales;
-        if (limpio >= meta) {
-            return [limpio === meta ? t('meta_llegaste', { meta: this.kg(meta) }) : t('meta_sobran', { meta: this.kg(meta), kg: this.kg(limpio - meta) })];
+        const { entero, pesadas } = this.totales;
+        if (entero >= meta) {
+            return [entero === meta ? t('meta_llegaste', { meta: this.kg(meta) }) : t('meta_sobran', { meta: this.kg(meta), kg: this.kg(entero - meta) })];
         }
-        const faltan = meta - limpio;
-        const textos = [t('meta_llevas', { limpio: this.kg(limpio), meta: this.kg(meta) }), t('meta_faltan', { kg: this.kg(faltan) })];
-        if (pesadas >= 2 && limpio > 0) {
-            const promedio = Math.round(limpio / pesadas);
-            const restantes = Math.ceil(faltan / (limpio / pesadas));
+        const faltan = meta - entero;
+        const textos = [t('meta_llevas', { entero: this.kg(entero), meta: this.kg(meta) }), t('meta_faltan', { kg: this.kg(faltan) })];
+        if (pesadas >= 2 && entero > 0) {
+            const promedio = Math.round(entero / pesadas);
+            const restantes = Math.ceil(faltan / (entero / pesadas));
             textos.push(t(restantes === 1 ? 'meta_promedio_una' : 'meta_promedio_varias', { promedio: this.kg(promedio), pesadas: restantes }));
         }
         return textos;
@@ -130,12 +130,12 @@ export default (config) => ({
         if (!(this.centesimas(this.vacias.canasta) > 0) || !(this.centesimas(this.vacias.canastilla) > 0)) {
             this.aviso = t('pesaje_vacias');
         } else {
-            const indice = this.filas.findIndex((fila) => this.limpioC(fila) === null);
+            const indice = this.filas.findIndex((fila) => this.enteroC(fila) === null);
             if (indice >= 0) {
                 this.aviso = t('pesaje_incompleta', { numero: indice + 1 });
                 this.enfocar(indice);
             } else {
-                const bajo = this.filas.findIndex((fila) => this.limpioC(fila) <= 0);
+                const bajo = this.filas.findIndex((fila) => this.enteroC(fila) <= 0);
                 if (bajo >= 0) this.aviso = t('pesaje_bajo_descuento', { numero: bajo + 1 });
             }
         }

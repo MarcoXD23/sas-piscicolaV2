@@ -132,7 +132,7 @@ class CosechasYVentasTest extends TestCase
         $this->cosechar();
 
         $this->actingAs($this->propietario)->get(route('admin.lagos.show', $this->lago))
-            ->assertSee('Cosecha · Mojarra roja')->assertSee('300 peces, 126,00 kg limpios')->assertSee('destino: Restaurante El Río');
+            ->assertSee('Cosecha · Mojarra roja')->assertSee('300 peces, 126,00 kg enteros')->assertSee('destino: Restaurante El Río');
     }
 
     // --- Ventas ---
