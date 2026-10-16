@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bitacora;
 use App\Models\Especie;
+use App\Models\Fase;
 use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\StockAlimento;
 use App\Models\Tratamiento;
 use App\Support\CalculadoraRacion;
+use App\Support\EstadoFase;
 use App\Support\HistorialLago;
 use App\Support\RangoAgua;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -25,7 +29,7 @@ class LagoController extends Controller
     {
         $lagos = Lago::query()
             // Con el origen de cada lote y los traslados que recibió (para agrupar por especie sin consultas de más)
-            ->with(['siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'avisoPescaPendiente.siembra', 'avisoPescaPendiente.usuario'])
+            ->with(['fase', 'siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'avisoPescaPendiente.siembra', 'avisoPescaPendiente.usuario'])
             ->withExists('tratamientosEnRetiro as en_retiro')
             ->orderBy('nombre')
             ->get();
@@ -34,6 +38,7 @@ class LagoController extends Controller
             'lagos' => $lagos,
             'raciones' => $lagos->mapWithKeys(fn (Lago $lago) => [$lago->id => CalculadoraRacion::paraLago($lago)]),
             'tipos' => Lago::opciones(),
+            'fases' => $this->opcionesFases(),
             'especies' => $this->opcionesEspecies(),
             // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
             'puedeRegistrar' => $request->user()->puedeTrabajarComo(Rol::TRABAJADOR),
@@ -47,10 +52,13 @@ class LagoController extends Controller
 
     public function show(Lago $lago): View
     {
-        $lago->load(['siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'tratamientosEnRetiro']);
+        $lago->load(['fase.reglas', 'siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'tratamientosEnRetiro']);
 
         return view('admin.lagos.show', [
             'lago' => $lago,
+            'tipos' => Lago::opciones(),
+            'fases' => $this->opcionesFases(),
+            'densidadActual' => EstadoFase::densidadLago($lago),
             'racion' => CalculadoraRacion::paraLago($lago),
             'alertasAgua' => $lago->ultimaMedicion?->alertas($lago->siembrasActivas->pluck('especie')) ?? [],
             'avisosRango' => RangoAgua::para($lago->siembrasActivas->pluck('especie'))['avisos'],
@@ -63,19 +71,64 @@ class LagoController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $datos = $request->validate([
-            'nombre' => [
-                'required', 'string', 'max:255',
-                // Un lago debe tener nombre único dentro del tenant
-                Rule::unique('lagos')->where('tenant_id', $request->user()->tenant_id),
-            ],
-            'tipo' => ['required', 'string', Rule::in(Lago::TIPOS)],
-        ]);
+        $datos = $this->validar($request);
 
         Lago::create($datos);
 
         return redirect()->route('admin.lagos.index')
             ->with('estado', __('mensajes.lago.registrado', ['nombre' => $datos['nombre']]));
+    }
+
+    public function update(Request $request, Lago $lago): RedirectResponse
+    {
+        $datos = $this->validar($request, $lago);
+
+        DB::transaction(function () use ($request, $lago, $datos) {
+            $lago->update($datos);
+            $faseNombre = $lago->fase()->value('nombre') ?? __('lagos.sin_fase');
+            Bitacora::registrar($request->user(), 'lago_editado', $lago, [Rol::ADMINISTRADOR], [
+                'detalle' => $faseNombre.($lago->area_m2 !== null ? ' · '.__('lagos.area_m2', ['area' => $lago->area_m2]) : ''),
+            ]);
+        });
+
+        return redirect()->route('admin.lagos.show', $lago)
+            ->with('estado', __('mensajes.lago.actualizado', ['nombre' => $lago->nombre]));
+    }
+
+    /** @return array{nombre: string, tipo: string, fase_id: ?int, area_m2: ?float} */
+    private function validar(Request $request, ?Lago $lago = null): array
+    {
+        $tenantId = $request->user()->tenant_id;
+
+        $datos = $request->validate([
+            'nombre' => [
+                'required', 'string', 'max:255',
+                // Un lago debe tener nombre único dentro del tenant
+                Rule::unique('lagos')
+                    ->where('tenant_id', $tenantId)
+                    ->when($lago, fn ($regla) => $regla->ignore($lago->id)),
+            ],
+            'tipo' => ['required', 'string', Rule::in(Lago::TIPOS)],
+            'fase_id' => [
+                'nullable', 'integer',
+                Rule::exists('fases', 'id')->where('tenant_id', $tenantId),
+            ],
+            'area_m2' => ['nullable', 'numeric', 'min:0.1', 'max:1000000'],
+        ]);
+
+        return [
+            'nombre' => trim($datos['nombre']),
+            'tipo' => $datos['tipo'],
+            'fase_id' => ! empty($datos['fase_id']) ? (int) $datos['fase_id'] : null,
+            'area_m2' => isset($datos['area_m2']) && $datos['area_m2'] !== '' ? (float) $datos['area_m2'] : null,
+        ];
+    }
+
+    /** @return array<int|string, string> */
+    private function opcionesFases(): array
+    {
+        return ['' => __('lagos.sin_fase')]
+            + Fase::query()->orderBy('orden')->orderBy('nombre')->pluck('nombre', 'id')->all();
     }
 
     /** @return array<int, string> id => nombre de las especies activas del catálogo de la finca (las que se pueden sembrar) */

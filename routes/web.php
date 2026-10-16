@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\EspecieFotoController;
+use App\Http\Controllers\Admin\FaseController;
 use App\Http\Controllers\Admin\JornaleroController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
@@ -141,6 +142,11 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
         Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
         Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
         Route::put('/ajustes/operacion', [AjustesFincaController::class, 'guardarOperacion'])->name('ajustes.operacion');
+        Route::get('/ajustes/fases', [FaseController::class, 'index'])->name('fases.index');
+        Route::post('/ajustes/fases', [FaseController::class, 'store'])->name('fases.store');
+        Route::put('/ajustes/fases/{fase}', [FaseController::class, 'update'])->whereNumber('fase')->name('fases.update');
+        Route::delete('/ajustes/fases/{fase}', [FaseController::class, 'destroy'])->whereNumber('fase')->name('fases.destroy');
+        Route::post('/ajustes/fases/{fase}/reglas', [FaseController::class, 'guardarRegla'])->whereNumber('fase')->name('fases.reglas.guardar');
 
         Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');
@@ -191,6 +197,7 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     // Operación de la finca: solo el administrador (o el propietario que también es administrador)
     Route::middleware('rol:administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
+        Route::put('/lagos/{lago}', [LagoController::class, 'update'])->whereNumber('lago')->name('lagos.update');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');

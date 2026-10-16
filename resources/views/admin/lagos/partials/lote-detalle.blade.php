@@ -35,6 +35,78 @@
     @endforeach
 </dl>
 
+@php
+    $estadoFase = \App\Support\EstadoFase::paraSiembra($lago, $siembra);
+@endphp
+@if ($estadoFase !== null)
+    <div class="border-b border-renglon bg-papel-hondo/60 px-4 py-3.5 sm:px-5" data-comparacion-fase>
+        <p class="text-sm font-bold text-tinta">{{ __('fases.comparacion.titulo', ['fase' => $estadoFase['fase']]) }}</p>
+
+        @if (! $estadoFase['tiene_regla'])
+            <p class="mt-1 text-sm text-tinta-suave">{{ __('fases.comparacion.sin_regla', ['fase' => $estadoFase['fase'], 'especie' => $siembra->nombre_especie]) }}</p>
+        @else
+            <dl class="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+                @if ($estadoFase['dias'] !== null)
+                    <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
+                        <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.dias') }}</dt>
+                        <dd class="mt-0.5 font-bold tabular-nums text-tinta">
+                            {{ __('fases.comparacion.dias_valor', ['real' => $numero($estadoFase['dias']['real']), 'esperado' => $numero($estadoFase['dias']['esperado'])]) }}
+                        </dd>
+                        <p @class(['mt-0.5 text-sm font-semibold', 'text-atencion' => $estadoFase['dias']['atraso'] > 0, 'text-bien' => $estadoFase['dias']['atraso'] === 0])>
+                            {{ $estadoFase['dias']['atraso'] > 0 ? __('fases.comparacion.dias_atraso', ['atraso' => $numero($estadoFase['dias']['atraso'])]) : __('fases.comparacion.dias_en_tiempo') }}
+                        </p>
+                    </div>
+                @endif
+
+                @if ($estadoFase['peso'] !== null)
+                    <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
+                        <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.peso') }}</dt>
+                        <dd class="mt-0.5 text-sm text-tinta">
+                            {{ __('fases.comparacion.peso_meta', ['salida' => $numero($estadoFase['peso']['salida_g'], 1), 'esperado' => $numero($estadoFase['peso']['esperado_hoy_g'], 1)]) }}
+                        </dd>
+                        <p @class(['mt-0.5 text-sm font-semibold', 'text-atencion' => $estadoFase['peso']['atrasado'], 'text-bien' => ! $estadoFase['peso']['atrasado']])>
+                            {{ $estadoFase['peso']['atrasado']
+                                ? __('fases.comparacion.peso_atrasado', ['diferencia' => $numero(abs($estadoFase['peso']['diferencia_g']), 1)])
+                                : __('fases.comparacion.peso_al_dia', ['diferencia' => ($estadoFase['peso']['diferencia_g'] >= 0 ? '+' : '−').$numero(abs($estadoFase['peso']['diferencia_g']), 1)]) }}
+                        </p>
+                    </div>
+                @endif
+
+                @if ($estadoFase['supervivencia'] !== null)
+                    <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
+                        <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.supervivencia') }}</dt>
+                        <dd class="mt-0.5 font-bold tabular-nums text-tinta">
+                            {{ __('fases.comparacion.supervivencia_meta', ['real' => $numero($estadoFase['supervivencia']['real'], 1), 'esperada' => $numero($estadoFase['supervivencia']['esperada'], 1)]) }}
+                        </dd>
+                        <p @class(['mt-0.5 text-sm font-semibold', 'text-atencion' => $estadoFase['supervivencia']['baja'], 'text-bien' => ! $estadoFase['supervivencia']['baja']])>
+                            {{ $estadoFase['supervivencia']['baja']
+                                ? __('fases.comparacion.supervivencia_baja', ['diferencia' => $numero(abs($estadoFase['supervivencia']['diferencia']), 1)])
+                                : __('fases.comparacion.supervivencia_bien') }}
+                        </p>
+                    </div>
+                @endif
+
+                @if ($estadoFase['densidad'] !== null)
+                    <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
+                        <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.densidad') }}</dt>
+                        <dd class="mt-0.5 font-bold tabular-nums text-tinta">
+                            {{ __('fases.comparacion.densidad_valor', ['real' => $numero($estadoFase['densidad']['real'], 2)]) }}
+                        </dd>
+                        @if ($estadoFase['densidad']['min'] !== null && $estadoFase['densidad']['max'] !== null)
+                            <p class="text-xs text-tinta-suave">
+                                {{ __('fases.comparacion.densidad_rango', ['min' => $numero($estadoFase['densidad']['min'], 1), 'max' => $numero($estadoFase['densidad']['max'], 1)]) }}
+                            </p>
+                        @endif
+                        <p @class(['mt-0.5 text-sm font-semibold', 'text-atencion' => $estadoFase['densidad']['estado'] !== 'en_rango', 'text-bien' => $estadoFase['densidad']['estado'] === 'en_rango'])>
+                            {{ __('fases.comparacion.estados_densidad.'.$estadoFase['densidad']['estado']) }}
+                        </p>
+                    </div>
+                @endif
+            </dl>
+        @endif
+    </div>
+@endif
+
 @if ($puedeOperar)
     <div class="grid grid-cols-2 gap-2 p-4">
         @if ($lago->tratamientosEnRetiro->isNotEmpty())

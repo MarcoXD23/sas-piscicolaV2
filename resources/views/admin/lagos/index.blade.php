@@ -83,7 +83,12 @@
                             <a href="{{ route('admin.lagos.show', $lago) }}" class="underline decoration-transparent underline-offset-4 hover:decoration-tinta">{{ $lago->nombre }}</a>
                         </h2>
                         <p class="text-sm text-tinta-suave">
-                            {{ __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]) }}@if ($siembras->count() > 1) · {{ __('lagos.policultivo') }} @endif
+                            {{ collect([
+                                __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]),
+                                $lago->fase?->nombre,
+                                $lago->area_m2 !== null ? __('lagos.area_m2', ['area' => $numero($lago->area_m2, $lago->area_m2 == (int) $lago->area_m2 ? 0 : 1)]) : null,
+                                $siembras->count() > 1 ? __('lagos.policultivo') : null,
+                            ])->filter()->join(' · ') }}
                         </p>
                         @if ($lago->en_retiro)
                             <x-insignia tono="atencion" como="p" class="mt-1.5">{{ __('lagos.retiro_sanitario') }}</x-insignia>
@@ -357,6 +362,10 @@
             <x-formulario :action="route('admin.lagos.store')">
                 <x-campo nombre="nombre" id="lago-nombre" :etiqueta="__('lagos.nombre_codigo')" required />
                 <x-seleccion nombre="tipo" id="lago-tipo" :etiqueta="__('lagos.tipo')" :opciones="$tipos" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-seleccion nombre="fase_id" id="lago-fase" :etiqueta="__('lagos.fase_opcional')" :opciones="$fases" />
+                    <x-campo nombre="area_m2" id="lago-area" :etiqueta="__('lagos.area_m2_opcional')" tipo="number" step="0.1" min="0.1" max="1000000" inputmode="decimal" />
+                </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

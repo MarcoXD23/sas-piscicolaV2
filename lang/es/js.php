@@ -27,6 +27,7 @@ return [
     'campo_seccion_medicion' => 'Medición del agua',
     'campo_lago' => 'Lago',
     'campo_lago_opcional' => 'Lago (opcional)',
+    'campo_opcion_lago_fase' => ':nombre · :fase',
     'campo_toda_la_finca' => 'Toda la finca',
     'campo_elige' => 'Elige…',
     'campo_elige_lago_primero' => 'Primero elige el lago',

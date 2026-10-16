@@ -45,8 +45,11 @@ class Tenant extends Model
     {
         // La región en memoria debe reflejar siempre los ajustes guardados
         static::saved(fn () => Region::olvidar());
-        // Toda finca nueva arranca con las 6 especies por defecto, editables y desactivables
-        static::created(fn (Tenant $finca) => Especie::cargarPorDefecto($finca->id));
+        // Toda finca nueva arranca con las 6 especies por defecto y las 4 fases con sus reglas orientativas
+        static::created(function (Tenant $finca) {
+            Especie::cargarPorDefecto($finca->id);
+            Fase::cargarPorDefecto($finca->id);
+        });
     }
 
     public function users(): HasMany

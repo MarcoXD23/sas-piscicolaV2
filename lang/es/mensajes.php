@@ -75,8 +75,18 @@ return [
         'registrada' => ':kg kg enteros cosechados (:peces peces de :gramos g en promedio).',
         'registrada_pesadas' => ':kg kg enteros cosechados en :pesadas pesadas (:peces peces de :gramos g en promedio).',
     ],
+    'fase' => [
+        'creada' => 'Fase «:nombre» creada.',
+        'actualizada' => 'Fase «:nombre» actualizada.',
+        'eliminada' => 'Fase «:nombre» eliminada.',
+        'con_lagos' => 'No se puede eliminar la fase «:nombre» porque tiene lagos asignados.',
+        'nombre_repetido' => 'Ya hay una fase con ese nombre en la finca.',
+        'rango_invertido' => 'El valor mínimo no puede ser mayor que el máximo.',
+        'regla_guardada' => 'Regla de :especie en «:fase» guardada.',
+    ],
     'lago' => [
         'registrado' => 'Lago «:nombre» registrado.',
+        'actualizado' => 'Lago «:nombre» actualizado.',
     ],
     'login' => [
         'correo_contrasena_no_son_correctos' => 'El correo o la contraseña no son correctos.',

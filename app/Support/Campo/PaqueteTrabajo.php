@@ -97,7 +97,7 @@ final class PaqueteTrabajo
         // Celador: todos los lagos (ronda y medición). Ración, mortalidad y aviso: solo lagos con siembra activa.
         $lagos = $secciones === [] ? collect() : Lago::query()
             ->when(! $tiene(self::RONDA, self::MEDICION), fn ($consulta) => $consulta->whereHas('siembrasActivas'))
-            ->with(['siembrasActivas.especie', 'siembrasActivas.lagoOrigen', 'ultimaMedicion'])
+            ->with(['fase', 'siembrasActivas.especie', 'siembrasActivas.lagoOrigen', 'ultimaMedicion'])
             ->when($tiene(self::AVISO_PESCA), fn ($consulta) => $consulta->withExists('avisoPescaPendiente as aviso_pendiente'))
             ->orderBy('nombre')
             ->limit($maximo + 1)
@@ -156,9 +156,11 @@ final class PaqueteTrabajo
     /** @param  \Closure(Siembra): array<string, mixed>  $lote */
     private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote): array
     {
-        return array_filter([
+        return [
             'id' => $lago->id,
             'nombre' => $lago->nombre,
+            'fase' => $lago->fase?->nombre,
+        ] + array_filter([
             'siembras' => $lago->siembrasActivas->map(fn (Siembra $siembra) => array_filter([
                 'id' => $siembra->id,
                 'especie' => $siembra->nombre_especie,

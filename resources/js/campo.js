@@ -179,7 +179,8 @@ export const iniciarCampo = (t, cola) => {
 
     const camposDe = (seccion, formulario) => {
         const lagos = lagosPara(seccion);
-        const selectorLago = lista(lagos.map((lago) => [lago.id, lago.nombre]), seccion === 'ronda' ? t('campo_toda_la_finca') : t('campo_elige'));
+        const textoLago = (lago) => (lago.fase ? t('campo_opcion_lago_fase', { nombre: lago.nombre, fase: lago.fase }) : lago.nombre);
+        const selectorLago = lista(lagos.map((lago) => [lago.id, textoLago(lago)]), seccion === 'ronda' ? t('campo_toda_la_finca') : t('campo_elige'));
         const campos = [grupo('lago_id', t(seccion === 'ronda' ? 'campo_lago_opcional' : 'campo_lago'), selectorLago)];
         const fecha = () => grupo('fecha', t('campo_fecha'), entrada('date', { value: fechaLocal(), max: fechaLocal(), required: '' }));
 

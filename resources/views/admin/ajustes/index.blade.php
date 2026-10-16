@@ -59,6 +59,11 @@
         </x-formulario>
     </x-tarjeta>
 
+    {{-- Fases de los lagos y reglas por especie (F2) --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('fases.titulo')" :subtitulo="__('fases.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.fases.index')">{{ __('fases.enlace') }}</x-boton>
+    </x-tarjeta>
+
     {{-- Exportar o eliminar los datos de la finca --}}
     <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('datos.titulo')" :subtitulo="__('datos.subtitulo')">
         <x-boton variante="secundario" :href="route('admin.datos.index')">{{ __('datos.enlace') }}</x-boton>

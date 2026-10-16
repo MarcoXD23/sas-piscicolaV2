@@ -27,8 +27,17 @@
     </a>
 
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
-                  :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]))">
+                  :subtitulo="collect([
+                      __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]),
+                      $lago->fase?->nombre,
+                      $lago->area_m2 !== null ? __('lagos.area_m2', ['area' => $numero($lago->area_m2, $lago->area_m2 == (int) $lago->area_m2 ? 0 : 1)]) : null,
+                      $densidadActual !== null ? __('lagos.densidad_actual', ['densidad' => $numero($densidadActual, 2)]) : null,
+                      $lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]),
+                  ])->filter()->join(' · ')">
         @if ($puedeOperar)
+            <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-editar-lago">
+                {{ __('lagos.editar_lago') }}
+            </x-boton>
             {{-- Quién mide el agua: ajuste de la finca (F4) --}}
             @if (\App\Support\Ajustes\QuienMideAgua::puedeMedir(\App\Models\Rol::ADMINISTRADOR))
                 <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
@@ -337,6 +346,22 @@
                 <x-campo nombre="dias_retiro" :etiqueta="__('lagos.dias_retiro')" tipo="number" min="0" max="365" inputmode="numeric" valor="0" required
                          :ayuda="__('lagos.dias_despues_fin_pescado_no')" />
                 <x-campo nombre="observaciones" id="tratamiento-obs" :etiqueta="__('lagos.observaciones_opcional')" />
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ __('comun.guardar') }}</x-boton>
+                </div>
+            </x-formulario>
+        </x-modal>
+
+        <x-modal id="modal-editar-lago" :titulo="__('lagos.editar_lago_titulo', ['lago' => $lago->nombre])">
+            <x-formulario :action="route('admin.lagos.update', $lago)" metodo="PUT">
+                <x-campo nombre="nombre" id="editar-lago-nombre" :etiqueta="__('lagos.nombre_codigo')" :valor="$lago->nombre" required />
+                <x-seleccion nombre="tipo" id="editar-lago-tipo" :etiqueta="__('lagos.tipo')" :opciones="$tipos" :valor="$lago->tipo" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-seleccion nombre="fase_id" id="editar-lago-fase" :etiqueta="__('lagos.fase_opcional')" :opciones="$fases" :valor="$lago->fase_id ?? ''" />
+                    <x-campo nombre="area_m2" id="editar-lago-area" :etiqueta="__('lagos.area_m2_opcional')" tipo="number" step="0.1" min="0.1" max="1000000" inputmode="decimal" :valor="$lago->area_m2" />
+                </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

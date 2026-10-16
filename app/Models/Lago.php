@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\PerteneceATenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -12,9 +13,21 @@ class Lago extends Model
 {
     use HasFactory, PerteneceATenant;
 
-    protected $fillable = ['nombre', 'tipo'];
+    protected $fillable = ['nombre', 'tipo', 'fase_id', 'area_m2'];
+
+    protected function casts(): array
+    {
+        return [
+            'area_m2' => 'float',
+        ];
+    }
 
     public const TIPOS = ['tierra', 'geomembrana', 'concreto'];
+
+    public function fase(): BelongsTo
+    {
+        return $this->belongsTo(Fase::class);
+    }
 
     /** @return array<string, string> código => texto en el idioma de la finca */
     public static function opciones(): array

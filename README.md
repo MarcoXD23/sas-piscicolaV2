@@ -71,6 +71,14 @@ En **Ajustes › Operación de la finca** el propietario define cómo trabaja su
 - Lo que la finca cambia se guarda en `ajustes_finca` y cada cambio queda en la bitácora.
 - Un ajuste nuevo se agrega al catálogo, con sus textos en `lang/es/ajustes_finca.php`, sin migración. Solo se agregan los que usa alguna función.
 
+### Fases de los lagos
+
+En **Ajustes › Fases de los lagos** el propietario configura las etapas productivas de la finca y las reglas orientativas por fase y especie (`fases` y `reglas_fase`):
+
+- Cada finca arranca con 4 fases por defecto (**Alevinaje**, **Precría**, **Levante** y **Engorde**) y reglas iniciales para las 6 especies por defecto. El propietario puede agregar, renombrar, reordenar o eliminar fases (solo si no tienen lagos asignados) y ajustar por especie el peso de entrada y salida, los días esperados, la supervivencia esperada y la densidad mínima y máxima en peces/m².
+- El administrador asigna opcionalmente la **fase** y el **área en m²** de cada lago al crearlo o editarlo.
+- El detalle del lago muestra la fase, el área, la densidad actual (`peces vivos del lago ÷ área`) y, en cada lote activo de un lago con fase, la comparación **real vs. esperado** (días, peso promedio, supervivencia y densidad) calculada por [`EstadoFase`](app/Support/EstadoFase.php). En Registro rápido el selector de lago incluye su fase cuando la tiene.
+
 **Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca una copia con `php artisan piscicola:respaldar`, que guarda fuera del proyecto (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)).
 
 ## Requisitos

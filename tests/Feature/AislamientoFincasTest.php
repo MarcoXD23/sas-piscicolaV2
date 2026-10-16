@@ -16,6 +16,7 @@ use App\Models\Especie;
 use App\Models\EspecieFoto;
 use App\Models\EventoAgenda;
 use App\Models\Exportacion;
+use App\Models\Fase;
 use App\Models\HoraExtra;
 use App\Models\Lago;
 use App\Models\Liquidacion;
@@ -25,6 +26,7 @@ use App\Models\MovimientoAlimento;
 use App\Models\Muestreo;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
+use App\Models\ReglaFase;
 use App\Models\Rol;
 use App\Models\RegistroSinConexion;
 use App\Models\Ronda;
@@ -64,7 +66,7 @@ class AislamientoFincasTest extends TestCase
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
-        'jornalero' => Tercero::class,
+        'jornalero' => Tercero::class, 'fase' => Fase::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -152,6 +154,8 @@ class AislamientoFincasTest extends TestCase
             Especie::class => $especie = Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
             EspecieFoto::class => EspecieFoto::create(['especie_id' => $especie->id, 'user_id' => $persona->id, 'ruta_original' => "x/{$sufijo}.jpg", 'ruta_ligera' => "x/{$sufijo}.webp",
                 'tipo_original' => 'image/jpeg', 'bytes_original' => 10, 'bytes_ligera' => 5, 'ancho' => 1, 'alto' => 1, 'orden' => 1]),
+            Fase::class => $fase = Fase::create(['nombre' => "Fase {$sufijo}", 'orden' => 10]),
+            ReglaFase::class => ReglaFase::create(['fase_id' => $fase->id, 'especie_id' => $especie->id, 'dias_esperados' => 30]),
             RegistroSinConexion::class => RegistroSinConexion::create(['user_id' => $persona->id, 'uuid' => (string) Str::uuid(), 'ruta' => 'noche.rondas.store', 'registrado_at' => now()]),
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
             StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),
