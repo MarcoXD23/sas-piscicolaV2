@@ -36,6 +36,8 @@ return [
     'campo_opcion_concentrado' => ':tipo (:kg kg en bodega)',
     'campo_kg' => 'Kilos de esta toma',
     'campo_racion_sugerida' => 'Sugerida: :kg kg por toma.',
+    'campo_racion_sugerida_con' => 'Sugerida: :kg kg por toma (:concentrado).',
+    'campo_unidad_bultos' => 'bultos',
     'campo_sin_concentrado' => 'No hay concentrado en bodega según los datos guardados.',
     'campo_lote' => 'Lote',
     'campo_opcion_lote' => ':especie · desde :fecha · :vivos vivos',

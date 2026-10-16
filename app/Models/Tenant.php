@@ -14,7 +14,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'nombre', 'codigo', 'pais', 'zona_horaria', 'idioma',
-        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias',
+        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias', 'alerta_muestreo_dias',
         'peso_canasta_kg', 'peso_canastilla_kg', 'unidad_peso_muestreo', 'formato_hora',
     ];
 
@@ -38,6 +38,7 @@ class Tenant extends Model
             'alerta_mortalidad_porcentaje' => 'float',
             'alerta_mortalidad_dias' => 'integer',
             'alerta_despacho_dias' => 'integer',
+            'alerta_muestreo_dias' => 'integer',
         ];
     }
 
@@ -45,10 +46,11 @@ class Tenant extends Model
     {
         // La región en memoria debe reflejar siempre los ajustes guardados
         static::saved(fn () => Region::olvidar());
-        // Toda finca nueva arranca con las 6 especies por defecto y las 4 fases con sus reglas orientativas
+        // Toda finca nueva arranca con las 6 especies por defecto, las 4 fases y las tablas de ración iniciales
         static::created(function (Tenant $finca) {
             Especie::cargarPorDefecto($finca->id);
             Fase::cargarPorDefecto($finca->id);
+            TablaRacion::cargarPorDefecto($finca->id);
         });
     }
 

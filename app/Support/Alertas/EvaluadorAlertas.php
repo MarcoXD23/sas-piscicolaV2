@@ -46,7 +46,7 @@ class EvaluadorAlertas
             return;
         }
 
-        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua(), ...self::despachos()])
+        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua(), ...self::despachos(), ...self::muestreos()])
             ->keyBy(fn ($condicion) => $condicion['tipo'].'|'.$condicion['referencia']);
 
         $porAvisar = DB::transaction(function () use ($tenantId, $condiciones) {
@@ -217,6 +217,56 @@ class EvaluadorAlertas
                     'referencia' => (string) $lago->id,
                     'severidad' => in_array('oxigeno', array_column($problemas, 'parametro'), true) ? Alerta::CRITICA : Alerta::ADVERTENCIA,
                     'datos' => ['lago' => $lago->nombre, 'lago_id' => $lago->id, 'problemas' => array_column($problemas, 'texto'), 'medicion_id' => $medicion->id],
+                ];
+            }
+        }
+
+        return $condiciones;
+    }
+
+    /**
+     * Lagos con siembra activa que superan el plazo de días sin muestreo de la finca (30 días por defecto).
+     *
+     * @return list<array{tipo: string, referencia: string, severidad: string, datos: array<string, mixed>}>
+     */
+    private static function muestreos(): array
+    {
+        $plazo = (int) (Region::tenant()?->alerta_muestreo_dias ?: 30);
+        $hoy = Region::hoy()->startOfDay();
+        $condiciones = [];
+
+        $lagos = Lago::query()
+            ->whereHas('siembrasActivas')
+            ->with(['siembrasActivas' => fn ($q) => $q->withMax('muestreos', 'fecha')])
+            ->get();
+
+        foreach ($lagos as $lago) {
+            $maxDias = null;
+
+            foreach ($lago->siembrasActivas as $siembra) {
+                $ultimaFecha = $siembra->muestreos_max_fecha;
+                if ($ultimaFecha === null && abs((float) $siembra->peso_actual_g - (float) $siembra->peso_promedio_inicial_g) >= 0.001 && $lago->fase_id === null) {
+                    continue;
+                }
+
+                $base = $ultimaFecha !== null ? \Illuminate\Support\Carbon::parse($ultimaFecha)->startOfDay() : $siembra->fecha->startOfDay();
+                $dias = (int) $base->diffInDays($hoy, false);
+                if ($dias > $plazo && ($maxDias === null || $dias > $maxDias)) {
+                    $maxDias = $dias;
+                }
+            }
+
+            if ($maxDias !== null) {
+                $condiciones[] = [
+                    'tipo' => Alerta::MUESTREO,
+                    'referencia' => (string) $lago->id,
+                    'severidad' => Alerta::ADVERTENCIA,
+                    'datos' => [
+                        'lago' => $lago->nombre,
+                        'lago_id' => $lago->id,
+                        'dias' => $maxDias,
+                        'plazo' => $plazo,
+                    ],
                 ];
             }
         }

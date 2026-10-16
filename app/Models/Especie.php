@@ -79,6 +79,12 @@ class Especie extends Model
         return $this->hasMany(Siembra::class);
     }
 
+    /** Tramos de la tabla de ración de esta especie en la finca, de menor a mayor peso. */
+    public function tablaRacion(): HasMany
+    {
+        return $this->hasMany(TablaRacion::class)->orderBy('peso_hasta_g');
+    }
+
     public function scopeActivas(Builder $consulta): void
     {
         $consulta->where('activo', true);

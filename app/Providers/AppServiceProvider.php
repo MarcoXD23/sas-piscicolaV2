@@ -107,7 +107,7 @@ class AppServiceProvider extends ServiceProvider
         // Las alertas se revisan después de guardar los registros que las afectan (al confirmar la transacción)
         $evaluar = fn (Model $registro) => $registro->tenant_id === null ? null
             : DB::afterCommit(fn () => EvaluadorAlertas::paraFinca($registro->tenant_id));
-        foreach ([MovimientoAlimento::class, Mortalidad::class, MedicionAgua::class] as $modelo) {
+        foreach ([MovimientoAlimento::class, Mortalidad::class, MedicionAgua::class, \App\Models\Muestreo::class] as $modelo) {
             $modelo::saved($evaluar);
             $modelo::deleted($evaluar);
         }

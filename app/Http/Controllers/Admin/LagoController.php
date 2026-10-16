@@ -46,7 +46,7 @@ class LagoController extends Controller
             'soloLectura' => ! $request->user()->tieneRol(Rol::ADMINISTRADOR, Rol::TRABAJADOR),
             // «Listo para pescar»: solo el trabajador, dentro de su turno
             'puedeAvisarPesca' => $request->user()->tieneRol(Rol::TRABAJADOR) && $request->user()->turnoEnCurso(Rol::TRABAJADOR) !== null,
-            'stocksDisponibles' => StockAlimento::query()->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get(),
+            'stocksDisponibles' => StockAlimento::query()->with('concentrado')->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get(),
         ]);
     }
 

@@ -37,7 +37,7 @@ class CoberturaBodega
 
         $minimo = self::diasMinimos();
 
-        return StockAlimento::query()->orderBy('tipo_concentrado')->get()->map(function (StockAlimento $stock) use ($consumos, $minimo) {
+        return StockAlimento::query()->with('concentrado')->orderBy('tipo_concentrado')->get()->map(function (StockAlimento $stock) use ($consumos, $minimo) {
             $diario = round((float) ($consumos[$stock->tipo_concentrado] ?? 0) / self::VENTANA_DIAS, 2);
             $cantidad = (float) $stock->cantidad_kg;
             $dias = $diario > 0 ? round($cantidad / $diario, 1) : null;

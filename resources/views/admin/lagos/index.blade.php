@@ -291,24 +291,46 @@
                 </div>
 
                 @if ($siembras->isNotEmpty() && ! $soloLectura)
+                    @php $sugerida = $raciones[$lago->id]; @endphp
                     <x-modal id="modal-racion-{{ $lago->id }}" :titulo="__('lagos.alimentar_lago', ['lago' => $lago->nombre])">
                         <x-formulario :action="route('admin.raciones.store', $lago->id)" :data-guardar-sin-conexion="__('layout.cola.resumen_racion', ['lago' => $lago->nombre])">
                             <x-campo nombre="fecha" id="racion-fecha-{{ $lago->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
+
+                            @if ($sugerida['cambio_gradual'] !== null)
+                                <x-aviso tono="atencion" icono="alimentar" class="text-sm">
+                                    <strong class="block font-bold">{{ __('lagos.cambio_gradual_titulo', ['dia' => $sugerida['cambio_gradual']['dia'], 'fraccion' => $sugerida['cambio_gradual']['fraccion']]) }}</strong>
+                                    <span>{{ __('lagos.cambio_gradual_hoy', [
+                                        'kg_nuevo' => $numero($sugerida['cambio_gradual']['kg_nuevo'], 1),
+                                        'nuevo' => $sugerida['cambio_gradual']['nuevo'],
+                                        'fraccion' => $sugerida['cambio_gradual']['fraccion'],
+                                        'kg_anterior' => $numero($sugerida['cambio_gradual']['kg_anterior'], 1),
+                                        'anterior' => $sugerida['cambio_gradual']['anterior'],
+                                    ]) }}</span>
+                                </x-aviso>
+                            @endif
 
                             @if ($stocksDisponibles->isEmpty())
                                 <x-aviso tono="alerta">{{ __('lagos.no_hay_alimento_bodega') }}</x-aviso>
                             @else
                                 <x-seleccion nombre="tipo_concentrado" id="racion-concentrado-{{ $lago->id }}" :etiqueta="__('lagos.concentrado')" required
-                                             :opciones="$stocksDisponibles->mapWithKeys(fn ($stock) => [$stock->tipo_concentrado => __('lagos.concentrado_disponible', ['tipo' => $stock->tipo_concentrado, 'kg' => $numero($stock->cantidad_kg, 1)])])->all()" />
+                                             :valor="$sugerida['concentrado_sugerido'] ?? ''"
+                                             :ayuda="$sugerida['concentrado_etiqueta'] ? __('lagos.concentrado_sugerido_etiqueta', ['concentrado' => $sugerida['concentrado_etiqueta']]) : null"
+                                             :opciones="$stocksDisponibles->mapWithKeys(fn ($stock) => [$stock->tipo_concentrado => __('lagos.concentrado_disponible', ['tipo' => $stock->concentrado?->etiqueta() ?? $stock->tipo_concentrado, 'kg' => $numero($stock->cantidad_kg, 1)])])->all()" />
                             @endif
 
-                            @php $sugerida = $raciones[$lago->id]; @endphp
-                            <x-campo nombre="cantidad_kg" id="racion-cantidad-{{ $lago->id }}" :etiqueta="__('lagos.cantidad_esta_toma_kg')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required
-                                     :valor="$sugerida['kg_por_toma'] > 0 ? $sugerida['kg_por_toma'] : null"
-                                     :ayuda="$sugerida['tomas'] > 0
-                                         ? __('lagos.racion_sugerida_ayuda', ['kg' => $numero($sugerida['kg_por_toma'], 1), 'tomas' => $sugerida['tomas'], 'total' => $numero($sugerida['total_kg_dia'], 1)])
-                                             .($sugerida['factor'] < 1 ? ' '.__('lagos.racion_reducida_agua') : '')
-                                         : null" />
+                            <div class="grid grid-cols-[1fr_auto] items-start gap-3">
+                                <x-campo nombre="cantidad_kg" id="racion-cantidad-{{ $lago->id }}" :etiqueta="__('lagos.cantidad_esta_toma_kg')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required
+                                         :valor="$sugerida['kg_por_toma'] > 0 ? $sugerida['kg_por_toma'] : null"
+                                         :ayuda="$sugerida['tomas'] > 0
+                                             ? __('lagos.racion_sugerida_ayuda', ['kg' => $numero($sugerida['kg_por_toma'], 1), 'tomas' => $sugerida['tomas'], 'total' => $numero($sugerida['total_kg_dia'], 1)])
+                                                 .($sugerida['factor'] < 1 ? ' '.__('lagos.racion_reducida_agua') : '')
+                                             : null" />
+                                <x-seleccion nombre="unidad" id="racion-unidad-{{ $lago->id }}" :etiqueta="__('lagos.unidad_racion')"
+                                             valor="kg" :opciones="[
+                                                 'kg' => __('lagos.unidades_racion.kg'),
+                                                 'bultos' => __('lagos.unidades_racion.bultos'),
+                                             ]" />
+                            </div>
 
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

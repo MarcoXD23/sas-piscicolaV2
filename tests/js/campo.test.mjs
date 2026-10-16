@@ -203,3 +203,22 @@ test('lotes para elegir: agrupados por especie cuando hay varios, como antes si 
     const viejo = siembras.map(({ lote, origen, ...resto }) => resto);
     assert.ok(opcionesLotes(viejo, t, formatear).every((grupo) => grupo.grupo === null));
 });
+
+test('ración en bultos y por nombre corto: convierte a kilos con el peso del bulto y envía el concentrado de bodega', async () => {
+    const { kgDeRacion } = await import('../../resources/js/campo-logica.js');
+    const conCatalogo = {
+        ...paquete,
+        concentrados: [{ tipo: 'Engorde 32%', nombre_corto: 'P32', peso_bulto_kg: 40, kg: 120.5 }],
+    };
+    assert.equal(kgDeRacion({ cantidad_kg: '2', unidad_racion: 'bultos' }, conCatalogo.concentrados[0]), 80);
+    assert.deepEqual(validar('racion', { lago_id: '1', tipo_concentrado: 'P32', cantidad_kg: '2', unidad_racion: 'bultos', fecha: HOY }, conCatalogo, HOY), {});
+    assert.deepEqual(validar('racion', { lago_id: '1', tipo_concentrado: 'P32', cantidad_kg: '4', unidad_racion: 'bultos', fecha: HOY }, conCatalogo, HOY).cantidad_kg,
+        ['campo_error_kg_bodega', { kg: 120.5 }]);
+    assert.deepEqual(armarRegistro('racion', { lago_id: '1', tipo_concentrado: 'P32', cantidad_kg: '1,5', unidad_racion: 'bultos', fecha: HOY }, conCatalogo, t), {
+        url: '/admin/lagos/1/raciones',
+        campos: [['fecha', HOY], ['tipo_concentrado', 'Engorde 32%'], ['cantidad_kg', '60']],
+        detalle: [['campo_lago', 'L01'], ['campo_fecha', HOY], ['campo_concentrado', 'Engorde 32%'], ['campo_kg', '60']],
+        resumen: 'campo_resumen_racion{"lago":"L01"}',
+    });
+});
+

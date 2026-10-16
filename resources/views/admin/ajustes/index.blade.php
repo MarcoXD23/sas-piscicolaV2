@@ -29,6 +29,8 @@
                 <p class="text-sm text-tinta-suave">{{ __('alertas.ajustes.mortalidad_ayuda') }}</p>
                 <x-campo nombre="alerta_despacho_dias" :etiqueta="__('alertas.ajustes.despacho_dias')" tipo="number" min="1" max="30" inputmode="numeric"
                          :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
+                <x-campo nombre="alerta_muestreo_dias" :etiqueta="__('alertas.ajustes.muestreo_dias')" tipo="number" min="1" max="180" inputmode="numeric"
+                         :valor="$finca->alerta_muestreo_dias ?? 30" :ayuda="__('alertas.ajustes.muestreo_dias_ayuda')" required />
             </fieldset>
 
             <x-seleccion nombre="formato_hora" :etiqueta="__('region.ajustes.formato_hora')" :valor="$finca->formato_hora"
@@ -62,6 +64,11 @@
     {{-- Fases de los lagos y reglas por especie (F2) --}}
     <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('fases.titulo')" :subtitulo="__('fases.subtitulo')">
         <x-boton variante="secundario" :href="route('admin.fases.index')">{{ __('fases.enlace') }}</x-boton>
+    </x-tarjeta>
+
+    {{-- Catálogo de concentrados y tabla de ración por especie (F3) --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('concentrados.titulo')" :subtitulo="__('concentrados.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.concentrados.index')">{{ __('concentrados.enlace') }}</x-boton>
     </x-tarjeta>
 
     {{-- Exportar o eliminar los datos de la finca --}}

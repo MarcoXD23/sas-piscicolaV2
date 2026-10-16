@@ -250,6 +250,24 @@
                     <p class="mt-1 text-base text-tinta-suave">
                         {{ __('lagos.tomas_de', ['tomas' => $racion['tomas'], 'kg' => $numero($racion['kg_por_toma'], 1)]) }}
                     </p>
+                    @if (! empty($racion['concentrado_etiqueta']))
+                        <p class="mt-1.5 text-sm font-semibold text-marca-700">
+                            {{ __('lagos.concentrado_sugerido_etiqueta', ['concentrado' => $racion['concentrado_etiqueta']]) }}
+                        </p>
+                    @endif
+
+                    @if (! empty($racion['cambio_gradual']))
+                        <x-aviso tono="atencion" icono="alimentar" class="mt-4 text-sm">
+                            <strong class="block font-bold">{{ __('lagos.cambio_gradual_titulo', ['dia' => $racion['cambio_gradual']['dia'], 'fraccion' => $racion['cambio_gradual']['fraccion']]) }}</strong>
+                            <span>{{ __('lagos.cambio_gradual_hoy', [
+                                'kg_nuevo' => $numero($racion['cambio_gradual']['kg_nuevo'], 1),
+                                'nuevo' => $racion['cambio_gradual']['nuevo'],
+                                'fraccion' => $racion['cambio_gradual']['fraccion'],
+                                'kg_anterior' => $numero($racion['cambio_gradual']['kg_anterior'], 1),
+                                'anterior' => $racion['cambio_gradual']['anterior'],
+                            ]) }}</span>
+                        </x-aviso>
+                    @endif
 
                     @if ($racion['factor'] < 1)
                         <x-aviso tono="atencion" class="mt-4 text-sm">{{ __('lagos.racion_reducida', ['horas' => \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE]) }}</x-aviso>
@@ -266,6 +284,12 @@
                                     {{ __('lagos.porcentaje_de_biomasa', ['porcentaje' => $numero($fila['porcentaje'], 1), 'kg' => $numero($fila['biomasa_kg'], 1)]) }}
                                     @if ($fila['proteina'])
                                         · {{ __('lagos.etapa_proteina', ['etapa' => __('lagos.etapas.'.$fila['etapa']), 'proteina' => $fila['proteina']]) }}
+                                    @endif
+                                    @if (! empty($fila['pellet']))
+                                        · {{ $fila['pellet'] }}
+                                    @endif
+                                    @if (! empty($fila['concentrado_etiqueta']))
+                                        · {{ $fila['concentrado_etiqueta'] }}
                                     @endif
                                 </dd>
                             </div>

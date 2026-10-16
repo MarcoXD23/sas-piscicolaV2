@@ -79,6 +79,21 @@ export const opcionesLotes = (siembras, t, formatear) => {
 
 const lagoDe = (paquete, id) => (paquete.lagos ?? []).find((lago) => String(lago.id) === String(id));
 const siembraDe = (lago, id) => (lago?.siembras ?? []).find((siembra) => String(siembra.id) === String(id));
+const concentradoDe = (paquete, valor) => {
+    const buscado = texto(valor);
+    return (paquete.concentrados ?? []).find((c) => c.tipo === buscado || (c.nombre_corto && c.nombre_corto === buscado));
+};
+
+/** Kilos de la ración según la unidad elegida ('kg' por defecto, o 'bultos' × peso_bulto_kg del concentrado). */
+export const kgDeRacion = (datos, concentrado) => {
+    const valor = numero(datos.cantidad_kg);
+    if (!Number.isFinite(valor)) return NaN;
+    if (texto(datos.unidad_racion) === 'bultos') {
+        const pesoBulto = Number(concentrado?.peso_bulto_kg) > 0 ? Number(concentrado.peso_bulto_kg) : 40;
+        return Math.round(valor * pesoBulto * 100) / 100;
+    }
+    return valor;
+};
 
 /**
  * Errores de una sección ({ campo: [clave, datos] }); vacío si se puede guardar.
@@ -96,8 +111,8 @@ export const validar = (seccion, datos, paquete, hoy) => {
 
     if (seccion === 'racion') {
         if (!lago?.url_racion) errores.lago_id = ['campo_error_lago', {}];
-        const concentrado = (paquete.concentrados ?? []).find((c) => c.tipo === texto(datos.tipo_concentrado));
-        const kg = numero(datos.cantidad_kg);
+        const concentrado = concentradoDe(paquete, datos.tipo_concentrado);
+        const kg = kgDeRacion(datos, concentrado);
         if (!concentrado) errores.tipo_concentrado = ['campo_error_concentrado', {}];
         if (!Number.isFinite(kg) || kg < 0.1 || kg > 100000) errores.cantidad_kg = ['campo_error_kg', {}];
         else if (concentrado && kg > concentrado.kg) errores.cantidad_kg = ['campo_error_kg_bodega', { kg: concentrado.kg }];
@@ -181,10 +196,13 @@ export const armarRegistro = (seccion, datos, paquete, t) => {
     const decimal = (valor) => String(numero(valor));
 
     if (seccion === 'racion') {
+        const concentrado = concentradoDe(paquete, datos.tipo_concentrado);
+        const tipoEnvio = concentrado?.tipo ?? texto(datos.tipo_concentrado);
+        const kg = String(kgDeRacion(datos, concentrado));
         return {
             url: lago.url_racion,
-            campos: [['fecha', texto(datos.fecha)], ['tipo_concentrado', texto(datos.tipo_concentrado)], ['cantidad_kg', decimal(datos.cantidad_kg)]],
-            detalle: [[t('campo_lago'), lago.nombre], [t('campo_fecha'), texto(datos.fecha)], [t('campo_concentrado'), texto(datos.tipo_concentrado)], [t('campo_kg'), decimal(datos.cantidad_kg)]],
+            campos: [['fecha', texto(datos.fecha)], ['tipo_concentrado', tipoEnvio], ['cantidad_kg', kg]],
+            detalle: [[t('campo_lago'), lago.nombre], [t('campo_fecha'), texto(datos.fecha)], [t('campo_concentrado'), tipoEnvio], [t('campo_kg'), kg]],
             resumen: t('campo_resumen_racion', { lago: lago.nombre }),
         };
     }

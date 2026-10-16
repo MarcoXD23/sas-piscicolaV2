@@ -187,4 +187,14 @@ return [
     'densidad_actual' => ':densidad peces/m²',
     'editar_lago' => 'Editar lago',
     'editar_lago_titulo' => 'Editar · :lago',
+    // Concentrado sugerido, cambio gradual y ración en bultos (F3)
+    'concentrado_sugerido_etiqueta' => 'Concentrado sugerido: :concentrado',
+    'cambio_gradual_titulo' => 'Cambio gradual de concentrado (día :dia de 3 · :fraccion)',
+    'cambio_gradual_hoy' => 'Hoy: :kg_nuevo kg de :nuevo (:fraccion) y :kg_anterior kg de :anterior.',
+    'unidad_racion' => 'Unidad de la ración',
+    'unidades_racion' => [
+        'kg' => 'Kilos (kg)',
+        'bultos' => 'Bultos',
+    ],
+    'bultos_esta_toma' => 'Bultos de esta toma (si alimentas por bultos)',
 ];

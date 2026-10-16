@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
+use App\Models\Concentrado;
 use App\Models\DespachoAlimento;
 use App\Models\MovimientoAlimento;
 use App\Models\Rol;
@@ -33,7 +34,7 @@ class BodegaController extends Controller
         $tipo = in_array($request->query('tipo'), self::TIPOS_MOVIMIENTO, true) ? $request->query('tipo') : null;
 
         $movimientos = MovimientoAlimento::query()
-            ->with(['usuario', 'lago', 'despacho'])
+            ->with(['usuario', 'lago', 'despacho', 'concentrado'])
             ->when($tipo, fn ($consulta) => $consulta->where('tipo_movimiento', $tipo))
             ->latest('fecha')
             ->latest('id')
@@ -41,7 +42,7 @@ class BodegaController extends Controller
             ->withQueryString();
 
         $despachos = DespachoAlimento::query()
-            ->with('usuario')
+            ->with(['usuario', 'concentrado'])
             ->withCount('recepciones')
             ->withSum('recepciones', 'cantidad_kg')
             ->latest('fecha')->latest('id')
@@ -50,6 +51,7 @@ class BodegaController extends Controller
 
         return view('admin.bodega.index', [
             'cobertura' => CoberturaBodega::calcular(),
+            'concentradosCatalogo' => Concentrado::query()->activos()->orderBy('nombre')->get(),
             'movimientos' => $movimientos,
             'tipo' => $tipo,
             'despachos' => $despachos,
@@ -73,8 +75,12 @@ class BodegaController extends Controller
         ]);
 
         DB::transaction(function () use ($datos, $request) {
+            $concentrado = Concentrado::asegurar($datos['tipo_concentrado'], (float) $datos['peso_bulto_kg']);
+            $datos['tipo_concentrado'] = $concentrado->nombre;
+
             $despacho = DespachoAlimento::create($datos + [
                 'user_id' => $request->user()->id,
+                'concentrado_id' => $concentrado->id,
                 'cantidad_kg' => round($datos['bultos'] * $datos['peso_bulto_kg'], 2),
             ]);
 
@@ -110,12 +116,17 @@ class BodegaController extends Controller
             }
 
             // Con despacho, el concentrado, el proveedor y el lote son los del despacho
-            $tipo = $despacho?->tipo_concentrado ?? $datos['tipo_concentrado'];
+            $textoConcentrado = $despacho?->tipo_concentrado ?? $datos['tipo_concentrado'];
+            $concentrado = $despacho?->concentrado_id !== null
+                ? Concentrado::query()->find($despacho->concentrado_id)
+                : Concentrado::asegurar($textoConcentrado, (float) $datos['peso_bulto_kg']);
+            $tipo = $concentrado?->nombre ?? $textoConcentrado;
             $cantidad = round($datos['bultos'] * $datos['peso_bulto_kg'], 2);
 
             MovimientoAlimento::create([
                 'user_id' => $request->user()->id,
                 'despacho_id' => $despacho?->id,
+                'concentrado_id' => $concentrado?->id,
                 'fecha' => $datos['fecha'],
                 'tipo_movimiento' => 'entrada',
                 'tipo_concentrado' => $tipo,
@@ -128,10 +139,15 @@ class BodegaController extends Controller
 
             $stock = StockAlimento::where('tipo_concentrado', $tipo)->lockForUpdate()->first();
             if ($stock) {
+                $stock->concentrado_id ??= $concentrado?->id;
                 $stock->cantidad_kg += $cantidad;
                 $stock->save();
             } else {
-                StockAlimento::create(['tipo_concentrado' => $tipo, 'cantidad_kg' => $cantidad]);
+                StockAlimento::create([
+                    'concentrado_id' => $concentrado?->id,
+                    'tipo_concentrado' => $tipo,
+                    'cantidad_kg' => $cantidad,
+                ]);
             }
 
             Bitacora::registrar($request->user(), 'recepcion', null, [Rol::ADMINISTRADOR], [

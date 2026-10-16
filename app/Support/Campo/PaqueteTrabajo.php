@@ -156,6 +156,10 @@ final class PaqueteTrabajo
     /** @param  \Closure(Siembra): array<string, mixed>  $lote */
     private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote): array
     {
+        $racion = $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty()
+            ? CalculadoraRacion::paraLago($lago)
+            : null;
+
         return [
             'id' => $lago->id,
             'nombre' => $lago->nombre,
@@ -172,7 +176,8 @@ final class PaqueteTrabajo
                 'peso_actual_g' => $tiene(self::MUESTREO) ? round((float) $siembra->peso_actual_g, 2) : null,
                 'url_muestreo' => $tiene(self::MUESTREO) ? route('admin.muestreos.store', $siembra->id, absolute: false) : null,
             ], fn ($valor) => $valor !== null))->values()->all(),
-            'racion_sugerida_kg' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? CalculadoraRacion::paraLago($lago)['kg_por_toma'] : null,
+            'racion_sugerida_kg' => $racion ? $racion['kg_por_toma'] : null,
+            'concentrado_sugerido' => $racion['concentrado_sugerido'] ?? null,
             'aviso_pendiente' => $tiene(self::AVISO_PESCA) ? (bool) $lago->aviso_pendiente : null,
             'url_racion' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? route('admin.raciones.store', $lago->id, absolute: false) : null,
             'url_aviso_pesca' => $tiene(self::AVISO_PESCA) && $lago->siembrasActivas->isNotEmpty() ? route('admin.avisos-pesca.store', $lago, absolute: false) : null,
@@ -184,8 +189,14 @@ final class PaqueteTrabajo
     /** Concentrados con existencias (lo recibido en bodega). Solo informativo: el servidor descuenta al llegar. */
     private static function concentrados(): array
     {
-        return StockAlimento::query()->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get()
-            ->map(fn (StockAlimento $stock) => ['tipo' => $stock->tipo_concentrado, 'kg' => round((float) $stock->cantidad_kg, 2)])
+        return StockAlimento::query()->with('concentrado')->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get()
+            ->map(fn (StockAlimento $stock) => [
+                'tipo' => $stock->tipo_concentrado,
+                'kg' => round((float) $stock->cantidad_kg, 2),
+            ] + array_filter([
+                'nombre_corto' => $stock->concentrado?->nombre_corto,
+                'peso_bulto_kg' => $stock->concentrado !== null ? round((float) $stock->concentrado->peso_bulto_kg, 2) : null,
+            ], fn ($valor) => $valor !== null))
             ->all();
     }
 
