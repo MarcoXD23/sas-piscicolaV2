@@ -121,6 +121,7 @@ return [
         'name' => 'nombre',
         'email' => 'correo',
         'password' => 'contraseña',
+        'clave' => 'contraseña',
         'password_confirmation' => 'confirmación de la contraseña',
         'codigo_finca' => 'código de la finca',
         'nombre' => 'nombre',

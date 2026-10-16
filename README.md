@@ -169,13 +169,13 @@ Luego `php artisan config:clear`. Mientras `MAIL_MAILER` esté vacío, el correo
 
 ### Primer propietario
 
-No hay usuarios ni contraseñas fijas. Crea la finca y su propietario con un comando que pide el país, la zona horaria y la contraseña:
+No hay usuarios ni contraseñas fijas. Crea la finca y su propietario con un comando que pide el país, la zona horaria y la contraseña. El código de la finca lo genera la app (6 caracteres sin letras ni números que se confundan) y el comando lo muestra al final:
 
 ```bash
 php artisan piscicola:crear-propietario
 ```
 
-El personal se registra en `/registro` con el código de la finca, y el propietario lo aprueba en **Personal**.
+El personal se registra en `/registro` con el código de la finca (sin importar mayúsculas ni espacios), y el propietario lo aprueba en **Personal**. El propietario ve su código, con un botón «Copiar», en los primeros pasos del inicio y en **Datos de la finca**. Las fincas que ya existían conservan su código.
 
 ### Invitar una finca
 
@@ -183,11 +183,12 @@ Desde el panel de plataforma se invita a un cliente para que **él mismo cree su
 
 1. En `/plataforma`, en «Invitar una finca», se escribe el correo del cliente.
 2. Sale un **enlace de un solo uso que vence en 7 días** (`/invitacion/{codigo}`). Se copia y se envía por WhatsApp o correo: el sistema no envía correos.
-3. El cliente abre el enlace y llena su finca (nombre, código, país y zona horaria), su nombre y su contraseña, y acepta los términos. El correo es el invitado y no se cambia.
+3. El cliente abre el enlace y llena su finca (nombre, país y zona horaria), su nombre y su contraseña, y acepta los términos. El correo es el invitado y no se cambia. Si tiene una sesión abierta, la página lo avisa y ofrece «Cerrar sesión y continuar»: no se crea nada ni se gasta la invitación.
 4. La finca queda creada igual que con el comando, y el cliente entra como propietario.
 
 Algunos detalles:
 
+- **Una invitación por correo:** si el correo ya usó la suya o ya tiene cuenta, no se invita de nuevo; si tiene una pendiente, hay que anularla primero. Si la suya venció o se anuló sin usarse, sí se puede invitar otra vez.
 - La finca y su propietario se crean con [`CreadorFinca`](app/Support/Fincas/CreadorFinca.php), el mismo paso que usa `piscicola:crear-propietario`.
 - La tabla `invitaciones_finca` es de la plataforma, sin `tenant_id`. Guarda el sha256 del código del enlace, nunca el código mismo, por eso el enlace se muestra una sola vez.
 - Las invitaciones pendientes se pueden anular.
@@ -346,6 +347,7 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 - **Ver la contraseña:** todo campo de contraseña usa `<x-contrasena>`, con un botón de ojo para mostrar u ocultar lo escrito (`resources/js/contrasena.js`, en el bundle y sin scripts en línea). Está en el ingreso, el ingreso de plataforma, el registro, restablecer y cambiar la contraseña, y las confirmaciones con contraseña (eliminar la finca, quitar los dos pasos); no en los códigos de verificación en dos pasos.
   - El botón es `<button type="button">` de 48 × 48 px, con `aria-pressed` y `aria-label` («Mostrar contraseña» / «Ocultar contraseña»). No le quita el foco al campo y conserva el `autocomplete` de los administradores de contraseñas.
   - La contraseña vuelve a ocultarse sola al enviar el formulario, al salir de la pantalla y al volver con «atrás».
+- **Contraseñas nuevas:** una sola regla (`Password::defaults()` en `AppServiceProvider`): mínimo 10 caracteres, con mayúscula, minúscula y número; el símbolo es opcional y no se consulta internet. Vale para el registro, la invitación, el comando, Mi cuenta y restablecer. El formulario muestra la lista de requisitos y la marca mientras se escribe (`<x-contrasena nueva>`). El panel de plataforma pide 12 caracteres con mayúscula, minúscula, número y símbolo. Las contraseñas que ya existían siguen sirviendo para entrar.
 - **Topes numéricos** en todos los formularios (un valor enorme recibe un mensaje y no un error 500).
 - **Tokens de la API** que vencen (`SANCTUM_TOKEN_MINUTOS`, 30 días por defecto) y **topes diarios del asistente** (`ASISTENTE_LIMITE_DIARIO_PERSONA` y `ASISTENTE_LIMITE_DIARIO_FINCA`).
 - Pruebas generales de aislamiento: todos los modelos de finca y todas las rutas con ids (`AislamientoFincasTest`).

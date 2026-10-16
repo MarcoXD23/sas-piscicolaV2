@@ -1,4 +1,4 @@
-@props(['nombre', 'etiqueta', 'ayuda' => null])
+@props(['nombre', 'etiqueta', 'ayuda' => null, 'nueva' => false])
 
 @php
     $id = $attributes->get('id', 'campo-'.$nombre);
@@ -40,7 +40,20 @@
         </button>
     </div>
 
-    @if ($ayuda && ! $tieneError)
+    @if ($nueva)
+        {{-- Contraseña nueva: los requisitos de Password::defaults() (AppServiceProvider), que se marcan mientras se
+             escribe (resources/js/contrasena.js). El servidor vuelve a revisarlos al guardar. --}}
+        <ul class="mt-2 grid gap-1 text-sm sm:grid-cols-2" data-requisitos-de="{{ $id }}" data-minimo="{{ \App\Providers\AppServiceProvider::CONTRASENA_MINIMO }}">
+            @foreach (['largo', 'mayuscula', 'minuscula', 'numero'] as $requisito)
+                <li class="group flex items-center gap-1.5 text-tinta-suave data-[cumple]:font-semibold data-[cumple]:text-bien" data-requisito="{{ $requisito }}">
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full ring-1 ring-current group-data-[cumple]:bg-bien group-data-[cumple]:ring-bien" aria-hidden="true">
+                        <x-icono nombre="ok" class="hidden h-3 w-3 text-white group-data-[cumple]:block" />
+                    </span>
+                    {{ __('acceso.requisitos.'.$requisito, ['minimo' => \App\Providers\AppServiceProvider::CONTRASENA_MINIMO]) }}
+                </li>
+            @endforeach
+        </ul>
+    @elseif ($ayuda && ! $tieneError)
         <p class="mt-1.5 text-sm text-tinta-suave">{{ $ayuda }}</p>
     @endif
 

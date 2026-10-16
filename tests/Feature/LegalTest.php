@@ -33,7 +33,7 @@ class LegalTest extends TestCase
     {
         return $this->post(route('registro'), $datos + [
             'codigo_finca' => 'F01', 'name' => 'Persona Nueva', 'email' => 'nueva@finca.test',
-            'password' => 'clave-segura-123', 'password_confirmation' => 'clave-segura-123',
+            'password' => 'Clave-Segura-123', 'password_confirmation' => 'Clave-Segura-123',
         ]);
     }
 

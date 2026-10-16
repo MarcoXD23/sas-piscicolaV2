@@ -59,11 +59,11 @@ class MiCuentaTest extends TestCase
         $recordarAntes = $this->persona->fresh()->remember_token;
 
         $this->actingAs($this->persona)->put(route('mi-cuenta.contrasena'), [
-            'actual' => 'clave-actual-123', 'password' => 'clave-nueva-456', 'password_confirmation' => 'clave-nueva-456',
+            'actual' => 'clave-actual-123', 'password' => 'Clave-Nueva-456', 'password_confirmation' => 'Clave-Nueva-456',
         ])->assertSessionHasNoErrors()->assertSessionHas('estado', __('cuenta.contrasena.cambiada'));
 
         $persona = $this->persona->fresh();
-        $this->assertTrue(Hash::check('clave-nueva-456', $persona->password));
+        $this->assertTrue(Hash::check('Clave-Nueva-456', $persona->password));
         $this->assertNotSame($recordarAntes, $persona->remember_token);    // «recordarme» deja de servir en otros equipos
         $this->assertSame(0, $persona->tokens()->count());                 // la app móvil se desconecta
         $this->assertSame(0, DB::table('sessions')->where('user_id', $persona->id)->count());
@@ -77,7 +77,7 @@ class MiCuentaTest extends TestCase
         $this->persona->createToken('celular');
 
         $this->actingAs($this->persona)->put(route('mi-cuenta.contrasena'), [
-            'actual' => 'otra-clave', 'password' => 'clave-nueva-456', 'password_confirmation' => 'clave-nueva-456',
+            'actual' => 'otra-clave', 'password' => 'Clave-Nueva-456', 'password_confirmation' => 'Clave-Nueva-456',
         ])->assertInvalid(['actual' => 'La contraseña actual no es correcta.']);
 
         $this->assertTrue(Hash::check('clave-actual-123', $this->persona->fresh()->password));
@@ -93,7 +93,7 @@ class MiCuentaTest extends TestCase
         $cambiar('corta1')->assertInvalid(['password']);
         $cambiar('ana@finca.test')->assertInvalid(['password']);   // igual al correo
         $this->actingAs($this->persona)->put(route('mi-cuenta.contrasena'), [
-            'actual' => 'clave-actual-123', 'password' => 'clave-nueva-456', 'password_confirmation' => 'distinta-789',
+            'actual' => 'clave-actual-123', 'password' => 'Clave-Nueva-456', 'password_confirmation' => 'distinta-789',
         ])->assertInvalid(['password']);
 
         $this->assertTrue(Hash::check('clave-actual-123', $this->persona->fresh()->password));
@@ -106,7 +106,7 @@ class MiCuentaTest extends TestCase
                 ->assertSessionHasErrors();
         }
 
-        $this->actingAs($this->persona)->put(route('mi-cuenta.contrasena'), ['actual' => 'clave-actual-123', 'password' => 'clave-nueva-456', 'password_confirmation' => 'clave-nueva-456'])
+        $this->actingAs($this->persona)->put(route('mi-cuenta.contrasena'), ['actual' => 'clave-actual-123', 'password' => 'Clave-Nueva-456', 'password_confirmation' => 'Clave-Nueva-456'])
             ->assertStatus(429);
     }
 

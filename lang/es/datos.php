@@ -8,6 +8,13 @@ return [
     'subtitulo' => 'Descarga una copia de los datos de tu finca o pide que se eliminen.',
     'enlace' => 'Datos de la finca',
 
+    'codigo' => [
+        'titulo' => 'Código de la finca',
+        'ayuda' => 'Dáselo a tu personal para que pida acceso en /registro.',
+        'copiar' => 'Copiar',
+        'copiado' => 'Copiado',
+    ],
+
     'exportar' => [
         'titulo' => 'Exportar mis datos',
         'ayuda' => 'Un archivo ZIP con una hoja (CSV) por cada tipo de registro y las fotos originales. No incluye contraseñas, claves ni datos de otras fincas. Se prepara en unos minutos y se puede descargar durante 24 horas.',

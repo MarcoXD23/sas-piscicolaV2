@@ -25,7 +25,13 @@ return [
     'gestion_tu_finca_piscicola' => 'Gestión de tu finca piscícola',
     'ingresar' => 'Ingresar',
     'mantener_sesion_iniciada' => 'Mantener la sesión iniciada',
-    'minimo_8_caracteres' => 'Mínimo 8 caracteres.',
+    // Lista de requisitos de una contraseña nueva (Password::defaults en AppServiceProvider), que se marca al escribir
+    'requisitos' => [
+        'largo' => 'Al menos :minimo caracteres',
+        'mayuscula' => 'Una mayúscula',
+        'minuscula' => 'Una minúscula',
+        'numero' => 'Un número',
+    ],
     'nombre_completo' => 'Nombre completo',
     'pideselo_propietario_finca' => 'Pídeselo al propietario de la finca.',
     'propietario_finca_aprobara_tu_cuenta' => 'El propietario de la finca aprobará tu cuenta y te asignará tu rol.',

@@ -51,7 +51,7 @@ class FincaController extends Controller
     {
         $request->validate([
             'codigo' => ['required', 'string', function ($atributo, $valor, $falla) use ($finca) {
-                if (trim((string) $valor) !== $finca->codigo) {
+                if (! $finca->tieneCodigo((string) $valor)) {
                     $falla(__('datos.eliminar.codigo_incorrecto'));
                 }
             }],

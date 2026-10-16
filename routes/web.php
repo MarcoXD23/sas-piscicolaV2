@@ -57,15 +57,20 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+// Enlace de invitación para crear una finca (lo genera el panel de plataforma): un solo uso, vence en 7 días.
+// Sin «guest»: con una sesión abierta la página lo avisa y ofrece cerrarla, en vez de mandar callado al inicio.
+Route::middleware('throttle:invitacion')->group(function () {
+    Route::get('/invitacion/{codigo}', [InvitacionFincaController::class, 'show'])->name('invitacion.show');
+    Route::post('/invitacion/{codigo}', [InvitacionFincaController::class, 'store'])->name('invitacion.store');
+    Route::post('/invitacion/{codigo}/logout', [InvitacionFincaController::class, 'salir'])->name('invitacion.salir');
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:ingreso');
 
     Route::get('/registro', [RegistroController::class, 'create'])->name('registro');
     Route::post('/registro', [RegistroController::class, 'store'])->middleware('throttle:registro');
-    // Enlace de invitación para crear una finca (lo genera el panel de plataforma): un solo uso, vence en 7 días
-    Route::get('/invitacion/{codigo}', [InvitacionFincaController::class, 'show'])->middleware('throttle:invitacion')->name('invitacion.show');
-    Route::post('/invitacion/{codigo}', [InvitacionFincaController::class, 'store'])->middleware('throttle:invitacion')->name('invitacion.store');
 
     Route::get('/olvide-contrasena', [RecuperarContrasenaController::class, 'create'])->name('password.request');
     Route::post('/olvide-contrasena', [RecuperarContrasenaController::class, 'store'])->middleware('throttle:pedir-enlace-contrasena')->name('password.email');

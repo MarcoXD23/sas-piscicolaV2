@@ -53,6 +53,28 @@ class Tenant extends Model
         });
     }
 
+    /**
+     * La finca de un código, sin importar mayúsculas ni espacios al inicio y al final (el personal lo escribe a mano).
+     * Si dos fincas viejas tuvieran el mismo código con distintas mayúsculas, no se adivina: devuelve null.
+     */
+    public static function porCodigo(?string $codigo): ?self
+    {
+        $limpio = mb_strtolower(trim((string) $codigo));
+        if ($limpio === '') {
+            return null;
+        }
+
+        $fincas = self::query()->whereRaw('LOWER(codigo) = ?', [$limpio])->limit(2)->get();
+
+        return $fincas->count() === 1 ? $fincas->first() : null;
+    }
+
+    /** Si un código escrito a mano es el de esta finca (sin importar mayúsculas ni espacios al inicio y al final). */
+    public function tieneCodigo(?string $codigo): bool
+    {
+        return mb_strtolower(trim((string) $codigo)) === mb_strtolower($this->codigo);
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

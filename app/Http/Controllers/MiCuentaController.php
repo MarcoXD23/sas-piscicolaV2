@@ -57,7 +57,7 @@ class MiCuentaController extends Controller
         $usuario = $request->user();
         $datos = $request->validate([
             'actual' => ['required', 'string', 'current_password:web'],
-            'password' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($usuario->email)],
+            'password' => ['required', 'confirmed', Password::defaults(), new NoIgualAlCorreo($usuario->email)],
         ], [
             'actual.current_password' => __('cuenta.contrasena.actual_incorrecta'),
         ]);

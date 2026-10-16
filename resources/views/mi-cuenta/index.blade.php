@@ -23,8 +23,8 @@
         <x-tarjeta :titulo="__('cuenta.contrasena.titulo')" :subtitulo="__('cuenta.contrasena.ayuda')">
             <x-formulario :action="route('mi-cuenta.contrasena')" metodo="PUT">
                 <x-contrasena nombre="actual" :etiqueta="__('cuenta.contrasena.actual')" autocomplete="current-password" required :ayuda="__('cuenta.contrasena.actual_ayuda')" />
-                <x-contrasena nombre="password" :etiqueta="__('cuenta.contrasena.nueva')" autocomplete="new-password" minlength="8" required />
-                <x-contrasena nombre="password_confirmation" :etiqueta="__('cuenta.contrasena.confirmar')" autocomplete="new-password" minlength="8" required />
+                <x-contrasena nombre="password" :etiqueta="__('cuenta.contrasena.nueva')" autocomplete="new-password" minlength="10" required nueva />
+                <x-contrasena nombre="password_confirmation" :etiqueta="__('cuenta.contrasena.confirmar')" autocomplete="new-password" minlength="10" required />
                 <x-boton>{{ __('cuenta.contrasena.guardar') }}</x-boton>
             </x-formulario>
         </x-tarjeta>

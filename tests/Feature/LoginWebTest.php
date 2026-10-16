@@ -61,8 +61,8 @@ class LoginWebTest extends TestCase
             'codigo_finca' => 'finca-prueba',
             'name' => 'Persona Nueva',
             'email' => 'nueva@example.test',
-            'password' => 'clave-segura-123',
-            'password_confirmation' => 'clave-segura-123',
+            'password' => 'Clave-Segura-123',
+            'password_confirmation' => 'Clave-Segura-123',
             'acepto' => '1',
         ])->assertRedirect(route('login'));
 
@@ -79,8 +79,8 @@ class LoginWebTest extends TestCase
             'codigo_finca' => 'no-existe',
             'name' => 'Persona',
             'email' => 'persona@example.test',
-            'password' => 'clave-segura-123',
-            'password_confirmation' => 'clave-segura-123',
+            'password' => 'Clave-Segura-123',
+            'password_confirmation' => 'Clave-Segura-123',
             'acepto' => '1',
         ])->assertSessionHasErrors(['registro' => __('mensajes.registro.no_se_pudo')]);   // mensaje genérico: no revela qué códigos existen
 

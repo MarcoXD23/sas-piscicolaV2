@@ -10,7 +10,10 @@ return [
     'ir' => 'Ir',
     'lo_hace_propietario' => 'Lo hace el propietario.',
     'lo_hace_administrador' => 'Lo hace el administrador.',
-    'codigo_finca' => 'Código de la finca: :codigo',
+    'codigo_finca_etiqueta' => 'Código de la finca',
+    'codigo_ayuda' => 'Dáselo a tu personal para que pida acceso en /registro.',
+    'copiar' => 'Copiar',
+    'copiado' => 'Copiado',
     'pasos' => [
         'ajustes' => [
             'titulo' => 'Revisa la zona horaria y el idioma',

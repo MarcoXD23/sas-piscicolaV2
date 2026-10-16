@@ -45,7 +45,7 @@ class RecuperarContrasenaController extends Controller
         $datos = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'confirmed', ReglaContrasena::min(8), new NoIgualAlCorreo($request->input('email'))],
+            'password' => ['required', 'confirmed', ReglaContrasena::defaults(), new NoIgualAlCorreo($request->input('email'))],
         ]);
 
         $estado = Password::reset(

@@ -259,3 +259,5 @@ Ver «Invitar una finca» en el README.
 
 - Equipos y mantenimiento (tema 15.10).
 - La unidad de cultivo para jaulas o canales (tema 14).
+- Finca demo: una finca con datos inventados y una cuenta de solo consulta para que los clientes vean la app antes de comprar. Se arma después del piloto con base en cómo se usa la finca piloto, sin sus datos reales.
+- Invitaciones: verificar el correo con un código de 6 dígitos enviado al correo invitado antes de crear la finca. Requiere tener configurado el envío de correos (`MAIL_MAILER`) en el servidor. Hasta entonces, el enlace es la única prueba: se envía solo por chat privado, vence en 7 días y se puede anular.

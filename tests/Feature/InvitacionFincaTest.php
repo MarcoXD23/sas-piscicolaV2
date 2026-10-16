@@ -10,13 +10,15 @@ use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Fincas\CreadorFinca;
 use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Invitaciones de finca: el administrador de plataforma invita un correo y el cliente crea su finca con el enlace
- * (un solo uso, 7 días). Un enlace que ya no sirve muestra siempre el mismo aviso.
+ * Invitaciones de finca: el administrador de plataforma invita un correo (una invitación por correo) y el cliente crea
+ * su finca con el enlace (un solo uso, 7 días). El código de la finca lo genera la app. Un enlace que ya no sirve
+ * muestra siempre el mismo aviso; con una sesión abierta no se crea nada.
  */
 class InvitacionFincaTest extends TestCase
 {
@@ -34,7 +36,7 @@ class InvitacionFincaTest extends TestCase
     private function datosFinca(array $cambios = []): array
     {
         return $cambios + [
-            'finca' => 'La Esperanza', 'codigo' => 'la-esperanza', 'pais' => 'co', 'zona_horaria' => 'America/Bogota',
+            'finca' => 'La Esperanza', 'pais' => 'co', 'zona_horaria' => 'America/Bogota',
             'nombre' => 'Cliente Nuevo', 'clave' => 'ClaveSegura123', 'clave_confirmation' => 'ClaveSegura123', 'acepto' => '1',
         ];
     }
@@ -44,11 +46,15 @@ class InvitacionFincaTest extends TestCase
         return __('invitaciones.invalida');
     }
 
+    private function fincasCreadas(): int
+    {
+        return Tenant::query()->where('nombre', 'La Esperanza')->count();
+    }
+
     public function test_el_dueno_invita_un_correo_y_ve_el_enlace_una_sola_vez(): void
     {
-
         $this->entrarAPlataforma();
-        $this->post(route('plataforma.invitaciones.store'), ['correo' => 'Cliente@Finca.test'])->assertSessionHas('invitacion_enlace');
+        $this->post(route('plataforma.invitaciones.store'), ['correo' => ' Cliente@Finca.test '])->assertSessionHas('invitacion_enlace');
         $enlace = session('invitacion_enlace');
         $invitacion = InvitacionFinca::sole();
 
@@ -63,11 +69,36 @@ class InvitacionFincaTest extends TestCase
         // El enlace se ve en la página siguiente; después ya no
         $this->get(route('plataforma.fincas.index'))->assertSee($enlace, false)->assertSee('cliente@finca.test');
         $this->get(route('plataforma.fincas.index'))->assertDontSee($enlace, false)->assertSee(__('invitaciones.estados.pendiente'));
+    }
 
-        // Un correo que ya tiene cuenta (en cualquier finca, sin importar mayúsculas) no se invita
-        User::factory()->create(['tenant_id' => $this->finca->id, 'email' => 'ya@finca.test']);
-        $this->post(route('plataforma.invitaciones.store'), ['correo' => 'YA@finca.test'])->assertSessionHasErrors('correo');
+    public function test_una_invitacion_por_correo(): void
+    {
+        $this->entrarAPlataforma();
+        $invitar = fn (string $correo) => $this->post(route('plataforma.invitaciones.store'), ['correo' => $correo]);
+
+        // Con una pendiente no se crea otra (sin importar mayúsculas ni espacios)
+        $invitar('cliente@finca.test')->assertSessionHasNoErrors();
+        $invitar('  CLIENTE@finca.test ')->assertSessionHasErrors(['correo' => __('invitaciones.correo_con_pendiente')]);
         $this->assertSame(1, InvitacionFinca::count());
+
+        // Anulada sin usarse: sí se puede invitar de nuevo
+        InvitacionFinca::sole()->forceFill(['anulada_at' => now()])->save();
+        $invitar('cliente@finca.test')->assertSessionHasNoErrors();
+        $this->assertSame(2, InvitacionFinca::count());
+
+        // Vencida sin usarse: también
+        InvitacionFinca::query()->latest('id')->first()->forceFill(['vence_at' => now()->subMinute()])->save();
+        $invitar('Cliente@Finca.test')->assertSessionHasNoErrors();
+        $this->assertSame(3, InvitacionFinca::count());
+
+        // Ya usó la suya: no se invita de nuevo, aunque la usada sea vieja y no haya otra pendiente
+        InvitacionFinca::query()->latest('id')->first()->forceFill(['usada_at' => now()])->save();
+        $invitar('cliente@finca.test')->assertSessionHasErrors(['correo' => __('invitaciones.correo_ya_uso')]);
+
+        // Ya tiene cuenta (en cualquier finca, sin importar mayúsculas): el mismo mensaje
+        User::factory()->create(['tenant_id' => $this->finca->id, 'email' => 'ya@finca.test']);
+        $invitar('YA@finca.test')->assertSessionHasErrors(['correo' => __('invitaciones.correo_ya_uso')]);
+        $this->assertSame(3, InvitacionFinca::count());
     }
 
     public function test_ninguna_persona_de_una_finca_invita_ni_anula(): void
@@ -87,14 +118,17 @@ class InvitacionFincaTest extends TestCase
     {
         [$invitacion, $codigo] = InvitacionFinca::crear('cliente@finca.test', null);
 
-        $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee('cliente@finca.test')->assertSee(__('invitaciones.crear'));
+        // La invitación ya no pide el código de la finca: lo genera la app
+        $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee('cliente@finca.test')->assertSee(__('invitaciones.crear'))
+            ->assertDontSee('name="codigo"', false);
 
-        // El correo es el invitado, aunque se envíe otro
-        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['correo' => 'intruso@finca.test']))
+        // El correo es el invitado, aunque se envíe otro; un código enviado a mano se ignora
+        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['correo' => 'intruso@finca.test', 'codigo' => 'mi-codigo']))
             ->assertRedirect(route('inicio'))->assertSessionHas('estado');
 
-        $finca = Tenant::query()->where('codigo', 'la-esperanza')->sole();
-        $this->assertSame(['La Esperanza', 'CO', 'America/Bogota'], [$finca->nombre, $finca->pais, $finca->zona_horaria]);
+        $finca = Tenant::query()->where('nombre', 'La Esperanza')->sole();
+        $this->assertSame(['CO', 'America/Bogota'], [$finca->pais, $finca->zona_horaria]);
+        $this->assertMatchesRegularExpression('/^['.CreadorFinca::ALFABETO_CODIGO.']{6}$/', $finca->codigo);
         $propietario = TenantActual::sinFiltro(fn () => User::query()->where('tenant_id', $finca->id)->sole());
         $this->assertSame('cliente@finca.test', $propietario->email);
         $this->assertTrue($propietario->estaAprobado());
@@ -108,11 +142,41 @@ class InvitacionFincaTest extends TestCase
         $invitacion->refresh();
         $this->assertSame([InvitacionFinca::USADA, $finca->id], [$invitacion->estado(), $invitacion->finca_creada_id]);
 
-        // Un solo uso: el mismo enlace ya no sirve ni crea otra finca
+        // Un solo uso: el mismo enlace ya no sirve ni crea otra finca (con sesión o sin ella, el mismo aviso)
+        $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee($this->aviso());
         auth('web')->logout();
         $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee($this->aviso());
-        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['codigo' => 'otra-finca']))->assertOk()->assertSee($this->aviso());
-        $this->assertSame(0, Tenant::query()->where('codigo', 'otra-finca')->count());
+        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['finca' => 'Otra finca']))->assertOk()->assertSee($this->aviso());
+        $this->assertSame(0, Tenant::query()->where('nombre', 'Otra finca')->count());
+    }
+
+    public function test_con_sesion_abierta_se_avisa_y_no_se_crea_nada(): void
+    {
+        [$invitacion, $codigo] = InvitacionFinca::crear('cliente@finca.test', null);
+        $persona = tap(User::factory()->create(['tenant_id' => $this->finca->id, 'name' => 'Ana Celadora']))->asignarRoles([Rol::CELADOR]);
+
+        // Antes la app mandaba callado al inicio de esa cuenta: ahora la página lo dice y ofrece cerrar sesión
+        $this->actingAs($persona)->get(route('invitacion.show', $codigo))->assertOk()
+            ->assertSee(__('invitaciones.sesion_abierta', ['nombre' => 'Ana Celadora']))
+            ->assertSee(__('invitaciones.cerrar_y_continuar'))
+            ->assertDontSee(__('invitaciones.crear'));
+
+        // El POST con sesión abierta no crea nada y vuelve al aviso; la invitación no se gasta
+        $this->actingAs($persona)->post(route('invitacion.store', $codigo), $this->datosFinca())->assertRedirect(route('invitacion.show', $codigo));
+        $this->assertSame(0, $this->fincasCreadas());
+        $this->assertSame(InvitacionFinca::PENDIENTE, $invitacion->fresh()->estado());
+        $this->assertAuthenticatedAs($persona, 'web');
+
+        // «Cerrar sesión y continuar»: cierra la sesión y vuelve al mismo enlace, que ya funciona
+        $this->post(route('invitacion.salir', $codigo))->assertRedirect(route('invitacion.show', $codigo));
+        $this->assertGuest('web');
+        $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee(__('invitaciones.crear'));
+        $this->post(route('invitacion.store', $codigo), $this->datosFinca())->assertRedirect(route('inicio'));
+        $this->assertSame(1, $this->fincasCreadas());
+
+        // Un enlace inventado muestra el aviso de siempre, aunque haya sesión abierta
+        $this->actingAs($persona)->get(route('invitacion.show', 'codigo-inventado'))->assertOk()->assertSee($this->aviso())
+            ->assertDontSee(__('invitaciones.cerrar_y_continuar'));
     }
 
     public function test_vencida_anulada_o_inventada_muestran_el_mismo_aviso_y_no_crean_nada(): void
@@ -128,7 +192,7 @@ class InvitacionFincaTest extends TestCase
             $this->get(route('invitacion.show', $codigo))->assertOk()->assertSee($this->aviso())->assertDontSee(__('invitaciones.crear'));
             $this->post(route('invitacion.store', $codigo), $this->datosFinca())->assertOk()->assertSee($this->aviso());
         }
-        $this->assertSame(0, Tenant::query()->where('codigo', 'la-esperanza')->count());
+        $this->assertSame(0, $this->fincasCreadas());
     }
 
     public function test_el_dueno_anula_una_invitacion_pendiente(): void
@@ -150,11 +214,12 @@ class InvitacionFincaTest extends TestCase
     {
         [$invitacion, $codigo] = InvitacionFinca::crear('cliente@finca.test', null);
 
-        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['codigo' => 'norte']))->assertSessionHasErrors(['codigo' => __('invitaciones.codigo_usado')]);
-        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['codigo' => 'con espacios', 'pais' => 'XX', 'clave' => 'corta', 'clave_confirmation' => 'corta', 'acepto' => null]))
-            ->assertSessionHasErrors(['codigo', 'pais', 'clave', 'acepto']);
-        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['clave' => 'cliente@finca.test', 'clave_confirmation' => 'cliente@finca.test']))
-            ->assertSessionHasErrors('clave');
+        $this->post(route('invitacion.store', $codigo), $this->datosFinca(['pais' => 'XX', 'clave' => 'corta', 'clave_confirmation' => 'corta', 'acepto' => null]))
+            ->assertSessionHasErrors(['pais', 'clave', 'acepto']);
+        // Contraseña débil: sin mayúscula, sin número o igual al correo
+        foreach (['cachama2026', 'CachamaBlanca', 'cliente@finca.test'] as $debil) {
+            $this->post(route('invitacion.store', $codigo), $this->datosFinca(['clave' => $debil, 'clave_confirmation' => $debil]))->assertSessionHasErrors('clave');
+        }
 
         // Si mientras tanto alguien creó una cuenta con ese correo, no se crea otra
         User::factory()->create(['tenant_id' => $this->finca->id, 'email' => 'CLIENTE@finca.test']);

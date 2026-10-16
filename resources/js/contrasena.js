@@ -40,7 +40,27 @@ export const ocultarTodas = (raiz, documento = document) => {
     raiz.querySelectorAll(BOTON).forEach((boton) => mostrar(boton, campoDe(boton, documento), false));
 };
 
+/**
+ * Requisitos de una contraseña nueva que ya cumple el texto: los mismos de Password::defaults() en el servidor
+ * (AppServiceProvider), que es el que decide al guardar.
+ */
+export const requisitos = (texto, minimo) => ({
+    largo: [...texto].length >= minimo,
+    mayuscula: /\p{Lu}/u.test(texto),
+    minuscula: /\p{Ll}/u.test(texto),
+    numero: /\p{N}/u.test(texto),
+});
+
 export const iniciarVerContrasena = (documento = document, ventana = window) => {
+    // Contraseña nueva: marca en su lista (data-requisitos-de = id del campo) los requisitos que ya cumple
+    documento.addEventListener('input', (evento) => {
+        const campo = evento.target;
+        const lista = campo?.id ? documento.querySelector(`[data-requisitos-de="${campo.id}"]`) : null;
+        if (!lista) return;
+        const cumple = requisitos(campo.value, Number(lista.dataset.minimo));
+        lista.querySelectorAll('[data-requisito]').forEach((item) => item.toggleAttribute('data-cumple', Boolean(cumple[item.dataset.requisito])));
+    });
+
     // El campo conserva el foco al tocar el botón (si no, el teclado del teléfono se cierra)
     documento.addEventListener('mousedown', (evento) => {
         if (evento.target.closest?.(BOTON)) evento.preventDefault();

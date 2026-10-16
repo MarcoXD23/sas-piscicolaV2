@@ -32,14 +32,14 @@ class RegistroController extends Controller
             'codigo_finca' => ['required', 'string', 'max:60'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($request->input('email'))],
+            'password' => ['required', 'confirmed', Password::defaults(), new NoIgualAlCorreo($request->input('email'))],
             'acepto' => ['accepted'],
         ], [
             'acepto.accepted' => __('legal.aceptar.marca_la_casilla'),
         ]);
 
         // Un solo mensaje para «código inexistente» y «correo ya registrado»: no revela qué fincas ni qué correos existen
-        $tenant = Tenant::query()->where('codigo', $datos['codigo_finca'])->first();
+        $tenant = Tenant::porCodigo($datos['codigo_finca']);
         // El correo es único en todo el sistema: se revisa en todas las fincas
         $correoUsado = TenantActual::sinFiltro(fn () => User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower($datos['email'])])->exists());
         if ($tenant === null || $correoUsado) {

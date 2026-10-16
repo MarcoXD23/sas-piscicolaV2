@@ -46,7 +46,7 @@ class PrimerUsoTest extends TestCase
     {
         // El administrador ya se registró con el código: «Invita a tu personal» sale hecho
         $this->inicio($this->propietario)->assertSee(__('primer_uso.titulo'))->assertSee('Llevas 1 de 6')
-            ->assertSee('Código de la finca: NUEVA-01')->assertSee(route('admin.ajustes.edit'));
+            ->assertSee('value="NUEVA-01"', false)->assertSee(__('primer_uso.codigo_ayuda'))->assertSee(route('admin.ajustes.edit'));
         $this->inicio($this->administrador)->assertSee(__('primer_uso.titulo'));
 
         foreach ([Rol::TRABAJADOR, Rol::CELADOR] as $rol) {

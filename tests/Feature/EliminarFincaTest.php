@@ -94,12 +94,16 @@ class EliminarFincaTest extends TestCase
 
     public function test_la_confirmacion_es_obligatoria(): void
     {
-        $this->solicitar(['codigo' => 'norte'])->assertInvalid(['codigo' => 'El código no coincide']);
+        $this->solicitar(['codigo' => 'SUR'])->assertInvalid(['codigo' => 'El código no coincide']);
         $this->solicitar(['actual' => 'otra'])->assertInvalid(['actual']);
         $this->assertFalse($this->finca->fresh()->enEliminacion());
 
         $trabajador = $this->trabajador;
         $this->actingAs($trabajador)->post(route('admin.datos.eliminar'), ['codigo' => 'NORTE', 'actual' => 'clave-segura-123'])->assertForbidden();
+
+        // El código correcto se acepta sin importar mayúsculas ni espacios (como en /registro)
+        $this->solicitar(['codigo' => ' norte '])->assertSessionHasNoErrors();
+        $this->assertTrue($this->finca->fresh()->enEliminacion());
     }
 
     public function test_al_pedirla_queda_suspendida_con_periodo_de_gracia_y_se_avisa(): void

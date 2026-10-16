@@ -6,6 +6,17 @@
     <x-encabezado :titulo="__('datos.titulo')" :subtitulo="__('datos.subtitulo')" />
 
     <div class="grid max-w-3xl gap-6">
+        {{-- Código de la finca para el personal, con «Copiar» (data-copiar-grupo, resources/js/app.js). Va aparte de
+             «Eliminar», que también pide el código, para no confundir los dos usos --}}
+        <x-tarjeta :titulo="__('datos.codigo.titulo')" :subtitulo="__('datos.codigo.ayuda')">
+            <div class="flex flex-wrap items-center gap-3" data-copiar-grupo>
+                <label for="datos-codigo" class="sr-only">{{ __('datos.codigo.titulo') }}</label>
+                <input id="datos-codigo" type="text" readonly value="{{ $finca->codigo }}" data-copiar-texto size="{{ max(6, mb_strlen($finca->codigo)) }}"
+                       class="min-h-12 rounded-ficha border border-renglon bg-ficha px-4 font-mono text-lg font-bold tracking-wider text-marca-800">
+                <x-boton tipo="button" variante="secundario" data-copiar :data-copiado="__('datos.codigo.copiado')">{{ __('datos.codigo.copiar') }}</x-boton>
+            </div>
+        </x-tarjeta>
+
         <x-tarjeta :titulo="__('datos.exportar.titulo')" :subtitulo="__('datos.exportar.ayuda')">
             @error('exportar')
                 <x-aviso tono="atencion" role="alert" class="mb-4">{{ $message }}</x-aviso>

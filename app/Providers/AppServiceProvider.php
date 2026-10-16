@@ -30,10 +30,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Translation\Translator;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /** Largo mínimo de una contraseña nueva de la finca (la lista de requisitos del formulario lo muestra). */
+    public const CONTRASENA_MINIMO = 10;
+
     /**
      * Register any application services.
      */
@@ -98,6 +102,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // Horas en el formato de cada persona (12 o 24 horas): $instante->formatoHora('d/m/Y H:i')
         Hora::registrar();
+
+        // Una sola regla para toda contraseña nueva o cambiada (registro, invitación, comando, Mi cuenta, restablecer):
+        // 10 caracteres con mayúscula, minúscula y número; el símbolo es opcional. Sin uncompromised(): necesita
+        // internet. Las contraseñas que ya existen siguen entrando (la regla no se aplica al ingresar).
+        Password::defaults(fn () => Password::min(self::CONTRASENA_MINIMO)->mixedCase()->numbers());
 
         // El filtro de finca falla cerrado: la identidad (login, sesión, recuperar contraseña y tokens de la API)
         // se busca sin él, antes de que EstablecerTenant fije la finca

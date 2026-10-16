@@ -111,11 +111,11 @@ class FiltroFincaCerradoTest extends TestCase
         $this->post(route('password.update'), [
             'token' => $token,
             'email' => $usuario->email,
-            'password' => 'clave-nueva-456',
-            'password_confirmation' => 'clave-nueva-456',
+            'password' => 'Clave-Nueva-456',
+            'password_confirmation' => 'Clave-Nueva-456',
         ])->assertSessionHasNoErrors();
 
-        $this->assertTrue(Hash::check('clave-nueva-456', $usuario->fresh()->password));
+        $this->assertTrue(Hash::check('Clave-Nueva-456', $usuario->fresh()->password));
     }
 
     public function test_la_api_inicia_sesion_y_reconoce_el_token(): void

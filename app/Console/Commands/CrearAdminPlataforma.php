@@ -33,7 +33,7 @@ class CrearAdminPlataforma extends Command
         $validador = Validator::make($datos, [
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'email', 'max:255', 'unique:administradores_plataforma,email'],
-            'clave' => ['required', 'confirmed', Password::min(12), new NoIgualAlCorreo($datos['correo'])],
+            'clave' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols(), new NoIgualAlCorreo($datos['correo'])],
         ]);
 
         if ($validador->fails()) {

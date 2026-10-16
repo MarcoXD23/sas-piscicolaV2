@@ -157,13 +157,13 @@ class PlataformaTest extends TestCase
         $this->artisan('piscicola:crear-admin-plataforma')
             ->expectsQuestion(__('comandos.crear_admin_plataforma.nombre'), 'Soporte')
             ->expectsQuestion(__('comandos.crear_admin_plataforma.correo'), 'Soporte@Software.test')
-            ->expectsQuestion(__('comandos.crear_admin_plataforma.clave'), 'OtraClaveLarga123')
-            ->expectsQuestion(__('comandos.crear_admin_plataforma.confirmacion'), 'OtraClaveLarga123')
+            ->expectsQuestion(__('comandos.crear_admin_plataforma.clave'), 'Otra-ClaveLarga123')
+            ->expectsQuestion(__('comandos.crear_admin_plataforma.confirmacion'), 'Otra-ClaveLarga123')
             ->assertSuccessful();
 
         $acceso = AdministradorPlataforma::where('email', 'soporte@software.test')->first();
         $this->assertNotNull($acceso);
-        $this->assertTrue(Hash::check('OtraClaveLarga123', $acceso->password));
+        $this->assertTrue(Hash::check('Otra-ClaveLarga123', $acceso->password));
         // No es un usuario de finca ni tiene roles
         $this->assertSame(0, User::withoutGlobalScopes()->where('email', 'soporte@software.test')->count());
 

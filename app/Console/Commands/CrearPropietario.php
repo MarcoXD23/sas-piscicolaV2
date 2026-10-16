@@ -25,7 +25,6 @@ class CrearPropietario extends Command
     public function handle(): int
     {
         $finca = (string) $this->ask(__('comandos.crear_propietario.finca'));
-        $codigo = (string) $this->ask(__('comandos.crear_propietario.codigo'), Str::slug($finca));
         $pais = Str::upper((string) $this->ask(__('comandos.crear_propietario.pais')));
         // Sugiere la primera zona horaria del país (o la zona por defecto si el código no es válido)
         $zonaSugerida = Region::paisValido($pais) ? (Region::zonasDelPais($pais)[0] ?? Region::ZONA_POR_DEFECTO) : Region::ZONA_POR_DEFECTO;
@@ -37,7 +36,6 @@ class CrearPropietario extends Command
 
         $datos = [
             'finca' => $finca,
-            'codigo' => $codigo,
             'pais' => $pais,
             'zona_horaria' => $zona,
             'nombre' => $nombre,
@@ -56,9 +54,11 @@ class CrearPropietario extends Command
             return self::FAILURE;
         }
 
-        CreadorFinca::crear($datos);
+        $propietario = CreadorFinca::crear($datos);
 
-        $this->info(__('comandos.crear_propietario.creado', ['finca' => $finca, 'codigo' => $codigo, 'pais' => $pais, 'zona' => $zona]));
+        $this->info(__('comandos.crear_propietario.creado', ['finca' => $finca, 'pais' => $pais, 'zona' => $zona]));
+        // El código lo genera la app (CreadorFinca::generarCodigo)
+        $this->info(__('comandos.crear_propietario.codigo_generado', ['codigo' => $propietario->tenant->codigo]));
 
         return self::SUCCESS;
     }

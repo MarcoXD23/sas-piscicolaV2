@@ -20,8 +20,14 @@ use Illuminate\Validation\Rules\Password;
  */
 final class CreadorFinca
 {
+    /** Alfabeto del código de la finca: mayúsculas y números sin los que se confunden (0, O, 1, I, L). */
+    public const ALFABETO_CODIGO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+    public const LARGO_CODIGO = 6;
+
     /**
-     * Reglas de los datos (finca, codigo, pais, zona_horaria, nombre, correo, clave con clave_confirmation).
+     * Reglas de los datos (finca, pais, zona_horaria, nombre, correo, clave con clave_confirmation). El código de la
+     * finca no se pide: lo genera la app.
      *
      * @return array<string, array<int, mixed>>
      */
@@ -29,7 +35,6 @@ final class CreadorFinca
     {
         return [
             'finca' => ['required', 'string', 'max:255'],
-            'codigo' => ['required', 'alpha_dash', 'max:60', 'unique:tenants,codigo'],
             'pais' => ['required', function ($atributo, $valor, $falla) {
                 if (! Region::paisValido((string) $valor)) {
                     $falla(__('comandos.crear_propietario.pais_invalido'));
@@ -43,7 +48,7 @@ final class CreadorFinca
                     $falla(__('validation.unique', ['attribute' => $atributo]));
                 }
             }],
-            'clave' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($correo)],
+            'clave' => ['required', 'confirmed', Password::defaults(), new NoIgualAlCorreo($correo)],
         ];
     }
 
@@ -53,18 +58,34 @@ final class CreadorFinca
     }
 
     /**
-     * Crea la finca y su propietario (aprobado, con el rol de propietario) en una transacción.
+     * Código nuevo de finca: 6 caracteres del alfabeto sin confusiones, que ninguna finca tenga (sin importar
+     * mayúsculas, porque así se busca). Si choca, se genera otro.
+     */
+    public static function generarCodigo(): string
+    {
+        do {
+            $codigo = '';
+            for ($i = 0; $i < self::LARGO_CODIGO; $i++) {
+                $codigo .= self::ALFABETO_CODIGO[random_int(0, strlen(self::ALFABETO_CODIGO) - 1)];
+            }
+        } while (Tenant::query()->whereRaw('LOWER(codigo) = ?', [mb_strtolower($codigo)])->exists());
+
+        return $codigo;
+    }
+
+    /**
+     * Crea la finca (con su código generado) y su propietario (aprobado, con el rol de propietario) en una transacción.
      * Con $aceptoTerminos queda la aceptación de los términos (la invitación la pide; el comando no, y el propietario
-     * los acepta al entrar por primera vez).
+     * los acepta al entrar por primera vez). La finca queda en $propietario->tenant.
      *
-     * @param  array{finca: string, codigo: string, pais: string, zona_horaria: string, nombre: string, correo: string, clave: string}  $datos
+     * @param  array{finca: string, pais: string, zona_horaria: string, nombre: string, correo: string, clave: string}  $datos
      */
     public static function crear(array $datos, bool $aceptoTerminos = false): User
     {
         return DB::transaction(function () use ($datos, $aceptoTerminos) {
             $finca = Tenant::create([
                 'nombre' => $datos['finca'],
-                'codigo' => $datos['codigo'],
+                'codigo' => self::generarCodigo(),
                 'pais' => $datos['pais'],
                 'zona_horaria' => $datos['zona_horaria'],
                 'idioma' => Region::IDIOMA_POR_DEFECTO,
@@ -80,7 +101,7 @@ final class CreadorFinca
                 AceptacionLegal::registrar($propietario);
             }
 
-            return $propietario;
+            return $propietario->setRelation('tenant', $finca);
         });
     }
 }
