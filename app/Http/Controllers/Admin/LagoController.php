@@ -36,7 +36,8 @@ class LagoController extends Controller
 
         return view('admin.lagos.index', [
             'lagos' => $lagos,
-            'raciones' => $lagos->mapWithKeys(fn (Lago $lago) => [$lago->id => CalculadoraRacion::paraLago($lago)]),
+            // Ración de todos los lagos con las mismas consultas (no una por lago)
+            'raciones' => CalculadoraRacion::paraLagos($lagos),
             'tipos' => Lago::opciones(),
             'fases' => $this->opcionesFases(),
             'especies' => $this->opcionesEspecies(),

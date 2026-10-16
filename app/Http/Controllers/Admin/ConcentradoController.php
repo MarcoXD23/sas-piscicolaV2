@@ -51,12 +51,12 @@ class ConcentradoController extends Controller
         $concentrado = DB::transaction(function () use ($request, $datos) {
             $creado = Concentrado::create($datos);
 
-            // Si ya había registros en bodega con ese nombre en la finca, quedan ligados al catálogo
+            // Si ya había registros en bodega con ese nombre en la finca, quedan ligados al catálogo (su texto no cambia)
             foreach ([StockAlimento::class, MovimientoAlimento::class, DespachoAlimento::class] as $modelo) {
                 $modelo::query()
                     ->whereNull('concentrado_id')
                     ->whereRaw('LOWER(tipo_concentrado) = ?', [mb_strtolower($creado->nombre)])
-                    ->update(['concentrado_id' => $creado->id, 'tipo_concentrado' => $creado->nombre]);
+                    ->update(['concentrado_id' => $creado->id]);
             }
 
             Bitacora::registrar($request->user(), 'concentrado_creado', null, [Rol::PROPIETARIO], [
@@ -74,17 +74,10 @@ class ConcentradoController extends Controller
     {
         $datos = $this->validarConcentrado($request, $concentrado);
 
+        // Renombrar no cambia la historia: la bodega, los movimientos y los despachos guardados conservan su texto y
+        // siguen ligados por concentrado_id (Concentrado::resolver encuentra también el nombre viejo)
         DB::transaction(function () use ($request, $concentrado, $datos) {
-            $nombreAnterior = $concentrado->nombre;
             $concentrado->update($datos);
-
-            if ($nombreAnterior !== $concentrado->nombre) {
-                foreach ([StockAlimento::class, MovimientoAlimento::class, DespachoAlimento::class] as $modelo) {
-                    $modelo::query()
-                        ->where('concentrado_id', $concentrado->id)
-                        ->update(['tipo_concentrado' => $concentrado->nombre]);
-                }
-            }
 
             Bitacora::registrar($request->user(), 'concentrado_editado', null, [Rol::PROPIETARIO], [
                 'concentrado' => $concentrado->etiqueta(),

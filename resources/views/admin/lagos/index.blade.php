@@ -318,14 +318,16 @@
                                              :opciones="$stocksDisponibles->mapWithKeys(fn ($stock) => [$stock->tipo_concentrado => __('lagos.concentrado_disponible', ['tipo' => $stock->concentrado?->etiqueta() ?? $stock->tipo_concentrado, 'kg' => $numero($stock->cantidad_kg, 1)])])->all()" />
                             @endif
 
-                            <div class="grid grid-cols-[1fr_auto] items-start gap-3">
+                            {{-- Al elegir «Bultos», el campo dice bultos (resources/js/app.js, data-racion-unidad) --}}
+                            <div class="grid grid-cols-[1fr_auto] items-start gap-3" data-racion-unidad
+                                 data-etiqueta-kg="{{ __('lagos.cantidad_esta_toma_kg') }}" data-etiqueta-bultos="{{ __('lagos.bultos_esta_toma') }}">
                                 <x-campo nombre="cantidad_kg" id="racion-cantidad-{{ $lago->id }}" :etiqueta="__('lagos.cantidad_esta_toma_kg')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required
                                          :valor="$sugerida['kg_por_toma'] > 0 ? $sugerida['kg_por_toma'] : null"
                                          :ayuda="$sugerida['tomas'] > 0
                                              ? __('lagos.racion_sugerida_ayuda', ['kg' => $numero($sugerida['kg_por_toma'], 1), 'tomas' => $sugerida['tomas'], 'total' => $numero($sugerida['total_kg_dia'], 1)])
                                                  .($sugerida['factor'] < 1 ? ' '.__('lagos.racion_reducida_agua') : '')
                                              : null" />
-                                <x-seleccion nombre="unidad" id="racion-unidad-{{ $lago->id }}" :etiqueta="__('lagos.unidad_racion')"
+                                <x-seleccion nombre="unidad" id="racion-unidad-{{ $lago->id }}" :etiqueta="__('lagos.unidad_racion')" data-unidad-racion
                                              valor="kg" :opciones="[
                                                  'kg' => __('lagos.unidades_racion.kg'),
                                                  'bultos' => __('lagos.unidades_racion.bultos'),

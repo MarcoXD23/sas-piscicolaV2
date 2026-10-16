@@ -95,29 +95,27 @@ class Concentrado extends Model
 
         $minuscula = mb_strtolower($limpio);
 
-        return self::query()
-            ->whereRaw('LOWER(nombre) = ?', [$minuscula])
-            ->orWhereRaw('LOWER(nombre_corto) = ?', [$minuscula])
+        $porNombre = self::query()
+            ->where(fn (Builder $consulta) => $consulta->whereRaw('LOWER(nombre) = ?', [$minuscula])
+                ->orWhereRaw('LOWER(nombre_corto) = ?', [$minuscula]))
             ->orderByDesc('activo')
             ->orderBy('id')
             ->first();
-    }
-
-    /**
-     * Devuelve el concentrado del catálogo para un texto, o lo crea en la finca activa si aún no existía.
-     */
-    public static function asegurar(string $texto, ?float $pesoBultoKg = null): self
-    {
-        $existente = self::resolver($texto);
-        if ($existente !== null) {
-            return $existente;
+        if ($porNombre !== null) {
+            return $porNombre;
         }
 
-        return self::create([
-            'nombre' => trim($texto),
-            'peso_bulto_kg' => $pesoBultoKg !== null && $pesoBultoKg > 0 ? $pesoBultoKg : self::PESO_BULTO_POR_DEFECTO,
-            'activo' => true,
-        ]);
+        // Renombrar no cambia la historia: un nombre viejo (el de la bodega o el de un registro ya guardado, que puede
+        // venir de la cola de un teléfono) sigue llevando a su concentrado
+        foreach ([StockAlimento::class, MovimientoAlimento::class, DespachoAlimento::class] as $modelo) {
+            $id = $modelo::query()->whereNotNull('concentrado_id')->whereRaw('LOWER(tipo_concentrado) = ?', [$minuscula])
+                ->latest('id')->value('concentrado_id');
+            if ($id !== null) {
+                return self::query()->find($id);
+            }
+        }
+
+        return null;
     }
 }
 

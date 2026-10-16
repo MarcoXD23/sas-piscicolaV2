@@ -102,6 +102,15 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
   - los lagos que ya existen quedan «sin fase» hasta que alguien se la ponga;
   - el paquete del teléfono crece, solo con campos agregados.
 
+**Estado: hecha** (hecha con Antigravity y revisada en F2-F3c, rama `antigravity-prueba`, sin unir a `main`).
+- Las reglas iniciales traen solo los datos de la finca piloto (tema 15.1): precría, levante y engorde para las especies de agua cálida. La trucha y el alevinaje quedan sin reglas, y lo que falta dice «sin dato».
+- El detalle del lago compara el peso con el rango de la fase, la supervivencia y la densidad.
+- **Pendiente para F5:** el atraso en días. Se compara con los días en la fase, cuando los traslados los arrastren.
+- **Pendiente de la finca:**
+  - la supervivencia esperada y las densidades de alevinaje, precría y levante;
+  - el peso de entrada a precría;
+  - el peso de salida de las demás especies.
+
 ### F3. Concentrados y ración configurable (4 días)
 
 - Catálogo de concentrados: nombre corto (el color del hilo en la finca piloto), proteína, pellet y peso del bulto.
@@ -122,6 +131,17 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
   - **cola sin conexión:** los registros guardados en los teléfonos envían `tipo_concentrado` como texto. El servidor debe seguir aceptándolo, buscándolo por nombre.
 - **Falta de la finca:** el color de hilo de cada concentrado. Se construye igual, porque es el nombre corto que escribe la finca.
 
+**Estado: hecha** (hecha con Antigravity y revisada en F2-F3c, rama `antigravity-prueba`, sin unir a `main`).
+- Ya no hay tablas fijas en `CalculadoraRacion`. La tabla de la finca arranca con los porcentajes de antes y, en el perfil cálido, con la tabla de la finca piloto (tema 15.3). La proteína y el pellet que no dio la finca quedan vacíos.
+- El concentrado sugerido es el de la regla de la fase (`reglas_fase.concentrado_id`). Si la fase no tiene uno, es el del tramo de peso.
+- La bodega no agrega concentrados al catálogo, y renombrar uno no cambia la historia.
+- El plazo del muestreo es el ajuste `muestreo.plazo_dias` de `ajustes_finca` (30 días por defecto), sin columna nueva.
+- El paquete de Registro rápido calcula la ración de todos los lagos con las mismas consultas, y solo agrega campos (`concentrado_sugerido`, `nombre_corto`, `peso_bulto_kg`).
+- **Pendiente de la finca:**
+  - los concentrados azul (24 %), blanca (30 %) y «38» (38 %) se crean en Ajustes › Concentrados (no van por defecto en las fincas nuevas);
+  - la proteína y el pellet de los tramos que faltan.
+- **Antes de migrar `sas_piscicola_v2`:** respaldo con `piscicola:respaldar`.
+
 ### F5. Lotes y trazabilidad (3 días)
 
 - Catálogo de proveedores de alevinos: los terceros que ya existen, con la marca de proveedor.
@@ -129,6 +149,7 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
 - En el traslado:
   - preguntar «sumar al lote o crear lote aparte» (tema 4);
   - arrastrar los días y el alimento, para la conversión de toda la vida del pez.
+- **Activar el atraso en días de las fases (pendiente de F2):** con los días en la fase de cada lote, comparar contra `reglas_fase.dias_esperados` en el detalle del lago (`EstadoFase`). Hasta F5 no se muestra, porque el lote solo conoce sus días desde la siembra.
 - Comparación de proveedores: crecimiento, supervivencia y conversión.
 - **Pruebas:**
   - conversión de vida a través de dos traslados;

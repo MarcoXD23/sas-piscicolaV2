@@ -29,8 +29,6 @@
                 <p class="text-sm text-tinta-suave">{{ __('alertas.ajustes.mortalidad_ayuda') }}</p>
                 <x-campo nombre="alerta_despacho_dias" :etiqueta="__('alertas.ajustes.despacho_dias')" tipo="number" min="1" max="30" inputmode="numeric"
                          :valor="$finca->alerta_despacho_dias" :ayuda="__('alertas.ajustes.despacho_dias_ayuda')" required />
-                <x-campo nombre="alerta_muestreo_dias" :etiqueta="__('alertas.ajustes.muestreo_dias')" tipo="number" min="1" max="180" inputmode="numeric"
-                         :valor="$finca->alerta_muestreo_dias ?? 30" :ayuda="__('alertas.ajustes.muestreo_dias_ayuda')" required />
             </fieldset>
 
             <x-seleccion nombre="formato_hora" :etiqueta="__('region.ajustes.formato_hora')" :valor="$finca->formato_hora"
@@ -50,9 +48,16 @@
                 <fieldset class="space-y-5">
                     <legend class="mb-1 text-lg font-semibold text-tinta">{{ __('ajustes_finca.secciones.'.$seccion) }}</legend>
                     @foreach ($claves as $clave)
-                        <x-seleccion :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
-                                     :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required
-                                     :opciones="collect(\App\Support\Ajustes\CatalogoAjustes::definicion($clave)['opciones'])->mapWithKeys(fn ($opcion) => [$opcion => \App\Support\Ajustes\AjustesFinca::textoOpcion($clave, $opcion)])->all()" />
+                        @php $definicion = \App\Support\Ajustes\CatalogoAjustes::definicion($clave); @endphp
+                        @if ($definicion['tipo'] === \App\Support\Ajustes\CatalogoAjustes::TIPO_ENTERO)
+                            <x-campo :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
+                                     tipo="number" :min="$definicion['min']" :max="$definicion['max']" inputmode="numeric"
+                                     :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required />
+                        @else
+                            <x-seleccion :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
+                                         :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required
+                                         :opciones="collect($definicion['opciones'])->mapWithKeys(fn ($opcion) => [$opcion => \App\Support\Ajustes\AjustesFinca::textoOpcion($clave, $opcion)])->all()" />
+                        @endif
                     @endforeach
                 </fieldset>
             @endforeach

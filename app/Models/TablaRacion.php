@@ -40,39 +40,43 @@ class TablaRacion extends Model
     }
 
     /**
-     * Tramos iniciales por perfil de alimentación: conservan los porcentajes y tomas de referencia
-     * e incorporan proteína y tamaño de pellet orientativos (editables por cada finca).
+     * Tramos iniciales por perfil de alimentación: el % de la biomasa y las tomas de las tablas que la app usaba antes
+     * (fijas en CalculadoraRacion hasta F3) y, encima, los datos de la tabla de la finca piloto en el perfil cálido
+     * (diseño, tema 15.3): hasta 5 g 8 % y harina de 45 %; de 6 a 20 g 4,1 % y 36 %; de 251 a 300 g 1,5 % y 24 %;
+     * de 401 a 500 g 1,3 %. La proteína y el pellet que la finca no dio quedan vacíos. La migración de F3 copia estos
+     * mismos valores para las fincas que ya existían.
      *
-     * @var array<string, list<array{0: float, 1: float, 2: float, 3: int, 4: float, 5: string}>>
+     * @var array<string, list<array{0: float, 1: float, 2: float, 3: int, 4: ?float, 5: ?string}>>
      */
     public const TRAMOS_POR_PERFIL = [
         'calido' => [
             [0.1, 5.0, 8.0, 5, 45.0, 'Harina'],
-            [5.01, 20.0, 6.0, 4, 38.0, '1.5 mm'],
-            [20.01, 50.0, 4.0, 4, 34.0, '2.5 mm'],
-            [50.01, 100.0, 3.0, 3, 32.0, '3.5 mm'],
-            [100.01, 200.0, 2.5, 3, 30.0, '4.5 mm'],
-            [200.01, 300.0, 2.0, 3, 28.0, '4.5 mm'],
-            [300.01, 500.0, 1.5, 2, 24.0, '6 mm'],
-            [500.01, 99999.0, 1.2, 2, 24.0, '6 mm'],
+            [5.01, 20.0, 4.1, 4, 36.0, null],
+            [20.01, 50.0, 4.0, 4, null, null],
+            [50.01, 100.0, 3.0, 3, null, null],
+            [100.01, 200.0, 2.5, 3, null, null],
+            [200.01, 300.0, 1.5, 3, 24.0, null],
+            [300.01, 500.0, 1.3, 2, null, null],
+            [500.01, 99999.0, 1.2, 2, null, null],
         ],
+        // Aprovecha detritos y restos: recibe la mitad de la ración de un pez de agua cálida
         'detritivoro' => [
-            [0.1, 5.0, 4.0, 4, 32.0, 'Harina'],
-            [5.01, 20.0, 3.0, 3, 28.0, '1.5 mm'],
-            [20.01, 50.0, 2.0, 3, 28.0, '2.5 mm'],
-            [50.01, 100.0, 1.5, 2, 25.0, '3.5 mm'],
-            [100.01, 200.0, 1.2, 2, 24.0, '4.5 mm'],
-            [200.01, 300.0, 1.0, 2, 24.0, '4.5 mm'],
-            [300.01, 500.0, 0.8, 2, 24.0, '4.5 mm'],
-            [500.01, 99999.0, 0.6, 2, 24.0, '4.5 mm'],
+            [0.1, 5.0, 4.0, 4, null, null],
+            [5.01, 20.0, 3.0, 3, null, null],
+            [20.01, 50.0, 2.0, 3, null, null],
+            [50.01, 100.0, 1.5, 2, null, null],
+            [100.01, 200.0, 1.2, 2, null, null],
+            [200.01, 300.0, 1.0, 2, null, null],
+            [300.01, 500.0, 0.8, 2, null, null],
+            [500.01, 99999.0, 0.6, 2, null, null],
         ],
         'frio' => [
-            [0.1, 5.0, 5.0, 6, 48.0, 'Harina'],
-            [5.01, 20.0, 3.5, 5, 45.0, '1.5 mm'],
-            [20.01, 50.0, 2.5, 4, 45.0, '2.5 mm'],
-            [50.01, 100.0, 2.0, 3, 42.0, '3.5 mm'],
-            [100.01, 200.0, 1.6, 3, 42.0, '4.5 mm'],
-            [200.01, 99999.0, 1.2, 2, 40.0, '6 mm'],
+            [0.1, 5.0, 5.0, 6, null, null],
+            [5.01, 20.0, 3.5, 5, null, null],
+            [20.01, 50.0, 2.5, 4, null, null],
+            [50.01, 100.0, 2.0, 3, null, null],
+            [100.01, 200.0, 1.6, 3, null, null],
+            [200.01, 99999.0, 1.2, 2, null, null],
         ],
     ];
 

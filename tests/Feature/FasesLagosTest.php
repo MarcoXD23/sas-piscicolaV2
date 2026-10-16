@@ -45,12 +45,25 @@ class FasesLagosTest extends TestCase
     {
         $nombres = Fase::query()->orderBy('orden')->pluck('nombre')->all();
         $this->assertSame(['Alevinaje', 'Precría', 'Levante', 'Engorde'], $nombres);
-        $this->assertSame(24, ReglaFase::query()->count());
+        // Solo los datos de la finca piloto (tema 15.1): precría, levante y engorde para las 5 especies de agua cálida
+        $this->assertSame(15, ReglaFase::query()->count());
+
+        $regla = fn (string $fase, string $especie) => ReglaFase::query()->where('fase_id', Fase::query()->where('clave', $fase)->value('id'))
+            ->where('especie_id', $this->especie($especie))->first();
+        $campos = ['peso_entrada_g', 'peso_salida_g', 'dias_esperados', 'supervivencia_porcentaje', 'densidad_min_m2', 'densidad_max_m2'];
+        $this->assertSame([null, 30.0, 60, null, null, null], array_values($regla('precria', 'mojarra roja')->only($campos)));
+        $this->assertSame([30.0, 150.0, 90, null, null, null], array_values($regla('levante', 'bocachico')->only($campos)));
+        $this->assertSame([150.0, 850.0, 90, null, 15.0, 24.0], array_values($regla('engorde', 'cachama blanca')->only($campos)));
+        $this->assertSame([150.0, 600.0, 90, null, 15.0, 24.0], array_values($regla('engorde', 'mojarra negra')->only($campos)));
+        // Sin peso de salida para el bocachico en engorde; la trucha y el alevinaje, sin reglas
+        $this->assertNull($regla('engorde', 'bocachico')->peso_salida_g);
+        $this->assertNull($regla('engorde', 'trucha arcoiris'));
+        $this->assertSame(0, ReglaFase::query()->where('fase_id', Fase::query()->where('clave', 'alevinaje')->value('id'))->count());
 
         // Volver a llamar cargarPorDefecto no duplica fases ni reglas
         Fase::cargarPorDefecto($this->finca->id);
         $this->assertSame(4, Fase::query()->count());
-        $this->assertSame(24, ReglaFase::query()->count());
+        $this->assertSame(15, ReglaFase::query()->count());
     }
 
     public function test_solo_el_propietario_puede_gestionar_las_fases_y_sus_reglas(): void
@@ -210,79 +223,64 @@ class FasesLagosTest extends TestCase
         $this->assertTrue(Bitacora::query()->where('accion', 'lago_editado')->where('lago_id', $lago->id)->exists());
     }
 
-    public function test_el_detalle_del_lago_y_el_paquete_de_campo_muestran_la_fase_y_la_comparacion_real_vs_esperado(): void
+    public function test_el_detalle_del_lago_compara_peso_supervivencia_y_densidad_sin_dias_y_sin_datos_inventados(): void
     {
-        $engorde = Fase::query()->where('nombre', 'Engorde')->firstOrFail();
-        $truchaId = $this->especie('trucha arcoiris');
+        $engorde = Fase::query()->where('clave', 'engorde')->firstOrFail();
         $especieNueva = Especie::create(['nombre' => 'Carpa espejo', 'clima' => Especie::FRIO, 'activo' => true]);
+        $lago = Lago::create(['nombre' => 'E01', 'tipo' => 'concreto', 'fase_id' => $engorde->id, 'area_m2' => 100]);
 
-        $lago = Lago::create([
-            'nombre' => 'E01',
-            'tipo' => 'concreto',
-            'fase_id' => $engorde->id,
-            'area_m2' => 100,
-        ]);
+        // Cachama en engorde: regla de la finca piloto (150 a 850 g, 15 a 24 peces/m², sin supervivencia esperada)
+        $cachama = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('cachama blanca'), 'fecha' => '2026-09-17',
+            'cantidad_alevinos' => 1500, 'peso_promedio_inicial_g' => 150, 'peces_vivos' => 1440, 'peso_actual_g' => 250, 'biomasa_kg' => 360]);
+        // Policultivo con una especie sin regla en esa fase
+        $carpa = Siembra::create(['lago_id' => $lago->id, 'especie_id' => $especieNueva->id, 'fecha' => '2026-10-20',
+            'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 50, 'peces_vivos' => 100, 'peso_actual_g' => 50, 'biomasa_kg' => 5]);
 
-        // Lote con regla configurada (Trucha arcoíris en Engorde: 80 a 400 g en 100 días, 95% supervivencia, 12 a 25 peces/m²)
-        $siembraConRegla = Siembra::create([
-            'lago_id' => $lago->id,
-            'especie_id' => $truchaId,
-            'fecha' => '2026-09-17', // 50 días de cultivo al 2026-11-06
-            'cantidad_alevinos' => 1500,
-            'peso_promedio_inicial_g' => 80,
-            'peces_vivos' => 1440,
-            'peso_actual_g' => 250,
-            'biomasa_kg' => 360,
-        ]);
+        $estado = EstadoFase::paraSiembra($lago, $cachama);
+        $this->assertTrue($estado['tiene_regla']);
+        $this->assertArrayNotHasKey('dias', $estado);   // los días en la fase llegan con F5
+        $this->assertSame(['real_g' => 250.0, 'entrada_g' => 150.0, 'salida_g' => 850.0, 'estado' => EstadoFase::PESO_EN_FASE], $estado['peso']);
+        $this->assertSame(['real' => 96.0, 'esperada' => null, 'baja' => null], $estado['supervivencia']);
+        // Densidad total del lago: (1440 + 100) / 100 = 15,4 peces/m² (dentro de 15 a 24)
+        $this->assertSame(['real' => 15.4, 'min' => 15.0, 'max' => 24.0, 'estado' => 'en_rango'], $estado['densidad']);
+        $this->assertFalse(EstadoFase::paraSiembra($lago, $carpa)['tiene_regla']);
 
-        // Segundo lote en policultivo sin regla en esa fase y sin muestreos (usa peso inicial y maneja ausencia de regla)
-        $siembraSinRegla = Siembra::create([
-            'lago_id' => $lago->id,
-            'especie_id' => $especieNueva->id,
-            'fecha' => '2026-10-20',
-            'cantidad_alevinos' => 100,
-            'peso_promedio_inicial_g' => 50,
-            'peces_vivos' => 100,
-            'peso_actual_g' => 50,
-            'biomasa_kg' => 5,
-        ]);
+        // Peso por debajo de la entrada y en el peso de salida
+        $cachama->update(['peso_actual_g' => 120]);
+        $this->assertSame(EstadoFase::PESO_BAJO_ENTRADA, EstadoFase::paraSiembra($lago, $cachama)['peso']['estado']);
+        $cachama->update(['peso_actual_g' => 850]);
+        $this->assertSame(EstadoFase::PESO_SALIDA, EstadoFase::paraSiembra($lago, $cachama)['peso']['estado']);
+        $cachama->update(['peso_actual_g' => 250]);
 
-        $estadoConRegla = EstadoFase::paraSiembra($lago, $siembraConRegla);
-        $this->assertNotNull($estadoConRegla);
-        $this->assertTrue($estadoConRegla['tiene_regla']);
-        $this->assertSame(50, $estadoConRegla['dias']['real']);
-        $this->assertSame(100, $estadoConRegla['dias']['esperado']);
-        $this->assertSame(0, $estadoConRegla['dias']['atraso']);
-        $this->assertSame(240.0, $estadoConRegla['peso']['esperado_hoy_g']);
-        $this->assertFalse($estadoConRegla['peso']['atrasado']);
-        $this->assertSame(96.0, $estadoConRegla['supervivencia']['real']);
-        $this->assertFalse($estadoConRegla['supervivencia']['baja']);
-        // Densidad total del lago: (1440 + 100) / 100 = 15,4 peces/m² (dentro de 12 a 25)
-        $this->assertSame(15.4, $estadoConRegla['densidad']['real']);
-        $this->assertSame('en_rango', $estadoConRegla['densidad']['estado']);
-
-        $estadoSinRegla = EstadoFase::paraSiembra($lago, $siembraSinRegla);
-        $this->assertNotNull($estadoSinRegla);
-        $this->assertFalse($estadoSinRegla['tiene_regla']);
-
-        // Si area_m2 es null o 0, densidadLago devuelve null sin división por cero
+        // Sin área: la densidad no se calcula (sin dividir por cero) ni se juzga
         $lagoSinArea = Lago::create(['nombre' => 'E02', 'tipo' => 'tierra', 'fase_id' => $engorde->id, 'area_m2' => null]);
         $this->assertNull(EstadoFase::densidadLago($lagoSinArea));
 
-        // Vista de detalle del lago renderiza la comparación y la densidad
+        // La pantalla: lo que no tiene dato dice «sin dato», sin días ni valores esperados inventados
         $this->actingAs($this->administrador)
             ->get(route('admin.lagos.show', $lago))
             ->assertOk()
             ->assertSee('Engorde')
             ->assertSee('100 m²')
             ->assertSee('15,40 peces/m²')
-            ->assertSee('Fase Engorde · real vs. esperado')
+            ->assertSee('Fase Engorde · real contra la regla')
+            ->assertSee('Entrada: 150 g · salida: 850 g')
+            ->assertSee('Dentro de la fase')
+            ->assertSee('Esperada: sin dato')
+            ->assertSee('Referencia: 15 a 24 peces/m²')
+            ->assertDontSee('días de atraso')
             ->assertSee('La fase Engorde aún no tiene reglas configuradas para Carpa espejo.');
 
-        // Paquete de Registro rápido incluye la fase del lago
+        // Un lago sin fase no muestra comparación y sigue funcionando
+        $sinFase = Lago::create(['nombre' => 'S01', 'tipo' => 'tierra']);
+        $loteSinFase = Siembra::create(['lago_id' => $sinFase->id, 'especie_id' => $this->especie('cachama blanca'), 'fecha' => '2026-10-01',
+            'cantidad_alevinos' => 10, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 10, 'peso_actual_g' => 5, 'biomasa_kg' => 0.05]);
+        $this->assertNull(EstadoFase::paraSiembra($sinFase, $loteSinFase));
+        $this->actingAs($this->administrador)->get(route('admin.lagos.show', $sinFase))->assertOk()->assertDontSee('data-comparacion-fase', false);
+
+        // Paquete de Registro rápido incluye la fase del lago (campo agregado)
         $paquete = $this->actingAs($this->administrador)->getJson(route('campo.paquete'))->assertOk()->json();
-        $lagoEnPaquete = collect($paquete['lagos'])->firstWhere('id', $lago->id);
-        $this->assertSame('Engorde', $lagoEnPaquete['fase']);
+        $this->assertSame('Engorde', collect($paquete['lagos'])->firstWhere('id', $lago->id)['fase']);
+        $this->assertNull(collect($paquete['lagos'])->firstWhere('id', $sinFase->id)['fase']);
     }
 }
-

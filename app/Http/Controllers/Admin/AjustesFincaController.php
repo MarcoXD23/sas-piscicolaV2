@@ -58,7 +58,6 @@ class AjustesFincaController extends Controller
             'alerta_mortalidad_porcentaje' => ['sometimes', 'required', 'numeric', 'min:0.1', 'max:100'],
             'alerta_mortalidad_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:60'],
             'alerta_despacho_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:30'],
-            'alerta_muestreo_dias' => ['sometimes', 'required', 'integer', 'min:1', 'max:180'],
             // Unidad que sale primero en el muestreo (lo guardado sigue en gramos)
             'unidad_peso_muestreo' => ['sometimes', 'required', Rule::in(UnidadesPeso::UNIDADES)],
             // Formato de hora de la finca; vacío = el del país

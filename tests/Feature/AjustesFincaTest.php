@@ -44,22 +44,48 @@ class AjustesFincaTest extends TestCase
         return tap(User::factory()->create(['tenant_id' => $finca->id, 'password' => 'clave-segura-123']))->asignarRoles([$rol]);
     }
 
+    /** Envía el formulario completo, como la pantalla: los ajustes que no se cambian van con su valor de ahora. */
     private function guardar(User $usuario, array $datos)
     {
-        return $this->actingAs($usuario)->put(route('admin.ajustes.operacion'), $datos);
+        $actuales = collect(AjustesFinca::todos())->mapWithKeys(fn ($valor, string $clave) => [CatalogoAjustes::campo($clave) => $valor])->all();
+
+        return $this->actingAs($usuario)->put(route('admin.ajustes.operacion'), $datos + $actuales);
     }
 
     public function test_sin_cambios_cada_ajuste_vale_su_valor_por_defecto(): void
     {
         // Por defecto «ambos»: como funciona hoy (el administrador desde Lagos y el celador desde Seguridad & Noche)
         $this->assertSame(CatalogoAjustes::QUIEN_MIDE_AMBOS, AjustesFinca::valor(CatalogoAjustes::AGUA_QUIEN_MIDE));
-        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos'], AjustesFinca::todos());
+        // Plazo del muestreo: 30 días (diseño, tema 15.3)
+        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30], AjustesFinca::todos());
         $this->assertSame(0, AjusteFinca::count());
 
         $this->actingAs($this->propietario)->get(route('admin.ajustes.edit'))->assertOk()
             ->assertSee(__('ajustes_finca.titulo'))
             ->assertSee(__('ajustes_finca.agua.quien_mide.etiqueta'))
-            ->assertSee('<option value="ambos" selected', false);
+            ->assertSee('<option value="ambos" selected', false)
+            ->assertSee(__('ajustes_finca.muestreo.plazo_dias.etiqueta'))
+            ->assertSee('name="'.CatalogoAjustes::campo(CatalogoAjustes::MUESTREO_PLAZO_DIAS).'"', false);
+    }
+
+    public function test_el_plazo_del_muestreo_es_un_entero_con_rango_y_queda_en_la_bitacora(): void
+    {
+        $campo = CatalogoAjustes::campo(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
+
+        foreach (['0', '181', 'treinta', '2.5'] as $malo) {
+            $this->guardar($this->propietario, [$campo => $malo])->assertSessionHasErrors($campo);
+        }
+        $this->assertSame(0, AjusteFinca::count());
+
+        $this->guardar($this->propietario, [$campo => '45'])->assertSessionHasNoErrors()->assertSessionHas('estado', __('ajustes_finca.guardados'));
+        $this->assertSame(45, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
+        $this->assertSame('Ajuste «Plazo del muestreo (días)»: 30 días → 45 días',
+            Bitacora::query()->where('accion', 'ajustes')->sole()->textoDetalle());
+
+        // Guardar el mismo número no escribe en la bitácora; uno guardado fuera de rango vuelve al de por defecto
+        $this->guardar($this->propietario, [$campo => '45'])->assertSessionHas('estado', __('ajustes_finca.sin_cambios'));
+        AjusteFinca::query()->where('clave', CatalogoAjustes::MUESTREO_PLAZO_DIAS)->update(['valor' => json_encode(500)]);
+        $this->assertSame(30, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
     }
 
     public function test_el_propietario_guarda_y_queda_en_la_bitacora(): void
@@ -90,7 +116,7 @@ class AjustesFincaTest extends TestCase
     public function test_una_opcion_que_no_existe_o_un_campo_vacio_se_rechazan(): void
     {
         $this->guardar($this->propietario, [$this->campo => 'trabajador'])->assertSessionHasErrors($this->campo);
-        $this->guardar($this->propietario, [])->assertSessionHasErrors($this->campo);
+        $this->actingAs($this->propietario)->put(route('admin.ajustes.operacion'), [])->assertSessionHasErrors($this->campo);
         $this->assertSame(0, AjusteFinca::count());
 
         // Una clave desconocida no existe en el catálogo

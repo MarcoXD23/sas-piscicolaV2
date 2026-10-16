@@ -9,8 +9,6 @@ return [
         'mortalidad_ayuda' => 'Se avisa cuando en un lago muere este porcentaje de los peces o más en el período. Si llega al doble, la alerta es crítica.',
         'mortalidad_dias' => 'En los últimos (días)',
         'mortalidad_porcentaje' => 'Mortalidad anormal (%)',
-        'muestreo_dias' => 'Muestreo vencido: plazo máximo (días)',
-        'muestreo_dias_ayuda' => 'Se avisa cuando un lago con peces lleva más de estos días sin muestreo.',
         'stock_dias' => 'Stock bajo: días mínimos de alimento',
         'stock_dias_ayuda' => 'Se avisa cuando un concentrado alcanza para menos de estos días, según el consumo de la última semana.',
         'titulo' => 'Umbrales de alerta',

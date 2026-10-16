@@ -2,7 +2,7 @@
 
 /*
 | Ajustes de operación por finca (App\Support\Ajustes\CatalogoAjustes): sección «Operación de la finca» en Ajustes.
-| Cada ajuste: etiqueta, ayuda y el texto de cada opción.
+| Cada ajuste: etiqueta, ayuda y el texto de cada opción (o «valor», el texto del número, si es un entero).
 */
 
 return [
@@ -14,6 +14,7 @@ return [
 
     'secciones' => [
         'agua' => 'Calidad del agua',
+        'muestreo' => 'Muestreos',
     ],
 
     'agua' => [
@@ -25,6 +26,14 @@ return [
                 'celador' => 'Solo el celador',
                 'administrador' => 'Solo el administrador',
             ],
+        ],
+    ],
+
+    'muestreo' => [
+        'plazo_dias' => [
+            'etiqueta' => 'Plazo del muestreo (días)',
+            'ayuda' => 'Si un lago con peces pasa más de estos días sin muestreo, Alertas avisa «muestreo vencido». Si el lote no tiene ningún muestreo, se cuenta desde la siembra.',
+            'valor' => ':valor días',
         ],
     ],
 ];

@@ -8,6 +8,7 @@ use App\Models\MovimientoAlimento;
 use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\StockAlimento;
+use App\Models\TablaRacion;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Alertas\EvaluadorAlertas;
@@ -80,12 +81,36 @@ class AlimentacionYBodegaTest extends TestCase
 
     public function test_tablas_de_alimentacion_por_peso_y_perfil(): void
     {
-        $this->assertSame([8.0, 5], CalculadoraRacion::porcentajeYTomas('calido', 5));
-        $this->assertSame([6.0, 4], CalculadoraRacion::porcentajeYTomas('calido', 5.1));
-        $this->assertSame([1.2, 2], CalculadoraRacion::porcentajeYTomas('calido', 900));
-        $this->assertSame([2.5, 4], CalculadoraRacion::porcentajeYTomas('frio', 30));
+        // La tabla de ración por defecto de la finca (TablaRacion): la de antes, con los datos de la finca piloto en el perfil cálido
+        $fila = function (string $especie, float $peso): array {
+            $this->lago = Lago::create(['nombre' => 'T'.Lago::count(), 'tipo' => 'tierra']);
+            $this->sembrar($especie, 100, $peso);
+
+            return CalculadoraRacion::paraLago($this->lago)['filas'][0];
+        };
+
+        $this->assertSame([8.0, 5, '45 %', 'Harina'], array_values(array_intersect_key($fila('mojarra roja', 5), array_flip(['porcentaje', 'tomas', 'proteina', 'pellet']))));
+        $this->assertSame([4.1, 4, '36 %'], [$fila('mojarra roja', 5.1)['porcentaje'], $fila('mojarra roja', 5.1)['tomas'], $fila('mojarra roja', 5.1)['proteina']]);
+        $this->assertSame([1.5, '24 %'], [$fila('cachama blanca', 280)['porcentaje'], $fila('cachama blanca', 280)['proteina']]);
+        $this->assertSame([1.3, 2], [$fila('mojarra negra', 450)['porcentaje'], $fila('mojarra negra', 450)['tomas']]);
+        $this->assertSame([1.2, 2], [$fila('mojarra roja', 900)['porcentaje'], $fila('mojarra roja', 900)['tomas']]);
+        $this->assertSame([2.5, 4], [$fila('trucha arcoiris', 30)['porcentaje'], $fila('trucha arcoiris', 30)['tomas']]);
+        // Sin proteína en el tramo: la de referencia de la especie para su etapa; sin pellet: vacío
+        $this->assertSame(['32 % a 34 %', null], [$fila('mojarra roja', 50)['proteina'], $fila('mojarra roja', 50)['pellet']]);
         $this->assertSame('iniciacion', CalculadoraRacion::etapa(10));
         $this->assertSame('engorde', CalculadoraRacion::etapa(150));
+    }
+
+    public function test_una_especie_sin_tabla_de_racion_no_tiene_sugerencia(): void
+    {
+        // Ya no hay tablas fijas en el código: sin tramos en la tabla de la finca, la ración es manual
+        $this->sembrar('mojarra roja', 1000, 50);
+        TablaRacion::query()->where('especie_id', $this->especie('mojarra roja'))->delete();
+
+        $racion = CalculadoraRacion::paraLago($this->lago->fresh());
+        $this->assertSame([], $racion['filas']);
+        $this->assertSame(['Mojarra roja'], $racion['sin_sugerencia']);
+        $this->assertSame(0.0, $racion['total_kg_dia']);
     }
 
     public function test_reduce_la_racion_si_la_medicion_reciente_tiene_alertas(): void

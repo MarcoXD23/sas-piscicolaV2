@@ -196,5 +196,5 @@ return [
         'kg' => 'Kilos (kg)',
         'bultos' => 'Bultos',
     ],
-    'bultos_esta_toma' => 'Bultos de esta toma (si alimentas por bultos)',
+    'bultos_esta_toma' => 'Bultos de esta toma',
 ];

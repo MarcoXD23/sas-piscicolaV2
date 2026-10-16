@@ -142,24 +142,26 @@ final class PaqueteTrabajo
     /** @param  Collection<int, Lago>  $lagos */
     private static function lagos(Collection $lagos, \Closure $tiene, bool $medicionAdministrador): array
     {
-        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador) {
+        // La ración sugerida de todos los lagos con peces, con las mismas consultas (no una por lago)
+        $raciones = $tiene(self::RACION) ? CalculadoraRacion::paraLagos($lagos->filter(fn (Lago $lago) => $lago->siembrasActivas->isNotEmpty())) : [];
+
+        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador, $raciones) {
             // Con varios lotes de la misma especie: número del lote dentro de su especie y su origen, para elegirlo
             $numeros = LotesPorEspecie::numeros($lago->siembrasActivas);
             $porEspecie = $lago->siembrasActivas->countBy(fn (Siembra $s) => (string) ($s->especie_id ?? $s->nombre_especie));
 
             return self::lago($lago, $tiene, $medicionAdministrador, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
                 ? ['lote' => $numeros[$siembra->id], 'origen' => $siembra->textoOrigen()]
-                : []);
+                : [], $raciones[$lago->id] ?? null);
         })->values()->all();
     }
 
-    /** @param  \Closure(Siembra): array<string, mixed>  $lote */
-    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote): array
+    /**
+     * @param  \Closure(Siembra): array<string, mixed>  $lote
+     * @param  ?array<string, mixed>  $racion  la de CalculadoraRacion, o null si el lago no tiene ración
+     */
+    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote, ?array $racion): array
     {
-        $racion = $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty()
-            ? CalculadoraRacion::paraLago($lago)
-            : null;
-
         return [
             'id' => $lago->id,
             'nombre' => $lago->nombre,

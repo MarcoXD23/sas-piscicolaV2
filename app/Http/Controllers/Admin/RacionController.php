@@ -43,18 +43,7 @@ class RacionController extends Controller
         $cantidadKg = DB::transaction(function () use ($datos, $lago, $request) {
             // El teléfono o el formulario pueden enviar el nombre completo o el nombre corto del concentrado
             $concentrado = Concentrado::resolver($datos['tipo_concentrado']);
-            $nombreCanonica = $concentrado?->nombre ?? $datos['tipo_concentrado'];
-
-            $stock = StockAlimento::query()
-                ->where(function ($consulta) use ($concentrado, $nombreCanonica, $datos) {
-                    $consulta->where('tipo_concentrado', $nombreCanonica)
-                        ->orWhere('tipo_concentrado', $datos['tipo_concentrado']);
-                    if ($concentrado !== null) {
-                        $consulta->orWhere('concentrado_id', $concentrado->id);
-                    }
-                })
-                ->lockForUpdate()
-                ->first();
+            $stock = StockAlimento::paraBloquear($concentrado, $datos['tipo_concentrado']);
 
             // El stock es solo lo recibido en bodega: sin recepción no se puede alimentar con ese concentrado
             if (! $stock || (float) $stock->cantidad_kg <= 0) {

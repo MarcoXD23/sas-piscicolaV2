@@ -75,12 +75,14 @@ class BodegaController extends Controller
         ]);
 
         DB::transaction(function () use ($datos, $request) {
-            $concentrado = Concentrado::asegurar($datos['tipo_concentrado'], (float) $datos['peso_bulto_kg']);
-            $datos['tipo_concentrado'] = $concentrado->nombre;
+            // Un nombre del catálogo queda ligado a su concentrado; uno que no está se guarda como texto (al catálogo
+            // solo se agrega desde Ajustes › Concentrados)
+            $concentrado = Concentrado::resolver($datos['tipo_concentrado']);
+            $datos['tipo_concentrado'] = $concentrado?->nombre ?? trim($datos['tipo_concentrado']);
 
             $despacho = DespachoAlimento::create($datos + [
                 'user_id' => $request->user()->id,
-                'concentrado_id' => $concentrado->id,
+                'concentrado_id' => $concentrado?->id,
                 'cantidad_kg' => round($datos['bultos'] * $datos['peso_bulto_kg'], 2),
             ]);
 
@@ -117,10 +119,8 @@ class BodegaController extends Controller
 
             // Con despacho, el concentrado, el proveedor y el lote son los del despacho
             $textoConcentrado = $despacho?->tipo_concentrado ?? $datos['tipo_concentrado'];
-            $concentrado = $despacho?->concentrado_id !== null
-                ? Concentrado::query()->find($despacho->concentrado_id)
-                : Concentrado::asegurar($textoConcentrado, (float) $datos['peso_bulto_kg']);
-            $tipo = $concentrado?->nombre ?? $textoConcentrado;
+            $concentrado = Concentrado::resolver($textoConcentrado, $despacho?->concentrado_id);
+            $tipo = $concentrado?->nombre ?? trim($textoConcentrado);
             $cantidad = round($datos['bultos'] * $datos['peso_bulto_kg'], 2);
 
             MovimientoAlimento::create([
@@ -137,7 +137,7 @@ class BodegaController extends Controller
                 'peso_bulto_kg' => $datos['peso_bulto_kg'],
             ]);
 
-            $stock = StockAlimento::where('tipo_concentrado', $tipo)->lockForUpdate()->first();
+            $stock = StockAlimento::paraBloquear($concentrado, $tipo);
             if ($stock) {
                 $stock->concentrado_id ??= $concentrado?->id;
                 $stock->cantidad_kg += $cantidad;

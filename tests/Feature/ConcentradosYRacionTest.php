@@ -14,6 +14,8 @@ use App\Models\StockAlimento;
 use App\Models\TablaRacion;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\Alertas\EvaluadorAlertas;
 use App\Support\CalculadoraRacion;
 use App\Support\Campo\PaqueteTrabajo;
@@ -63,37 +65,44 @@ class ConcentradosYRacionTest extends TestCase
 
     public function test_catalogo_de_concentrados_crear_editar_y_sincronizar_bodega(): void
     {
+        // Lo que ya estaba en bodega con ese nombre queda ligado al crearlo en el catálogo, sin cambiar su texto
+        $movimiento = MovimientoAlimento::create(['user_id' => $this->admin->id, 'fecha' => '2026-10-10', 'tipo_movimiento' => 'entrada',
+            'tipo_concentrado' => 'mojarras 24', 'cantidad_kg' => 80]);
+        $stock = StockAlimento::create(['tipo_concentrado' => 'mojarras 24', 'cantidad_kg' => 80]);
+
         $this->actingAs($this->propietario)->post(route('admin.concentrados.store'), [
-            'nombre' => 'Italcol Mojarras 24',
-            'nombre_corto' => 'P24',
+            'nombre' => 'Mojarras 24',
+            'nombre_corto' => 'Azul',
             'proteina_porcentaje' => 24,
             'pellet_mm' => '4.5 mm',
             'peso_bulto_kg' => 40,
         ])->assertRedirect(route('admin.concentrados.index'));
 
-        $concentrado = Concentrado::query()->where('nombre_corto', 'P24')->firstOrFail();
-        $this->assertSame('Italcol Mojarras 24', $concentrado->nombre);
+        $concentrado = Concentrado::query()->where('nombre_corto', 'Azul')->firstOrFail();
+        $this->assertSame('Mojarras 24', $concentrado->nombre);
         $this->assertEquals(24.0, (float) $concentrado->proteina_porcentaje);
-        $this->assertSame('P24 (Italcol Mojarras 24)', $concentrado->etiqueta());
+        $this->assertSame('Azul (Mojarras 24)', $concentrado->etiqueta());
+        $this->assertSame([$concentrado->id, 'mojarras 24'], [$stock->fresh()->concentrado_id, $stock->fresh()->tipo_concentrado]);
+        $this->assertSame([$concentrado->id, 'mojarras 24'], [$movimiento->fresh()->concentrado_id, $movimiento->fresh()->tipo_concentrado]);
 
-        // Editar concentrado y sincronizar nombre en stock de bodega
-        $stock = StockAlimento::create([
-            'tipo_concentrado' => 'Italcol Mojarras 24',
-            'concentrado_id' => $concentrado->id,
-            'cantidad_kg' => 80,
-        ]);
-
+        // Renombrar no cambia la historia: la bodega y los movimientos guardados conservan su texto
         $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $concentrado), [
-            'nombre' => 'Solla Mojarras 25',
-            'nombre_corto' => 'P25',
+            'nombre' => 'Mojarras 25',
+            'nombre_corto' => 'Blanca',
             'proteina_porcentaje' => 25,
             'pellet_mm' => '5 mm',
             'peso_bulto_kg' => 50,
             'activo' => 1,
         ])->assertRedirect(route('admin.concentrados.index'));
 
-        $this->assertSame('Solla Mojarras 25', $stock->fresh()->tipo_concentrado);
-        $this->assertSame('P25', $concentrado->fresh()->nombre_corto);
+        $this->assertSame('Mojarras 25', $concentrado->fresh()->nombre);
+        $this->assertSame('Blanca', $concentrado->fresh()->nombre_corto);
+        $this->assertSame('mojarras 24', $stock->fresh()->tipo_concentrado);
+        $this->assertSame('mojarras 24', $movimiento->fresh()->tipo_concentrado);
+        $this->assertSame($concentrado->id, $movimiento->fresh()->concentrado_id);
+        // El nombre viejo (el que puede traer la cola de un teléfono) sigue llevando al mismo concentrado
+        $this->assertSame($concentrado->id, Concentrado::resolver('Mojarras 24')?->id);
+        $this->assertSame($concentrado->id, Concentrado::resolver('blanca')?->id);
 
         // Administrador y trabajador no pueden entrar a Ajustes › Concentrados (exclusivo del propietario)
         $this->actingAs($this->admin)
@@ -274,17 +283,15 @@ class ConcentradosYRacionTest extends TestCase
 
     public function test_despacho_y_recepcion_en_bodega_enlazan_el_concentrado_del_catalogo(): void
     {
-        $this->actingAs($this->propietario)->post(route('admin.bodega.despachos.store'), [
-            'fecha' => '2026-10-15',
-            'proveedor' => 'Italcol',
-            'tipo_concentrado' => 'Finalizador 24%',
-            'bultos' => 5,
-            'peso_bulto_kg' => 40,
-            'lote' => 'LOT-24',
+        $catalogo = Concentrado::create(['nombre' => 'Finalizador 24%', 'nombre_corto' => 'Azul', 'proteina_porcentaje' => 24, 'peso_bulto_kg' => 40]);
+        $despachar = fn (string $tipo) => $this->actingAs($this->propietario)->post(route('admin.bodega.despachos.store'), [
+            'fecha' => '2026-10-15', 'proveedor' => 'Proveedor', 'tipo_concentrado' => $tipo, 'bultos' => 5, 'peso_bulto_kg' => 40, 'lote' => 'LOT-24',
         ])->assertRedirect(route('admin.bodega.index'));
 
-        $despacho = DespachoAlimento::query()->firstOrFail();
-        $this->assertNotNull($despacho->concentrado_id);
+        // Por su nombre corto: queda con el nombre y el id del catálogo
+        $despachar('azul');
+        $despacho = DespachoAlimento::query()->latest('id')->firstOrFail();
+        $this->assertSame([$catalogo->id, 'Finalizador 24%'], [$despacho->concentrado_id, $despacho->tipo_concentrado]);
 
         $this->actingAs($this->admin)->post(route('admin.bodega.recepciones.store'), [
             'despacho_id' => $despacho->id,
@@ -294,8 +301,49 @@ class ConcentradosYRacionTest extends TestCase
         ])->assertRedirect(route('admin.bodega.index'));
 
         $stock = StockAlimento::query()->where('tipo_concentrado', 'Finalizador 24%')->firstOrFail();
-        $this->assertSame($despacho->concentrado_id, $stock->concentrado_id);
+        $this->assertSame($catalogo->id, $stock->concentrado_id);
         $this->assertEquals(200.0, (float) $stock->cantidad_kg);
+
+        // Un nombre que no está en el catálogo se guarda como texto, sin concentrado: la bodega no agrega al catálogo
+        $despachar('Concentrado nuevo');
+        $this->assertNull(DespachoAlimento::query()->latest('id')->first()->concentrado_id);
+        $this->actingAs($this->admin)->post(route('admin.bodega.recepciones.store'), [
+            'fecha' => '2026-10-15', 'tipo_concentrado' => 'Otro sin catálogo', 'proveedor' => 'Proveedor', 'lote' => 'L2', 'bultos' => 2, 'peso_bulto_kg' => 40,
+        ])->assertSessionHasNoErrors();
+        $this->assertNull(StockAlimento::query()->where('tipo_concentrado', 'Otro sin catálogo')->sole()->concentrado_id);
+        $this->assertSame(1, Concentrado::count());
+    }
+
+    public function test_el_concentrado_de_la_fase_manda_sobre_el_del_tramo_de_peso(): void
+    {
+        $delTramo = Concentrado::create(['nombre' => 'Treinta', 'nombre_corto' => 'Blanca', 'proteina_porcentaje' => 30]);
+        $deFase = Concentrado::create(['nombre' => 'Veinticuatro', 'nombre_corto' => 'Azul', 'proteina_porcentaje' => 24]);
+        $especieId = $this->especie('cachama blanca');
+        TablaRacion::query()->where('especie_id', $especieId)->where('peso_hasta_g', 200)->update(['concentrado_id' => $delTramo->id]);
+        StockAlimento::create(['tipo_concentrado' => 'veinticuatro en bodega', 'concentrado_id' => $deFase->id, 'cantidad_kg' => 100]);
+
+        $engorde = \App\Models\Fase::query()->where('clave', 'engorde')->firstOrFail();
+        $lago = Lago::create(['nombre' => 'E1', 'tipo' => 'tierra', 'fase_id' => $engorde->id]);
+        Siembra::create(['lago_id' => $lago->id, 'especie_id' => $especieId, 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
+            'peso_promedio_inicial_g' => 150, 'peces_vivos' => 100, 'peso_actual_g' => 180, 'biomasa_kg' => 18]);
+
+        // Sin concentrado en la regla de la fase: el del tramo de peso
+        $this->assertSame('Treinta', CalculadoraRacion::paraLago($lago->fresh())['concentrado_sugerido']);
+
+        // Con concentrado en la regla de la fase (Ajustes › Fases): ese, con el texto con que está en bodega
+        $this->actingAs($this->propietario)->post(route('admin.fases.reglas.guardar', $engorde), [
+            'especie_id' => $especieId, 'peso_entrada_g' => 150, 'dias_esperados' => 90, 'concentrado_id' => $deFase->id,
+        ])->assertSessionHasNoErrors();
+        $racion = CalculadoraRacion::paraLago($lago->fresh());
+        $this->assertSame('veinticuatro en bodega', $racion['concentrado_sugerido']);
+        $this->assertSame('Azul (Veinticuatro)', $racion['concentrado_etiqueta']);
+
+        // Un concentrado de otra finca no se puede poner en la regla
+        $otra = Tenant::create(['nombre' => 'Otra', 'codigo' => 'OTRA']);
+        $idAjeno = TenantActual::sinFiltro(fn () => tap((new Concentrado(['nombre' => 'Ajeno']))->forceFill(['tenant_id' => $otra->id]))->save()->id);
+        $this->actingAs($this->propietario)->post(route('admin.fases.reglas.guardar', $engorde), [
+            'especie_id' => $especieId, 'concentrado_id' => $idAjeno,
+        ])->assertSessionHasErrors('concentrado_id');
     }
 
     public function test_alerta_de_muestreo_vencido_a_los_30_dias_y_cierre_al_muestrear(): void
@@ -342,15 +390,23 @@ class ConcentradosYRacionTest extends TestCase
         $this->assertNull(Alerta::abiertas()->where('tipo', Alerta::MUESTREO)->where('referencia', (string) $lago->id)->first());
         $this->assertNotNull($alerta->fresh()->cerrada_at);
 
-        // El propietario puede configurar los días de alerta de muestreo en Ajustes
-        $this->actingAs($this->propietario)->put(route('admin.ajustes.update'), [
-            'nombre' => $this->finca->nombre,
-            'pais' => 'CO',
-            'zona_horaria' => 'America/Bogota',
-            'idioma' => 'es',
-            'alerta_muestreo_dias' => 20,
-        ])->assertRedirect(route('admin.ajustes.edit'));
+        // El plazo es el ajuste «muestreo.plazo_dias» (Ajustes › Operación de la finca). Un lote sin ningún muestreo
+        // cuenta desde la siembra: 25 días no pasan de 30, pero sí de 20
+        $otroLago = Lago::create(['nombre' => 'Lago Nuevo', 'tipo' => 'tierra']);
+        Siembra::create(['lago_id' => $otroLago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-09-20', 'cantidad_alevinos' => 100,
+            'peso_promedio_inicial_g' => 10, 'peces_vivos' => 100, 'peso_actual_g' => 10, 'biomasa_kg' => 1]);
+        EvaluadorAlertas::paraFinca($this->finca->id);
+        $this->assertNull(Alerta::abiertas()->where('tipo', Alerta::MUESTREO)->where('referencia', (string) $otroLago->id)->first());
 
-        $this->assertSame(20, $this->finca->fresh()->alerta_muestreo_dias);
+        $campo = CatalogoAjustes::campo(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
+        $this->actingAs($this->propietario)->put(route('admin.ajustes.operacion'), [
+            CatalogoAjustes::campo(CatalogoAjustes::AGUA_QUIEN_MIDE) => 'ambos', $campo => 20,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame(20, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('tenants', 'alerta_muestreo_dias'));
+
+        EvaluadorAlertas::paraFinca($this->finca->id);
+        $alertaNueva = Alerta::abiertas()->where('tipo', Alerta::MUESTREO)->where('referencia', (string) $otroLago->id)->sole();
+        $this->assertSame([25, 20], [$alertaNueva->datos['dias'], $alertaNueva->datos['plazo']]);
     }
 }

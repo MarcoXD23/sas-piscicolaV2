@@ -8,10 +8,13 @@ use App\Models\Lago;
 use App\Models\Mortalidad;
 use App\Models\Rol;
 use App\Models\User;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\Region;
 use App\Support\TenantActual;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -225,13 +228,14 @@ class EvaluadorAlertas
     }
 
     /**
-     * Lagos con siembra activa que superan el plazo de días sin muestreo de la finca (30 días por defecto).
+     * Lagos con siembra activa que superan el plazo sin muestreo del ajuste de la finca (30 días por defecto).
+     * Un lote sin ningún muestreo cuenta desde su fecha de siembra.
      *
      * @return list<array{tipo: string, referencia: string, severidad: string, datos: array<string, mixed>}>
      */
     private static function muestreos(): array
     {
-        $plazo = (int) (Region::tenant()?->alerta_muestreo_dias ?: 30);
+        $plazo = (int) AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
         $hoy = Region::hoy()->startOfDay();
         $condiciones = [];
 
@@ -245,11 +249,7 @@ class EvaluadorAlertas
 
             foreach ($lago->siembrasActivas as $siembra) {
                 $ultimaFecha = $siembra->muestreos_max_fecha;
-                if ($ultimaFecha === null && abs((float) $siembra->peso_actual_g - (float) $siembra->peso_promedio_inicial_g) >= 0.001 && $lago->fase_id === null) {
-                    continue;
-                }
-
-                $base = $ultimaFecha !== null ? \Illuminate\Support\Carbon::parse($ultimaFecha)->startOfDay() : $siembra->fecha->startOfDay();
+                $base = $ultimaFecha !== null ? Carbon::parse($ultimaFecha)->startOfDay() : $siembra->fecha->startOfDay();
                 $dias = (int) $base->diffInDays($hoy, false);
                 if ($dias > $plazo && ($maxDias === null || $dias > $maxDias)) {
                     $maxDias = $dias;

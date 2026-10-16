@@ -14,7 +14,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'nombre', 'codigo', 'pais', 'zona_horaria', 'idioma',
-        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias', 'alerta_muestreo_dias',
+        'alerta_stock_dias', 'alerta_mortalidad_porcentaje', 'alerta_mortalidad_dias', 'alerta_despacho_dias',
         'peso_canasta_kg', 'peso_canastilla_kg', 'unidad_peso_muestreo', 'formato_hora',
     ];
 
@@ -38,7 +38,6 @@ class Tenant extends Model
             'alerta_mortalidad_porcentaje' => 'float',
             'alerta_mortalidad_dias' => 'integer',
             'alerta_despacho_dias' => 'integer',
-            'alerta_muestreo_dias' => 'integer',
         ];
     }
 

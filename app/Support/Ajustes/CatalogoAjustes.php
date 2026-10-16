@@ -11,7 +11,8 @@ use InvalidArgumentException;
  * - Solo se agregan los ajustes que usa alguna función (docs/diseno/dia-de-proceso.md, tema 1: no construir opciones
  *   que nadie ha pedido). Un ajuste nuevo se agrega aquí, con sus textos en lang/es/ajustes_finca.php; no hace falta
  *   migración.
- * - Tipos: por ahora solo «opcion» (una de una lista). Otros tipos se agregan cuando un ajuste los necesite.
+ * - Tipos: «opcion» (una de una lista) y «entero» (un número entre min y max). Otros tipos se agregan cuando un
+ *   ajuste los necesite.
  */
 final class CatalogoAjustes
 {
@@ -24,8 +25,15 @@ final class CatalogoAjustes
 
     public const QUIEN_MIDE_ADMINISTRADOR = 'administrador';
 
+    /** Días sin muestreo después de los cuales un lago con peces avisa «muestreo vencido» (lo aplica la fase F3). */
+    public const MUESTREO_PLAZO_DIAS = 'muestreo.plazo_dias';
+
+    public const TIPO_OPCION = 'opcion';
+
+    public const TIPO_ENTERO = 'entero';
+
     /**
-     * @return array<string, array{seccion: string, tipo: string, opciones: list<string>, defecto: string}>
+     * @return array<string, array{seccion: string, tipo: string, opciones?: list<string>, min?: int, max?: int, defecto: string|int}>
      */
     public static function todos(): array
     {
@@ -33,9 +41,17 @@ final class CatalogoAjustes
             // Por defecto «ambos»: como hoy (el administrador desde Lagos y el celador desde Seguridad & Noche)
             self::AGUA_QUIEN_MIDE => [
                 'seccion' => 'agua',
-                'tipo' => 'opcion',
+                'tipo' => self::TIPO_OPCION,
                 'opciones' => [self::QUIEN_MIDE_AMBOS, self::QUIEN_MIDE_CELADOR, self::QUIEN_MIDE_ADMINISTRADOR],
                 'defecto' => self::QUIEN_MIDE_AMBOS,
+            ],
+            // Por defecto 30 días (diseño, tema 15.3: muestreo cada 30 días)
+            self::MUESTREO_PLAZO_DIAS => [
+                'seccion' => 'muestreo',
+                'tipo' => self::TIPO_ENTERO,
+                'min' => 1,
+                'max' => 180,
+                'defecto' => 30,
             ],
         ];
     }
@@ -45,7 +61,7 @@ final class CatalogoAjustes
         return array_key_exists($clave, self::todos());
     }
 
-    /** @return array{seccion: string, tipo: string, opciones: list<string>, defecto: string} */
+    /** @return array{seccion: string, tipo: string, opciones?: list<string>, min?: int, max?: int, defecto: string|int} */
     public static function definicion(string $clave): array
     {
         return self::todos()[$clave] ?? throw new InvalidArgumentException("Ajuste desconocido: {$clave}");

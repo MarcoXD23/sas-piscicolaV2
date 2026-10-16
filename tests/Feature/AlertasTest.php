@@ -238,9 +238,11 @@ class AlertasTest extends TestCase
         $agua = 'Amonio de 1,5 mg/L por encima de 1 mg/L.';
         $diferencia = 'faltan 20 kg';
 
-        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 3]))->assertSee($stock)->assertSee($agua)->assertSee($diferencia);
+        // El lote lleva 44 días sin ningún muestreo (desde la siembra): también avisa «muestreo vencido» (F3)
+        $muestreo = 'días sin muestreo';
+        $this->actingAs($this->propietario)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 4]))->assertSee($stock)->assertSee($agua)->assertSee($diferencia)->assertSee($muestreo);
         // El administrador recibe el concentrado: ve el stock, pero no la diferencia de lo que despachó el propietario
-        $this->actingAs($administrador)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 2]))->assertSee($stock)->assertSee($agua)->assertDontSee($diferencia);
+        $this->actingAs($administrador)->get(route('inicio'))->assertSee(__('alertas.inicio.titulo', ['cantidad' => 3]))->assertSee($stock)->assertSee($agua)->assertSee($muestreo)->assertDontSee($diferencia);
 
         $this->actingAs($this->propietario)->get(route('admin.alertas.index'))->assertOk()->assertSee($stock)->assertSee($agua)->assertSee($diferencia);
         $this->actingAs($this->propietario)->get(route('admin.alertas.index', ['tipo' => Alerta::AGUA]))->assertDontSee($stock)->assertSee($agua);

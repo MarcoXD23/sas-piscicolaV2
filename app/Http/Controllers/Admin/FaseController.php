@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
+use App\Models\Concentrado;
 use App\Models\Especie;
 use App\Models\Fase;
 use App\Models\ReglaFase;
@@ -35,6 +36,8 @@ class FaseController extends Controller
         return view('admin.fases.index', [
             'fases' => $fases,
             'especies' => $especies,
+            'opcionesConcentrados' => ['' => __('fases.reglas.concentrado_del_tramo')]
+                + Concentrado::query()->activos()->orderBy('nombre')->get()->mapWithKeys(fn (Concentrado $c) => [$c->id => $c->etiqueta()])->all(),
             'siguienteOrden' => ((int) $fases->max('orden')) + 1,
         ]);
     }
@@ -108,6 +111,7 @@ class FaseController extends Controller
             'supervivencia_porcentaje' => ['nullable', 'numeric', 'min:1', 'max:100'],
             'densidad_min_m2' => ['nullable', 'numeric', 'min:0.1', 'max:5000'],
             'densidad_max_m2' => ['nullable', 'numeric', 'min:0.1', 'max:5000'],
+            'concentrado_id' => ['nullable', 'integer', Rule::exists('concentrados', 'id')->where('tenant_id', $tenantId)],
         ]);
 
         foreach ([['peso_entrada_g', 'peso_salida_g'], ['densidad_min_m2', 'densidad_max_m2']] as [$minimo, $maximo]) {
@@ -128,6 +132,7 @@ class FaseController extends Controller
                     'supervivencia_porcentaje' => $datos['supervivencia_porcentaje'] ?? null,
                     'densidad_min_m2' => $datos['densidad_min_m2'] ?? null,
                     'densidad_max_m2' => $datos['densidad_max_m2'] ?? null,
+                    'concentrado_id' => ! empty($datos['concentrado_id']) ? (int) $datos['concentrado_id'] : null,
                 ],
             );
 

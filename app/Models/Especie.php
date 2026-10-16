@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\PerteneceATenant;
 use App\Support\CatalogoEspecies;
+use App\Support\TenantActual;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -52,6 +53,18 @@ class Especie extends Model
             'procesamiento' => 'array',
             'ficha_orientativa' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Una especie con tipo de alimentación y sin tabla de ración arranca con la tabla de su perfil (TablaRacion):
+        // así la ración sugerida sigue como antes de F3, cuando las tablas eran fijas por perfil. Si ya tiene tabla, no se toca.
+        static::saved(function (Especie $especie) {
+            if ($especie->alimentacion !== null && ($especie->wasRecentlyCreated || $especie->wasChanged('alimentacion'))
+                && ! TenantActual::sinFiltro(fn () => TablaRacion::query()->where('tenant_id', $especie->tenant_id)->where('especie_id', $especie->id)->exists())) {
+                TablaRacion::cargarParaEspecie($especie);
+            }
+        });
     }
 
     /** Carga las 6 especies por defecto en una finca (editables y desactivables). */

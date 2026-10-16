@@ -63,7 +63,7 @@
                         <span>{{ __('fases.reglas.titulo', ['fase' => $fase->nombre]) }}</span>
                         <x-icono nombre="abajo" class="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
                     </summary>
-                    <p class="mt-1 text-sm text-tinta-suave">{{ __('fases.reglas.subtitulo') }}</p>
+                    <p class="mt-1 text-sm text-tinta-suave">{{ __('fases.reglas.subtitulo') }} {{ __('fases.reglas.dias_ayuda') }}</p>
 
                     <div class="mt-4 divide-y divide-renglon">
                         @foreach ($especies as $especie)
@@ -82,6 +82,8 @@
                                         <x-campo nombre="densidad_min_m2" id="regla-dmin-{{ $fase->id }}-{{ $especie->id }}" :etiqueta="__('fases.reglas.densidad_min_m2')" tipo="number" step="0.1" min="0.1" max="5000" inputmode="decimal" :valor="$regla?->densidad_min_m2" />
                                         <x-campo nombre="densidad_max_m2" id="regla-dmax-{{ $fase->id }}-{{ $especie->id }}" :etiqueta="__('fases.reglas.densidad_max_m2')" tipo="number" step="0.1" min="0.1" max="5000" inputmode="decimal" :valor="$regla?->densidad_max_m2" />
                                     </div>
+                                    <x-seleccion nombre="concentrado_id" id="regla-concentrado-{{ $fase->id }}-{{ $especie->id }}" :etiqueta="__('fases.reglas.concentrado')"
+                                                 :opciones="$opcionesConcentrados" :valor="$regla?->concentrado_id ?? ''" :ayuda="__('fases.reglas.concentrado_ayuda')" />
                                     <x-boton variante="secundario">{{ __('fases.reglas.guardar') }}</x-boton>
                                 </x-formulario>
                             </div>
