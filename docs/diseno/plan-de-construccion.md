@@ -25,6 +25,15 @@ Los días son estimados de trabajo.
 
 Mientras tanto, los días de proceso del piloto se registran como hoy, con la cosecha por pesadas. **De ellos salen los números reales** del día de proceso: tolerancias del cuadre, topes y rendimiento.
 
+### Fase agregada: invitaciones de finca (2 días)
+
+Pedida por el usuario el 2026-10-16 y construida antes de F5. Desde el panel de plataforma se invita un correo, con un enlace de un solo uso que vence en 7 días, y el cliente crea su finca él mismo. Lo dejado para después:
+
+- **el registro público, con o sin aprobación:** cuando haya clientes que lleguen solos;
+- **el cobro.**
+
+Ver «Invitar una finca» en el README.
+
 ### Después del piloto
 
 **Orden:** F5 → F6a → F6b → F6c → F6d → F7 → F8a → F8b → F9 → F10 → F11 → F12 → F13.

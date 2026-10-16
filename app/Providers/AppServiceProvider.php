@@ -142,6 +142,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         RateLimiter::for('registro', fn (Request $request) => Limit::perMinute(10)->by('registro|'.$request->ip()));
+        // Enlace de invitación para crear una finca: 10 por minuto por IP (nadie adivina códigos a punta de intentos)
+        RateLimiter::for('invitacion', fn (Request $request) => Limit::perMinute(10)->by('invitacion|'.$request->ip()));
 
         // Cada pregunta al asistente cuesta dinero: 10 por minuto por persona y topes diarios por persona y por finca
         RateLimiter::for('asistente', fn (Request $request) => [

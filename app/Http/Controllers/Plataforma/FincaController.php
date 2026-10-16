@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Plataforma;
 
 use App\Http\Controllers\Controller;
+use App\Models\InvitacionFinca;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Datos\EliminadorFinca;
@@ -23,6 +24,8 @@ class FincaController extends Controller
     {
         return view('plataforma.fincas', [
             'fincas' => TenantActual::sinFiltro(fn () => Tenant::query()->withCount('users')->orderBy('nombre')->get()),
+            // Invitaciones para crear fincas: las más nuevas primero (las de los últimos 90 días)
+            'invitaciones' => InvitacionFinca::query()->with('fincaCreada')->where('created_at', '>=', now()->subDays(90))->latest('id')->get(),
         ]);
     }
 

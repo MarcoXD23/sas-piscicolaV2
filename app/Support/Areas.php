@@ -26,7 +26,7 @@ final class Areas
     /** Pantallas neutras a propósito (generales o de la cuenta): sin color de área. */
     public const NEUTRAS = [
         'inicio', 'mi-cuenta.*', 'admin.ajustes.*', 'admin.fases.*', 'admin.concentrados.*', 'admin.datos.*', 'admin.agenda.*',
-        'login', 'registro', 'password.*', 'dos-pasos.*', 'legal.*', 'plataforma.*',
+        'login', 'registro', 'invitacion.*', 'password.*', 'dos-pasos.*', 'legal.*', 'plataforma.*',
     ];
 
     /** Ícono de cada área (en el recuadro del título de sus pantallas). */

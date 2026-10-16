@@ -107,6 +107,22 @@ document.querySelectorAll('[data-racion-unidad]').forEach((grupo) => {
     });
 });
 
+// Copiar un texto (el enlace de una invitación en el panel de plataforma). Sin portapapeles, queda seleccionado
+document.querySelectorAll('[data-copiar-grupo]').forEach((grupo) => {
+    const texto = grupo.querySelector('[data-copiar-texto]');
+    const boton = grupo.querySelector('[data-copiar]');
+    if (!texto || !boton) return;
+    boton.addEventListener('click', async () => {
+        texto.select();
+        try {
+            await navigator.clipboard.writeText(texto.value);
+            boton.textContent = boton.dataset.copiado;
+        } catch {
+            // El texto ya quedó seleccionado para copiarlo a mano
+        }
+    });
+});
+
 // Sin conexión: franja de aviso (la página puede ser una copia guardada por el service worker; solo consulta)
 const franjaSinConexion = document.querySelector('[data-sin-conexion]');
 const mostrarConexion = () => { if (franjaSinConexion) franjaSinConexion.hidden = navigator.onLine; };

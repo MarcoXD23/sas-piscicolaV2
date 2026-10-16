@@ -2,20 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Rol;
-use App\Models\Tenant;
-use App\Models\User;
-use App\Rules\NoIgualAlCorreo;
+use App\Support\Fincas\CreadorFinca;
 use App\Support\Region;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 /**
  * Crea una finca (tenant) con su región y su propietario inicial. La contraseña se pide por consola.
+ * La creación es la misma de las invitaciones de la plataforma (CreadorFinca).
  */
 class CrearPropietario extends Command
 {
@@ -40,7 +35,7 @@ class CrearPropietario extends Command
         $clave = (string) $this->secret(__('comandos.crear_propietario.clave'));
         $confirmacion = (string) $this->secret(__('comandos.crear_propietario.confirmacion'));
 
-        $validador = Validator::make([
+        $datos = [
             'finca' => $finca,
             'codigo' => $codigo,
             'pais' => $pais,
@@ -48,20 +43,8 @@ class CrearPropietario extends Command
             'nombre' => $nombre,
             'correo' => $correo,
             'clave' => $clave,
-            'clave_confirmation' => $confirmacion,
-        ], [
-            'finca' => ['required', 'string', 'max:255'],
-            'codigo' => ['required', 'alpha_dash', 'max:60', 'unique:tenants,codigo'],
-            'pais' => ['required', function ($atributo, $valor, $falla) {
-                if (! Region::paisValido($valor)) {
-                    $falla(__('comandos.crear_propietario.pais_invalido'));
-                }
-            }],
-            'zona_horaria' => ['required', Rule::in(Region::zonasValidas())],
-            'nombre' => ['required', 'string', 'max:255'],
-            'correo' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'clave' => ['required', 'confirmed', Password::min(8), new NoIgualAlCorreo($correo)],
-        ], [
+        ];
+        $validador = Validator::make($datos + ['clave_confirmation' => $confirmacion], CreadorFinca::reglas($correo), [
             'zona_horaria.in' => __('comandos.crear_propietario.zona_invalida'),
         ]);
 
@@ -73,22 +56,7 @@ class CrearPropietario extends Command
             return self::FAILURE;
         }
 
-        DB::transaction(function () use ($finca, $codigo, $pais, $zona, $nombre, $correo, $clave): void {
-            $tenant = Tenant::create([
-                'nombre' => $finca,
-                'codigo' => $codigo,
-                'pais' => $pais,
-                'zona_horaria' => $zona,
-                'idioma' => Region::IDIOMA_POR_DEFECTO,
-            ]);
-
-            $usuario = new User(['name' => $nombre, 'email' => $correo, 'password' => $clave]);
-            $usuario->tenant_id = $tenant->id;
-            $usuario->aprobado_at = now();
-            $usuario->save();
-
-            $usuario->asignarRoles([Rol::PROPIETARIO]);
-        });
+        CreadorFinca::crear($datos);
 
         $this->info(__('comandos.crear_propietario.creado', ['finca' => $finca, 'codigo' => $codigo, 'pais' => $pais, 'zona' => $zona]));
 

@@ -76,8 +76,8 @@ class AislamientoFincasTest extends TestCase
         'admin.personal.update' => ['roles' => [Rol::TRABAJADOR]],
     ];
 
-    /** Parámetros que no son registros de una finca (token de contraseña, ficha de especie, panel de plataforma). */
-    private const NO_SON_DE_FINCA = ['token', 'slug', 'finca'];
+    /** Parámetros que no son registros de una finca (token de contraseña, ficha de especie, panel de plataforma, enlace de invitación). */
+    private const NO_SON_DE_FINCA = ['token', 'slug', 'finca', 'codigo', 'invitacion'];
 
     /** Parámetros que no son registros (van junto a un id de otra finca, que es lo que se prueba). */
     private const VALORES_FIJOS = ['version' => 'ligera'];

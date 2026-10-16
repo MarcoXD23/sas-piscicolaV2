@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\AsistenteController;
 use App\Http\Controllers\Auth\DosPasosController;
+use App\Http\Controllers\Auth\InvitacionFincaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RecuperarContrasenaController;
 use App\Http\Controllers\Auth\RegistroController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\Noche\NocheController;
 use App\Http\Controllers\Noche\RondaController;
 use App\Http\Controllers\Plataforma\DosPasosController as PlataformaDosPasosController;
 use App\Http\Controllers\Plataforma\FincaController as PlataformaFincaController;
+use App\Http\Controllers\Plataforma\InvitacionController as PlataformaInvitacionController;
 use App\Http\Controllers\Plataforma\LoginController as PlataformaLoginController;
 use App\Http\Controllers\SaludController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -61,6 +63,9 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/registro', [RegistroController::class, 'create'])->name('registro');
     Route::post('/registro', [RegistroController::class, 'store'])->middleware('throttle:registro');
+    // Enlace de invitación para crear una finca (lo genera el panel de plataforma): un solo uso, vence en 7 días
+    Route::get('/invitacion/{codigo}', [InvitacionFincaController::class, 'show'])->middleware('throttle:invitacion')->name('invitacion.show');
+    Route::post('/invitacion/{codigo}', [InvitacionFincaController::class, 'store'])->middleware('throttle:invitacion')->name('invitacion.store');
 
     Route::get('/olvide-contrasena', [RecuperarContrasenaController::class, 'create'])->name('password.request');
     Route::post('/olvide-contrasena', [RecuperarContrasenaController::class, 'store'])->middleware('throttle:pedir-enlace-contrasena')->name('password.email');
@@ -321,5 +326,7 @@ Route::prefix('plataforma')->name('plataforma.')->group(function () {
         Route::post('/fincas/{finca}/reactivar', [PlataformaFincaController::class, 'reactivar'])->name('fincas.reactivar');
         Route::post('/fincas/{finca}/eliminar', [PlataformaFincaController::class, 'eliminar'])->name('fincas.eliminar');
         Route::post('/fincas/{finca}/cancelar-eliminacion', [PlataformaFincaController::class, 'cancelarEliminacion'])->name('fincas.cancelar-eliminacion');
+        Route::post('/invitaciones', [PlataformaInvitacionController::class, 'store'])->name('invitaciones.store');
+        Route::post('/invitaciones/{invitacion}/anular', [PlataformaInvitacionController::class, 'anular'])->whereNumber('invitacion')->name('invitaciones.anular');
     });
 });

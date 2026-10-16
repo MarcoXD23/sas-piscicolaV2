@@ -5,6 +5,49 @@
 @section('contenido')
     <x-encabezado :titulo="__('plataforma.fincas.titulo')" :subtitulo="__('plataforma.fincas.subtitulo', ['activas' => $fincas->reject->estaSuspendida()->count(), 'total' => $fincas->count()])" />
 
+    {{-- Invitar una finca: enlace de un solo uso (InvitacionFinca). El enlace solo se muestra aquí, una vez --}}
+    <x-tarjeta class="mb-6 max-w-2xl" :titulo="__('invitaciones.titulo')" :subtitulo="__('invitaciones.subtitulo', ['dias' => \App\Models\InvitacionFinca::DIAS_VIGENCIA])">
+        @if (session('invitacion_enlace'))
+            <div class="mb-5 rounded-ficha border border-bien-borde bg-bien-fondo p-4" data-copiar-grupo>
+                <label for="invitacion-enlace" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('invitaciones.enlace') }}</label>
+                <input id="invitacion-enlace" type="text" readonly value="{{ session('invitacion_enlace') }}" data-copiar-texto
+                       class="block min-h-12 w-full rounded-ficha border border-renglon bg-ficha px-4 text-base text-tinta">
+                <p class="mt-1.5 text-sm text-tinta-suave">{{ __('invitaciones.enlace_ayuda') }}</p>
+                <x-boton tipo="button" variante="secundario" class="mt-3" data-copiar :data-copiado="__('invitaciones.copiado')">{{ __('invitaciones.copiar') }}</x-boton>
+            </div>
+        @endif
+        <x-formulario :action="route('plataforma.invitaciones.store')">
+            <x-campo nombre="correo" id="invitacion-correo" :etiqueta="__('invitaciones.correo')" tipo="email" inputmode="email" autocomplete="off" required />
+            <x-boton>{{ __('invitaciones.invitar') }}</x-boton>
+        </x-formulario>
+
+        <h3 class="mt-6 border-t border-renglon pt-4 text-base font-bold text-tinta">{{ __('invitaciones.lista') }}</h3>
+        @forelse ($invitaciones as $invitacion)
+            @php $estado = $invitacion->estado(); @endphp
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-renglon py-3 last:border-b-0">
+                <div>
+                    <p class="font-semibold text-tinta">{{ $invitacion->correo }}</p>
+                    <p class="text-sm text-tinta-suave">
+                        @if ($estado === \App\Models\InvitacionFinca::USADA)
+                            {{ $invitacion->fincaCreada ? __('invitaciones.estados.usada', ['finca' => $invitacion->fincaCreada->nombre]) : __('invitaciones.estados.usada_sin_finca') }}
+                        @else
+                            {{ __('invitaciones.estados.'.$estado) }}
+                        @endif
+                        · {{ __('invitaciones.columna_vence') }} {{ \App\Support\Region::local($invitacion->vence_at)->format('d/m/Y') }}
+                    </p>
+                </div>
+                @if ($estado === \App\Models\InvitacionFinca::PENDIENTE)
+                    <x-formulario :action="route('plataforma.invitaciones.anular', $invitacion)" class="!space-y-0"
+                                  :confirmar="__('invitaciones.anular_confirmar', ['correo' => $invitacion->correo])">
+                        <x-boton variante="secundario">{{ __('invitaciones.anular') }}</x-boton>
+                    </x-formulario>
+                @endif
+            </div>
+        @empty
+            <p class="mt-2 text-sm text-tinta-suave">{{ __('invitaciones.vacio') }}</p>
+        @endforelse
+    </x-tarjeta>
+
     <x-tabla :columnas="[__('plataforma.fincas.finca'), __('plataforma.fincas.usuarios'), __('plataforma.fincas.estado'), __('plataforma.fincas.creada'), '']" :vacio="__('plataforma.fincas.vacio')">
         @foreach ($fincas as $finca)
             <tr>

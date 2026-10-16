@@ -177,6 +177,22 @@ php artisan piscicola:crear-propietario
 
 El personal se registra en `/registro` con el código de la finca, y el propietario lo aprueba en **Personal**.
 
+### Invitar una finca
+
+Desde el panel de plataforma se invita a un cliente para que **él mismo cree su finca**, sin entrar al servidor:
+
+1. En `/plataforma`, en «Invitar una finca», se escribe el correo del cliente.
+2. Sale un **enlace de un solo uso que vence en 7 días** (`/invitacion/{codigo}`). Se copia y se envía por WhatsApp o correo: el sistema no envía correos.
+3. El cliente abre el enlace y llena su finca (nombre, código, país y zona horaria), su nombre y su contraseña, y acepta los términos. El correo es el invitado y no se cambia.
+4. La finca queda creada igual que con el comando, y el cliente entra como propietario.
+
+Algunos detalles:
+
+- La finca y su propietario se crean con [`CreadorFinca`](app/Support/Fincas/CreadorFinca.php), el mismo paso que usa `piscicola:crear-propietario`.
+- La tabla `invitaciones_finca` es de la plataforma, sin `tenant_id`. Guarda el sha256 del código del enlace, nunca el código mismo, por eso el enlace se muestra una sola vez.
+- Las invitaciones pendientes se pueden anular.
+- Un enlace vencido, anulado, usado o inventado muestra siempre el mismo aviso. La página tiene un límite de 10 intentos por minuto por IP.
+
 ### Panel de plataforma (dueño del software)
 
 En `/plataforma` el dueño del software ve todas las fincas (usuarios, estado y fecha de creación) y puede **suspender** o **reactivar** cada una. No es un rol de finca: usa una tabla (`administradores_plataforma`) y un ingreso (`guard` `plataforma`) aparte, sin `tenant_id`. Ningún usuario de finca puede entrar al panel y el acceso de plataforma no entra a los módulos de las fincas.
