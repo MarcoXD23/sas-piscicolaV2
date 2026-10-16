@@ -46,7 +46,7 @@
                         {{-- Si perdió su teléfono y sus códigos de recuperación, el propietario le quita los dos pasos --}}
                         <span class="mt-2 inline-block rounded-full bg-info-fondo px-3 py-1 text-sm font-semibold text-info">{{ __('cuenta.dos_pasos.activa_corto') }}</span>
                         <form method="POST" action="{{ route('admin.personal.quitar-dos-pasos', $persona->id) }}" class="mt-2"
-                              onsubmit="return confirm(@js(__('cuenta.dos_pasos.confirmar_quitar', ['nombre' => $persona->name])))">
+                              data-confirmar="{{ __('cuenta.dos_pasos.confirmar_quitar', ['nombre' => $persona->name]) }}">
                             @csrf
                             <button class="inline-flex min-h-12 items-center text-sm font-semibold text-alerta underline">{{ __('cuenta.dos_pasos.quitar') }}</button>
                         </form>

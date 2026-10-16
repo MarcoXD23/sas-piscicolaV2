@@ -55,12 +55,16 @@
                     <div role="listitem" tabindex="0" data-tip="{{ $texto }}" aria-label="{{ $texto }}"
                          class="group relative flex h-full flex-1 cursor-default items-end justify-center rounded-sm outline-none focus-visible:bg-papel-hondo">
                         @if ($indice === $indiceMaximo)
+                            {{-- Sobre la columna más alta: su posición necesita calc(), así que la pone el JS (data-abajo) --}}
                             <span class="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-bold tabular-nums text-tinta"
-                                  style="bottom: calc({{ $alto }}% + 4px)">{{ $numero($dato['valor']) }}</span>
+                                  data-abajo="{{ round($alto, 2) }}">{{ $numero($dato['valor']) }}</span>
                         @endif
                         @if ($alto > 0)
-                            <span class="block w-full max-w-6 rounded-t-[3px] bg-marca-600 transition-colors group-hover:bg-marca-800 group-focus-visible:bg-marca-800"
-                                  style="height: {{ max($alto, 1.5) }}%"></span>
+                            {{-- SVG con el alto como atributo (la Content-Security-Policy no permite style en el HTML) --}}
+                            @php $altoBarra = round(max($alto, 1.5), 2); @endphp
+                            <svg class="block h-full w-full max-w-6" aria-hidden="true">
+                                <rect width="100%" y="{{ 100 - $altoBarra }}%" height="{{ $altoBarra }}%" class="fill-marca-600 transition-colors group-hover:fill-marca-800 group-focus-visible:fill-marca-800" />
+                            </svg>
                         @endif
                     </div>
                 @endforeach

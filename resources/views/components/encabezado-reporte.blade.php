@@ -11,7 +11,7 @@
                     <x-icono nombre="reporte" class="h-5 w-5" /> {{ $formato === 'excel' ? __('componentes.descargar_excel') : __('componentes.descargar_pdf') }}
                 </x-boton>
             @endforeach
-            <x-boton tipo="button" onclick="window.print()">
+            <x-boton tipo="button" data-imprimir>
                 <x-icono nombre="imprimir" class="h-5 w-5" /> {{ __('componentes.imprimir') }}
             </x-boton>
         </div>

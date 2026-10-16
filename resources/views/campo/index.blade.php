@@ -13,7 +13,8 @@
     <title>{{ __('campo.titulo') }} · {{ config('app.name') }}</title>
     <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
     <link rel="manifest" href="/manifest.webmanifest">
-    <script>window.textos = @json(__('js'));</script>
+    {{-- Textos de la interfaz para el JS: JSON que no se ejecuta (la Content-Security-Policy no permite scripts en línea) --}}
+    <script type="application/json" id="textos-js">@json(__('js'))</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-papel">

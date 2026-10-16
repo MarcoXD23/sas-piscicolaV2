@@ -34,7 +34,7 @@
                                 </form>
                             @endif
                         @endforeach
-                        <form method="POST" action="{{ route('admin.especies.fotos.destroy', [$especie, $foto]) }}" onsubmit="return confirm(@js(__('especies.fotos.confirmar_borrar')))">
+                        <form method="POST" action="{{ route('admin.especies.fotos.destroy', [$especie, $foto]) }}" data-confirmar="{{ __('especies.fotos.confirmar_borrar') }}">
                             @csrf
                             @method('DELETE')
                             <button class="flex h-12 w-12 items-center justify-center rounded-ficha text-tinta-suave ring-1 ring-renglon-fuerte transition-colors hover:bg-alerta-fondo hover:text-alerta" aria-label="{{ __('especies.fotos.borrar') }}" title="{{ __('especies.fotos.borrar') }}">

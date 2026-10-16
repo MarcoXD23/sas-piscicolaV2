@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "test:js": "node --test tests/js/sin-conexion.test.mjs tests/js/paquete.test.mjs tests/js/campo.test.mjs tests/js/unidades-peso.test.mjs tests/js/contrasena.test.mjs tests/js/hora.test.mjs"
+        "test:js": "node --test tests/js/sin-conexion.test.mjs tests/js/paquete.test.mjs tests/js/campo.test.mjs tests/js/unidades-peso.test.mjs tests/js/contrasena.test.mjs tests/js/hora.test.mjs tests/js/pesaje.test.mjs"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -18,8 +18,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "@fontsource-variable/nunito-sans": "^5.3.0",
-        "alpinejs": "^3.17.4"
+        "@fontsource-variable/nunito-sans": "^5.3.0"
     },
     "overrides": {
         "shell-quote": "^1.12.0"

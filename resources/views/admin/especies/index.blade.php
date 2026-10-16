@@ -59,7 +59,7 @@
                                 <x-boton variante="secundario" class="!min-h-12 !px-3 !py-2 text-sm">{{ __($especie->activo ? 'especies.catalogo_finca.desactivar' : 'especies.catalogo_finca.activar') }}</x-boton>
                             </form>
                             @if ($especie->siembras_count === 0)
-                                <form method="POST" action="{{ route('admin.especies.destroy', $especie) }}" onsubmit="return confirm(@js(__('especies.catalogo_finca.confirmar_eliminar', ['nombre' => $especie->nombre])))">
+                                <form method="POST" action="{{ route('admin.especies.destroy', $especie) }}" data-confirmar="{{ __('especies.catalogo_finca.confirmar_eliminar', ['nombre' => $especie->nombre]) }}">
                                     @csrf
                                     @method('DELETE')
                                     <x-boton variante="secundario" class="!min-h-12 !px-3 !py-2 text-sm !text-alerta">{{ __('especies.catalogo_finca.eliminar') }}</x-boton>

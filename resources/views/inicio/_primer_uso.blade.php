@@ -16,9 +16,9 @@
         </div>
         <p class="mt-1 text-sm text-tinta-suave">{{ __('primer_uso.codigo_ayuda') }}</p>
     </div>
-    <div class="mb-5 h-2 overflow-hidden rounded-full bg-papel-hondo" aria-hidden="true">
-        <div class="h-full rounded-full bg-marca-700" style="width: {{ round($hechos / count($pasos) * 100) }}%"></div>
-    </div>
+    {{-- <progress> en lugar de un ancho en línea (la Content-Security-Policy no permite style en el HTML) --}}
+    <progress max="{{ count($pasos) }}" value="{{ $hechos }}" aria-hidden="true"
+              class="mb-5 block h-2 w-full appearance-none overflow-hidden rounded-full [&::-moz-progress-bar]:bg-marca-700 [&::-webkit-progress-bar]:bg-papel-hondo [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-marca-700"></progress>
 
     {{-- Una secuencia real: el número de cada paso informa el orden --}}
     <ol class="divide-y divide-renglon">

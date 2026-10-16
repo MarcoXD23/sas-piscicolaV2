@@ -1,10 +1,11 @@
-@props(['action', 'metodo' => 'POST'])
+@props(['action', 'metodo' => 'POST', 'confirmar' => null])
 
 @php
     $metodo = strtoupper($metodo);
 @endphp
 
-<form action="{{ $action }}" method="{{ $metodo === 'GET' ? 'GET' : 'POST' }}" {{ $attributes->class('space-y-5') }}>
+{{-- confirmar: pregunta antes de enviar (data-confirmar, resources/js/app.js; sin onsubmit, que la CSP bloquea) --}}
+<form action="{{ $action }}" method="{{ $metodo === 'GET' ? 'GET' : 'POST' }}" @if ($confirmar) data-confirmar="{{ $confirmar }}" @endif {{ $attributes->class('space-y-5') }}>
     @if ($metodo !== 'GET')
         @csrf
     @endif
@@ -15,4 +16,3 @@
 
     {{ $slot }}
 </form>
-

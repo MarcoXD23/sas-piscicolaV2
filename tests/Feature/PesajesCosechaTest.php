@@ -228,8 +228,9 @@ class PesajesCosechaTest extends TestCase
             ->assertSee('value="2026-10-20"', false)            // fecha de hoy en la zona de la finca
             ->assertSee('15:30')                                // hora del registro: se muestra, no se edita
             ->assertDontSee('name="hora"', false)
-            ->assertSee('\u0022canasta\u0022:\u00222\u0022', false)            // pesos por defecto de la finca (JSON de Js::from)
-            ->assertSee('\u0022canastilla\u0022:\u00221.5\u0022', false)
+            // Pesos por defecto de la finca en los campos de las vacías
+            ->assertSeeInOrder(['name="peso_canasta_kg"', 'value="2"'], false)
+            ->assertSeeInOrder(['name="peso_canastilla_kg"', 'value="1.5"'], false)
             ->assertSee('<option value="'.$this->siembra->id.'" selected', false)   // lago ya elegido desde su tarjeta
             ->assertSee('<option value="'.$this->administrador->id.'" selected', false);   // despachó: quien registra
     }
@@ -238,7 +239,7 @@ class PesajesCosechaTest extends TestCase
     {
         $pagina = $this->actingAs($this->administrador)->get(route('admin.cosechas.create'))->assertOk();
         // El campo de la meta no tiene nombre: no viaja al servidor
-        $this->assertMatchesRegularExpression('/<input[^>]*x-model="meta"(?![^>]*name=)[^>]*>/', $pagina->getContent());
+        $this->assertMatchesRegularExpression('/<input[^>]*data-meta(?![^>]*name=)[^>]*>/', $pagina->getContent());
         $pagina->assertSee(__('cosechas.meta'));
 
         $this->cosechar(['meta' => 700])->assertSessionHasNoErrors();

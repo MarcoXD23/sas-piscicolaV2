@@ -12,6 +12,6 @@
     @endif
     @for ($i = 0; $i < $renglones; $i++)
         {{-- Largos distintos, como renglones escritos de verdad --}}
-        <div class="esqueleto h-4" style="width: {{ [92, 76, 84, 64][$i % 4] }}%" aria-hidden="true"></div>
+        <div class="esqueleto h-4 {{ ['w-[92%]', 'w-[76%]', 'w-[84%]', 'w-[64%]'][$i % 4] }}" aria-hidden="true"></div>
     @endfor
 </div>

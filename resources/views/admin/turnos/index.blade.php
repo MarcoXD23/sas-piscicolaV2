@@ -77,7 +77,7 @@
                         @unless ($turno->haEmpezado())
                             <x-formulario :action="route('admin.turnos.destroy', $turno)" metodo="DELETE" class="!space-y-0">
                                 <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-ficha text-tinta-suave hover:bg-alerta-fondo hover:text-alerta"
-                                        aria-label="{{ __('turnos.eliminar_turno_de', ['nombre' => $turno->user->name]) }}" onclick="return confirm(@js(__('turnos.confirmar_eliminar')))">
+                                        aria-label="{{ __('turnos.eliminar_turno_de', ['nombre' => $turno->user->name]) }}" data-confirmar="{{ __('turnos.confirmar_eliminar') }}">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
                             </x-formulario>

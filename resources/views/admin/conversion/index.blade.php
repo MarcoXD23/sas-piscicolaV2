@@ -89,7 +89,8 @@
                         <td data-label="{{ __('conversion.fca') }}" class="w-1/3">
                             @if ($fila['fca'] !== null)
                                 <span class="flex items-center gap-2">
-                                    <span class="block h-3 rounded-r-[4px] bg-marca-500" style="width: {{ max($fila['fca'] / $maximo * 100, 2) }}%" aria-hidden="true"></span>
+                                    {{-- SVG con el ancho como atributo (la Content-Security-Policy no permite style en el HTML) --}}
+                                    <svg class="block h-3 flex-1" aria-hidden="true"><rect height="100%" rx="3" width="{{ round(max($fila['fca'] / $maximo * 100, 2), 2) }}%" class="fill-marca-500" /></svg>
                                     <span class="font-semibold tabular-nums">{{ $fca($fila) }}</span>
                                 </span>
                             @else

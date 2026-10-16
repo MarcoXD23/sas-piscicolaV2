@@ -1,5 +1,4 @@
-import Alpine from 'alpinejs';
-import pesaje from './pesaje';
+import { iniciarPesaje } from './pesaje';
 import { iniciarCampo } from './campo';
 import { iniciarPaquete } from './paquete';
 import { iniciarCola } from './sin-conexion';
@@ -7,11 +6,37 @@ import { iniciarVerContrasena } from './contrasena';
 import { iniciarAyudaHora } from './hora';
 import { aCentesimas, leerRecordada, promedio as promedioPeso, recordar, texto as textoPeso, unidadInicial } from './unidades-peso';
 
-window.Alpine = Alpine;
-Alpine.data('pesaje', pesaje);   // tabla de pesadas de la cosecha
-Alpine.start();
+// Textos de la interfaz (lang/es/js.php). El layout los publica en <script type="application/json" id="textos-js">,
+// que no se ejecuta: la Content-Security-Policy no permite scripts en línea. Se leen antes que todo lo demás.
+try {
+    window.textos = JSON.parse(document.getElementById('textos-js')?.textContent || '{}');
+} catch {
+    window.textos = {};
+}
 
-// Textos de la interfaz (lang/es/js.php, publicados por el layout en window.textos). Reemplaza :marcadores.
+// Tabla de pesadas de la cosecha (sin Alpine: la CSP no permite evaluar código escrito en el HTML)
+document.querySelectorAll('[data-pesaje]').forEach(iniciarPesaje);
+
+// Pedir confirmación (data-confirmar en un formulario o en un botón) e imprimir (data-imprimir): sin onclick ni
+// onsubmit en el HTML, que la CSP bloquea. La confirmación va en captura, antes que cualquier otro manejador del envío.
+document.addEventListener('submit', (evento) => {
+    // El envío pasa dos veces (la segunda, tras revisar la conexión, más abajo): se pregunta solo la primera
+    if (evento.target.dataset?.conexionVerificada) return;
+    const mensaje = evento.target.dataset?.confirmar ?? evento.submitter?.dataset?.confirmar;
+    if (mensaje && !window.confirm(mensaje)) {
+        evento.preventDefault();
+        evento.stopImmediatePropagation();
+    }
+}, true);
+document.addEventListener('click', (evento) => {
+    if (evento.target.closest('[data-imprimir]')) window.print();
+});
+
+// La cifra sobre la columna más alta de <x-grafica-columnas> (data-abajo, en %): su posición necesita calc(), así que
+// se pone por JS. Las barras son SVG con el tamaño como atributo; ninguna usa style en el HTML, que la CSP bloquea.
+document.querySelectorAll('[data-abajo]').forEach((elemento) => { elemento.style.bottom = `calc(${elemento.dataset.abajo}% + 4px)`; });
+
+// Textos de la interfaz con :marcadores reemplazados.
 // Como el traductor del servidor (App\Support\Traductor): sin punto doble tras «a. m.» / «p. m.» al final de una frase
 const t = (clave, datos = {}) => (window.textos?.[clave] ?? clave).replace(/:(\w+)/g, (marca, nombre) => datos[nombre] ?? marca)
     .replace(/([ap])\.\u00A0m\.((?:<\/[a-z]+>)*)\./g, '$1.\u00A0m.$2');

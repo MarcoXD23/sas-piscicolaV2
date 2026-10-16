@@ -29,8 +29,10 @@
                 <li class="group flex items-center gap-3 rounded-lg outline-none focus-visible:bg-papel-hondo" tabindex="0" data-tip="{{ $dato['etiqueta'] }}: {{ $valor }}">
                     <span class="w-16 shrink-0 truncate text-sm text-tinta" title="{{ $dato['etiqueta'] }}">{{ $dato['etiqueta'] }}</span>
                     <span class="block min-w-0 flex-1 border-l border-renglon-fuerte">
-                        <span class="block h-5 rounded-r-[3px] bg-marca-600 transition-colors group-hover:bg-marca-800 group-focus-visible:bg-marca-800"
-                              style="width: {{ max($ancho, 1) }}%"></span>
+                        {{-- SVG con el ancho como atributo (la Content-Security-Policy no permite style en el HTML) --}}
+                        <svg class="block h-5 w-full" aria-hidden="true">
+                            <rect height="100%" rx="3" width="{{ round(max($ancho, 1), 2) }}%" class="fill-marca-600 transition-colors group-hover:fill-marca-800 group-focus-visible:fill-marca-800" />
+                        </svg>
                     </span>
                     <span class="w-24 shrink-0 text-right text-sm font-bold tabular-nums text-tinta">{{ $valor }}</span>
                 </li>

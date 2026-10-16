@@ -16,6 +16,8 @@
         'peso' => (string) ($fila['peso_pesado'] ?? ''),
     ])->values()->all();
     $modo = old('kg') !== null && old('pesadas') === null ? 'total' : 'pesadas';
+    // Lo que necesita resources/js/pesaje.js (va en un <script type="application/json">, que la CSP permite)
+    $configPesaje = ['modo' => $modo, 'filas' => $filasPrevias, 'decimal' => $decimal, 'miles' => $miles];
 
     // Opciones id de la siembra => texto (con un ciclo: flatMap renumeraría las claves y se perderían los ids)
     $opcionesSiembra = [];
@@ -37,9 +39,10 @@
     @if ($lagos->isEmpty())
         <x-vacio icono="lagos" :mensaje="__('cosechas.sin_lagos')" />
     @else
-        <x-formulario :action="route('admin.cosechas.store')" class="max-w-4xl"
-                      x-data="pesaje({{ Js::from(['modo' => $modo, 'canasta' => (string) old('peso_canasta_kg', $pesoCanasta), 'canastilla' => (string) old('peso_canastilla_kg', $pesoCanastilla), 'filas' => $filasPrevias, 'decimal' => $decimal, 'miles' => $miles]) }})"
-                      x-on:submit="validar($event)">
+        {{-- Tabla de pesadas en JS sin Alpine (resources/js/pesaje.js; las cuentas en pesaje-logica.js): la
+             Content-Security-Policy no permite evaluar código escrito en el HTML --}}
+        <x-formulario :action="route('admin.cosechas.store')" class="max-w-4xl" data-pesaje>
+            <script type="application/json" data-pesaje-config>@json($configPesaje)</script>
 
             {{-- A. Encabezado --}}
             <x-tarjeta>
@@ -78,25 +81,25 @@
                     <div class="grid grid-cols-2 gap-1 rounded-ficha bg-papel-hondo p-1 ring-1 ring-renglon">
                         @foreach (['pesadas' => __('cosechas.modo_pesadas'), 'total' => __('cosechas.modo_total')] as $valor => $texto)
                             <label class="flex min-h-12 cursor-pointer items-center justify-center rounded-md px-2 text-center text-base text-tinta-suave transition-colors has-checked:bg-ficha has-checked:font-bold has-checked:text-tinta has-checked:shadow-ficha has-focus-visible:ring-2 has-focus-visible:ring-marca-700">
-                                <input type="radio" value="{{ $valor }}" class="sr-only" x-model="modo">
+                                <input type="radio" name="modo_pesaje" value="{{ $valor }}" class="sr-only" data-modo @checked($modo === $valor)>
                                 {{ $texto }}
                             </label>
                         @endforeach
                     </div>
                 </fieldset>
 
-                <div x-show="modo === 'total'" x-cloak class="mt-5">
+                <div data-zona="total" class="mt-5" @if ($modo !== 'total') hidden @endif>
                     <x-campo nombre="kg" :etiqueta="__('cosechas.total_entero_kg')" tipo="number" step="0.01" min="0.1" inputmode="decimal"
-                             :ayuda="__('cosechas.total_entero_ayuda')" x-bind:disabled="modo !== 'total'" x-bind:required="modo === 'total'" />
+                             :ayuda="__('cosechas.total_entero_ayuda')" :disabled="$modo !== 'total'" :required="$modo === 'total'" />
                 </div>
 
                 {{-- B. Tabla de pesadas --}}
-                <div x-show="modo === 'pesadas'" class="mt-5 space-y-5">
+                <div data-zona="pesadas" class="mt-5 space-y-5" @if ($modo !== 'pesadas') hidden @endif>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <x-campo nombre="peso_canasta_kg" :etiqueta="__('cosechas.peso_canasta_vacia')" tipo="number" step="0.01" min="0.01" max="20" inputmode="decimal"
-                                 x-model="vacias.canasta" x-bind:disabled="modo !== 'pesadas'" />
+                                 :valor="(string) old('peso_canasta_kg', $pesoCanasta)" :disabled="$modo !== 'pesadas'" />
                         <x-campo nombre="peso_canastilla_kg" :etiqueta="__('cosechas.peso_canastilla_vacia')" tipo="number" step="0.01" min="0.01" max="20" inputmode="decimal"
-                                 x-model="vacias.canastilla" x-bind:disabled="modo !== 'pesadas'" />
+                                 :valor="(string) old('peso_canastilla_kg', $pesoCanastilla)" :disabled="$modo !== 'pesadas'" />
                     </div>
                     <p class="text-sm text-tinta-suave">{{ __('cosechas.pesos_vacias_ayuda') }}</p>
 
@@ -113,50 +116,47 @@
                         <span>{{ __('cosechas.pesada') }}</span><span>{{ __('cosechas.tipo') }}</span><span>{{ __('cosechas.cantidad') }}</span>
                         <span>{{ __('cosechas.peso_pesado') }}</span><span>{{ __('cosechas.descuento') }}</span><span>{{ __('cosechas.peso_entero') }}</span><span></span>
                     </div>
-                    <ol class="space-y-3">
-                        <template x-for="(fila, indice) in filas" :key="indice">
-                            <li class="grid grid-cols-2 items-end gap-3 rounded-ficha bg-papel p-3 ring-1 ring-renglon ancho:grid-cols-[4rem_9rem_1fr_1fr_1fr_1fr_3rem] ancho:gap-2 ancho:p-2">
-                                <p class="col-span-2 text-base font-bold ancho:col-span-1 ancho:self-center">
-                                    <span class="ancho:hidden">{{ __('cosechas.pesada') }}</span> <span x-text="indice + 1"></span>
-                                </p>
-                                <label class="block">
-                                    <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.tipo') }}</span>
-                                    <select x-model="fila.tipo" :name="`pesadas[${indice}][tipo]`" :disabled="modo !== 'pesadas'"
-                                            class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
-                                        @foreach (CalculoPesaje::TIPOS as $tipo)
-                                            <option value="{{ $tipo }}">{{ __('cosechas.tipos.'.$tipo) }}</option>
-                                        @endforeach
-                                    </select>
-                                </label>
-                                <label class="block">
-                                    <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.cantidad') }}</span>
-                                    <input type="number" min="1" max="{{ CalculoPesaje::MAX_CANTIDAD }}" step="1" inputmode="numeric" x-model="fila.cantidad"
-                                           :name="`pesadas[${indice}][cantidad]`" :data-cantidad="indice" :disabled="modo !== 'pesadas'"
-                                           class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base tabular-nums text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
-                                </label>
-                                <label class="block">
-                                    <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_pesado') }}</span>
-                                    <input type="number" min="0.01" max="{{ CalculoPesaje::MAX_PESO_PESADA_KG }}" step="0.01" inputmode="decimal" x-model="fila.peso"
-                                           :name="`pesadas[${indice}][peso_pesado]`" :disabled="modo !== 'pesadas'" x-on:keydown.enter.prevent="siguiente(indice)"
-                                           class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base tabular-nums text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
-                                </label>
-                                <p class="ancho:self-center">
-                                    <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.descuento') }}</span>
-                                    <span class="text-base tabular-nums text-tinta-suave" x-text="kg(descuentoC(fila))"></span>
-                                </p>
-                                <p class="ancho:self-center">
-                                    <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_entero') }}</span>
-                                    <span class="text-base font-bold tabular-nums" x-text="kg(enteroC(fila))"></span>
-                                </p>
-                                <button type="button" x-on:click="quitar(indice)" :aria-label="@js(__('cosechas.quitar_pesada', ['numero' => '__N__'])).replace('__N__', indice + 1)"
-                                        class="col-span-2 flex h-12 items-center justify-center rounded-ficha text-tinta-suave ring-1 ring-renglon transition-colors hover:bg-alerta-fondo hover:text-alerta ancho:col-span-1 ancho:w-12 ancho:ring-0">
-                                    <x-icono nombre="basura" class="h-5 w-5" />
-                                </button>
-                            </li>
-                        </template>
-                    </ol>
+                    <ol class="space-y-3" data-pesadas></ol>
+                    <template data-plantilla-pesada>
+                        <li class="grid grid-cols-2 items-end gap-3 rounded-ficha bg-papel p-3 ring-1 ring-renglon ancho:grid-cols-[4rem_9rem_1fr_1fr_1fr_1fr_3rem] ancho:gap-2 ancho:p-2">
+                            <p class="col-span-2 text-base font-bold ancho:col-span-1 ancho:self-center">
+                                <span class="ancho:hidden">{{ __('cosechas.pesada') }}</span> <span data-numero></span>
+                            </p>
+                            <label class="block">
+                                <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.tipo') }}</span>
+                                <select data-pesada="tipo"
+                                        class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
+                                    @foreach (CalculoPesaje::TIPOS as $tipo)
+                                        <option value="{{ $tipo }}">{{ __('cosechas.tipos.'.$tipo) }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.cantidad') }}</span>
+                                <input type="number" min="1" max="{{ CalculoPesaje::MAX_CANTIDAD }}" step="1" inputmode="numeric" data-pesada="cantidad"
+                                       class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base tabular-nums text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
+                            </label>
+                            <label class="block">
+                                <span class="mb-1 block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_pesado') }}</span>
+                                <input type="number" min="0.01" max="{{ CalculoPesaje::MAX_PESO_PESADA_KG }}" step="0.01" inputmode="decimal" data-pesada="peso"
+                                       class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-3 text-base tabular-nums text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
+                            </label>
+                            <p class="ancho:self-center">
+                                <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.descuento') }}</span>
+                                <span class="text-base tabular-nums text-tinta-suave" data-descuento>—</span>
+                            </p>
+                            <p class="ancho:self-center">
+                                <span class="block text-sm font-semibold text-tinta-suave ancho:sr-only">{{ __('cosechas.peso_entero') }}</span>
+                                <span class="text-base font-bold tabular-nums" data-entero>—</span>
+                            </p>
+                            <button type="button" data-quitar data-texto="{{ __('cosechas.quitar_pesada', ['numero' => '__N__']) }}"
+                                    class="col-span-2 flex h-12 items-center justify-center rounded-ficha text-tinta-suave ring-1 ring-renglon transition-colors hover:bg-alerta-fondo hover:text-alerta ancho:col-span-1 ancho:w-12 ancho:ring-0">
+                                <x-icono nombre="basura" class="h-5 w-5" />
+                            </button>
+                        </li>
+                    </template>
 
-                    <x-boton tipo="button" variante="secundario" class="w-full sm:w-auto" x-on:click="agregar()">
+                    <x-boton tipo="button" variante="secundario" class="w-full sm:w-auto" data-agregar-pesada>
                         <x-icono nombre="mas" class="h-5 w-5" /> {{ __('cosechas.anadir_pesada') }}
                     </x-boton>
 
@@ -164,34 +164,34 @@
                     <div class="space-y-3 border-t border-renglon pt-5">
                         <label class="block max-w-xs">
                             <span class="mb-1.5 block text-base font-semibold text-tinta">{{ __('cosechas.meta') }}</span>
-                            <input type="number" min="0" step="0.01" inputmode="decimal" x-model="meta"
+                            <input type="number" min="0" step="0.01" inputmode="decimal" data-meta
                                    class="block min-h-12 w-full rounded-ficha border border-renglon-fuerte bg-ficha px-4 text-base tabular-nums text-tinta transition-[border-color,box-shadow] duration-150 hover:border-tinta-suave focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
                             <span class="mt-1.5 block text-sm text-tinta-suave">{{ __('cosechas.meta_ayuda') }}</span>
                         </label>
-                        <div x-show="metaC !== null" x-cloak class="space-y-2" aria-live="polite">
-                            <div class="h-3 overflow-hidden rounded-full bg-papel-hondo ring-1 ring-renglon">
-                                <div class="h-full rounded-full bg-marca-700 transition-[width] duration-200" :style="`width: ${avance}%`"></div>
-                            </div>
-                            <template x-for="texto in metaTexto"><p class="text-base font-semibold" x-text="texto"></p></template>
+                        <div data-meta-zona hidden class="space-y-2" aria-live="polite">
+                            {{-- <progress> en lugar de un ancho en línea: se ve sin JS y la CSP no lo bloquea --}}
+                            <progress max="100" value="0" data-meta-avance aria-label="{{ __('cosechas.meta') }}"
+                                      class="block h-3 w-full appearance-none overflow-hidden rounded-full ring-1 ring-renglon [&::-moz-progress-bar]:bg-marca-700 [&::-webkit-progress-bar]:bg-papel-hondo [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-marca-700"></progress>
+                            <div data-meta-textos></div>
                         </div>
                     </div>
 
                     {{-- E. Totales en vivo --}}
                     <dl class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-ficha border border-renglon bg-papel-hondo p-4 text-base sm:grid-cols-3" aria-live="polite">
-                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_pesadas') }}</dt><dd class="text-lg font-bold tabular-nums" x-text="totales.pesadas"></dd></div>
+                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_pesadas') }}</dt><dd class="text-lg font-bold tabular-nums" data-total="pesadas">0</dd></div>
                         <div class="col-span-2 sm:col-span-1"><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_cantidad') }}</dt>
-                            <dd class="text-lg font-bold tabular-nums" x-text="@js(__('cosechas.cantidad_por_tipo')).replace(':canastas', totales.porTipo.canasta).replace(':canastillas', totales.porTipo.canastilla)"></dd></div>
-                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_pesado') }}</dt><dd class="text-lg font-bold tabular-nums" x-text="kg(totales.pesado)"></dd></div>
-                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_descuento') }}</dt><dd class="text-lg font-bold tabular-nums" x-text="kg(totales.descuento)"></dd></div>
-                        <div class="col-span-2 sm:col-span-1"><dt class="text-sm font-bold text-tinta">{{ __('cosechas.total_entero') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800" x-text="kg(totales.entero)"></dd></div>
+                            <dd class="text-lg font-bold tabular-nums" data-total="cantidad" data-texto="{{ __('cosechas.cantidad_por_tipo') }}"></dd></div>
+                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_pesado') }}</dt><dd class="text-lg font-bold tabular-nums" data-total="pesado">—</dd></div>
+                        <div><dt class="text-sm text-tinta-suave">{{ __('cosechas.total_descuento') }}</dt><dd class="text-lg font-bold tabular-nums" data-total="descuento">—</dd></div>
+                        <div class="col-span-2 sm:col-span-1"><dt class="text-sm font-bold text-tinta">{{ __('cosechas.total_entero') }}</dt><dd class="text-cifra font-bold tabular-nums text-marca-800" data-total="entero">—</dd></div>
                     </dl>
-                    <p class="text-base font-semibold" x-show="linea" x-text="linea"></p>
+                    <p class="text-base font-semibold" data-linea hidden></p>
                 </div>
             </x-tarjeta>
 
             <x-tarjeta>
                 <x-campo nombre="observaciones" :etiqueta="__('cosechas.observaciones')" maxlength="500" />
-                <p x-show="aviso" x-cloak x-text="aviso" role="alert" class="mt-4 rounded-ficha border border-alerta-borde bg-alerta-fondo p-4 text-base font-semibold text-alerta"></p>
+                <p data-aviso-pesaje hidden role="alert" class="mt-4 rounded-ficha border border-alerta-borde bg-alerta-fondo p-4 text-base font-semibold text-alerta"></p>
                 <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <x-boton variante="secundario" :href="url()->previous()">{{ __('comun.cancelar') }}</x-boton>
                     <x-boton>{{ __('cosechas.registrar') }}</x-boton>

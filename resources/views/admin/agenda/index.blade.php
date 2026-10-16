@@ -135,7 +135,7 @@
             @else
                 <div class="mt-5 grid grid-cols-3 gap-2">
                     <x-formulario :action="route('admin.agenda.destroy', $evento)" metodo="DELETE" class="!space-y-0">
-                        <x-boton variante="secundario" class="w-full !px-2" onclick="return confirm(@js(__('agenda.confirmar_eliminar')))">
+                        <x-boton variante="secundario" class="w-full !px-2" data-confirmar="{{ __('agenda.confirmar_eliminar') }}">
                             <x-icono nombre="basura" class="h-5 w-5" /> {{ __('agenda.eliminar') }}
                         </x-boton>
                     </x-formulario>

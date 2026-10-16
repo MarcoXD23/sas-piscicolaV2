@@ -77,7 +77,7 @@
                     @unless ($liquidacion->estaPagada())
                         <div class="mt-4 grid grid-cols-2 gap-2">
                             <x-formulario :action="route('admin.nomina.destroy', $liquidacion)" metodo="DELETE" class="!space-y-0">
-                                <x-boton variante="secundario" class="w-full" onclick="return confirm(@js(__('nomina.confirmar_anular')))">{{ __('nomina.anular') }}</x-boton>
+                                <x-boton variante="secundario" class="w-full" data-confirmar="{{ __('nomina.confirmar_anular') }}">{{ __('nomina.anular') }}</x-boton>
                             </x-formulario>
                             <x-formulario :action="route('admin.nomina.pagar', $liquidacion)" class="!space-y-0">
                                 <x-boton class="w-full"><x-icono nombre="ok" class="h-5 w-5" /> {{ __('nomina.marcar_pagada') }}</x-boton>

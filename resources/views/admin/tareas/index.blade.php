@@ -61,7 +61,7 @@
 
                             <x-formulario :action="route('admin.tareas.destroy', $tarea)" metodo="DELETE" class="!space-y-0">
                                 <button type="submit" class="flex h-12 w-12 items-center justify-center rounded-ficha text-tinta-suave hover:bg-alerta-fondo hover:text-alerta"
-                                        aria-label="{{ __('tareas.eliminar_tarea', ['titulo' => $tarea->titulo]) }}" onclick="return confirm(@js(__('tareas.confirmar_eliminar')))">
+                                        aria-label="{{ __('tareas.eliminar_tarea', ['titulo' => $tarea->titulo]) }}" data-confirmar="{{ __('tareas.confirmar_eliminar') }}">
                                     <x-icono nombre="basura" class="h-5 w-5" />
                                 </button>
                             </x-formulario>

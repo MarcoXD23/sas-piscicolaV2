@@ -10,7 +10,8 @@
     <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180">
     <link rel="manifest" href="/manifest.webmanifest">
-    <script>window.textos = @json(__('js'));</script>
+    {{-- Textos de la interfaz para el JS: JSON que no se ejecuta (la Content-Security-Policy no permite scripts en línea) --}}
+    <script type="application/json" id="textos-js">@json(__('js'))</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 @php
@@ -138,7 +139,8 @@
         @if ($conMenuInferior)
             {{-- Celular: menú inferior sólido; la sección activa lleva una raya arriba y el texto en negrita --}}
             <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-renglon bg-ficha pb-[env(safe-area-inset-bottom)] [view-transition-name:menu-inferior] md:hidden print:hidden" aria-label="{{ __('layout.principal_movil') }}">
-                <ul class="mx-auto grid max-w-md" style="grid-template-columns: repeat({{ $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1) }}, minmax(0, 1fr))">
+                {{-- Columnas con clases (la Content-Security-Policy no permite style en el HTML) --}}
+                <ul @class(['mx-auto grid max-w-md', [1 => 'grid-cols-1', 2 => 'grid-cols-2', 3 => 'grid-cols-3', 4 => 'grid-cols-4', 5 => 'grid-cols-5', 6 => 'grid-cols-6'][min(6, max(1, $enlacesInferiores->count() + ($enlacesMas->isEmpty() ? 0 : 1)))]])>
                     @foreach ($enlacesInferiores as $enlace)
                         <li>
                             <a href="{{ route($enlace['ruta']) }}" @if ($enlace['area']) data-area="{{ $enlace['area'] }}" @endif
