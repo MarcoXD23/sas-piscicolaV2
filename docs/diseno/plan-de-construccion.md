@@ -7,7 +7,7 @@ Plan aprobado el 2026-10-15 para construir el diseño de `dia-de-proceso.md` (te
 - Se construye fase por fase. Antes de cada fase se listan los archivos y se espera el «apruebo».
 - Al cerrar cada fase:
   - se corren todas las pruebas;
-  - se hace el commit y se sube a `main` y a `mejora-visual`;
+  - se hace el commit y se sube a `main` (la única rama desde el 2026-10-15);
   - se espera el «continúa».
 - Antes de cada migración que toque datos existentes se saca un respaldo fuera del proyecto.
 - Todo campo nuevo del paquete de Registro rápido se **agrega**: nunca se cambia ni se quita, para no romper la cola sin conexión de los teléfonos.
@@ -102,7 +102,7 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
   - los lagos que ya existen quedan «sin fase» hasta que alguien se la ponga;
   - el paquete del teléfono crece, solo con campos agregados.
 
-**Estado: hecha** (hecha con Antigravity y revisada en F2-F3c, rama `antigravity-prueba`, sin unir a `main`).
+**Estado: hecha** (hecha con Antigravity, revisada en F2-F3c y unida a `main` el 2026-10-15, commit f6a4f6b).
 - Las reglas iniciales traen solo los datos de la finca piloto (tema 15.1): precría, levante y engorde para las especies de agua cálida. La trucha y el alevinaje quedan sin reglas, y lo que falta dice «sin dato».
 - El detalle del lago compara el peso con el rango de la fase, la supervivencia y la densidad.
 - **Pendiente para F5:** el atraso en días. Se compara con los días en la fase, cuando los traslados los arrastren.
@@ -131,7 +131,7 @@ Mientras tanto, los días de proceso del piloto se registran como hoy, con la co
   - **cola sin conexión:** los registros guardados en los teléfonos envían `tipo_concentrado` como texto. El servidor debe seguir aceptándolo, buscándolo por nombre.
 - **Falta de la finca:** el color de hilo de cada concentrado. Se construye igual, porque es el nombre corto que escribe la finca.
 
-**Estado: hecha** (hecha con Antigravity y revisada en F2-F3c, rama `antigravity-prueba`, sin unir a `main`).
+**Estado: hecha** (hecha con Antigravity, revisada en F2-F3c y unida a `main` el 2026-10-15, commit f6a4f6b).
 - Ya no hay tablas fijas en `CalculadoraRacion`. La tabla de la finca arranca con los porcentajes de antes y, en el perfil cálido, con la tabla de la finca piloto (tema 15.3). La proteína y el pellet que no dio la finca quedan vacíos.
 - El concentrado sugerido es el de la regla de la fase (`reglas_fase.concentrado_id`). Si la fase no tiene uno, es el del tramo de peso.
 - La bodega no agrega concentrados al catálogo, y renombrar uno no cambia la historia.
