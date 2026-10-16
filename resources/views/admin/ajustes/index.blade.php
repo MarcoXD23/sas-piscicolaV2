@@ -48,15 +48,32 @@
                 <fieldset class="space-y-5">
                     <legend class="mb-1 text-lg font-semibold text-tinta">{{ __('ajustes_finca.secciones.'.$seccion) }}</legend>
                     @foreach ($claves as $clave)
-                        <x-seleccion :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
-                                     :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required
-                                     :opciones="collect(\App\Support\Ajustes\CatalogoAjustes::definicion($clave)['opciones'])->mapWithKeys(fn ($opcion) => [$opcion => \App\Support\Ajustes\AjustesFinca::textoOpcion($clave, $opcion)])->all()" />
+                        @php $definicion = \App\Support\Ajustes\CatalogoAjustes::definicion($clave); @endphp
+                        @if ($definicion['tipo'] === \App\Support\Ajustes\CatalogoAjustes::TIPO_ENTERO)
+                            <x-campo :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
+                                     tipo="number" :min="$definicion['min']" :max="$definicion['max']" inputmode="numeric"
+                                     :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required />
+                        @else
+                            <x-seleccion :nombre="\App\Support\Ajustes\CatalogoAjustes::campo($clave)" :etiqueta="__('ajustes_finca.'.$clave.'.etiqueta')"
+                                         :valor="$ajustesOperacion[$clave]" :ayuda="__('ajustes_finca.'.$clave.'.ayuda')" required
+                                         :opciones="collect($definicion['opciones'])->mapWithKeys(fn ($opcion) => [$opcion => \App\Support\Ajustes\AjustesFinca::textoOpcion($clave, $opcion)])->all()" />
+                        @endif
                     @endforeach
                 </fieldset>
             @endforeach
 
             <x-boton>{{ __('ajustes_finca.guardar') }}</x-boton>
         </x-formulario>
+    </x-tarjeta>
+
+    {{-- Fases de los lagos y reglas por especie (F2) --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('fases.titulo')" :subtitulo="__('fases.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.fases.index')">{{ __('fases.enlace') }}</x-boton>
+    </x-tarjeta>
+
+    {{-- Catálogo de concentrados y tabla de ración por especie (F3) --}}
+    <x-tarjeta class="mt-6 max-w-2xl" :titulo="__('concentrados.titulo')" :subtitulo="__('concentrados.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.concentrados.index')">{{ __('concentrados.enlace') }}</x-boton>
     </x-tarjeta>
 
     {{-- Exportar o eliminar los datos de la finca --}}

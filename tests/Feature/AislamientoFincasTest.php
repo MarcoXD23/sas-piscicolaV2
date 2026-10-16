@@ -9,6 +9,7 @@ use App\Models\Aireacion;
 use App\Models\Alerta;
 use App\Models\AvisoPesca;
 use App\Models\Bitacora;
+use App\Models\Concentrado;
 use App\Models\Concerns\PerteneceATenant;
 use App\Models\Cosecha;
 use App\Models\DespachoAlimento;
@@ -16,6 +17,7 @@ use App\Models\Especie;
 use App\Models\EspecieFoto;
 use App\Models\EventoAgenda;
 use App\Models\Exportacion;
+use App\Models\Fase;
 use App\Models\HoraExtra;
 use App\Models\Lago;
 use App\Models\Liquidacion;
@@ -25,11 +27,13 @@ use App\Models\MovimientoAlimento;
 use App\Models\Muestreo;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
+use App\Models\ReglaFase;
 use App\Models\Rol;
 use App\Models\RegistroSinConexion;
 use App\Models\Ronda;
 use App\Models\Siembra;
 use App\Models\StockAlimento;
+use App\Models\TablaRacion;
 use App\Models\Tarea;
 use App\Models\Tenant;
 use App\Models\Tercero;
@@ -64,7 +68,7 @@ class AislamientoFincasTest extends TestCase
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
-        'jornalero' => Tercero::class,
+        'jornalero' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -152,9 +156,13 @@ class AislamientoFincasTest extends TestCase
             Especie::class => $especie = Especie::create(['nombre' => "Especie {$sufijo}", 'clima' => Especie::CALIDO]),
             EspecieFoto::class => EspecieFoto::create(['especie_id' => $especie->id, 'user_id' => $persona->id, 'ruta_original' => "x/{$sufijo}.jpg", 'ruta_ligera' => "x/{$sufijo}.webp",
                 'tipo_original' => 'image/jpeg', 'bytes_original' => 10, 'bytes_ligera' => 5, 'ancho' => 1, 'alto' => 1, 'orden' => 1]),
+            Concentrado::class => $concentrado = Concentrado::create(['nombre' => "Concentrado {$sufijo}", 'nombre_corto' => "C{$sufijo}", 'proteina_porcentaje' => 30, 'pellet_mm' => '3 mm', 'peso_bulto_kg' => 40]),
+            Fase::class => $fase = Fase::create(['nombre' => "Fase {$sufijo}", 'orden' => 10]),
+            ReglaFase::class => ReglaFase::create(['fase_id' => $fase->id, 'especie_id' => $especie->id, 'dias_esperados' => 30]),
             RegistroSinConexion::class => RegistroSinConexion::create(['user_id' => $persona->id, 'uuid' => (string) Str::uuid(), 'ruta' => 'noche.rondas.store', 'registrado_at' => now()]),
             Ronda::class => Ronda::create(['user_id' => $persona->id, 'registrada_at' => now(), 'tipo' => Ronda::SIN_NOVEDAD]),
-            StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'cantidad_kg' => 10]),
+            StockAlimento::class => StockAlimento::create(['tipo_concentrado' => "Concentrado {$sufijo}", 'concentrado_id' => $concentrado->id, 'cantidad_kg' => 10]),
+            TablaRacion::class => TablaRacion::create(['especie_id' => $especie->id, 'concentrado_id' => $concentrado->id, 'peso_desde_g' => 0, 'peso_hasta_g' => 50, 'porcentaje_biomasa' => 5, 'tomas_dia' => 3, 'proteina_porcentaje' => 30, 'pellet' => '3 mm']),
             Tarea::class => Tarea::create(['asignada_a' => $persona->id, 'creada_por' => $persona->id, 'titulo' => "Tarea {$sufijo}", 'fecha' => '2026-10-20']),
             Tercero::class => Tercero::create(['nombres' => "Jornalero {$sufijo}", 'es_jornalero' => true]),
             Traslado::class => Traslado::create(['siembra_origen_id' => $siembra->id, 'siembra_destino_id' => $destino->id, 'lago_origen_id' => $lago->id, 'lago_destino_id' => $otroLago->id,

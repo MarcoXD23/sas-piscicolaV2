@@ -80,6 +80,11 @@ class EspeciesFincaTest extends TestCase
         $migracion = require database_path('migrations/2026_10_24_000001_create_especies_por_finca.php');
         $ficha = require database_path('migrations/2026_10_25_000001_add_ficha_to_especies.php');
         $fotos = require database_path('migrations/2026_10_26_000001_create_especie_fotos_table.php');
+        // Las reglas de las fases (F2) y la tabla de ración (F3) también tienen llave foránea a especies
+        $fases = require database_path('migrations/2026_11_06_000001_create_fases_and_reglas_fase_tables.php');
+        $concentrados = require database_path('migrations/2026_11_07_000001_create_concentrados_and_tabla_racion_tables.php');
+        $concentrados->down();
+        $fases->down();
         $fotos->down();
         $migracion->down();
         $this->assertTrue(Schema::hasColumn('siembras', 'especie'));
@@ -92,6 +97,8 @@ class EspeciesFincaTest extends TestCase
         $migracion->up();
         $ficha->up();
         $fotos->up();
+        $fases->up();
+        $concentrados->up();
 
         $this->assertFalse(Schema::hasColumn('siembras', 'especie'));   // el texto viejo ya no queda en uso
         $this->assertSame(7, Especie::count());                         // 6 por defecto + la que no estaba en el catálogo

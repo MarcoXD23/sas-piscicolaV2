@@ -230,4 +230,29 @@ class PaqueteTrabajoTest extends TestCase
         $enviar()->assertOk()->assertJson(['estado' => 'duplicado']);
         $this->assertSame(945, $this->siembra->fresh()->peces_vivos);
     }
+
+    public function test_el_paquete_no_hace_una_consulta_por_lago_para_la_racion(): void
+    {
+        $administrador = $this->persona(Rol::ADMINISTRADOR);
+        $consultas = function () use ($administrador): int {
+            \Illuminate\Support\Facades\DB::flushQueryLog();
+            \Illuminate\Support\Facades\DB::enableQueryLog();
+            PaqueteTrabajo::para($administrador->fresh());
+            $total = count(\Illuminate\Support\Facades\DB::getQueryLog());
+            \Illuminate\Support\Facades\DB::disableQueryLog();
+
+            return $total;
+        };
+
+        $conUnLago = $consultas();
+        foreach (range(1, 4) as $numero) {
+            $lago = Lago::create(['nombre' => "C-Lago {$numero}", 'tipo' => 'tierra']);
+            Siembra::create(['lago_id' => $lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => now()->subDays(10),
+                'cantidad_alevinos' => 100, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 100, 'peso_actual_g' => 30, 'biomasa_kg' => 3]);
+        }
+
+        // Cinco lagos con peces: las mismas consultas que con uno (la ración se calcula de todos juntos)
+        $this->assertSame($conUnLago, $consultas());
+        $this->assertCount(5, collect(PaqueteTrabajo::para($administrador->fresh())['lagos'])->whereNotNull('racion_sugerida_kg'));
+    }
 }

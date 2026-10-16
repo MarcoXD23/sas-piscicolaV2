@@ -25,7 +25,9 @@ class Alerta extends Model
 
     public const DESPACHO_DIFERENCIA = 'despacho_diferencia';
 
-    public const TIPOS = [self::STOCK, self::MORTALIDAD, self::AGUA, self::DESPACHO_PENDIENTE, self::DESPACHO_DIFERENCIA];
+    public const MUESTREO = 'muestreo';
+
+    public const TIPOS = [self::STOCK, self::MORTALIDAD, self::AGUA, self::DESPACHO_PENDIENTE, self::DESPACHO_DIFERENCIA, self::MUESTREO];
 
     public const ADVERTENCIA = 'advertencia';
 
@@ -58,7 +60,7 @@ class Alerta extends Model
     {
         return $usuario->tieneRol(Rol::PROPIETARIO)
             ? self::TIPOS
-            : [self::STOCK, self::MORTALIDAD, self::AGUA, self::DESPACHO_PENDIENTE];
+            : [self::STOCK, self::MORTALIDAD, self::AGUA, self::DESPACHO_PENDIENTE, self::MUESTREO];
     }
 
     public function esCritica(): bool
@@ -94,6 +96,11 @@ class Alerta extends Model
                 'concentrado' => $d['concentrado'], 'fecha' => $d['fecha'], 'despachado' => $decimal($d['despachado']),
                 'recibido' => $decimal($d['recibido']), 'diferencia' => $decimal(abs($d['diferencia'])),
             ]),
+            self::MUESTREO => __('alertas.mensajes.muestreo', [
+                'lago' => $d['lago'],
+                'dias' => $d['dias'],
+                'plazo' => $d['plazo'],
+            ]),
             default => $this->tipo,
         };
     }
@@ -103,7 +110,7 @@ class Alerta extends Model
     {
         return match ($this->tipo) {
             self::STOCK, self::DESPACHO_PENDIENTE, self::DESPACHO_DIFERENCIA => route('admin.bodega.index'),
-            self::MORTALIDAD, self::AGUA => isset($this->datos['lago_id']) ? route('admin.lagos.show', $this->datos['lago_id']) : null,
+            self::MORTALIDAD, self::AGUA, self::MUESTREO => isset($this->datos['lago_id']) ? route('admin.lagos.show', $this->datos['lago_id']) : null,
             default => null,
         };
     }

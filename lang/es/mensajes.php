@@ -49,6 +49,15 @@ return [
     'comun' => [
         'solo_hay_peces' => 'Solo hay :cantidad peces vivos en esta siembra.',
     ],
+    'concentrado' => [
+        'creado' => 'Concentrado «:nombre» guardado en el catálogo.',
+        'actualizado' => 'Concentrado «:nombre» actualizado.',
+        'nombre_repetido' => 'Ya hay un concentrado con ese nombre en la finca.',
+        'rango_peso_invertido' => 'El peso inicial del tramo no puede ser mayor que el peso final.',
+        'tramo_guardado' => 'Tramo de ración de :especie guardado.',
+        'tramo_eliminado' => 'Tramo de ración de :especie eliminado.',
+        'tabla_restaurada' => 'Tabla de ración de :especie restaurada con los valores de referencia.',
+    ],
     'contrasena' => [
         'igual_al_correo' => 'La contraseña no puede ser igual a tu correo.',
     ],
@@ -75,8 +84,18 @@ return [
         'registrada' => ':kg kg enteros cosechados (:peces peces de :gramos g en promedio).',
         'registrada_pesadas' => ':kg kg enteros cosechados en :pesadas pesadas (:peces peces de :gramos g en promedio).',
     ],
+    'fase' => [
+        'creada' => 'Fase «:nombre» creada.',
+        'actualizada' => 'Fase «:nombre» actualizada.',
+        'eliminada' => 'Fase «:nombre» eliminada.',
+        'con_lagos' => 'No se puede eliminar la fase «:nombre» porque tiene lagos asignados.',
+        'nombre_repetido' => 'Ya hay una fase con ese nombre en la finca.',
+        'rango_invertido' => 'El valor mínimo no puede ser mayor que el máximo.',
+        'regla_guardada' => 'Regla de :especie en «:fase» guardada.',
+    ],
     'lago' => [
         'registrado' => 'Lago «:nombre» registrado.',
+        'actualizado' => 'Lago «:nombre» actualizado.',
     ],
     'login' => [
         'correo_contrasena_no_son_correctos' => 'El correo o la contraseña no son correctos.',
@@ -151,6 +170,7 @@ return [
         'ya_no_eres_administrador' => 'Ya no tienes el rol de administrador.',
     ],
     'racion' => [
+        'cantidad_fuera_de_rango' => 'La cantidad de alimento debe estar entre 0,1 y 100.000 kg.',
         'este_lago_no_tiene_peces' => 'Este lago no tiene peces: no se puede registrar alimentación.',
         'registrada' => 'Ración de :kg kg registrada en el lago :lago.',
         'sin_concentrado_recibido' => 'No hay concentrado recibido. El administrador debe registrar la recepción.',

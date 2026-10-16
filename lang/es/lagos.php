@@ -179,4 +179,22 @@ return [
         'etiqueta' => ':especie · lote :numero · :origen',
         'peso_con_rango' => ':promedio · de :min a :max g',
     ],
+    // Fase y área del lago (F2)
+    'fase_opcional' => 'Fase (opcional)',
+    'sin_fase' => 'Sin fase',
+    'area_m2_opcional' => 'Área en m² (opcional)',
+    'area_m2' => ':area m²',
+    'densidad_actual' => ':densidad peces/m²',
+    'editar_lago' => 'Editar lago',
+    'editar_lago_titulo' => 'Editar · :lago',
+    // Concentrado sugerido, cambio gradual y ración en bultos (F3)
+    'concentrado_sugerido_etiqueta' => 'Concentrado sugerido: :concentrado',
+    'cambio_gradual_titulo' => 'Cambio gradual de concentrado (día :dia de 3 · :fraccion)',
+    'cambio_gradual_hoy' => 'Hoy: :kg_nuevo kg de :nuevo (:fraccion) y :kg_anterior kg de :anterior.',
+    'unidad_racion' => 'Unidad de la ración',
+    'unidades_racion' => [
+        'kg' => 'Kilos (kg)',
+        'bultos' => 'Bultos',
+    ],
+    'bultos_esta_toma' => 'Bultos de esta toma',
 ];

@@ -179,23 +179,39 @@ export const iniciarCampo = (t, cola) => {
 
     const camposDe = (seccion, formulario) => {
         const lagos = lagosPara(seccion);
-        const selectorLago = lista(lagos.map((lago) => [lago.id, lago.nombre]), seccion === 'ronda' ? t('campo_toda_la_finca') : t('campo_elige'));
+        const textoLago = (lago) => (lago.fase ? t('campo_opcion_lago_fase', { nombre: lago.nombre, fase: lago.fase }) : lago.nombre);
+        const selectorLago = lista(lagos.map((lago) => [lago.id, textoLago(lago)]), seccion === 'ronda' ? t('campo_toda_la_finca') : t('campo_elige'));
         const campos = [grupo('lago_id', t(seccion === 'ronda' ? 'campo_lago_opcional' : 'campo_lago'), selectorLago)];
         const fecha = () => grupo('fecha', t('campo_fecha'), entrada('date', { value: fechaLocal(), max: fechaLocal(), required: '' }));
 
         if (seccion === 'racion') {
-            const concentrados = lista((paquete.concentrados ?? []).map((c) => [c.tipo, t('campo_opcion_concentrado', { tipo: c.tipo, kg: c.kg.toLocaleString(document.documentElement.lang) })]), t('campo_elige'));
+            const etiquetaConcentrado = (c) => (c.nombre_corto && c.nombre_corto !== c.tipo ? `${c.nombre_corto} · ${c.tipo}` : c.tipo);
+            const concentrados = lista((paquete.concentrados ?? []).map((c) => [c.tipo, t('campo_opcion_concentrado', { tipo: etiquetaConcentrado(c), kg: c.kg.toLocaleString(document.documentElement.lang) })]), t('campo_elige'));
             const kg = entrada('text', { inputmode: 'decimal', autocomplete: 'off' });
+            const unidadRacion = lista([['kg', t('campo_unidad_kg')], ['bultos', t('campo_unidad_bultos')]]);
             const grupoKg = grupo('cantidad_kg', t('campo_kg'), kg, ' ');
+            const grupoUnidadRacion = grupo('unidad_racion', t('campo_unidad'), unidadRacion);
+            const cantidadYUnidad = el('div', 'grid grid-cols-[1fr_auto] items-start gap-3');
+            cantidadYUnidad.append(grupoKg, grupoUnidadRacion);
             const ayuda = grupoKg.querySelector('#ayuda-cantidad_kg');
             ayuda.textContent = '';
             selectorLago.addEventListener('change', () => {
-                const sugerida = lagos.find((lago) => String(lago.id) === selectorLago.value)?.racion_sugerida_kg;
-                ayuda.textContent = sugerida ? t('campo_racion_sugerida', { kg: sugerida.toLocaleString(document.documentElement.lang) }) : '';
-                if (sugerida && kg.value === '') kg.value = String(sugerida);
+                const lago = lagos.find((uno) => String(uno.id) === selectorLago.value);
+                const sugerida = lago?.racion_sugerida_kg;
+                const sugerido = lago?.concentrado_sugerido;
+                if (sugerida && sugerido) {
+                    ayuda.textContent = t('campo_racion_sugerida_con', { kg: sugerida.toLocaleString(document.documentElement.lang), concentrado: sugerido });
+                } else {
+                    ayuda.textContent = sugerida ? t('campo_racion_sugerida', { kg: sugerida.toLocaleString(document.documentElement.lang) }) : '';
+                }
+                if (sugerida && kg.value === '' && unidadRacion.value === 'kg') kg.value = String(sugerida);
+                if (sugerido && concentrados.value === '') {
+                    const enBodega = (paquete.concentrados ?? []).find((c) => c.tipo === sugerido || c.nombre_corto === sugerido);
+                    if (enBodega) concentrados.value = enBodega.tipo;
+                }
             });
             if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-ficha border border-alerta-borde bg-alerta-fondo p-4 text-base font-semibold text-alerta', t('campo_sin_concentrado')));
-            campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), grupoKg, fecha());
+            campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), cantidadYUnidad, fecha());
         }
 
         if (seccion === 'mortalidad' || seccion === 'muestreo' || seccion === 'aviso_pesca') {

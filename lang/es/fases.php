@@ -1,0 +1,70 @@
+<?php
+
+return [
+    'titulo' => 'Fases de los lagos',
+    'subtitulo' => 'Define las etapas productivas de la finca y las metas esperadas por fase y especie (peso, días, supervivencia y densidad).',
+    'enlace' => 'Configurar fases y reglas',
+    'volver_ajustes' => 'Ajustes',
+    'nueva_fase' => 'Nueva fase',
+    'nombre' => 'Nombre de la fase',
+    'orden' => 'Orden',
+    'guardar_fase' => 'Guardar fase',
+    'eliminar' => 'Eliminar',
+    'confirmar_eliminar' => '¿Eliminar la fase «:nombre»?',
+    'sin_fases' => 'Aún no hay fases configuradas en la finca.',
+    'lagos_en_fase' => '{0} Sin lagos|{1} 1 lago|[2,*] :count lagos',
+
+    'por_defecto' => [
+        'alevinaje' => 'Alevinaje',
+        'precria' => 'Precría',
+        'levante' => 'Levante',
+        'engorde' => 'Engorde',
+    ],
+
+    'reglas' => [
+        'titulo' => 'Reglas por especie en :fase',
+        'subtitulo' => 'Valores esperados para comparar con lo real en el detalle del lago. Deja en blanco lo que no aplique.',
+        'especie' => 'Especie',
+        'peso_entrada_g' => 'Peso entrada (g)',
+        'peso_salida_g' => 'Peso salida (g)',
+        'dias_esperados' => 'Días en la fase',
+        'supervivencia_porcentaje' => 'Supervivencia (%)',
+        'densidad_min_m2' => 'Densidad mín. (peces/m²)',
+        'densidad_max_m2' => 'Densidad máx. (peces/m²)',
+        'concentrado' => 'Concentrado de la fase',
+        'concentrado_del_tramo' => 'El del tramo de peso',
+        'concentrado_ayuda' => 'Si lo eliges, la ración sugiere este concentrado a los lagos de esta fase; si no, el que corresponde al peso en la tabla de ración.',
+        'dias_ayuda' => 'Los días en la fase se comparan desde la fase F5, cuando los traslados arrastren los días de cada lote.',
+        'guardar' => 'Guardar regla',
+    ],
+
+    // Comparación real contra la regla de la fase en el detalle del lago (sin días hasta F5)
+    'comparacion' => [
+        'titulo' => 'Fase :fase · real contra la regla',
+        'sin_regla' => 'La fase :fase aún no tiene reglas configuradas para :especie.',
+        'sin_dato' => 'sin dato',
+        'sin_area' => 'Sin área del lago',
+        'gramos' => ':valor g',
+        'porcentaje' => ':valor %',
+        'peso' => 'Peso promedio',
+        'peso_rango' => 'Entrada: :entrada · salida: :salida',
+        'estados_peso' => [
+            'bajo_entrada' => 'Por debajo del peso de entrada',
+            'en_fase' => 'Dentro de la fase',
+            'salida' => 'Llegó al peso de salida',
+        ],
+        'supervivencia' => 'Supervivencia',
+        'supervivencia_esperada' => 'Esperada: :esperada',
+        'supervivencia_baja' => 'Por debajo de la esperada',
+        'supervivencia_bien' => 'Dentro de lo esperado',
+        'densidad' => 'Densidad del lago',
+        'densidad_valor' => ':real peces/m²',
+        'densidad_rango' => 'Referencia: :min a :max peces/m²',
+        'densidad_sin_referencia' => 'Referencia: sin dato',
+        'estados_densidad' => [
+            'alta' => 'Por encima de la densidad de referencia',
+            'baja' => 'Por debajo de la densidad de referencia',
+            'en_rango' => 'En rango',
+        ],
+    ],
+];

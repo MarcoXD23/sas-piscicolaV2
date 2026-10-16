@@ -43,11 +43,20 @@
                     </span>
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
-                            <h2 class="text-lg font-semibold text-tinta">{{ $stock->tipo_concentrado }}</h2>
+                            <h2 class="text-lg font-semibold text-tinta">{{ $stock->concentrado?->etiqueta() ?? $stock->tipo_concentrado }}</h2>
                             @if ($estilo['chip'])
                                 <span class="rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $estilo['chip'] }}">{{ $estilo['texto'] }}</span>
                             @endif
                         </div>
+                        @if ($stock->concentrado && ($stock->concentrado->proteina_porcentaje !== null || $stock->concentrado->pellet_mm !== null))
+                            <p class="mt-0.5 text-xs text-tinta-suave">
+                                {{ collect([
+                                    $stock->concentrado->proteina_porcentaje !== null ? $numero($stock->concentrado->proteina_porcentaje, 1).' %' : null,
+                                    $stock->concentrado->pellet_mm,
+                                    __('concentrados.bulto_de_kg', ['kg' => $numero($stock->concentrado->peso_bulto_kg, 0)]),
+                                ])->filter()->join(' · ') }}
+                            </p>
+                        @endif
                         <p class="mt-1 text-3xl font-bold tabular-nums {{ $estilo['cifra'] }}">
                             {{ $numero($stock->cantidad_kg, 2) }} <span class="text-base font-medium text-tinta-suave">kg</span>
                         </p>
@@ -182,8 +191,8 @@
                     <x-campo nombre="lote" id="recepcion-lote" :etiqueta="__('bodega.lote_produccion')" />
                 </fieldset>
                 <datalist id="concentrados">
-                    @foreach ($cobertura as $item)
-                        <option value="{{ $item['stock']->tipo_concentrado }}"></option>
+                    @foreach ($concentradosCatalogo->pluck('nombre')->merge($cobertura->map(fn ($item) => $item['stock']->tipo_concentrado))->unique() as $nombreConcentrado)
+                        <option value="{{ $nombreConcentrado }}"></option>
                     @endforeach
                 </datalist>
 
@@ -208,8 +217,8 @@
                 <x-campo nombre="proveedor" id="despacho-proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" required />
                 <x-campo nombre="tipo_concentrado" id="despacho-tipo" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados-despacho" required />
                 <datalist id="concentrados-despacho">
-                    @foreach ($cobertura as $item)
-                        <option value="{{ $item['stock']->tipo_concentrado }}"></option>
+                    @foreach ($concentradosCatalogo->pluck('nombre')->merge($cobertura->map(fn ($item) => $item['stock']->tipo_concentrado))->unique() as $nombreConcentrado)
+                        <option value="{{ $nombreConcentrado }}"></option>
                     @endforeach
                 </datalist>
                 <x-campo nombre="lote" id="despacho-lote" :etiqueta="__('bodega.lote_produccion')" required />

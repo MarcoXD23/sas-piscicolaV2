@@ -22,7 +22,15 @@ final class AjustesFinca
         $definicion = CatalogoAjustes::definicion($clave);
         $guardado = AjusteFinca::query()->where('clave', $clave)->first();
 
-        return $guardado !== null && in_array($guardado->valor, $definicion['opciones'], true) ? $guardado->valor : $definicion['defecto'];
+        return $guardado !== null && self::valido($definicion, $guardado->valor) ? $guardado->valor : $definicion['defecto'];
+    }
+
+    /** Un valor guardado vale si es una de las opciones o un entero dentro del rango; si no, se usa el valor por defecto. */
+    private static function valido(array $definicion, mixed $valor): bool
+    {
+        return $definicion['tipo'] === CatalogoAjustes::TIPO_ENTERO
+            ? is_int($valor) && $valor >= $definicion['min'] && $valor <= $definicion['max']
+            : in_array($valor, $definicion['opciones'], true);
     }
 
     /** @return array<string, mixed> clave => valor de todos los ajustes del catálogo */
@@ -35,20 +43,24 @@ final class AjustesFinca
     public static function reglas(): array
     {
         return collect(CatalogoAjustes::todos())->mapWithKeys(fn (array $definicion, string $clave) => [
-            CatalogoAjustes::campo($clave) => ['required', 'string', Rule::in($definicion['opciones'])],
+            CatalogoAjustes::campo($clave) => $definicion['tipo'] === CatalogoAjustes::TIPO_ENTERO
+                ? ['required', 'integer', 'min:'.$definicion['min'], 'max:'.$definicion['max']]
+                : ['required', 'string', Rule::in($definicion['opciones'])],
         ])->all();
     }
 
-    /** Texto de una opción, para la pantalla y la bitácora. */
-    public static function textoOpcion(string $clave, string $valor): string
+    /** Texto de un valor (la opción, o el número con su unidad), para la pantalla y la bitácora. */
+    public static function textoOpcion(string $clave, string|int $valor): string
     {
-        return __("ajustes_finca.{$clave}.opciones.{$valor}");
+        return CatalogoAjustes::definicion($clave)['tipo'] === CatalogoAjustes::TIPO_ENTERO
+            ? __("ajustes_finca.{$clave}.valor", ['valor' => $valor])
+            : __("ajustes_finca.{$clave}.opciones.{$valor}");
     }
 
     /**
      * Guarda los valores que cambiaron (validados con reglas()) y deja cada cambio en la bitácora.
      *
-     * @param  array<string, string>  $datos  campo => valor
+     * @param  array<string, string|int>  $datos  campo => valor
      * @return int cuántos ajustes cambiaron
      */
     public static function guardar(User $usuario, array $datos): int
@@ -61,7 +73,7 @@ final class AjustesFinca
                     continue;
                 }
                 $antes = self::valor($clave);
-                $nuevo = $datos[$campo];
+                $nuevo = $definicion['tipo'] === CatalogoAjustes::TIPO_ENTERO ? (int) $datos[$campo] : $datos[$campo];
                 if ($nuevo === $antes) {
                     continue;
                 }

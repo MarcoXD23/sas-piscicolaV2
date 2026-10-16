@@ -27,8 +27,17 @@
     </a>
 
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
-                  :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]))">
+                  :subtitulo="collect([
+                      __('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]),
+                      $lago->fase?->nombre,
+                      $lago->area_m2 !== null ? __('lagos.area_m2', ['area' => $numero($lago->area_m2, $lago->area_m2 == (int) $lago->area_m2 ? 0 : 1)]) : null,
+                      $densidadActual !== null ? __('lagos.densidad_actual', ['densidad' => $numero($densidadActual, 2)]) : null,
+                      $lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]),
+                  ])->filter()->join(' · ')">
         @if ($puedeOperar)
+            <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-editar-lago">
+                {{ __('lagos.editar_lago') }}
+            </x-boton>
             {{-- Quién mide el agua: ajuste de la finca (F4) --}}
             @if (\App\Support\Ajustes\QuienMideAgua::puedeMedir(\App\Models\Rol::ADMINISTRADOR))
                 <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
@@ -241,6 +250,24 @@
                     <p class="mt-1 text-base text-tinta-suave">
                         {{ __('lagos.tomas_de', ['tomas' => $racion['tomas'], 'kg' => $numero($racion['kg_por_toma'], 1)]) }}
                     </p>
+                    @if (! empty($racion['concentrado_etiqueta']))
+                        <p class="mt-1.5 text-sm font-semibold text-marca-700">
+                            {{ __('lagos.concentrado_sugerido_etiqueta', ['concentrado' => $racion['concentrado_etiqueta']]) }}
+                        </p>
+                    @endif
+
+                    @if (! empty($racion['cambio_gradual']))
+                        <x-aviso tono="atencion" icono="alimentar" class="mt-4 text-sm">
+                            <strong class="block font-bold">{{ __('lagos.cambio_gradual_titulo', ['dia' => $racion['cambio_gradual']['dia'], 'fraccion' => $racion['cambio_gradual']['fraccion']]) }}</strong>
+                            <span>{{ __('lagos.cambio_gradual_hoy', [
+                                'kg_nuevo' => $numero($racion['cambio_gradual']['kg_nuevo'], 1),
+                                'nuevo' => $racion['cambio_gradual']['nuevo'],
+                                'fraccion' => $racion['cambio_gradual']['fraccion'],
+                                'kg_anterior' => $numero($racion['cambio_gradual']['kg_anterior'], 1),
+                                'anterior' => $racion['cambio_gradual']['anterior'],
+                            ]) }}</span>
+                        </x-aviso>
+                    @endif
 
                     @if ($racion['factor'] < 1)
                         <x-aviso tono="atencion" class="mt-4 text-sm">{{ __('lagos.racion_reducida', ['horas' => \App\Support\CalculadoraRacion::HORAS_MEDICION_VIGENTE]) }}</x-aviso>
@@ -257,6 +284,12 @@
                                     {{ __('lagos.porcentaje_de_biomasa', ['porcentaje' => $numero($fila['porcentaje'], 1), 'kg' => $numero($fila['biomasa_kg'], 1)]) }}
                                     @if ($fila['proteina'])
                                         · {{ __('lagos.etapa_proteina', ['etapa' => __('lagos.etapas.'.$fila['etapa']), 'proteina' => $fila['proteina']]) }}
+                                    @endif
+                                    @if (! empty($fila['pellet']))
+                                        · {{ $fila['pellet'] }}
+                                    @endif
+                                    @if (! empty($fila['concentrado_etiqueta']))
+                                        · {{ $fila['concentrado_etiqueta'] }}
                                     @endif
                                 </dd>
                             </div>
@@ -337,6 +370,22 @@
                 <x-campo nombre="dias_retiro" :etiqueta="__('lagos.dias_retiro')" tipo="number" min="0" max="365" inputmode="numeric" valor="0" required
                          :ayuda="__('lagos.dias_despues_fin_pescado_no')" />
                 <x-campo nombre="observaciones" id="tratamiento-obs" :etiqueta="__('lagos.observaciones_opcional')" />
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
+                    <x-boton>{{ __('comun.guardar') }}</x-boton>
+                </div>
+            </x-formulario>
+        </x-modal>
+
+        <x-modal id="modal-editar-lago" :titulo="__('lagos.editar_lago_titulo', ['lago' => $lago->nombre])">
+            <x-formulario :action="route('admin.lagos.update', $lago)" metodo="PUT">
+                <x-campo nombre="nombre" id="editar-lago-nombre" :etiqueta="__('lagos.nombre_codigo')" :valor="$lago->nombre" required />
+                <x-seleccion nombre="tipo" id="editar-lago-tipo" :etiqueta="__('lagos.tipo')" :opciones="$tipos" :valor="$lago->tipo" required />
+                <div class="grid grid-cols-2 gap-4">
+                    <x-seleccion nombre="fase_id" id="editar-lago-fase" :etiqueta="__('lagos.fase_opcional')" :opciones="$fases" :valor="$lago->fase_id ?? ''" />
+                    <x-campo nombre="area_m2" id="editar-lago-area" :etiqueta="__('lagos.area_m2_opcional')" tipo="number" step="0.1" min="0.1" max="1000000" inputmode="decimal" :valor="$lago->area_m2" />
+                </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>

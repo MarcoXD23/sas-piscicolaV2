@@ -97,7 +97,7 @@ final class PaqueteTrabajo
         // Celador: todos los lagos (ronda y medición). Ración, mortalidad y aviso: solo lagos con siembra activa.
         $lagos = $secciones === [] ? collect() : Lago::query()
             ->when(! $tiene(self::RONDA, self::MEDICION), fn ($consulta) => $consulta->whereHas('siembrasActivas'))
-            ->with(['siembrasActivas.especie', 'siembrasActivas.lagoOrigen', 'ultimaMedicion'])
+            ->with(['fase', 'siembrasActivas.especie', 'siembrasActivas.lagoOrigen', 'ultimaMedicion'])
             ->when($tiene(self::AVISO_PESCA), fn ($consulta) => $consulta->withExists('avisoPescaPendiente as aviso_pendiente'))
             ->orderBy('nombre')
             ->limit($maximo + 1)
@@ -142,23 +142,31 @@ final class PaqueteTrabajo
     /** @param  Collection<int, Lago>  $lagos */
     private static function lagos(Collection $lagos, \Closure $tiene, bool $medicionAdministrador): array
     {
-        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador) {
+        // La ración sugerida de todos los lagos con peces, con las mismas consultas (no una por lago)
+        $raciones = $tiene(self::RACION) ? CalculadoraRacion::paraLagos($lagos->filter(fn (Lago $lago) => $lago->siembrasActivas->isNotEmpty())) : [];
+
+        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador, $raciones) {
             // Con varios lotes de la misma especie: número del lote dentro de su especie y su origen, para elegirlo
             $numeros = LotesPorEspecie::numeros($lago->siembrasActivas);
             $porEspecie = $lago->siembrasActivas->countBy(fn (Siembra $s) => (string) ($s->especie_id ?? $s->nombre_especie));
 
             return self::lago($lago, $tiene, $medicionAdministrador, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
                 ? ['lote' => $numeros[$siembra->id], 'origen' => $siembra->textoOrigen()]
-                : []);
+                : [], $raciones[$lago->id] ?? null);
         })->values()->all();
     }
 
-    /** @param  \Closure(Siembra): array<string, mixed>  $lote */
-    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote): array
+    /**
+     * @param  \Closure(Siembra): array<string, mixed>  $lote
+     * @param  ?array<string, mixed>  $racion  la de CalculadoraRacion, o null si el lago no tiene ración
+     */
+    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote, ?array $racion): array
     {
-        return array_filter([
+        return [
             'id' => $lago->id,
             'nombre' => $lago->nombre,
+            'fase' => $lago->fase?->nombre,
+        ] + array_filter([
             'siembras' => $lago->siembrasActivas->map(fn (Siembra $siembra) => array_filter([
                 'id' => $siembra->id,
                 'especie' => $siembra->nombre_especie,
@@ -170,7 +178,8 @@ final class PaqueteTrabajo
                 'peso_actual_g' => $tiene(self::MUESTREO) ? round((float) $siembra->peso_actual_g, 2) : null,
                 'url_muestreo' => $tiene(self::MUESTREO) ? route('admin.muestreos.store', $siembra->id, absolute: false) : null,
             ], fn ($valor) => $valor !== null))->values()->all(),
-            'racion_sugerida_kg' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? CalculadoraRacion::paraLago($lago)['kg_por_toma'] : null,
+            'racion_sugerida_kg' => $racion ? $racion['kg_por_toma'] : null,
+            'concentrado_sugerido' => $racion['concentrado_sugerido'] ?? null,
             'aviso_pendiente' => $tiene(self::AVISO_PESCA) ? (bool) $lago->aviso_pendiente : null,
             'url_racion' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? route('admin.raciones.store', $lago->id, absolute: false) : null,
             'url_aviso_pesca' => $tiene(self::AVISO_PESCA) && $lago->siembrasActivas->isNotEmpty() ? route('admin.avisos-pesca.store', $lago, absolute: false) : null,
@@ -182,8 +191,14 @@ final class PaqueteTrabajo
     /** Concentrados con existencias (lo recibido en bodega). Solo informativo: el servidor descuenta al llegar. */
     private static function concentrados(): array
     {
-        return StockAlimento::query()->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get()
-            ->map(fn (StockAlimento $stock) => ['tipo' => $stock->tipo_concentrado, 'kg' => round((float) $stock->cantidad_kg, 2)])
+        return StockAlimento::query()->with('concentrado')->where('cantidad_kg', '>', 0)->orderBy('tipo_concentrado')->get()
+            ->map(fn (StockAlimento $stock) => [
+                'tipo' => $stock->tipo_concentrado,
+                'kg' => round((float) $stock->cantidad_kg, 2),
+            ] + array_filter([
+                'nombre_corto' => $stock->concentrado?->nombre_corto,
+                'peso_bulto_kg' => $stock->concentrado !== null ? round((float) $stock->concentrado->peso_bulto_kg, 2) : null,
+            ], fn ($valor) => $valor !== null))
             ->all();
     }
 

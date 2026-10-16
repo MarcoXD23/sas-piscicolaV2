@@ -7,11 +7,13 @@ use App\Http\Controllers\Admin\AlertaController;
 use App\Http\Controllers\Admin\AvisoPescaController;
 use App\Http\Controllers\Admin\BitacoraController;
 use App\Http\Controllers\Admin\BodegaController;
+use App\Http\Controllers\Admin\ConcentradoController;
 use App\Http\Controllers\Admin\ConversionController;
 use App\Http\Controllers\Admin\CosechaController;
 use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\EspecieFotoController;
+use App\Http\Controllers\Admin\FaseController;
 use App\Http\Controllers\Admin\JornaleroController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
@@ -141,6 +143,18 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
         Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
         Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
         Route::put('/ajustes/operacion', [AjustesFincaController::class, 'guardarOperacion'])->name('ajustes.operacion');
+        Route::get('/ajustes/fases', [FaseController::class, 'index'])->name('fases.index');
+        Route::post('/ajustes/fases', [FaseController::class, 'store'])->name('fases.store');
+        Route::put('/ajustes/fases/{fase}', [FaseController::class, 'update'])->whereNumber('fase')->name('fases.update');
+        Route::delete('/ajustes/fases/{fase}', [FaseController::class, 'destroy'])->whereNumber('fase')->name('fases.destroy');
+        Route::post('/ajustes/fases/{fase}/reglas', [FaseController::class, 'guardarRegla'])->whereNumber('fase')->name('fases.reglas.guardar');
+
+        Route::get('/ajustes/concentrados', [ConcentradoController::class, 'index'])->name('concentrados.index');
+        Route::post('/ajustes/concentrados', [ConcentradoController::class, 'store'])->name('concentrados.store');
+        Route::put('/ajustes/concentrados/{concentrado}', [ConcentradoController::class, 'update'])->whereNumber('concentrado')->name('concentrados.update');
+        Route::post('/ajustes/concentrados/racion', [ConcentradoController::class, 'guardarTramo'])->name('concentrados.racion.guardar');
+        Route::delete('/ajustes/concentrados/racion/{tramo}', [ConcentradoController::class, 'eliminarTramo'])->whereNumber('tramo')->name('concentrados.racion.eliminar');
+        Route::post('/ajustes/concentrados/racion/{especie}/restaurar', [ConcentradoController::class, 'restaurarEspecie'])->whereNumber('especie')->name('concentrados.racion.restaurar');
 
         Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('/agenda', [AgendaController::class, 'store'])->name('agenda.store');
@@ -191,6 +205,7 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
     // Operación de la finca: solo el administrador (o el propietario que también es administrador)
     Route::middleware('rol:administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/lagos', [LagoController::class, 'store'])->name('lagos.store');
+        Route::put('/lagos/{lago}', [LagoController::class, 'update'])->whereNumber('lago')->name('lagos.update');
         Route::post('/lagos/{lago}/siembras', [SiembraController::class, 'store'])->name('siembras.store');
         Route::post('/siembras/{siembra}/finalizar', [SiembraController::class, 'finalizar'])->name('siembras.finalizar');
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');

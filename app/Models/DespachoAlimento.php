@@ -28,7 +28,7 @@ class DespachoAlimento extends Model
 
     protected $table = 'despachos_alimento';
 
-    protected $fillable = ['user_id', 'fecha', 'proveedor', 'tipo_concentrado', 'bultos', 'peso_bulto_kg', 'cantidad_kg', 'lote'];
+    protected $fillable = ['user_id', 'concentrado_id', 'fecha', 'proveedor', 'tipo_concentrado', 'bultos', 'peso_bulto_kg', 'cantidad_kg', 'lote'];
 
     protected function casts(): array
     {
@@ -38,6 +38,11 @@ class DespachoAlimento extends Model
             'peso_bulto_kg' => 'float',
             'revisado_at' => InstanteLocal::class,
         ];
+    }
+
+    public function concentrado(): BelongsTo
+    {
+        return $this->belongsTo(Concentrado::class);
     }
 
     public function usuario(): BelongsTo

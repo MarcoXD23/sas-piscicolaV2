@@ -90,6 +90,23 @@ document.querySelectorAll('[data-muestreo]').forEach((muestreo) => {
     calcular();
 });
 
+// Ración en kilos o en bultos (Lagos › Alimentar): el campo dice la unidad elegida. Al pasar a bultos se vacía la
+// cantidad sugerida en kilos (para no enviarla como bultos); al volver a kilos se recupera.
+document.querySelectorAll('[data-racion-unidad]').forEach((grupo) => {
+    const unidad = grupo.querySelector('[data-unidad-racion]');
+    const cantidad = grupo.querySelector('input[name="cantidad_kg"]');
+    const etiqueta = cantidad && grupo.querySelector(`label[for="${cantidad.id}"]`);
+    if (!unidad || !cantidad || !etiqueta) return;
+    const sugerida = cantidad.value;
+
+    unidad.addEventListener('change', () => {
+        const enBultos = unidad.value === 'bultos';
+        etiqueta.firstChild.textContent = enBultos ? grupo.dataset.etiquetaBultos : grupo.dataset.etiquetaKg;
+        if (enBultos && cantidad.value === sugerida) cantidad.value = '';
+        if (!enBultos && cantidad.value === '') cantidad.value = sugerida;
+    });
+});
+
 // Sin conexión: franja de aviso (la página puede ser una copia guardada por el service worker; solo consulta)
 const franjaSinConexion = document.querySelector('[data-sin-conexion]');
 const mostrarConexion = () => { if (franjaSinConexion) franjaSinConexion.hidden = navigator.onLine; };

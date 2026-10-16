@@ -8,10 +8,13 @@ use App\Models\Lago;
 use App\Models\Mortalidad;
 use App\Models\Rol;
 use App\Models\User;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\CalculadoraRacion;
 use App\Support\CoberturaBodega;
 use App\Support\Region;
 use App\Support\TenantActual;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -46,7 +49,7 @@ class EvaluadorAlertas
             return;
         }
 
-        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua(), ...self::despachos()])
+        $condiciones = collect([...self::stock(), ...self::mortalidad(), ...self::agua(), ...self::despachos(), ...self::muestreos()])
             ->keyBy(fn ($condicion) => $condicion['tipo'].'|'.$condicion['referencia']);
 
         $porAvisar = DB::transaction(function () use ($tenantId, $condiciones) {
@@ -217,6 +220,53 @@ class EvaluadorAlertas
                     'referencia' => (string) $lago->id,
                     'severidad' => in_array('oxigeno', array_column($problemas, 'parametro'), true) ? Alerta::CRITICA : Alerta::ADVERTENCIA,
                     'datos' => ['lago' => $lago->nombre, 'lago_id' => $lago->id, 'problemas' => array_column($problemas, 'texto'), 'medicion_id' => $medicion->id],
+                ];
+            }
+        }
+
+        return $condiciones;
+    }
+
+    /**
+     * Lagos con siembra activa que superan el plazo sin muestreo del ajuste de la finca (30 días por defecto).
+     * Un lote sin ningún muestreo cuenta desde su fecha de siembra.
+     *
+     * @return list<array{tipo: string, referencia: string, severidad: string, datos: array<string, mixed>}>
+     */
+    private static function muestreos(): array
+    {
+        $plazo = (int) AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
+        $hoy = Region::hoy()->startOfDay();
+        $condiciones = [];
+
+        $lagos = Lago::query()
+            ->whereHas('siembrasActivas')
+            ->with(['siembrasActivas' => fn ($q) => $q->withMax('muestreos', 'fecha')])
+            ->get();
+
+        foreach ($lagos as $lago) {
+            $maxDias = null;
+
+            foreach ($lago->siembrasActivas as $siembra) {
+                $ultimaFecha = $siembra->muestreos_max_fecha;
+                $base = $ultimaFecha !== null ? Carbon::parse($ultimaFecha)->startOfDay() : $siembra->fecha->startOfDay();
+                $dias = (int) $base->diffInDays($hoy, false);
+                if ($dias > $plazo && ($maxDias === null || $dias > $maxDias)) {
+                    $maxDias = $dias;
+                }
+            }
+
+            if ($maxDias !== null) {
+                $condiciones[] = [
+                    'tipo' => Alerta::MUESTREO,
+                    'referencia' => (string) $lago->id,
+                    'severidad' => Alerta::ADVERTENCIA,
+                    'datos' => [
+                        'lago' => $lago->nombre,
+                        'lago_id' => $lago->id,
+                        'dias' => $maxDias,
+                        'plazo' => $plazo,
+                    ],
                 ];
             }
         }

@@ -71,6 +71,29 @@ En **Ajustes › Operación de la finca** el propietario define cómo trabaja su
 - Lo que la finca cambia se guarda en `ajustes_finca` y cada cambio queda en la bitácora.
 - Un ajuste nuevo se agrega al catálogo, con sus textos en `lang/es/ajustes_finca.php`, sin migración. Solo se agregan los que usa alguna función.
 
+### Fases de los lagos
+
+En **Ajustes › Fases de los lagos** el propietario configura las etapas productivas de la finca y las reglas orientativas por fase y especie (`fases` y `reglas_fase`):
+
+- Cada finca arranca con 4 fases por defecto (**Alevinaje**, **Precría**, **Levante** y **Engorde**). Las reglas iniciales traen **solo los datos de la finca piloto** (tema 15.1 del diseño) para las especies de agua cálida; lo demás queda vacío y la pantalla dice «sin dato».
+- El propietario puede agregar, renombrar, reordenar o eliminar fases (solo si no tienen lagos asignados). Por especie ajusta el peso de entrada y salida, los días esperados, la supervivencia esperada, la densidad mínima y máxima en peces/m² y el concentrado de la fase.
+- El administrador asigna opcionalmente la **fase** y el **área en m²** de cada lago al crearlo o editarlo.
+- El detalle del lago muestra la fase, el área y la densidad actual (`peces vivos del lago ÷ área`). En cada lote activo de un lago con fase compara lo real con la regla: el peso contra el rango de la fase, la supervivencia y la densidad ([`EstadoFase`](app/Support/EstadoFase.php)). **El atraso en días llega con F5**, cuando los traslados arrastren los días en la fase.
+- En Registro rápido, el selector de lago incluye su fase cuando la tiene.
+
+### Concentrados y ración
+
+En **Ajustes › Concentrados y ración** el propietario lleva el catálogo de concentrados (nombre, nombre corto, proteína, pellet y peso del bulto) y la tabla de ración por especie (`concentrados` y `tabla_racion`):
+
+- La ración sugerida sale solo de la tabla de la finca ([`CalculadoraRacion`](app/Support/CalculadoraRacion.php)). Una especie sin tabla no tiene sugerencia.
+- La tabla arranca con los porcentajes de antes y, en el perfil cálido, los datos de la finca piloto (tema 15.3).
+- El concentrado sugerido es el de la regla de la fase del lago. Si la fase no tiene uno, es el del tramo de peso.
+- Cuando el lago venía comiendo otro concentrado, avisa el cambio gradual (¼, ½ y ¾).
+- La ración se registra en kilos o en bultos.
+- La bodega no agrega concentrados al catálogo: un nombre que no está se guarda como texto.
+- Renombrar un concentrado no cambia los registros guardados. El nombre viejo sigue llevando al mismo concentrado, también desde la cola de un teléfono.
+- El plazo del muestreo (30 días por defecto) es el ajuste «Plazo del muestreo» de Operación de la finca. Pasado ese plazo, Alertas avisa «muestreo vencido».
+
 **Instalaciones existentes:** la migración `convert_timestamps_to_utc` pasa a UTC las horas ya guardadas (que estaban en hora de Bogotá). Antes de correr `php artisan migrate` en producción, saca una copia con `php artisan piscicola:respaldar`, que guarda fuera del proyecto (ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)).
 
 ## Requisitos

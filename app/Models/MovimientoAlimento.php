@@ -17,6 +17,7 @@ class MovimientoAlimento extends Model
         'user_id',
         'lago_id',
         'despacho_id',
+        'concentrado_id',
         'fecha',
         'tipo_movimiento',
         'tipo_concentrado',
@@ -30,6 +31,11 @@ class MovimientoAlimento extends Model
     protected function casts(): array
     {
         return ['fecha' => 'date'];
+    }
+
+    public function concentrado(): BelongsTo
+    {
+        return $this->belongsTo(Concentrado::class);
     }
 
     public function usuario(): BelongsTo
