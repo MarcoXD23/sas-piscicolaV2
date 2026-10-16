@@ -3,6 +3,7 @@
 use App\Http\Middleware\AceptacionVigente;
 use App\Http\Middleware\CabecerasSeguridad;
 use App\Http\Middleware\CookieSeguraConHttps;
+use App\Http\Middleware\DosPasosObligatoria;
 use App\Http\Middleware\EstablecerTenant;
 use App\Http\Middleware\HoraServidor;
 use App\Http\Middleware\PlataformaConDosPasos;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'sin_conexion' => RegistroSinConexion::class,   // siempre antes de 'turno'
             'aceptacion' => AceptacionVigente::class,       // términos y privacidad aceptados (versión vigente)
             'plataforma_dos_pasos' => PlataformaConDosPasos::class,   // panel de plataforma: dos pasos obligatoria
+            'dos_pasos_obligatoria' => DosPasosObligatoria::class,    // la finca la exige a propietario y administrador
         ]);
 
         // El tenant debe fijarse antes del route model binding para que el scope aplique.

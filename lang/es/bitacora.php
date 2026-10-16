@@ -4,6 +4,7 @@ return [
     'accion' => 'Acción',
     'acciones' => [
         'ajustes' => 'Ajustes',
+        'sesiones_cerradas' => 'Sesiones del personal cerradas',
         'aprobacion' => 'Aprobación',
         'aviso_atendido' => 'Aviso atendido',
         'aviso_pesca' => 'Listo para pescar',
@@ -40,6 +41,7 @@ return [
     'detalle' => 'Detalle',
     'detalles' => [
         'ajustes' => 'Ajuste «:ajuste»: :antes → :despues',
+        'sesiones_cerradas' => 'Cerró la sesión de todo el personal (:personas personas)',
         'aprobacion' => ':persona aprobado como :roles',
         'aviso_atendido' => 'Aviso de pesca de :especie atendido',
         'aviso_pesca' => ':especie lista para pescar. :nota',

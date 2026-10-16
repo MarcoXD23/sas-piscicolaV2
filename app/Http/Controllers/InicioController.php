@@ -6,6 +6,7 @@ use App\Models\Alerta;
 use App\Models\AvisoPesca;
 use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
+use App\Models\Ingreso;
 use App\Models\Lago;
 use App\Models\Permiso;
 use App\Models\Rol;
@@ -37,6 +38,8 @@ class InicioController extends Controller
 
         return view('inicio', [
             'usuario' => $usuario,
+            // Ingreso desde un equipo nuevo que la persona todavía no vio (aviso con «No fui yo» y «Entendido»)
+            'equipoNuevo' => Ingreso::query()->where('user_id', $usuario->id)->avisoPendiente()->latest('id')->first(),
             // Primeros pasos de una finca nueva (solo propietario y administrador)
             'primerUso' => PrimerUso::paraInicio($usuario),
             'esPropietario' => $esPropietario,

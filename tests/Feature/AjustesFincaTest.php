@@ -57,7 +57,7 @@ class AjustesFincaTest extends TestCase
         // Por defecto «ambos»: como funciona hoy (el administrador desde Lagos y el celador desde Seguridad & Noche)
         $this->assertSame(CatalogoAjustes::QUIEN_MIDE_AMBOS, AjustesFinca::valor(CatalogoAjustes::AGUA_QUIEN_MIDE));
         // Plazo del muestreo: 30 días (diseño, tema 15.3)
-        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30], AjustesFinca::todos());
+        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30, CatalogoAjustes::SEGURIDAD_DOS_PASOS => 'apagada'], AjustesFinca::todos());
         $this->assertSame(0, AjusteFinca::count());
 
         $this->actingAs($this->propietario)->get(route('admin.ajustes.edit'))->assertOk()

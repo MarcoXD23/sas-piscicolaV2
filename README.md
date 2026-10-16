@@ -354,7 +354,22 @@ Resultado de la auditoría de la Fase 24 (ya aplicado):
 
 ## Mi cuenta y verificación en dos pasos
 
-- **Mi cuenta** (`/mi-cuenta`, todos los roles): cambiar la contraseña pidiendo la actual (mínimo 8, distinta del correo). Al cambiarla se cierran las demás sesiones, deja de servir «recordarme» en otros equipos y se revocan los tokens de la API.
+- **Mi cuenta** (`/mi-cuenta`, todos los roles): cambiar la contraseña pidiendo la actual (la regla de las contraseñas nuevas: 10 caracteres con mayúscula, minúscula y número, distinta del correo). Al cambiarla se cierran las demás sesiones, deja de servir «recordarme» en otros equipos y se revocan los tokens de la API.
+  - **Mis datos:** el nombre propio se edita. El correo todavía no se cambia, porque falta el envío de correos para verificarlo. Muestra la finca y los roles.
+  - **Mis sesiones abiertas** (tabla `sessions`, `SESSION_DRIVER=database`): el equipo y el navegador, la última actividad y «esta sesión». Se puede cerrar una, o todas las demás pidiendo la contraseña; esto también revoca los tokens de la API.
+  - **Mis últimos ingresos:** los últimos 20, exitosos y fallidos (web, segundo paso y API), con el equipo y la red recortada, nunca la IP completa (tabla `ingresos`, se guardan 90 días). Un correo inventado no se guarda.
+  - **Equipo nuevo:** cada navegador lleva una cookie cifrada con un identificador al azar. Si alguien entra a la cuenta desde un equipo con el que nunca había entrado, el inicio lo avisa, con «No fui yo: revisar» y «Entendido».
+- **Ajustes › Seguridad** (solo propietario):
+  - **Verificación en dos pasos obligatoria para propietario y administrador** (ajuste `seguridad.dos_pasos_obligatoria`, apagado por defecto). Encendida, quien no la tenga va a activarla antes de seguir (`DosPasosObligatoria`), y no la puede quitar. Activarla, cerrar sesión y aceptar los términos siempre se pueden, y la invitación queda fuera. Para el trabajador y el celador sigue siendo opcional.
+  - **Cerrar la sesión de todo el personal** menos la propia, con la contraseña. Revoca también sus tokens de la API y queda en la bitácora.
+  - **Ingresos del personal:** los últimos 90 días, filtrables por persona.
+  - Arriba de la página hay un índice: Finca, Operación, Fases, Concentrados, Pesaje, Seguridad y Datos.
+- **Content-Security-Policy estricta** en las páginas HTML (`CabecerasSeguridad`):
+  - `default-src 'self'`, sin `'unsafe-inline'` ni `'unsafe-eval'`, y `frame-ancestors 'none'`;
+  - no hay scripts, estilos ni `onclick` en el HTML: los textos del JS van en `<script type="application/json">`, las confirmaciones en `data-confirmar` y las barras en SVG;
+  - la tabla de pesadas va sin Alpine;
+  - las descargas no la llevan;
+  - lo vigila `CspTest`.
 - **Verificación en dos pasos (TOTP)** opcional, sin servicios externos: códigos de 6 números de una app de autenticación (Google Authenticator, Microsoft Authenticator, Authy…). Se activa con un código QR (paquete `chillerlan/php-qrcode`, generado en el servidor) o escribiendo la clave a mano. La clave se guarda **cifrada** con `APP_KEY`; se entregan 10 códigos de recuperación de un solo uso, guardados solo como hashes. Un código no se acepta dos veces.
 - **Ingreso:** web, en `/ingreso/dos-pasos` después de la contraseña (vence a los 5 minutos); API, `POST /api/login` con el campo `codigo` (sin él responde 422 con `dos_pasos_requerido: true`). Límite propio: 5 intentos por minuto por persona y 20 por IP.
 - **Teléfono perdido:** el propietario quita los dos pasos a una persona de su personal desde **Personal** (queda en la bitácora); para el propietario: `php artisan piscicola:quitar-dos-pasos correo@…`.

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ingreso;
 use App\Models\User;
 use App\Support\DosPasos;
+use App\Support\Seguridad\RegistroIngresos;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +52,7 @@ class DosPasosController extends Controller
 
         if (! DosPasos::verificar($usuario, $codigo)) {
             RateLimiter::hit($clave);
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_CODIGO);
 
             throw ValidationException::withMessages(['codigo' => __('cuenta.dos_pasos.codigo_invalido')]);
         }
@@ -58,6 +61,7 @@ class DosPasosController extends Controller
         $recordar = (bool) $request->session()->pull(self::SESION)['recordar'];
         Auth::guard('web')->login($usuario, $recordar);
         $request->session()->regenerate();
+        RegistroIngresos::exitoso($usuario, $request);
 
         return redirect()->intended(route('inicio'));
     }

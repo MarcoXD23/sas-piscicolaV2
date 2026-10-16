@@ -15,6 +15,7 @@ return [
     'secciones' => [
         'agua' => 'Calidad del agua',
         'muestreo' => 'Muestreos',
+        'seguridad' => 'Seguridad',
     ],
 
     'agua' => [
@@ -34,6 +35,17 @@ return [
             'etiqueta' => 'Plazo del muestreo (días)',
             'ayuda' => 'Si un lago con peces pasa más de estos días sin muestreo, Alertas avisa «muestreo vencido». Si el lote no tiene ningún muestreo, se cuenta desde la siembra.',
             'valor' => ':valor días',
+        ],
+    ],
+
+    'seguridad' => [
+        'dos_pasos_obligatoria' => [
+            'etiqueta' => 'Verificación en dos pasos obligatoria para propietario y administrador',
+            'ayuda' => 'Si la enciendes, el propietario y el administrador que no la tengan deben activarla al entrar, antes de seguir. Para el trabajador y el celador sigue siendo opcional.',
+            'opciones' => [
+                'apagada' => 'Apagada (opcional para todos)',
+                'encendida' => 'Encendida',
+            ],
         ],
     ],
 ];

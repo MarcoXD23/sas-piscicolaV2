@@ -22,3 +22,6 @@ Schedule::command('piscicola:eliminar-fincas')->dailyAt('03:30')->withoutOverlap
 // Estado del sistema: latido del programador (lo mira /salud) y vigilancia con aviso por correo
 Schedule::call(fn () => \App\Support\Salud\Comprobaciones::latido())->everyMinute()->name('latido-programador');
 Schedule::command('piscicola:vigilar')->everyFiveMinutes()->withoutOverlapping();
+
+// Ingresos a las cuentas: se guardan 90 días (RegistroIngresos)
+Schedule::call(fn () => \App\Support\Seguridad\RegistroIngresos::limpiar())->dailyAt('03:45')->name('limpiar-ingresos');

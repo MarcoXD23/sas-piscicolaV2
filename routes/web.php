@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\PrimerUsoController;
 use App\Http\Controllers\Admin\RacionController;
+use App\Http\Controllers\Admin\SeguridadFincaController;
 use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Admin\SiembraController;
 use App\Http\Controllers\Admin\SolicitudController;
@@ -96,7 +97,8 @@ Route::get('/terminos', [LegalController::class, 'terminos'])->name('legal.termi
 Route::get('/privacidad', [LegalController::class, 'privacidad'])->name('legal.privacidad');
 
 // 'aceptacion': quien no aceptó la versión vigente de los términos va primero a aceptarlos
-Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
+// 'dos_pasos_obligatoria': si la finca la exige, el propietario y el administrador la activan antes de seguir
+Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->group(function () {
     Route::get('/aceptar-terminos', [LegalController::class, 'aceptar'])->name('legal.aceptar');
     Route::post('/aceptar-terminos', [LegalController::class, 'guardarAceptacion'])->name('legal.aceptar.store');
 
@@ -114,6 +116,12 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
         Route::get('/', [MiCuentaController::class, 'index'])->name('index');
         Route::put('/contrasena', [MiCuentaController::class, 'cambiarContrasena'])->middleware('throttle:cambiar-contrasena')->name('contrasena');
         Route::put('/formato-hora', [MiCuentaController::class, 'formatoHora'])->name('formato-hora');
+        Route::put('/nombre', [MiCuentaController::class, 'nombre'])->name('nombre');
+        // Mis sesiones abiertas: cerrar una, o todas las demás pidiendo la contraseña actual
+        Route::delete('/sesiones/{sesion}', [MiCuentaController::class, 'cerrarSesion'])->name('sesiones.cerrar');
+        Route::post('/sesiones/cerrar-demas', [MiCuentaController::class, 'cerrarDemas'])->middleware('throttle:cambiar-contrasena')->name('sesiones.cerrar-demas');
+        // Aviso de ingreso desde un equipo nuevo: «Entendido»
+        Route::post('/ingresos/{ingreso}/visto', [MiCuentaController::class, 'avisoVisto'])->whereNumber('ingreso')->name('ingresos.visto');
         Route::get('/dos-pasos/activar', [MiCuentaController::class, 'activar'])->name('dos-pasos.activar');
         Route::post('/dos-pasos/activar', [MiCuentaController::class, 'confirmar'])->middleware('throttle:cambiar-contrasena')->name('dos-pasos.confirmar');
         Route::get('/dos-pasos/codigos', [MiCuentaController::class, 'codigos'])->name('dos-pasos.codigos');
@@ -153,6 +161,10 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
         Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
         Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
         Route::put('/ajustes/operacion', [AjustesFincaController::class, 'guardarOperacion'])->name('ajustes.operacion');
+        // Seguridad de la finca: dos pasos obligatoria, cerrar la sesión del personal e ingresos del personal
+        Route::put('/ajustes/seguridad', [SeguridadFincaController::class, 'guardar'])->name('ajustes.seguridad.guardar');
+        Route::post('/ajustes/seguridad/cerrar-sesiones', [SeguridadFincaController::class, 'cerrarSesiones'])->middleware('throttle:cambiar-contrasena')->name('ajustes.seguridad.cerrar-sesiones');
+        Route::get('/ajustes/seguridad/ingresos', [SeguridadFincaController::class, 'ingresos'])->name('ajustes.seguridad.ingresos');
         Route::get('/ajustes/fases', [FaseController::class, 'index'])->name('fases.index');
         Route::post('/ajustes/fases', [FaseController::class, 'store'])->name('fases.store');
         Route::put('/ajustes/fases/{fase}', [FaseController::class, 'update'])->whereNumber('fase')->name('fases.update');

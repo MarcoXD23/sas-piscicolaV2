@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Auth\DosPasosController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\Ingreso;
 use App\Models\User;
 use App\Support\DosPasos;
+use App\Support\Seguridad\RegistroIngresos;
 use App\Support\TenantActual;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
@@ -23,16 +25,23 @@ class AuthController extends Controller
         $usuario = TenantActual::sinFiltro(fn () => User::query()->where('email', $request->input('email'))->first());
 
         if ($usuario === null || ! Hash::check($request->input('password'), $usuario->password)) {
+            // Intento fallido de una persona que existe: queda en sus ingresos (un correo inventado no se guarda)
+            if ($usuario !== null) {
+                RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_CONTRASENA, Ingreso::CANAL_API);
+            }
+
             throw ValidationException::withMessages([
                 'email' => __('mensajes.auth.correo_contrasena_no_son_correctos'),
             ]);
         }
 
         if ($usuario->tenant?->estaSuspendida()) {
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_SUSPENDIDA, Ingreso::CANAL_API);
             throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
         }
 
         if (! $usuario->estaAprobado()) {
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_PENDIENTE, Ingreso::CANAL_API);
             throw ValidationException::withMessages([
                 'email' => __('mensajes.auth.tu_cuenta_aun_no_ha'),
             ]);
@@ -44,6 +53,7 @@ class AuthController extends Controller
         }
 
         $token = $usuario->createToken($request->input('dispositivo', 'api'))->plainTextToken;
+        RegistroIngresos::exitoso($usuario, $request, Ingreso::CANAL_API);
 
         return response()->json([
             'token' => $token,
@@ -83,6 +93,7 @@ class AuthController extends Controller
 
         if (! DosPasos::verificar($usuario, $codigo)) {
             RateLimiter::hit($clave);
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_CODIGO, Ingreso::CANAL_API);
 
             throw ValidationException::withMessages(['codigo' => __('cuenta.dos_pasos.codigo_invalido')]);
         }

@@ -182,7 +182,9 @@ DB_DATABASE=sas_piscicola_v2
 DB_USERNAME=sas_piscicola_app
 DB_PASSWORD=CLAVE-LARGA-DE-LA-APP
 
+SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
+SESSION_ENCRYPT=true
 TRUSTED_PROXIES=
 
 MAIL_MAILER=smtp
@@ -206,6 +208,8 @@ SIN_CONEXION_MAX_LAGOS=
 - **`APP_KEY`: guárdala aparte, en tu gestor de contraseñas, el mismo día que instalas.** Con ella se cifran los documentos de los jornaleros y las claves de verificación en dos pasos. La copia de la base (`piscicola:respaldar`) **no** la incluye: si pierdes el servidor y restauras la base con una `APP_KEY` distinta, esos datos ya no se pueden leer. No la cambies nunca en producción; si alguna vez hiciera falta, conserva la anterior en `APP_PREVIOUS_KEYS`.
 - **`APP_DEBUG`:** debe quedar en `false`. Con `true`, cada error muestra el SQL y la configuración, y la app deja una alerta crítica en el log.
 - **`SESSION_SECURE_COOKIE=true`:** la cookie de sesión solo viaja por HTTPS. Hasta terminar el paso 8 (HTTPS) no se puede iniciar sesión: es lo esperado.
+- **`SESSION_ENCRYPT=true`:** lo que la sesión guarda en la base va cifrado con `APP_KEY`; quien lea la tabla `sessions` no lo entiende.
+- **`SESSION_DRIVER=database`:** las sesiones van en la tabla `sessions`. Con ella funcionan «Mis sesiones abiertas» (Mi cuenta) y «Cerrar la sesión de todo el personal» (Ajustes › Seguridad).
 - **`TRUSTED_PROXIES` vacío:** con Nginx y PHP-FPM en el mismo servidor no hay proxy delante. PHP recibe directamente la IP real del visitante y el HTTPS. Solo se llena si después pones un proxy delante, por ejemplo Cloudflare con la nube naranja: entonces van sus rangos (https://www.cloudflare.com/ips/).
 - **`RESPALDOS_HORA=07:00`:** el programador usa la hora UTC de la app. 07:00 UTC son las 02:00 en Colombia (UTC−5), cuando nadie registra. Con el valor por defecto (02:00 UTC) correría a las 21:00, en pleno turno de noche.
 - **Correo:** es obligatorio en producción, porque por ahí llegan los enlaces de "¿Olvidaste tu contraseña?" y los avisos de `/salud`. Si un valor tiene espacios o símbolos, ponlo entre comillas. Agrega en el DNS los registros SPF y DKIM que te dé el proveedor de correo, para no caer en spam.
@@ -551,6 +555,7 @@ La prueba automática `RespaldoTest` hace este mismo recorrido de verdad:
 - [ ] `APP_ENV=production`, `APP_DEBUG=false` y `APP_URL` con `https://`.
 - [ ] La app se conecta como `sas_piscicola_app`, no como `postgres`, y `postgres` no tiene clave.
 - [ ] HTTPS activo; en el navegador, la cookie de sesión aparece como `Secure`.
+- [ ] `SESSION_DRIVER=database`, `SESSION_SECURE_COOKIE=true` y `SESSION_ENCRYPT=true` en el `.env`.
 - [ ] El correo funciona (probado con "¿Olvidaste tu contraseña?") y el dominio tiene SPF y DKIM.
 - [ ] El cron (`schedule:run`) y la cola (`sas-piscicola-cola`) están activos.
 - [ ] La primera copia está hecha y probada con `piscicola:restaurar`, y `rclone` ya dejó una copia fuera de Hostinger.

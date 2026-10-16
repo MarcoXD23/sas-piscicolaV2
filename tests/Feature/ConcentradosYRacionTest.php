@@ -400,7 +400,7 @@ class ConcentradosYRacionTest extends TestCase
 
         $campo = CatalogoAjustes::campo(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
         $this->actingAs($this->propietario)->put(route('admin.ajustes.operacion'), [
-            CatalogoAjustes::campo(CatalogoAjustes::AGUA_QUIEN_MIDE) => 'ambos', $campo => 20,
+            CatalogoAjustes::campo(CatalogoAjustes::AGUA_QUIEN_MIDE) => 'ambos', $campo => 20, CatalogoAjustes::campo(CatalogoAjustes::SEGURIDAD_DOS_PASOS) => 'apagada',
         ])->assertSessionHasNoErrors();
         $this->assertSame(20, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('tenants', 'alerta_muestreo_dias'));

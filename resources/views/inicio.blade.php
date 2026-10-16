@@ -12,6 +12,23 @@
 @endphp
 
 @section('contenido')
+    {{-- Se entró a esta cuenta desde un equipo con el que nunca había entrado (RegistroIngresos) --}}
+    @if ($equipoNuevo)
+        <x-aviso tono="atencion" class="mb-6" role="alert">
+            <strong class="block font-bold">{{ __('seguridad.aviso_equipo_nuevo.titulo') }}</strong>
+            {{ __('seguridad.aviso_equipo_nuevo.detalle', ['equipo' => $equipoNuevo->equipo, 'momento' => \App\Support\Region::local($equipoNuevo->created_at)->formatoHora('d/m/Y H:i')]) }}
+            {{ __('seguridad.aviso_equipo_nuevo.no_fui') }}
+            <x-slot:accion>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('mi-cuenta.index') }}#sesiones" class="inline-flex min-h-12 items-center rounded-ficha bg-tinta px-4 font-semibold text-white transition-colors hover:bg-marca-900">{{ __('seguridad.aviso_equipo_nuevo.revisar') }}</a>
+                    <x-formulario :action="route('mi-cuenta.ingresos.visto', $equipoNuevo->id)" class="!space-y-0">
+                        <x-boton variante="secundario">{{ __('seguridad.aviso_equipo_nuevo.entendido') }}</x-boton>
+                    </x-formulario>
+                </div>
+            </x-slot:accion>
+        </x-aviso>
+    @endif
+
     {{-- Propietario y administrador manejan datos sensibles: se les pide activar la verificación en dos pasos --}}
     @if (auth()->user()->tieneRol(\App\Models\Rol::PROPIETARIO, \App\Models\Rol::ADMINISTRADOR) && ! auth()->user()->tieneDosPasos())
         <x-aviso tono="atencion" class="mb-6">

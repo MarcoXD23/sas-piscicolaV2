@@ -83,14 +83,14 @@ class VerContrasenaTest extends TestCase
 
     public function test_mi_cuenta_y_datos_de_la_finca(): void
     {
-        // Cambiar la contraseña: actual, nueva y confirmación
+        // Cambiar la contraseña (actual, nueva y confirmación) y cerrar las demás sesiones (contraseña actual)
         $this->assertConOjo($this->actingAs($this->propietario)->get(route('mi-cuenta.index'))->assertOk()->getContent(),
-            ['current-password', 'new-password', 'new-password'], 'mi cuenta');
+            ['current-password', 'new-password', 'new-password', 'current-password'], 'mi cuenta');
         // Con dos pasos activa, quitarla también pide la contraseña
         $clave = Totp::nuevaClave();
         DosPasos::activar($this->propietario, $clave, Totp::codigo($clave, Totp::pasoActual()));
         $this->assertConOjo($this->actingAs($this->propietario->fresh())->get(route('mi-cuenta.index'))->assertOk()->getContent(),
-            ['current-password', 'new-password', 'new-password', 'current-password'], 'mi cuenta con dos pasos');
+            ['current-password', 'new-password', 'new-password', 'current-password', 'current-password'], 'mi cuenta con dos pasos');
 
         $this->assertConOjo($this->actingAs($this->propietario)->get(route('admin.datos.index'))->assertOk()->getContent(), ['current-password'], 'datos de la finca');
         EliminadorFinca::solicitar($this->finca, $this->propietario);

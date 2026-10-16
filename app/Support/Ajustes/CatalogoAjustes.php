@@ -28,6 +28,13 @@ final class CatalogoAjustes
     /** Días sin muestreo después de los cuales un lago con peces avisa «muestreo vencido» (lo aplica la fase F3). */
     public const MUESTREO_PLAZO_DIAS = 'muestreo.plazo_dias';
 
+    /** Verificación en dos pasos obligatoria para propietario y administrador (DosPasosObligatoria). */
+    public const SEGURIDAD_DOS_PASOS = 'seguridad.dos_pasos_obligatoria';
+
+    public const APAGADA = 'apagada';
+
+    public const ENCENDIDA = 'encendida';
+
     public const TIPO_OPCION = 'opcion';
 
     public const TIPO_ENTERO = 'entero';
@@ -52,6 +59,13 @@ final class CatalogoAjustes
                 'min' => 1,
                 'max' => 180,
                 'defecto' => 30,
+            ],
+            // Por defecto apagada: como hoy (los dos pasos son opcionales para todos)
+            self::SEGURIDAD_DOS_PASOS => [
+                'seccion' => 'seguridad',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::APAGADA, self::ENCENDIDA],
+                'defecto' => self::APAGADA,
             ],
         ];
     }

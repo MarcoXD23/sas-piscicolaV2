@@ -19,6 +19,7 @@ use App\Models\EventoAgenda;
 use App\Models\Exportacion;
 use App\Models\Fase;
 use App\Models\HoraExtra;
+use App\Models\Ingreso;
 use App\Models\Lago;
 use App\Models\Liquidacion;
 use App\Models\MedicionAgua;
@@ -68,7 +69,7 @@ class AislamientoFincasTest extends TestCase
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
-        'jornalero' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class,
+        'jornalero' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class, 'ingreso' => Ingreso::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -76,8 +77,8 @@ class AislamientoFincasTest extends TestCase
         'admin.personal.update' => ['roles' => [Rol::TRABAJADOR]],
     ];
 
-    /** Parámetros que no son registros de una finca (token de contraseña, ficha de especie, panel de plataforma, enlace de invitación). */
-    private const NO_SON_DE_FINCA = ['token', 'slug', 'finca', 'codigo', 'invitacion'];
+    /** Parámetros que no son registros de una finca (token de contraseña, ficha de especie, panel de plataforma, enlace de invitación, id de sesión: cada persona solo ve y cierra las suyas). */
+    private const NO_SON_DE_FINCA = ['token', 'slug', 'finca', 'codigo', 'invitacion', 'sesion'];
 
     /** Parámetros que no son registros (van junto a un id de otra finca, que es lo que se prueba). */
     private const VALORES_FIJOS = ['version' => 'ligera'];
@@ -145,6 +146,7 @@ class AislamientoFincasTest extends TestCase
             Bitacora::class => Bitacora::registrar($persona, 'ronda', $lago, [Rol::CELADOR], ['tipo' => 'x', 'descripcion' => '']),
             EventoAgenda::class => EventoAgenda::create(['creado_por' => $persona->id, 'titulo' => "Evento {$sufijo}", 'tipo' => 'visita', 'inicia_at' => '2026-10-20 08:00', 'recordar_dias_antes' => 0]),
             HoraExtra::class => HoraExtra::create(['user_id' => $persona->id, 'fecha' => '2026-10-14', 'horas' => 2, 'motivo' => 'm', 'estado' => 'pendiente']),
+            Ingreso::class => Ingreso::create(['user_id' => $persona->id, 'exitoso' => true, 'canal' => Ingreso::CANAL_WEB, 'equipo' => "Equipo {$sufijo}", 'equipo_nuevo' => true]),
             MedicionAgua::class => MedicionAgua::create(['lago_id' => $lago->id, 'user_id' => $persona->id, 'medido_at' => now(), 'oxigeno_mg_l' => 6]),
             Mortalidad::class => Mortalidad::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'cantidad' => 1]),
             MovimientoAlimento::class => MovimientoAlimento::create(['user_id' => $persona->id, 'lago_id' => $lago->id, 'fecha' => '2026-10-12', 'tipo_movimiento' => 'salida', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 1]),

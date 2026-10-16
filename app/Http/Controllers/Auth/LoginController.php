@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\Ingreso;
 use App\Models\Rol;
 use App\Models\User;
+use App\Support\Seguridad\RegistroIngresos;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +29,12 @@ class LoginController extends Controller
         $guard = Auth::guard('web');
 
         if (! $guard->validate($credenciales)) {
+            // Intento fallido: queda en «Mis últimos ingresos» de esa persona (un correo que no existe no se guarda)
+            $persona = $guard->getProvider()->retrieveByCredentials(['email' => $credenciales['email']]);
+            if ($persona instanceof User) {
+                RegistroIngresos::fallido($persona, $request, Ingreso::MOTIVO_CONTRASENA);
+            }
+
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.correo_contrasena_no_son_correctos'),
             ]);
@@ -38,10 +46,12 @@ class LoginController extends Controller
         // Suspendida: nadie entra, salvo el propietario de una finca en eliminación (para poder cancelarla)
         $finca = $usuario->tenant()->first();
         if ($finca?->estaSuspendida() && ! ($finca->enEliminacion() && $usuario->tieneRol(Rol::PROPIETARIO))) {
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_SUSPENDIDA);
             throw ValidationException::withMessages(['email' => __('plataforma.finca_suspendida')]);
         }
 
         if (! $usuario->estaAprobado()) {
+            RegistroIngresos::fallido($usuario, $request, Ingreso::MOTIVO_PENDIENTE);
             throw ValidationException::withMessages([
                 'email' => __('mensajes.login.tu_cuenta_aun_no_ha'),
             ]);
@@ -61,6 +71,7 @@ class LoginController extends Controller
         }
 
         $guard->login($usuario, $request->boolean('recordarme'));
+        RegistroIngresos::exitoso($usuario, $request);
 
         return redirect()->intended(route('inicio'));
     }

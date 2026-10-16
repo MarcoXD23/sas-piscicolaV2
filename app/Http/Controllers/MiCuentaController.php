@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ingreso;
+use App\Models\Rol;
+use App\Models\User;
 use App\Rules\NoIgualAlCorreo;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\DosPasos;
+use App\Support\Seguridad\Sesiones;
 use App\Support\Hora;
 use App\Support\Totp;
 use chillerlan\QRCode\QRCode;
@@ -19,8 +25,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Mi cuenta: cambiar la contraseña (pidiendo la actual) y activar o desactivar la verificación en dos pasos.
- * Todo actúa solo sobre la persona con sesión.
+ * Mi cuenta: mi nombre, mi rol y mi finca; cambiar la contraseña (pidiendo la actual); activar o desactivar la
+ * verificación en dos pasos; mis sesiones abiertas y mis últimos ingresos. Todo actúa solo sobre la persona con sesión.
  */
 class MiCuentaController extends Controller
 {
@@ -36,6 +42,10 @@ class MiCuentaController extends Controller
 
         return view('mi-cuenta.index', [
             'usuario' => $usuario,
+            // Mis sesiones abiertas (tabla sessions) y mis últimos 20 ingresos, exitosos y fallidos
+            'sesiones' => Sesiones::de($usuario, $request->session()->getId()),
+            'ingresos' => Ingreso::query()->where('user_id', $usuario->id)->latest('id')->limit(20)->get(),
+            'dosPasosObligatoria' => self::obligatoria($usuario),
             // «El de la finca» (vacío) dice cuál es, para elegir sabiendo
             'formatosHora' => ['' => __('cuenta.formato_hora.de_la_finca', ['formato' => __('region.formatos_hora_corto.'.Hora::deFinca($usuario->tenant))])]
                 + collect(Hora::FORMATOS)->mapWithKeys(fn (string $f) => [$f => __('region.formatos_hora.'.$f)])->all(),
@@ -132,6 +142,10 @@ class MiCuentaController extends Controller
             'actual.current_password' => __('cuenta.contrasena.actual_incorrecta'),
         ]);
 
+        // Si la finca la exige a su rol, no se puede quitar (se revisa antes del código: así no se gasta uno de recuperación)
+        if (self::obligatoria($usuario)) {
+            throw ValidationException::withMessages(['codigo' => __('seguridad.dos_pasos_obligatoria.no_se_quita')]);
+        }
         if (! $usuario->tieneDosPasos() || ! DosPasos::verificar($usuario, $datos['codigo'])) {
             throw ValidationException::withMessages(['codigo' => __('cuenta.dos_pasos.codigo_invalido')]);
         }
@@ -139,5 +153,49 @@ class MiCuentaController extends Controller
         DosPasos::desactivar($usuario);
 
         return redirect()->route('mi-cuenta.index')->with('estado', __('cuenta.dos_pasos.desactivada'));
+    }
+
+    /** El nombre propio (el correo no se cambia todavía: falta el envío de correos para verificarlo). */
+    public function nombre(Request $request): RedirectResponse
+    {
+        $datos = $request->validate(['name' => ['required', 'string', 'max:255']]);
+        $request->user()->forceFill(['name' => trim($datos['name'])])->save();
+
+        return back()->with('estado', __('seguridad.mi_cuenta.nombre_guardado'));
+    }
+
+    /** Cierra una de mis sesiones abiertas (para la de este equipo está «Cerrar sesión»). */
+    public function cerrarSesion(Request $request, string $sesion): RedirectResponse
+    {
+        abort_if(hash_equals($sesion, $request->session()->getId()), 404);
+        abort_unless(Sesiones::cerrarUna($request->user(), $sesion), 404);
+
+        return back()->with('estado', __('seguridad.sesiones.cerrada'));
+    }
+
+    /** Cierra todas mis sesiones menos esta, pidiendo la contraseña actual; también revoca mis tokens de la API. */
+    public function cerrarDemas(Request $request): RedirectResponse
+    {
+        $request->validate(['actual' => ['required', 'string', 'current_password:web']], [
+            'actual.current_password' => __('cuenta.contrasena.actual_incorrecta'),
+        ]);
+        $cerradas = Sesiones::cerrarDemas($request->user(), $request->session()->getId());
+
+        return back()->with('estado', trans_choice('seguridad.sesiones.cerradas_demas', $cerradas, ['cantidad' => $cerradas]));
+    }
+
+    /** «Entendido» en el aviso de ingreso desde un equipo nuevo (solo los avisos propios). */
+    public function avisoVisto(Request $request, int $ingreso): RedirectResponse
+    {
+        Ingreso::query()->where('user_id', $request->user()->id)->findOrFail($ingreso)->forceFill(['aviso_cerrado_at' => now()])->save();
+
+        return back();
+    }
+
+    /** Si la finca exige los dos pasos a esta persona (propietario o administrador con el ajuste encendido). */
+    public static function obligatoria(User $usuario): bool
+    {
+        return $usuario->tieneRol(Rol::PROPIETARIO, Rol::ADMINISTRADOR)
+            && AjustesFinca::valor(CatalogoAjustes::SEGURIDAD_DOS_PASOS) === CatalogoAjustes::ENCENDIDA;
     }
 }
