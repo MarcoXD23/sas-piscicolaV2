@@ -196,7 +196,7 @@ Algunos detalles:
 
 ### Panel de plataforma (dueño del software)
 
-En `/plataforma` el dueño del software ve todas las fincas (usuarios, estado y fecha de creación) y puede **suspender** o **reactivar** cada una. No es un rol de finca: usa una tabla (`administradores_plataforma`) y un ingreso (`guard` `plataforma`) aparte, sin `tenant_id`. Ningún usuario de finca puede entrar al panel y el acceso de plataforma no entra a los módulos de las fincas.
+En `/plataforma` el dueño del software ve todas las fincas (propietario, usuarios, estado y fecha de creación) y puede **suspender** o **reactivar** cada una. No es un rol de finca: usa una tabla (`administradores_plataforma`) y un ingreso (`guard` `plataforma`) aparte, sin `tenant_id`. Del propietario solo ve el nombre y el correo, para gestionar la cuenta y dar soporte (lo dice la política de privacidad); no ve el resto del personal ni los datos de la finca. Ningún usuario de finca puede entrar al panel y el acceso de plataforma no entra a los módulos de las fincas.
 
 ```bash
 php artisan piscicola:crear-admin-plataforma

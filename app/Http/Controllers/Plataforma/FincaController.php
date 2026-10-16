@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Plataforma;
 
 use App\Http\Controllers\Controller;
 use App\Models\InvitacionFinca;
+use App\Models\Rol;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Datos\EliminadorFinca;
@@ -23,7 +24,12 @@ class FincaController extends Controller
     public function index(): View
     {
         return view('plataforma.fincas', [
-            'fincas' => TenantActual::sinFiltro(fn () => Tenant::query()->withCount('users')->orderBy('nombre')->get()),
+            // Con el propietario (o los propietarios) de cada finca en una sola consulta: solo nombre y correo, para
+            // gestionar la cuenta y dar soporte (nada del resto del personal ni de los datos de la finca)
+            'fincas' => TenantActual::sinFiltro(fn () => Tenant::query()->withCount('users')
+                ->with(['users' => fn ($consulta) => $consulta->select(['id', 'tenant_id', 'name', 'email'])
+                    ->whereHas('roles', fn ($rol) => $rol->where('nombre', Rol::PROPIETARIO))->orderBy('name')])
+                ->orderBy('nombre')->get()),
             // Invitaciones para crear fincas: las más nuevas primero (las de los últimos 90 días)
             'invitaciones' => InvitacionFinca::query()->with('fincaCreada')->where('created_at', '>=', now()->subDays(90))->latest('id')->get(),
         ]);

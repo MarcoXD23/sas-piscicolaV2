@@ -46,6 +46,47 @@ class PlataformaTest extends TestCase
         $this->app['auth']->shouldUse('web');
     }
 
+    public function test_el_panel_muestra_el_nombre_y_el_correo_del_propietario_de_cada_finca(): void
+    {
+        $this->persona(Rol::PROPIETARIO)->update(['name' => 'Rosa Propietaria', 'email' => 'rosa@norte.test']);
+        $this->persona(Rol::TRABAJADOR)->update(['name' => 'Pedro Trabajador', 'email' => 'pedro@norte.test']);
+        $sur = Tenant::create(['nombre' => 'Finca Sur', 'codigo' => 'sur']);
+        $this->persona(Rol::PROPIETARIO, $sur)->update(['name' => 'Luis Sur', 'email' => 'luis@sur.test']);
+        $this->persona(Rol::PROPIETARIO, $sur)->update(['name' => 'Marta Sur', 'email' => 'marta@sur.test']);
+        Tenant::create(['nombre' => 'Finca Vacía', 'codigo' => 'vacia']);
+
+        $this->entrarComoDueno();
+        $consultas = function () {
+            \Illuminate\Support\Facades\DB::flushQueryLog();
+            \Illuminate\Support\Facades\DB::enableQueryLog();
+            $respuesta = $this->get(route('plataforma.fincas.index'))->assertOk();
+            \Illuminate\Support\Facades\DB::disableQueryLog();
+
+            return [$respuesta, count(\Illuminate\Support\Facades\DB::getQueryLog())];
+        };
+
+        [$respuesta, $conTres] = $consultas();
+        $respuesta->assertSee(__('plataforma.fincas.propietario'))
+            ->assertSeeInOrder(['Finca Norte', 'Rosa Propietaria', 'rosa@norte.test'])
+            ->assertSeeInOrder(['Finca Sur', 'Luis Sur', 'luis@sur.test', 'Marta Sur', 'marta@sur.test'])
+            ->assertSeeInOrder(['Finca Vacía', __('plataforma.fincas.sin_propietario')])
+            ->assertSee('data-label="'.__('plataforma.fincas.propietario').'"', false)
+            // Solo el propietario: nada del resto del personal
+            ->assertDontSee('Pedro Trabajador')->assertDontSee('pedro@norte.test');
+
+        // Una sola consulta para los propietarios de todas las fincas: con más fincas, las mismas consultas
+        foreach (range(1, 3) as $n) {
+            $finca = Tenant::create(['nombre' => "Finca Extra {$n}", 'codigo' => "extra{$n}"]);
+            $this->persona(Rol::PROPIETARIO, $finca);
+        }
+        $this->assertSame($conTres, $consultas()[1]);
+
+        // Un usuario de finca sigue sin poder entrar al panel
+        $this->salirComoDueno();
+        $this->actingAs(User::query()->withoutGlobalScopes()->where('email', 'rosa@norte.test')->sole())
+            ->get(route('plataforma.fincas.index'))->assertRedirect(route('plataforma.login'));
+    }
+
     public function test_el_dueno_ingresa_con_su_propio_acceso_y_ve_todas_las_fincas(): void
     {
         $otra = Tenant::create(['nombre' => 'Finca Sur', 'codigo' => 'sur']);

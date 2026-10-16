@@ -23,6 +23,8 @@ return [
         'titulo' => 'Fincas',
         'subtitulo' => ':activas activas de :total fincas registradas.',
         'finca' => 'Finca',
+        'propietario' => 'Propietario',
+        'sin_propietario' => 'Sin propietario',
         'usuarios' => 'Usuarios',
         'estado' => 'Estado',
         'creada' => 'Creada',

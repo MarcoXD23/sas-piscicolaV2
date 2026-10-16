@@ -48,12 +48,21 @@
         @endforelse
     </x-tarjeta>
 
-    <x-tabla :columnas="[__('plataforma.fincas.finca'), __('plataforma.fincas.usuarios'), __('plataforma.fincas.estado'), __('plataforma.fincas.creada'), '']" :vacio="__('plataforma.fincas.vacio')">
+    <x-tabla :columnas="[__('plataforma.fincas.finca'), __('plataforma.fincas.propietario'), __('plataforma.fincas.usuarios'), __('plataforma.fincas.estado'), __('plataforma.fincas.creada'), '']" :vacio="__('plataforma.fincas.vacio')">
         @foreach ($fincas as $finca)
             <tr>
                 <td data-label="{{ __('plataforma.fincas.finca') }}">
                     <p class="font-semibold text-tinta">{{ $finca->nombre }}</p>
                     <p class="text-sm text-tinta-suave">{{ __('plataforma.fincas.codigo', ['codigo' => $finca->codigo]) }}@if ($finca->pais) · {{ \App\Support\Region::nombrePais($finca->pais) }}@endif</p>
+                </td>
+                {{-- Solo el nombre y el correo del propietario (FincaController carga en «users» únicamente a los propietarios) --}}
+                <td data-label="{{ __('plataforma.fincas.propietario') }}">
+                    @forelse ($finca->users as $propietario)
+                        <p class="font-semibold text-tinta">{{ $propietario->name }}</p>
+                        <p class="break-all text-sm text-tinta-suave">{{ $propietario->email }}</p>
+                    @empty
+                        <p class="text-sm text-tinta-suave">{{ __('plataforma.fincas.sin_propietario') }}</p>
+                    @endforelse
                 </td>
                 <td data-label="{{ __('plataforma.fincas.usuarios') }}" class="tabular-nums">{{ $finca->users_count }}</td>
                 <td data-label="{{ __('plataforma.fincas.estado') }}">
