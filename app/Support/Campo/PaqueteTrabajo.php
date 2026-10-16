@@ -9,6 +9,7 @@ use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\Ajustes\QuienMideAgua;
 use App\Support\CalculadoraRacion;
 use App\Support\Hora;
 use App\Support\LotesPorEspecie;
@@ -71,8 +72,17 @@ final class PaqueteTrabajo
             $usuario->tieneRol(Rol::ADMINISTRADOR) ? self::MUESTREO : null,
             $usuario->tieneRol(Rol::TRABAJADOR) ? self::AVISO_PESCA : null,
             $usuario->tieneRol(Rol::CELADOR) ? self::RONDA : null,
-            $usuario->tieneRol(Rol::CELADOR) ? self::MEDICION : null,
+            self::medicionComoAdministrador($usuario) || ($usuario->tieneRol(Rol::CELADOR) && QuienMideAgua::puedeMedir(Rol::CELADOR)) ? self::MEDICION : null,
         ]));
+    }
+
+    /**
+     * La medición va por la ruta del administrador (sin turno) si la persona es administradora y el ajuste se lo permite;
+     * si no, por la de Seguridad & Noche (celador, con turno). Ajuste «Quién mide el agua» (F4).
+     */
+    private static function medicionComoAdministrador(User $usuario): bool
+    {
+        return $usuario->tieneRol(Rol::ADMINISTRADOR) && QuienMideAgua::puedeMedir(Rol::ADMINISTRADOR);
     }
 
     /** @return array<string, mixed> */
@@ -81,6 +91,7 @@ final class PaqueteTrabajo
         $usuario->loadMissing(['roles', 'tenant']);
         $secciones = self::secciones($usuario);
         $tiene = fn (string ...$cuales) => array_intersect($cuales, $secciones) !== [];
+        $medicionAdministrador = in_array(self::MEDICION, $secciones, true) && self::medicionComoAdministrador($usuario);
         $maximo = (int) config('sin_conexion.max_lagos');
 
         // Celador: todos los lagos (ronda y medición). Ración, mortalidad y aviso: solo lagos con siembra activa.
@@ -103,7 +114,7 @@ final class PaqueteTrabajo
             'formato_hora' => Hora::de($usuario),
             'secciones' => $secciones,
             'horas_limite' => (int) config('sin_conexion.horas'),
-            'lagos' => self::lagos($lagos->take($maximo), $tiene),
+            'lagos' => self::lagos($lagos->take($maximo), $tiene, $medicionAdministrador),
             'lagos_truncados' => $truncado,
             'max_lagos' => $maximo,
             'concentrados' => $tiene(self::RACION) ? self::concentrados() : [],
@@ -119,7 +130,9 @@ final class PaqueteTrabajo
             ] : [],
             'turnos' => self::turnos($usuario, $secciones),
             // Secciones que exigen turno a esta persona (el administrador registra ración, mortalidad y muestreo sin turno)
-            'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! (in_array($seccion, self::SIN_TURNO_ADMINISTRADOR, true) && $usuario->tieneRol(Rol::ADMINISTRADOR))])->all(),
+            // La medición por la ruta del administrador tampoco exige turno
+            'exige_turno' => collect($secciones)->mapWithKeys(fn (string $seccion) => [$seccion => ! ((in_array($seccion, self::SIN_TURNO_ADMINISTRADOR, true) && $usuario->tieneRol(Rol::ADMINISTRADOR))
+                || ($seccion === self::MEDICION && $medicionAdministrador))])->all(),
             'urls' => $secciones === [] ? [] : array_filter([
                 'ronda' => $tiene(self::RONDA) ? route('noche.rondas.store', absolute: false) : null,
             ]),
@@ -127,21 +140,21 @@ final class PaqueteTrabajo
     }
 
     /** @param  Collection<int, Lago>  $lagos */
-    private static function lagos(Collection $lagos, \Closure $tiene): array
+    private static function lagos(Collection $lagos, \Closure $tiene, bool $medicionAdministrador): array
     {
-        return $lagos->map(function (Lago $lago) use ($tiene) {
+        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador) {
             // Con varios lotes de la misma especie: número del lote dentro de su especie y su origen, para elegirlo
             $numeros = LotesPorEspecie::numeros($lago->siembrasActivas);
             $porEspecie = $lago->siembrasActivas->countBy(fn (Siembra $s) => (string) ($s->especie_id ?? $s->nombre_especie));
 
-            return self::lago($lago, $tiene, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
+            return self::lago($lago, $tiene, $medicionAdministrador, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
                 ? ['lote' => $numeros[$siembra->id], 'origen' => $siembra->textoOrigen()]
                 : []);
         })->values()->all();
     }
 
     /** @param  \Closure(Siembra): array<string, mixed>  $lote */
-    private static function lago(Lago $lago, \Closure $tiene, \Closure $lote): array
+    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote): array
     {
         return array_filter([
             'id' => $lago->id,
@@ -161,7 +174,8 @@ final class PaqueteTrabajo
             'aviso_pendiente' => $tiene(self::AVISO_PESCA) ? (bool) $lago->aviso_pendiente : null,
             'url_racion' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? route('admin.raciones.store', $lago->id, absolute: false) : null,
             'url_aviso_pesca' => $tiene(self::AVISO_PESCA) && $lago->siembrasActivas->isNotEmpty() ? route('admin.avisos-pesca.store', $lago, absolute: false) : null,
-            'url_medicion' => $tiene(self::MEDICION) ? route('noche.mediciones.store', $lago, absolute: false) : null,
+            'url_medicion' => $tiene(self::MEDICION)
+                ? route($medicionAdministrador ? 'admin.mediciones-agua.store' : 'noche.mediciones.store', $lago, absolute: false) : null,
         ], fn ($valor) => $valor !== null);
     }
 

@@ -83,6 +83,12 @@ return [
         'tu_cuenta_aun_no_ha' => 'Tu cuenta aún no ha sido aprobada por el propietario de la finca.',
     ],
     'medicion_agua' => [
+        // Ajuste «Quién mide el agua» (F4): motivo del 403 y nota en la pantalla del rol que no mide
+        'quien_mide' => [
+            'ambos' => 'En esta finca el agua la miden el celador y el administrador.',
+            'celador' => 'En esta finca el agua la mide solo el celador.',
+            'administrador' => 'En esta finca el agua la mide solo el administrador.',
+        ],
         'medicion_no_puede_tener_fecha' => 'La medición no puede tener fecha futura.',
         'medicion_registrada_todos_parametros_estan' => 'Medición registrada: todos los parámetros están en rango.',
         'registra_menos_parametro' => 'Registra al menos un parámetro.',

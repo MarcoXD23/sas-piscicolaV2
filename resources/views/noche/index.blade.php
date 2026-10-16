@@ -87,9 +87,14 @@
 
                     @unless ($soloLectura)
                     <div class="mt-auto grid grid-cols-2 gap-2">
-                        <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-oxigeno-{{ $lago->id }}" :disabled="! $puedeRegistrar">
-                            <x-icono nombre="gota" class="h-5 w-5" /> {{ __('noche.medir') }}
-                        </x-boton>
+                        {{-- Quién mide el agua: ajuste de la finca (F4) --}}
+                        @if (\App\Support\Ajustes\QuienMideAgua::puedeMedir(\App\Models\Rol::CELADOR))
+                            <x-boton tipo="button" variante="secundario" class="!px-2" data-abrir-modal="modal-oxigeno-{{ $lago->id }}" :disabled="! $puedeRegistrar">
+                                <x-icono nombre="gota" class="h-5 w-5" /> {{ __('noche.medir') }}
+                            </x-boton>
+                        @else
+                            <p class="self-center text-sm text-tinta-suave">{{ \App\Support\Ajustes\QuienMideAgua::aviso() }}</p>
+                        @endif
 
                         @if ($aireacion)
                             <x-formulario :action="route('noche.aireador.apagar', $aireacion)" class="!space-y-0">

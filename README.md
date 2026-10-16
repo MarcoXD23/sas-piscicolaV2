@@ -64,7 +64,7 @@ La lógica de zona, "hoy" y formatos está en [`App\Support\Region`](app/Support
 
 ### Operación de la finca
 
-En **Ajustes › Operación de la finca** el propietario define cómo trabaja su finca. Hoy hay un ajuste, **«Quién mide el agua»** (el celador, el administrador o los dos).
+En **Ajustes › Operación de la finca** el propietario define cómo trabaja su finca. Hoy hay un ajuste, **«Quién mide el agua»** (el celador, el administrador o los dos). El rol que no mide no ve el botón de medir, ni en su pantalla ni en Registro rápido, y el servidor lo rechaza.
 
 - Los ajustes, sus opciones y su valor por defecto están en [`CatalogoAjustes`](app/Support/Ajustes/CatalogoAjustes.php).
 - El valor por defecto conserva cómo funciona la app hoy.
@@ -245,8 +245,10 @@ Para registrar sin señal no hace falta haber abierto antes ninguna pantalla:
   | Rol | Secciones |
   |---|---|
   | Trabajador | Ración, mortalidad y aviso de pesca |
-  | Administrador | Ración, mortalidad y muestreo (sin turno) |
-  | Celador | Ronda y medición |
+  | Administrador | Ración, mortalidad, muestreo y medición del agua (sin turno) |
+  | Celador | Ronda y medición del agua |
+
+  La medición del agua depende del ajuste **«Quién mide el agua»** (Ajustes › Operación de la finca): con «solo el celador» o «solo el administrador», el otro rol no la ve y el servidor le responde 403 con el motivo, también a lo que ya estuviera en la cola del teléfono.
   | Propietario | Ninguna |
 
   Incluye hasta `SIN_CONEXION_MAX_LAGOS` lagos (vacío = 60) con sus lotes activos, los concentrados de bodega, los tipos de ronda, los rangos de medición y los turnos cercanos. Para el administrador, cada lote trae además su peso actual y los límites del muestreo (`PaqueteTrabajo::RANGOS_MUESTREO`, los mismos del servidor). No trae personal ni dinero.

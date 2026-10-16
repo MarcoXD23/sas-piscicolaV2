@@ -7,6 +7,7 @@ use App\Models\Bitacora;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
 use App\Models\Rol;
+use App\Support\Ajustes\QuienMideAgua;
 use App\Support\Formato;
 use App\Support\MomentoRegistro;
 use App\Support\Region;
@@ -15,8 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Medición del agua: desde el detalle del lago (administrador) o desde Seguridad & Noche (celador, también sin
- * conexión). Cada medición queda en la bitácora, con la hora del registro y, si llegó tarde, la nota de sin conexión
+ * Medición del agua: desde el detalle del lago (administrador) o desde Seguridad & Noche (celador), las dos también sin
+ * conexión desde Registro rápido. Quién mide lo decide el ajuste «Quién mide el agua» (QuienMideAgua): con la ruta del
+ * administrador mide el administrador y con la de Noche, el celador; si el ajuste no lo permite, 403 con el motivo. Cada medición queda en la bitácora, con la hora del registro y, si llegó tarde, la nota de sin conexión
  * y de la corrección del reloj del teléfono.
  */
 class MedicionAguaController extends Controller
@@ -25,6 +27,9 @@ class MedicionAguaController extends Controller
 
     public function store(Request $request, Lago $lago): RedirectResponse
     {
+        $rol = $request->routeIs('admin.mediciones-agua.store') ? Rol::ADMINISTRADOR : Rol::CELADOR;
+        abort_unless(QuienMideAgua::puedeMedir($rol), 403, QuienMideAgua::aviso());
+
         // Desde Seguridad & Noche no se envía la hora: se usa la del registro (ahora, o la del teléfono si fue sin conexión)
         // La hora del formulario es de la zona de la finca; el cast de MedicionAgua la guarda en UTC
         $request->mergeIfMissing(['medido_at' => MomentoRegistro::actual()->setTimezone(Region::zona())->format('Y-m-d H:i:s')]);

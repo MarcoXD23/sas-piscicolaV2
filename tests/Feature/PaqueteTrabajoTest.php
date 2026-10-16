@@ -90,7 +90,9 @@ class PaqueteTrabajoTest extends TestCase
     {
         $paquete = $this->paquete($this->persona(Rol::ADMINISTRADOR))->json();
 
-        $this->assertSame([PaqueteTrabajo::RACION, PaqueteTrabajo::MORTALIDAD, PaqueteTrabajo::MUESTREO], $paquete['secciones']);
+        // Con el ajuste por defecto («ambos», F4) el administrador también mide el agua, por su propia ruta y sin turno
+        $this->assertSame([PaqueteTrabajo::RACION, PaqueteTrabajo::MORTALIDAD, PaqueteTrabajo::MUESTREO, PaqueteTrabajo::MEDICION], $paquete['secciones']);
+        $this->assertSame(route('admin.mediciones-agua.store', $paquete['lagos'][0]['id'], absolute: false), $paquete['lagos'][0]['url_medicion']);
         $this->assertArrayNotHasKey('aviso_pendiente', $paquete['lagos'][0]);
         $this->assertArrayNotHasKey('url_aviso_pesca', $paquete['lagos'][0]);
         $this->assertSame([], $paquete['turnos']);   // el administrador no trabaja por turnos

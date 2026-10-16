@@ -66,7 +66,8 @@ class SinConexionTelefonoTest extends TestCase
             ->filter(fn ($ruta) => in_array('sin_conexion', $ruta->gatherMiddleware(), true))
             ->map(fn ($ruta) => $ruta->getName())->sort()->values()->all();
 
-        $this->assertSame(['admin.avisos-pesca.store', 'admin.mortalidades.store', 'admin.muestreos.store', 'admin.raciones.store', 'noche.mediciones.store', 'noche.rondas.store'], $rutas);
+        // F4: la medición del administrador también acepta registros sin conexión
+        $this->assertSame(['admin.avisos-pesca.store', 'admin.mediciones-agua.store', 'admin.mortalidades.store', 'admin.muestreos.store', 'admin.raciones.store', 'noche.mediciones.store', 'noche.rondas.store'], $rutas);
     }
 
     public function test_el_trabajador_puede_guardar_racion_mortalidad_y_aviso_y_nada_mas(): void

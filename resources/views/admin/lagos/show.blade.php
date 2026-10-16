@@ -29,9 +29,14 @@
     <x-encabezado :titulo="__('lagos.lago_nombre', ['lago' => $lago->nombre])"
                   :subtitulo="__('lagos.lago_en_tipo', ['tipo' => __('lagos.tipos.'.$lago->tipo)]).' · '.($lago->siembrasActivas->isEmpty() ? __('lagos.sin_siembras_activas') : __('lagos.especies_en_cultivo', ['cantidad' => \App\Support\LotesPorEspecie::agrupar($lago->siembrasActivas)->count()]))">
         @if ($puedeOperar)
-            <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
-                <x-icono nombre="gota" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
-            </x-boton>
+            {{-- Quién mide el agua: ajuste de la finca (F4) --}}
+            @if (\App\Support\Ajustes\QuienMideAgua::puedeMedir(\App\Models\Rol::ADMINISTRADOR))
+                <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-medicion">
+                    <x-icono nombre="gota" class="h-5 w-5" /> {{ __('lagos.medir_agua') }}
+                </x-boton>
+            @else
+                <p class="text-sm text-tinta-suave">{{ \App\Support\Ajustes\QuienMideAgua::aviso() }}</p>
+            @endif
             <x-boton tipo="button" variante="secundario" data-abrir-modal="modal-tratamiento">
                 <x-icono nombre="alerta" class="h-5 w-5" /> {{ __('lagos.tratamiento') }}
             </x-boton>

@@ -97,8 +97,8 @@ class RegistroRapidoTest extends TestCase
     {
         $this->assertSame(['racion' => true, 'mortalidad' => true, 'aviso_pesca' => true],
             $this->actingAs($this->persona(Rol::TRABAJADOR))->getJson(route('campo.paquete'))->json('exige_turno'));
-        // El administrador registra ración, mortalidad y muestreo sin turno
-        $this->assertSame(['racion' => false, 'mortalidad' => false, 'muestreo' => false],
+        // El administrador registra ración, mortalidad, muestreo y (con el ajuste por defecto, F4) la medición sin turno
+        $this->assertSame(['racion' => false, 'mortalidad' => false, 'muestreo' => false, 'medicion' => false],
             $this->actingAs($this->persona(Rol::ADMINISTRADOR))->getJson(route('campo.paquete'))->json('exige_turno'));
         $this->assertSame(['ronda' => true, 'medicion' => true],
             $this->actingAs($this->persona(Rol::CELADOR))->getJson(route('campo.paquete'))->json('exige_turno'));

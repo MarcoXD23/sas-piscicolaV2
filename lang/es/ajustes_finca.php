@@ -19,7 +19,7 @@ return [
     'agua' => [
         'quien_mide' => [
             'etiqueta' => 'Quién mide el agua',
-            'ayuda' => 'Quién registra el oxígeno, la temperatura y los demás valores del agua, también sin conexión desde Registro rápido.',
+            'ayuda' => 'Quién registra el oxígeno, la temperatura y los demás valores del agua: el celador desde Seguridad & Noche y el administrador desde el detalle del lago, los dos también sin conexión desde Registro rápido. Al otro rol no le aparece el botón de medir.',
             'opciones' => [
                 'ambos' => 'El celador y el administrador',
                 'celador' => 'Solo el celador',

@@ -209,7 +209,8 @@ Route::middleware(['auth', 'tenant', 'aceptacion'])->group(function () {
             Route::delete('/especies/{especie}/fotos/{foto}', [EspecieFotoController::class, 'destroy'])->name('especies.fotos.destroy');
         });
         Route::put('/ajustes-pesaje', [AjustesPesajeController::class, 'update'])->name('ajustes-pesaje.update');
-        Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->name('mediciones-agua.store');
+        // También sin conexión desde Registro rápido (sin turno: el administrador no trabaja por turnos). Quién mide: el ajuste de la finca
+        Route::post('/lagos/{lago}/mediciones-agua', [MedicionAguaController::class, 'store'])->middleware('sin_conexion')->name('mediciones-agua.store');
         Route::post('/lagos/{lago}/tratamientos', [TratamientoController::class, 'store'])->name('tratamientos.store');
 
         Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
