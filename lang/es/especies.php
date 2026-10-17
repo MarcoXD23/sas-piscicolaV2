@@ -191,6 +191,7 @@ return [
     'pestanas' => [
         'guia' => 'Guía',
         'catalogo' => 'Catálogo de la finca',
+        'presentaciones' => 'Presentaciones',
     ],
     // Catálogo de especies de la finca (lo edita el administrador)
     'catalogo_finca' => [
@@ -214,6 +215,8 @@ return [
         'temp_min' => 'Temperatura mínima (°C)',
         'temp_max' => 'Temperatura máxima (°C)',
         'oxigeno_min' => 'Oxígeno mínimo (mg/L)',
+        'rendimiento_referencia' => 'Rendimiento de referencia (%) (opcional)',
+        'rendimiento_referencia_ayuda' => 'Lo que normalmente sale de limpio por cada 100 kg de entero. La jornada compara el rendimiento del día con este valor hasta que haya suficientes jornadas con limpio; desde ahí usa el promedio real.',
         'ph_min' => 'pH mínimo',
         'ph_max' => 'pH máximo',
         'alimentacion' => 'Tipo de alimentación (para la ración sugerida)',

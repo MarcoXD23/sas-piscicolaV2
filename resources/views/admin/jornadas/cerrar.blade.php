@@ -26,12 +26,43 @@
         </x-aviso>
     @endif
 
-    <x-formulario :action="route('admin.jornadas.cerrar.guardar', $jornada)" :confirmar="__('jornadas.confirmar_cerrar')" class="max-w-4xl">
+    <x-formulario :action="route('admin.jornadas.cerrar.guardar', $jornada)" :confirmar="$rendimiento['hay_limpio'] ? __('jornadas.confirmar_cerrar') : __('jornadas.confirmar_cerrar_sin_limpio')" class="max-w-4xl">
+        {{-- Rendimiento con lo pesado: sin limpio queda sin dato; si sale bajo, se puede anotar el motivo --}}
+        <x-tarjeta :titulo="__('jornadas.rendimiento')">
+            @unless ($rendimiento['hay_limpio'])
+                <x-aviso tono="atencion">{{ __('jornadas.aviso_sin_limpio') }}</x-aviso>
+            @endunless
+            @if ($rendimiento['limpio_sin_entero'] !== [])
+                <x-aviso tono="alerta" class="mt-3">{{ __('jornadas.errores.limpio_sin_entero', ['especie' => $nombresEspecie[$rendimiento['limpio_sin_entero'][0]] ?? '']) }}</x-aviso>
+            @endif
+            <ul class="divide-y divide-renglon">
+                @foreach ($rendimiento['especies'] as $especieId => $fila)
+                    <li class="py-3">
+                        <p class="font-bold">{{ $nombresEspecie[$especieId] ?? '' }}</p>
+                        <p class="text-base tabular-nums">
+                            @if ($fila['rendimiento'] === null)
+                                {{ __('jornadas.rendimiento_sin_dato', ['entero' => CalculoPesaje::kg($fila['base'])]) }}
+                            @else
+                                {{ __('jornadas.rendimiento_linea', ['limpio' => CalculoPesaje::kg((float) $fila['limpio']), 'entero' => CalculoPesaje::kg($fila['base']), 'rendimiento' => Formato::numero($fila['rendimiento'], 1)]) }}
+                            @endif
+                            @if ($fila['referencia'] !== null)
+                                · {{ __($fila['fuente'] === 'promedio' ? 'jornadas.referencia_promedio' : 'jornadas.referencia_catalogo', ['referencia' => Formato::numero($fila['referencia'], 1)]) }}
+                            @endif
+                        </p>
+                        @if ($fila['bajo'])
+                            <x-aviso tono="atencion" class="mt-2">{{ __('jornadas.rendimiento_bajo') }}</x-aviso>
+                            <x-campo :nombre="'rendimientos['.$especieId.'][motivo]'" :id="'motivo-'.$especieId" :etiqueta="__('jornadas.motivo')" maxlength="300"
+                                     :valor="old('rendimientos.'.$especieId.'.motivo')" :ayuda="__('jornadas.motivo_ayuda')" class="mt-3" />
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </x-tarjeta>
+
         @foreach ($jornada->lagos as $jornadaLago)
             @php
                 $propuesta = $propuestas[$jornadaLago->id];
                 $base = 'lagos['.$jornadaLago->id.']';
-                $nombresEspecie = $jornadaLago->pesajes->pluck('especie.nombre', 'especie_id');
             @endphp
             <x-tarjeta :titulo="__('lagos.lago_nombre', ['lago' => $jornadaLago->lago->nombre])">
                 @if ($propuesta['totales'] !== [])
@@ -44,6 +75,9 @@
 
                 @if ($propuesta['sin_siembra'] !== [])
                     <x-aviso tono="alerta" class="mt-3">{{ __('jornadas.errores.especie_sin_siembra', ['lago' => $jornadaLago->lago->nombre]) }}</x-aviso>
+                @endif
+                @if ($propuesta['sin_entero'] !== [])
+                    <x-aviso tono="alerta" class="mt-3">{{ __('jornadas.errores.reproduccion_supera_entero', ['lago' => $jornadaLago->lago->nombre]) }}</x-aviso>
                 @endif
 
                 <fieldset class="mt-4">
@@ -87,6 +121,21 @@
                                     <input type="number" step="0.01" min="0" inputmode="decimal" name="{{ $base }}[restante_kg][{{ $siembra->id }}]" class="{{ $clasesEntrada }}"
                                            value="{{ old('lagos.'.$jornadaLago->id.'.restante_kg.'.$siembra->id) }}" placeholder="{{ __('jornadas.opcional') }}">
                                 </label>
+                                {{-- Muestra al pescar (opcional): peces y gramos totales; el promedio lo calcula el servidor --}}
+                                <fieldset class="grid grid-cols-2 gap-3 sm:col-span-3 sm:grid-cols-[1fr_10rem_10rem]">
+                                    <legend class="col-span-2 text-sm font-semibold text-tinta sm:col-span-3">{{ __('jornadas.muestra') }}</legend>
+                                    <p class="col-span-2 text-sm text-tinta-suave sm:col-span-1">{{ __('jornadas.muestra_ayuda') }}</p>
+                                    <label class="block">
+                                        <span class="mb-1 block text-sm font-semibold text-tinta-suave">{{ __('jornadas.muestra_peces') }}</span>
+                                        <input type="number" step="1" min="1" inputmode="numeric" name="{{ $base }}[muestra_peces][{{ $siembra->id }}]" class="{{ $clasesEntrada }}"
+                                               value="{{ old('lagos.'.$jornadaLago->id.'.muestra_peces.'.$siembra->id) }}" placeholder="{{ __('jornadas.opcional') }}">
+                                    </label>
+                                    <label class="block">
+                                        <span class="mb-1 block text-sm font-semibold text-tinta-suave">{{ __('jornadas.muestra_g') }}</span>
+                                        <input type="number" step="0.01" min="0.1" inputmode="decimal" name="{{ $base }}[muestra_g][{{ $siembra->id }}]" class="{{ $clasesEntrada }}"
+                                               value="{{ old('lagos.'.$jornadaLago->id.'.muestra_g.'.$siembra->id) }}" placeholder="{{ __('jornadas.opcional') }}">
+                                    </label>
+                                </fieldset>
                             </div>
                         @endforeach
                         <p class="text-sm text-tinta-suave">{{ __('jornadas.kg_quedan_ayuda') }}</p>

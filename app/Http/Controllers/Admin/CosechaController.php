@@ -121,6 +121,10 @@ class CosechaController extends Controller
                 'kg' => $kg,
                 'peso_promedio_g' => round($kg * 1000 / $peces, 2),
                 'observaciones' => $datos['observaciones'] ?? null,
+                // Esperado contra real: lo que decía el registro antes de pescar
+                'peces_esperados' => (int) $bloqueada->peces_vivos,
+                'peso_esperado_g' => (float) $bloqueada->peso_actual_g,
+                'cerro_lote' => $peces === (int) $bloqueada->peces_vivos,
             ]);
 
             foreach ($pesaje['filas'] ?? [] as $fila) {

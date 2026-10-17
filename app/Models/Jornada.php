@@ -67,6 +67,18 @@ class Jornada extends Model
         return $this->hasMany(Cosecha::class);
     }
 
+    /** Pesadas del limpio por presentación (F6b). */
+    public function pesajesLimpio(): HasMany
+    {
+        return $this->hasMany(PesajeLimpio::class)->orderBy('id');
+    }
+
+    /** Rendimiento por especie, guardado al cerrar (F6b). */
+    public function rendimientos(): HasMany
+    {
+        return $this->hasMany(JornadaRendimiento::class);
+    }
+
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

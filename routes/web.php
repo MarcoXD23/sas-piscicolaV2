@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
+use App\Http\Controllers\Admin\PresentacionController;
 use App\Http\Controllers\Admin\PrimerUsoController;
 use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Admin\RacionController;
@@ -222,6 +223,8 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         // Jornadas de proceso (solo con el ajuste encendido; si no, 404): el propietario solo consulta
         Route::get('/jornadas', [JornadaController::class, 'index'])->name('jornadas.index');
         Route::get('/jornadas/{jornada}', [JornadaController::class, 'show'])->whereNumber('jornada')->name('jornadas.show');
+        // Catálogo de presentaciones (tamaños, procesos y presentaciones): el propietario consulta, el administrador edita
+        Route::get('/presentaciones', [PresentacionController::class, 'index'])->name('presentaciones.index');
 
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
@@ -249,6 +252,17 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::get('/jornadas/{jornada}/cerrar', [JornadaController::class, 'cerrar'])->whereNumber('jornada')->name('jornadas.cerrar');
         Route::post('/jornadas/{jornada}/cerrar', [JornadaController::class, 'guardarCierre'])->whereNumber('jornada')->name('jornadas.cerrar.guardar');
         Route::post('/jornadas/{jornada}/cancelar', [JornadaController::class, 'cancelar'])->whereNumber('jornada')->name('jornadas.cancelar');
+        Route::post('/jornadas/{jornada}/limpio', [JornadaController::class, 'guardarLimpio'])->whereNumber('jornada')->name('jornadas.limpio.store');
+        Route::delete('/jornadas/{jornada}/limpio/{pesajeLimpio}', [JornadaController::class, 'eliminarLimpio'])->whereNumber(['jornada', 'pesajeLimpio'])->name('jornadas.limpio.destroy');
+        Route::post('/jornadas/{jornada}/reproduccion', [JornadaController::class, 'guardarReproduccion'])->whereNumber('jornada')->name('jornadas.reproduccion.store');
+        Route::delete('/jornadas/{jornada}/reproduccion/{reproduccion}', [JornadaController::class, 'eliminarReproduccion'])->whereNumber(['jornada', 'reproduccion'])->name('jornadas.reproduccion.destroy');
+        Route::post('/procesos', [PresentacionController::class, 'guardarProceso'])->name('procesos.store');
+        Route::put('/procesos/{proceso}', [PresentacionController::class, 'actualizarProceso'])->whereNumber('proceso')->name('procesos.update');
+        Route::delete('/procesos/{proceso}', [PresentacionController::class, 'eliminarProceso'])->whereNumber('proceso')->name('procesos.destroy');
+        Route::post('/tamanos', [PresentacionController::class, 'guardarTamano'])->name('tamanos.store');
+        Route::put('/tamanos/{tamano}', [PresentacionController::class, 'actualizarTamano'])->whereNumber('tamano')->name('tamanos.update');
+        Route::delete('/tamanos/{tamano}', [PresentacionController::class, 'eliminarTamano'])->whereNumber('tamano')->name('tamanos.destroy');
+        Route::put('/presentaciones/{especie}', [PresentacionController::class, 'guardarTabla'])->whereNumber('especie')->name('presentaciones.update');
         Route::get('/ajustes-pesaje', [AjustesPesajeController::class, 'edit'])->name('ajustes-pesaje.edit');
         Route::post('/especies', [EspecieFincaController::class, 'store'])->name('especies.store');
         Route::get('/especies/{especie}/editar', [EspecieFincaController::class, 'edit'])->name('especies.edit');

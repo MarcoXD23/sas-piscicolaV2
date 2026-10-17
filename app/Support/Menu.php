@@ -44,7 +44,7 @@ final class Menu
             ['ruta' => 'admin.ajustes.edit', 'activa' => 'admin.ajustes.*', 'texto' => __('region.ajustes.enlace'), 'icono' => 'ajustes', 'roles' => ['propietario']],
             ['ruta' => 'mi-trabajo.index', 'activa' => 'mi-trabajo.*', 'texto' => __('layout.menu.mi_trabajo'), 'icono' => 'tareas', 'roles' => ['trabajador', 'celador']],
             // Una sola entrada: la guía (todos) y, en pestañas, el catálogo de la finca (propietario y administrador)
-            ['ruta' => 'especies.index', 'activa' => ['especies.*', 'admin.especies.*'], 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador', 'celador']],
+            ['ruta' => 'especies.index', 'activa' => ['especies.*', 'admin.especies.*', 'admin.presentaciones.*'], 'texto' => __('layout.menu.especies'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador', 'trabajador', 'celador']],
         ];
     }
 
