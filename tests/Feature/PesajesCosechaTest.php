@@ -52,8 +52,10 @@ class PesajesCosechaTest extends TestCase
 
         $this->finca = Tenant::create(['nombre' => 'Finca', 'codigo' => 'F01', 'zona_horaria' => 'America/Bogota']);
         app(TenantActual::class)->establecer($this->finca->id);
+        // Nombres fijos: las pantallas muestran el personal y una prueba revisa que no aparezcan «tara», «bruto» ni «neto».
+        // Con fake()->name() salió alguna vez «Dr. Tara Howell DDS» y la prueba falló por azar.
         $this->administrador = tap(User::factory()->create(['tenant_id' => $this->finca->id, 'name' => 'Ana Admin']))->asignarRoles([Rol::ADMINISTRADOR]);
-        $this->propietario = tap(User::factory()->create(['tenant_id' => $this->finca->id]))->asignarRoles([Rol::PROPIETARIO]);
+        $this->propietario = tap(User::factory()->create(['tenant_id' => $this->finca->id, 'name' => 'Pedro Dueño']))->asignarRoles([Rol::PROPIETARIO]);
         $this->lago = Lago::create(['nombre' => 'L01', 'tipo' => 'tierra']);
         $this->siembra = Siembra::create(['lago_id' => $this->lago->id, 'especie_id' => $this->especie('mojarra roja'), 'fecha' => '2026-05-01',
             'cantidad_alevinos' => 5000, 'peso_promedio_inicial_g' => 5, 'peces_vivos' => 5000, 'peso_actual_g' => 400, 'biomasa_kg' => 2000]);
