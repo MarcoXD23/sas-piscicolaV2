@@ -10,11 +10,14 @@ use App\Models\JornadaLago;
 use App\Models\Lago;
 use App\Models\PesajeEntero;
 use App\Models\PesajeLimpio;
+use App\Models\PrecioEspecie;
 use App\Models\Presentacion;
 use App\Models\ReproduccionJornada;
 use App\Models\Rol;
 use App\Models\Siembra;
+use App\Models\Tercero;
 use App\Models\Tratamiento;
+use App\Models\User;
 use App\Support\Ajustes\AjustesFinca;
 use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\CalculoPesaje;
@@ -142,6 +145,10 @@ class JornadaController extends Controller implements HasMiddleware
             'conReproduccion' => $this->reproduccionEncendida(),
             'rendimientoAhora' => $jornada->estaAbierta() ? Rendimiento::deJornada($jornada) : null,
             'nombresEspecie' => Especie::query()->pluck('nombre', 'id'),
+            // Venta rápida y obsequios (F6c)
+            'ventas' => $jornada->ventas()->with(['especie', 'tercero', 'comprador', 'recibio'])->get(),
+            'obsequios' => $jornada->obsequios()->with(['especie', 'presentacion.tamano', 'presentacion.proceso', 'autorizadoPor', 'registradoPor'])->get(),
+            'venta' => $puedeOperar && $jornada->yaEsSuDia() ? $this->datosVenta($request) + ['especies' => VentaJornadaController::especiesDe($jornada)] : null,
             'pesoCanasta' => $request->user()->tenant->peso_canasta_kg,
             'pesoCanastilla' => $request->user()->tenant->peso_canastilla_kg,
         ]);
@@ -383,6 +390,25 @@ class JornadaController extends Controller implements HasMiddleware
         return redirect()->route('admin.jornadas.show', $jornada)->with('estado', __('jornadas.cancelada'));
     }
 
+    /**
+     * Listas para la venta rápida y los obsequios: fijos (personas aprobadas), jornaleros activos, precios por especie,
+     * quién puede recibir dinero y quién puede autorizar obsequios (nunca quien registra).
+     *
+     * @return array<string, mixed>
+     */
+    private function datosVenta(Request $request): array
+    {
+        $personal = User::query()->whereNotNull('aprobado_at')->with('roles')->orderBy('name')->get();
+
+        return [
+            'fijos' => $personal->pluck('name', 'id')->all(),
+            'jornaleros' => Tercero::query()->jornaleros()->activos()->orderBy('nombres')->orderBy('apellidos')->get()
+                ->mapWithKeys(fn (Tercero $t) => [$t->id => $t->nombreCompleto()])->all(),
+            'precios' => PrecioEspecie::query()->get()->keyBy('especie_id'),
+            'autorizadores' => $personal->filter(fn (User $u) => $u->id !== $request->user()->id && VentaJornadaController::puedeAutorizar($u))->pluck('name', 'id')->all(),
+        ];
+    }
+
     /** Reglas de una pesada (con canastas o el total escrito), las mismas para el entero y el limpio. */
     private function reglasPesadas(): array
     {
@@ -429,12 +455,7 @@ class JornadaController extends Controller implements HasMiddleware
     /** Bloquea la jornada; si ya no está abierta (cerrada o cancelada), no deja seguir. */
     private function bloquearAbierta(Jornada $jornada): Jornada
     {
-        $bloqueada = Jornada::query()->whereKey($jornada->id)->lockForUpdate()->firstOrFail();
-        if (! $bloqueada->estaAbierta()) {
-            throw ValidationException::withMessages(['jornada' => __('jornadas.ya_no_abierta')]);
-        }
-
-        return $bloqueada;
+        return Jornada::bloquearAbierta($jornada->id);
     }
 
     /** Un lago entra a la jornada si tiene peces y no está en retiro de tratamiento en la fecha de la jornada. */

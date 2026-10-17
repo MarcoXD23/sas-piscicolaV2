@@ -17,6 +17,7 @@ return [
         'muestreo' => 'Muestreos',
         'lotes' => 'Lotes',
         'proceso' => 'Día de proceso',
+        'ventas' => 'Ventas y obsequios',
         'seguridad' => 'Seguridad',
     ],
 
@@ -69,6 +70,34 @@ return [
             'opciones' => [
                 'manual' => 'Manual (lo escribe la finca)',
                 'automatica' => 'Automático (lo genera la app)',
+            ],
+        ],
+    ],
+
+    'ventas' => [
+        'cupo_kg' => [
+            'etiqueta' => 'Cupo de pescado de cada trabajador (kg)',
+            'ayuda' => 'Kilos que cada trabajador (fijo o jornalero) compra al precio de trabajador en cada período; lo que pase del cupo va al precio general. Solo para las especies que entran en el cupo (Ajustes › Precios). Con 0 no hay cupo: todos pagan el precio general.',
+            'valor' => ':valor kg',
+        ],
+        'cupo_periodo' => [
+            'etiqueta' => 'Período del cupo',
+            'ayuda' => 'Semanal: de lunes a domingo. Quincenal: del 1 al 15 y del 16 a fin de mes. Se cuenta con las fechas de la finca.',
+            'opciones' => [
+                'semanal' => 'Semanal',
+                'quincenal' => 'Quincenal',
+                'mensual' => 'Mensual',
+            ],
+        ],
+    ],
+
+    'obsequios' => [
+        'autoriza' => [
+            'etiqueta' => 'Quién autoriza los obsequios',
+            'ayuda' => 'Quien registra un obsequio elige quién lo autorizó. Nadie se autoriza a sí mismo. El propietario lo ve en su Inicio y en la bitácora.',
+            'opciones' => [
+                'propietario' => 'Solo el propietario',
+                'propietario_o_administrador' => 'El propietario o el administrador',
             ],
         ],
     ],

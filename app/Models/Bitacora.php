@@ -25,7 +25,7 @@ class Bitacora extends Model
         'fase_creada', 'fase_editada', 'fase_eliminada', 'regla_fase', 'lago_editado',
         'concentrado_creado', 'concentrado_editado', 'tabla_racion', 'sesiones_cerradas',
         'jornada_creada', 'jornada_lago_nuevo', 'jornada_cancelada', 'jornada_cerrada', 'jornada_lago_cerrado',
-        'presentaciones', 'rendimiento_bajo'];
+        'presentaciones', 'rendimiento_bajo', 'precio', 'obsequio'];
 
     /** Roles de mayor a menor nivel: se guarda el más alto que tenga la persona entre los que permite la acción. */
     private const NIVEL_ROLES = [Rol::PROPIETARIO, Rol::ADMINISTRADOR, Rol::TRABAJADOR, Rol::CELADOR];

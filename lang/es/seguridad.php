@@ -107,6 +107,7 @@ return [
         'operacion' => 'Operación',
         'fases' => 'Fases',
         'concentrados' => 'Concentrados',
+        'precios' => 'Precios',
         'pesaje' => 'Pesaje',
         'seguridad' => 'Seguridad',
         'datos' => 'Datos',

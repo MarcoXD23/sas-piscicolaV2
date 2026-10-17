@@ -138,6 +138,19 @@
         @include('inicio._primer_uso', ['pasos' => $primerUso])
     @endif
 
+    {{-- Obsequios de los últimos 7 días (solo el propietario) --}}
+    @if ($obsequiosRecientes->isNotEmpty())
+        <x-aviso tono="info" icono="pez" class="mb-6">
+            <strong class="block font-bold">{{ __('obsequios.aviso_inicio') }}</strong>
+            <ul class="mt-1 space-y-0.5">
+                @foreach ($obsequiosRecientes as $obsequio)
+                    <li>{{ __('obsequios.aviso_linea', ['fecha' => $obsequio->jornada?->fecha?->format('d/m'), 'kg' => \App\Support\Formato::sinCeros($obsequio->kg),
+                        'especie' => $obsequio->especie?->nombre, 'destinatario' => $obsequio->destinatario, 'autorizo' => $obsequio->autorizadoPor?->name]) }}</li>
+                @endforeach
+            </ul>
+        </x-aviso>
+    @endif
+
     {{-- Día de proceso sin alimentación (ajustes proceso.*): ese día no se alimenta en la finca --}}
     @if ($diaSinAlimentacion)
         <x-aviso tono="atencion" icono="pez" class="mb-6">{{ __('jornadas.ayuno.dia_sin_alimentacion') }}</x-aviso>

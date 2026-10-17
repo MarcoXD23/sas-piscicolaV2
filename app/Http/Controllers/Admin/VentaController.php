@@ -11,6 +11,7 @@ use App\Models\Tercero;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\Formato;
+use App\Support\Proceso\Ayuno;
 use App\Support\Region;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,13 +29,19 @@ class VentaController extends Controller
     {
         $inicioMes = Region::hoy()->startOfMonth()->toDateString();
 
+        // Con las jornadas encendidas, toda venta nueva entra por la jornada: aquí quedan consulta, abonos y cartera (F6c)
+        $conJornadas = Ayuno::jornadasEncendidas();
+
         return view('admin.ventas.index', [
             // Registra ventas y abonos el administrador; el propietario consulta
-            'puedeVender' => $request->user()->tieneRol(Rol::ADMINISTRADOR),
+            'puedeVender' => $request->user()->tieneRol(Rol::ADMINISTRADOR) && ! $conJornadas,
+            'puedeAbonar' => $request->user()->tieneRol(Rol::ADMINISTRADOR),
+            'conJornadas' => $conJornadas,
             'disponibles' => Cosecha::query()->with(['lago', 'siembra'])->withSum('ventas', 'kg')->latest('fecha')->limit(50)->get()
                 ->filter(fn (Cosecha $cosecha) => $cosecha->kgDisponibles() > 0)->values(),
             'creditos' => Venta::query()->with(['comprador', 'tercero'])->conSaldo()->orderBy('fecha')->get(),
-            'ventas' => Venta::query()->with(['cosecha.lago', 'comprador', 'tercero'])->latest('fecha')->latest('id')->paginate(20),
+            // Las ventas de jornada no tienen cosecha: muestran la jornada y la especie
+            'ventas' => Venta::query()->with(['cosecha.lago', 'especie', 'comprador', 'tercero'])->latest('fecha')->latest('id')->paginate(20),
             'vendidoMes' => (int) Venta::where('fecha', '>=', $inicioMes)->sum('total'),
             'kgMes' => (float) Venta::where('fecha', '>=', $inicioMes)->sum('kg'),
             'cartera' => (int) Venta::conSaldo()->sum('saldo'),
@@ -49,6 +56,9 @@ class VentaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (Ayuno::jornadasEncendidas()) {
+            throw ValidationException::withMessages(['venta' => __('ventas.con_jornadas')]);
+        }
         $tenant = $request->user()->tenant_id;
 
         $datos = $request->validate([

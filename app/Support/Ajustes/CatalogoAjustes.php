@@ -2,6 +2,7 @@
 
 namespace App\Support\Ajustes;
 
+use App\Support\Ventas\Cupo;
 use InvalidArgumentException;
 
 /**
@@ -55,6 +56,19 @@ final class CatalogoAjustes
 
     /** Jornadas con limpio que hacen falta para que el promedio real reemplace la referencia del catálogo. */
     public const PROCESO_JORNADAS_PROMEDIO = 'proceso.jornadas_promedio';
+
+    /** Kg del cupo de pescado de cada trabajador por período; 0 = sin cupo (F6c, tema 8). */
+    public const VENTAS_CUPO_KG = 'ventas.cupo_kg';
+
+    /** Período del cupo: semanal, quincenal o mensual (App\Support\Ventas\Cupo). */
+    public const VENTAS_CUPO_PERIODO = 'ventas.cupo_periodo';
+
+    /** Quién puede autorizar un obsequio (tema 9). Nadie se autoriza a sí mismo. */
+    public const OBSEQUIOS_AUTORIZA = 'obsequios.autoriza';
+
+    public const AUTORIZA_PROPIETARIO = 'propietario';
+
+    public const AUTORIZA_PROPIETARIO_O_ADMINISTRADOR = 'propietario_o_administrador';
 
     public const APAGADA = 'apagada';
 
@@ -136,6 +150,27 @@ final class CatalogoAjustes
                 'min' => 1,
                 'max' => 50,
                 'defecto' => 5,
+            ],
+            // Por defecto 0: sin cupo, todos pagan el precio general (como hoy)
+            self::VENTAS_CUPO_KG => [
+                'seccion' => 'ventas',
+                'tipo' => self::TIPO_ENTERO,
+                'min' => 0,
+                'max' => 1000,
+                'defecto' => 0,
+            ],
+            self::VENTAS_CUPO_PERIODO => [
+                'seccion' => 'ventas',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => Cupo::PERIODOS,
+                'defecto' => Cupo::SEMANAL,
+            ],
+            // Por defecto solo el propietario (finca piloto)
+            self::OBSEQUIOS_AUTORIZA => [
+                'seccion' => 'ventas',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::AUTORIZA_PROPIETARIO, self::AUTORIZA_PROPIETARIO_O_ADMINISTRADOR],
+                'defecto' => self::AUTORIZA_PROPIETARIO,
             ],
             // Por defecto apagada: como hoy (los dos pasos son opcionales para todos)
             self::SEGURIDAD_DOS_PASOS => [

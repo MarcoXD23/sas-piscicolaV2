@@ -20,6 +20,17 @@
         @endif
     </x-encabezado>
 
+    {{-- Con las jornadas encendidas, las ventas nuevas se registran en la jornada --}}
+    @if ($conJornadas)
+        <x-aviso tono="info" class="mb-6">
+            {{ __('ventas.con_jornadas') }}
+            <a href="{{ route('admin.jornadas.index') }}" class="font-bold underline">{{ __('ventas.ir_jornadas') }}</a>
+        </x-aviso>
+    @endif
+    @error('venta')
+        <x-aviso tono="alerta" class="mb-6">{{ $message }}</x-aviso>
+    @enderror
+
     @if ($puedeVender && $disponibles->isEmpty())
         <p id="motivo-sin-cosecha" role="status" class="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-ficha border border-atencion-borde bg-atencion-fondo px-4 py-3 text-base text-atencion">
             <x-icono nombre="alerta" class="h-5 w-5" />
@@ -35,6 +46,8 @@
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
+        {{-- Con jornadas no se vende contra la cosecha: el pescado disponible se ve en la jornada --}}
+        @unless ($conJornadas)
         <x-tarjeta :titulo="__('ventas.pescado_disponible')" :subtitulo="__('ventas.kg_cosechados_aun_no_han')">
             @forelse ($disponibles as $cosecha)
                 <div class="flex items-center justify-between gap-3 border-t border-renglon py-3 first:border-t-0 first:pt-0">
@@ -48,6 +61,7 @@
                 <p class="text-base text-tinta-suave">{{ __('ventas.no_hay_pescado_cosechado_sin') }}</p>
             @endforelse
         </x-tarjeta>
+        @endunless
 
         <x-tarjeta :titulo="__('ventas.creditos_cobrar')">
             @forelse ($creditos as $credito)
@@ -58,13 +72,13 @@
                     </div>
                     <div class="shrink-0 text-right">
                         <p class="font-bold tabular-nums text-tinta">{{ Formato::dinero($credito->saldo) }}</p>
-                        @if ($puedeVender)
+                        @if ($puedeAbonar)
                             <button type="button" data-abrir-modal="abono-{{ $credito->id }}" class="min-h-12 text-sm font-semibold text-marca-700 hover:underline">{{ __('ventas.registrar_abono') }}</button>
                         @endif
                     </div>
                 </div>
 
-                @if ($puedeVender)
+                @if ($puedeAbonar)
                 <x-modal id="abono-{{ $credito->id }}" :titulo="__('ventas.abono_de', ['cliente' => $credito->nombreCliente()])">
                     <p class="mb-4 text-base text-tinta-suave">{{ __('ventas.saldo_pendiente') }} <strong class="text-tinta">{{ Formato::dinero($credito->saldo) }}</strong></p>
                     <x-formulario :action="route('admin.ventas.abonar', $credito)">
@@ -93,7 +107,7 @@
                 <tr>
                     <td data-label="{{ __('comun.fecha') }}">{{ $venta->fecha->format('d/m/Y') }}</td>
                     <td data-label="{{ __('ventas.cliente') }}" class="font-medium">{{ $venta->nombreCliente() }}</td>
-                    <td data-label="{{ __('ventas.pescado') }}">{{ __('lagos.lago_nombre', ['lago' => $venta->cosecha->lago->nombre]) }}</td>
+                    <td data-label="{{ __('ventas.pescado') }}">{{ $venta->textoPescado() }}</td>
                     <td data-label="{{ __('ventas.kg') }}" class="tabular-nums">{{ Formato::numero($venta->kg, 1) }}</td>
                     <td data-label="{{ __('ventas.precio_por_kg') }}" class="tabular-nums">{{ Formato::dinero($venta->precio_kg) }}</td>
                     <td data-label="{{ __('ventas.total') }}" class="font-semibold tabular-nums">{{ Formato::dinero($venta->total) }}</td>

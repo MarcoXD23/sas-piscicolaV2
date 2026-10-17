@@ -29,10 +29,12 @@ use App\Models\MedicionAgua;
 use App\Models\Mortalidad;
 use App\Models\MovimientoAlimento;
 use App\Models\Muestreo;
+use App\Models\Obsequio;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
 use App\Models\PesajeEntero;
 use App\Models\PesajeLimpio;
+use App\Models\PrecioEspecie;
 use App\Models\Presentacion;
 use App\Models\Proceso;
 use App\Models\RegistroSinConexion;
@@ -149,6 +151,8 @@ class AislamientoFincasTest extends TestCase
         $tamano = Tamano::create(['especie_id' => $this->especie('mojarra roja'), 'nombre' => "Tamaño {$sufijo}"]);
         $proceso = Proceso::create(['nombre' => "Proceso {$sufijo}"]);
         $presentacion = Presentacion::create(['especie_id' => $this->especie('mojarra roja'), 'tamano_id' => $tamano->id, 'proceso_id' => $proceso->id]);
+        // El obsequio lo autoriza otra persona (nunca quien lo registra)
+        $otraPersona = User::factory()->create(['tenant_id' => $finca->id, 'name' => "Autoriza {$sufijo}"]);
 
         return [
             User::class => $persona,
@@ -183,6 +187,10 @@ class AislamientoFincasTest extends TestCase
                 'bruto_kg' => 4, 'limpio_kg' => 4, 'user_id' => $persona->id]),
             ReproduccionJornada::class => ReproduccionJornada::create(['jornada_lago_id' => $jornadaLago->id, 'especie_id' => $this->especie('mojarra roja'), 'kg' => 1, 'user_id' => $persona->id]),
             JornadaRendimiento::class => JornadaRendimiento::create(['jornada_id' => $jornada->id, 'especie_id' => $this->especie('mojarra roja'), 'entero_kg' => 5]),
+            // Precios y obsequios (F6c)
+            PrecioEspecie::class => PrecioEspecie::create(['especie_id' => $this->especie('mojarra roja'), 'precio_general' => 9000]),
+            Obsequio::class => Obsequio::create(['jornada_id' => $jornada->id, 'especie_id' => $this->especie('mojarra roja'), 'kg' => 1,
+                'destinatario' => "Vecino {$sufijo}", 'registrado_por' => $persona->id, 'autorizado_por' => $otraPersona->id]),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
             AceptacionLegal::class => AceptacionLegal::registrar($persona),
             Exportacion::class => Exportacion::create(['user_id' => $persona->id, 'estado' => Exportacion::LISTA, 'ruta' => "x/{$sufijo}.zip", 'bytes' => 1, 'vence_at' => now()->addDay()]),

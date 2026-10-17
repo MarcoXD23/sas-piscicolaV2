@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Jornada de proceso: un día en que se pescan uno o varios lagos (docs/diseno/dia-de-proceso.md, tema 2).
@@ -71,6 +72,31 @@ class Jornada extends Model
     public function pesajesLimpio(): HasMany
     {
         return $this->hasMany(PesajeLimpio::class)->orderBy('id');
+    }
+
+    /** Ventas rápidas de la jornada (F6c), por especie. */
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class)->orderBy('id');
+    }
+
+    public function obsequios(): HasMany
+    {
+        return $this->hasMany(Obsequio::class)->orderBy('id');
+    }
+
+    /**
+     * Bloquea la jornada para registrar en ella (pesajes, ventas, obsequios); si ya no está abierta, no deja seguir.
+     * Va dentro de una transacción.
+     */
+    public static function bloquearAbierta(int $id): self
+    {
+        $bloqueada = self::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+        if (! $bloqueada->estaAbierta()) {
+            throw ValidationException::withMessages(['jornada' => __('jornadas.ya_no_abierta')]);
+        }
+
+        return $bloqueada;
     }
 
     /** Rendimiento por especie, guardado al cerrar (F6b). */
