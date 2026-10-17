@@ -286,7 +286,7 @@ Cada tema separa:
 
 **Pendiente:**
 
-- **Pago por jornada, pendiente de confirmar con la finca:** qué cargos cobran por jornada (una suma fija) y cuáles por kilo. Hoy solo está confirmado el pago por kilo de los procesadores y del rayador. Mientras tanto se construye configurable.
+- **Pago por jornada (confirmado con la finca, 2026-10-17):** los pescadores cobran por jornada (una suma fija). Si la pesca pasa de la hora límite, además se les paga la hora extra aparte. Los procesadores y el rayador cobran por kilo. Falta confirmar si todos los pescadores ganan lo mismo por la jornada o si depende de la persona; mientras tanto se construye configurable.
 - Los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador.
 - **Antes de construirlo hay que cambiar una regla del proyecto** (ver el tema 11).
 
@@ -735,7 +735,7 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 - la foto de la nómina mensual;
 - quién pone el número de lote: la finca o el proveedor de alevinos;
 - qué color de hilo corresponde a cada concentrado;
-- qué cargos cobran por jornada y cuáles por kilo (tema 10);
+- si todos los pescadores ganan lo mismo por la jornada o depende de la persona (tema 10);
 - qué entra en «a crédito» para descontar del pago: solo el pescado, o también anticipos u otras cosas (tema 8).
 
 **Otras decisiones abiertas:**
