@@ -240,6 +240,8 @@ Cada tema separa:
 
 **Estado actual del sistema:** cada venta ya guarda su precio. La liquidación de la nómina ya tiene un campo para el descuento por pescado.
 
+**Desde F6c-1:** las ventas nuevas entran por la venta rápida de la jornada, por especie y sin cosecha, con los precios de Ajustes › Precios (general y dentro del cupo) y el cupo configurable (`ventas.cupo_kg` y `ventas.cupo_periodo`, con la fecha de la finca). Tres tipos de comprador fijos: particular, fijo y jornalero. «Descontar del pago» queda como crédito; de contado se anota quién recibió el dinero. Con las jornadas encendidas, Ventas queda para consulta, abonos y cartera. No hay precio especial en la venta ni ventas sin jornada.
+
 ---
 
 ## 9. Obsequios
@@ -253,6 +255,8 @@ Cada tema separa:
 - En el cuadre cuenta como salida sin dinero, nunca como faltante.
 
 **Configurable por finca:** quién puede autorizar obsequios: solo el propietario, o también el administrador.
+
+**Desde F6c-1:** el obsequio se registra en la jornada con especie, presentación opcional, kilos, a quién, quién lo registró y quién lo autorizó (ajuste `obsequios.autoriza`, solo el propietario por defecto). Nadie se autoriza a sí mismo. Queda en la bitácora y el propietario lo ve en su Inicio durante 7 días.
 
 ---
 

@@ -243,6 +243,25 @@ Ver «Invitar una finca» en el README.
   - qué entra en «a crédito»: solo el pescado comprado, o también anticipos u otras cosas.
 - **Riesgo:** las ventas que ya existen están ligadas a una cosecha. Se mantienen; las nuevas van por jornada.
 
+**F6c se partió en dos fases** (decidido el 2026-10-17), cada una con su rama y su PR: **F6c-1, ventas** (rama `f6c-ventas`) y **F6c-2, pago a jornaleros** (rama `f6c-pago-jornaleros`).
+
+**F6c-1: estado, hecha** (2026-10-17, rama `f6c-ventas`).
+- **AGENTS.md** (commit aparte, aprobado): el administrador prepara el pago a jornaleros y el propietario lo aprueba; nadie aprueba su propio pago; si el propietario también es administrador, puede preparar y aprobar.
+- **Migración** `2026_11_13_000001_ventas_por_jornada`: `precios_especie`, `obsequios` (CHECK: quien registra no autoriza) y, en `ventas`, `cosecha_id` acepta vacío más `jornada_id`, `especie_id`, `kg_cupo`, `precio_cupo` y `recibio_id`, con un CHECK que exige cosecha, o jornada con especie. Las ventas viejas siguen igual.
+- **Precios** (Ajustes › Precios, solo el propietario, con bitácora): por especie, el general y, si entra en el cupo, el de trabajador dentro del cupo. Tres tipos de comprador fijos: particular, fijo (con cuenta) y jornalero (la lista de Jornaleros, que ya existía). Nada de lista configurable todavía.
+- **Cupo** (`Cupo`): `ventas.cupo_kg` (0 = sin cupo, por defecto) y `ventas.cupo_periodo` (semanal de lunes a domingo, quincenal del 1 al 15 y del 16 a fin de mes, o mensual), con la fecha de la finca. La venta se parte entre cupo y exceso.
+- **Venta rápida** en la jornada abierta, con el mismo bloqueo que los pesajes: por especie, sin lago, sin cambiar el precio. Fijos y jornaleros: «descontar del pago» (crédito) o contado; particulares: contado o crédito. Sin elegir, la de la última compra. De contado se anota quién recibió el dinero. Con las jornadas encendidas, Ventas queda para consulta, abonos y cartera; con las jornadas apagadas, la venta por cosecha sigue igual. No hay «permitir ventas sin jornada».
+- **Obsequios:** `obsequios.autoriza` (solo el propietario por defecto, o propietario o administrador). Nadie se autoriza a sí mismo. Bitácora y aviso en el Inicio del propietario (últimos 7 días).
+- **Lo que lee ventas** (Ventas, cartera, informe mensual, nómina, saldo del jornalero, Mi trabajo) se probó con una venta de jornada. La conversión y el historial no leen ventas.
+- **Para después:** el cuadre del limpio contra las ventas, los obsequios y los despachos (F6d).
+
+**F6c-2: decidido para el pago a jornaleros** (2026-10-17, a construir):
+- **Por kilo:** el administrador escribe en cada jornada el valor por kilo. Bolsa = valor × limpio total de la jornada, repartida en partes iguales entre todos los de cargo «por kilo» (procesadores y rayador juntos), más una bonificación opcional por persona. Cada parte se redondea hacia abajo (configurable: sin redondeo, a 100 o a 1.000); el sobrante se muestra y no se reparte. Falta confirmarlo con la finca: construirlo así y que se pueda cambiar.
+- **Pescadores:** el administrador escribe en cada jornada el valor por pescador, igual para todos, con un valor opcional por persona que lo reemplaza. La hora extra va aparte, con hora límite y valor configurables.
+- **Tareas adicionales** de la jornada (por ejemplo, lavar canastas): tarea, a quién y valor; se suma al pago de esa persona.
+- Los valores se proponen con los de la última jornada y el administrador los puede cambiar; cada pago guarda los suyos y el propietario los ve al aprobar.
+- **Planilla por persona:** total ganado, descuento (lo comprado a crédito) y total a pagar; abajo, los totales y el desglose. Nunca un pago negativo: si el descuento supera lo ganado, queda saldo pendiente para la siguiente jornada.
+
 ### F6d. Pedidos, despacho, remisión y canastas (5 días)
 
 - Pedido a una ciudad y un cliente, con líneas por presentación (kilos pedidos y despachados).
