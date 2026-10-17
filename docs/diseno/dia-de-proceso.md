@@ -100,6 +100,7 @@ Cada tema separa:
   - Cada venta está ligada a una cosecha (un lote de un lago). La venta por especie y por jornada tendrá que ligarse a la jornada y a la especie.
   - En Conversión, la tabla «Por especie» no marca la fila como estimada; solo lo explica la nota general al pie.
   - La especie de una siembra vieja puede no estar ligada al catálogo. El cupo y los precios por especie necesitan esa liga siempre.
+- **Desde F6a:** la jornada reparte el entero de una especie entre sus siembras revueltas según la biomasa, con ajuste manual, y crea una cosecha por siembra. La siembra sin especie del catálogo no se puede pesar en la jornada hasta ligarla.
 
 ---
 
@@ -124,6 +125,7 @@ Cada tema separa:
 - La cosecha se bloquea durante el retiro de un tratamiento. Se mantiene en la jornada.
 - Cerrar a mano una siembra que todavía tiene peces no registra la diferencia entre lo estimado y lo cosechado, ni deja registro en la bitácora. Para «quedó vacío» hace falta registrarla.
 - El traslado suma siempre al lote más viejo de la misma especie, con peso ponderado. No ofrece «crear lote aparte». Además sale de una sola siembra, así que con siembras revueltas en el origen tiene el mismo problema de reparto.
+- **Desde F6a:** al cerrar la jornada se marca «quedó vacío» o «quedó pescado» por lago. Los peces salen de kg ÷ peso promedio; la diferencia con lo estimado queda en el cierre del lago y en la bitácora; el retiro de tratamiento se revisa al agregar el lago y otra vez al cerrar. La cosecha manual sigue igual. (Desde F5 el traslado ya pregunta «sumar» o «aparte».)
 
 ---
 
@@ -147,6 +149,7 @@ Cada tema separa:
 - No existe el ayuno ni el lago programado para pesca. Lo más cercano es el aviso «listo para pescar», que la cosecha atiende.
 - Inicio muestra la ración sugerida del día por lago. Un lago en ayuno debe decir «en ayuno» en vez de sugerir ración.
 - El aviso de stock bajo usa el consumo promedio; los días de ayuno lo bajan un poco (efecto menor).
+- **Desde F6a:** el ayuno se calcula de las jornadas abiertas (ajuste `proceso.dias_ayuno`) y se quita solo al cancelar o cerrar. Inicio, Lagos y Registro rápido muestran «en ayuno» sin ración sugerida; registrar ración avisa y no bloquea. El día sin alimentación (`proceso.sin_alimentacion`) se recuerda en Inicio y en Registro rápido. Falta: la asistencia de los fijos en la jornada (F8).
 
 ---
 

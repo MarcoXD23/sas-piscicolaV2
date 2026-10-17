@@ -45,6 +45,7 @@ Ver «Invitar una finca» en el README.
 
 ### Al final
 
+- **Limpiezas pendientes antes del piloto:** unificar el formulario de pesadas de la jornada y el de la cosecha manual (ver F6a).
 - **F14. Servidor:** ver la fase más abajo.
 - **Piloto en la finca:** la finca la usa en su trabajo diario. De los días de proceso del piloto salen los números reales que todavía son provisionales: tolerancias del cuadre, topes, rendimiento y pago a jornaleros.
 
@@ -193,6 +194,18 @@ Ver «Invitar una finca» en el README.
 - «Quedó vacío / quedó pescado» y el reparto entre siembras revueltas (temas 3 y 4).
 - **Tablas:** `jornadas`, `jornada_lagos`, `pesajes_entero`. La cosecha de hoy sigue funcionando para las fincas sin proceso.
 - **Riesgo alto:** convive con las cosechas que ya existen y con su conversión.
+
+**Estado: hecha** (2026-10-17).
+- **Migración:** una sola, `2026_11_11_000001_create_jornadas_tables`: `jornadas` (estado con CHECK, una activa por finca y fecha con índice único parcial `WHERE estado <> 'cancelada'`), `jornada_lagos` (resultado y el detalle del cierre en `cierre`), `pesajes_entero` (cada pesada o el total escrito, con CHECK de las cuentas) y `cosechas.jornada_id`, que acepta vacío. Todas con `tenant_id` y `PerteneceATenant`.
+- **Ajustes** (`proceso.*`, sección «Día de proceso»): `proceso.jornadas` apagado por defecto (apagado, rutas 404 y sin menú), `proceso.dias_ayuno` = 1 y `proceso.sin_alimentacion` encendida. Los dos últimos solo actúan con las jornadas encendidas.
+- **El cierre crea cosechas normales** (`CierreJornada`), una por siembra, ligadas a la jornada: conversión, conversión de vida, supervivencia, historial, informes y ventas siguen igual. El destino no se guarda: «Jornada de proceso dd/mm» sale de `lang/es` por `jornada_id`. Esas cosechas no se editan en la pantalla de cosecha: avisan y enlazan a la jornada.
+- **Reparto:** solo según la biomasa, con ajuste manual que debe sumar el entero de cada especie (`RepartoCosecha`). Peces = kg ÷ peso promedio; el peso promedio no cambia.
+  - Quedó vacío: se cierran todas las siembras del lago; la cosecha lleva todos los peces vivos y la diferencia con kg ÷ peso promedio queda en `cierre` y en la bitácora. Así el lote cerrado ya no cuenta como pérdida en la comparación de proveedores.
+  - Quedó pescado: se resta lo calculado; si el administrador escribe los kg que estima que quedan, los peces que quedan son esos kg ÷ peso promedio y la diferencia queda registrada.
+- **Seguridad del cierre:** transacción con `lockForUpdate` de la jornada y de las siembras; si la jornada ya no está abierta no hace nada (doble clic). Vuelve a revisar el retiro de tratamiento. Cerrada no se reabre; cancelar solo si está abierta, conserva los pesajes.
+- **Ayuno** (`Ayuno`, calculado, con la fecha de la finca): Inicio, Lagos y Registro rápido dicen «en ayuno» en vez de sugerir ración; registrar ración avisa y no bloquea. El día sin alimentación se recuerda en Inicio y en Registro rápido.
+- **Para después:** la siembra vieja sin especie del catálogo no se puede pesar en la jornada (hay que ligarla). El limpio, el rendimiento y el pago a procesadores son de F6b; la venta por especie y por jornada, de F6c.
+- **Limpieza pendiente (antes del piloto):** unificar `admin/jornadas/_pesaje.blade.php` con el marcado de pesadas de `admin/cosechas/crear.blade.php` en un solo parcial. En F6a se copió para no tocar la cosecha manual; los dos usan `resources/js/pesaje.js`.
 
 ### F6b. Presentaciones, limpio y rendimiento (3 días)
 
