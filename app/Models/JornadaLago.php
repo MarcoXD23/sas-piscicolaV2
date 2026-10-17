@@ -44,4 +44,10 @@ class JornadaLago extends Model
     {
         return $this->hasMany(PesajeEntero::class)->orderBy('id');
     }
+
+    /** Kg de «reproducción» por especie, que vuelven al lago (F6b, solo con el ajuste encendido). */
+    public function reproducciones(): HasMany
+    {
+        return $this->hasMany(ReproduccionJornada::class)->orderBy('id');
+    }
 }

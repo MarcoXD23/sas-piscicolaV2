@@ -35,6 +35,8 @@ class Especie extends Model
     protected $fillable = [
         'clave', 'nombre', 'nombre_cientifico', 'clima', 'temp_min', 'temp_max', 'oxigeno_min', 'ph_min', 'ph_max', 'alimentacion', 'activo',
         'cultivo', 'procesamiento', 'color', 'aspecto', 'ficha_orientativa',
+        // Rendimiento de referencia inicial de la finca (%), hasta que haya promedio real (F6b)
+        'rendimiento_referencia',
     ];
 
     /** Valores por defecto (los mismos de la base) también en el modelo recién creado. */
@@ -52,6 +54,7 @@ class Especie extends Model
             'cultivo' => 'array',
             'procesamiento' => 'array',
             'ficha_orientativa' => 'boolean',
+            'rendimiento_referencia' => 'float',
         ];
     }
 
@@ -90,6 +93,12 @@ class Especie extends Model
     public function siembras(): HasMany
     {
         return $this->hasMany(Siembra::class);
+    }
+
+    /** Tamaños de la especie en el catálogo de presentaciones de la finca (F6b). */
+    public function tamanos(): HasMany
+    {
+        return $this->hasMany(Tamano::class);
     }
 
     /** Tramos de la tabla de ración de esta especie en la finca, de menor a mayor peso. */

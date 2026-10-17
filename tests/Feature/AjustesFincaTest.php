@@ -60,6 +60,7 @@ class AjustesFincaTest extends TestCase
         // Jornadas de proceso apagadas (ninguna finca cambia); ayuno de 1 día y sin alimentación encendida solo actúan con ellas
         $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30, CatalogoAjustes::LOTES_NUMERACION => 'manual',
             CatalogoAjustes::PROCESO_JORNADAS => 'apagada', CatalogoAjustes::PROCESO_DIAS_AYUNO => 1, CatalogoAjustes::PROCESO_SIN_ALIMENTACION => 'encendida',
+            CatalogoAjustes::PROCESO_REPRODUCCION => 'apagada', CatalogoAjustes::PROCESO_UMBRAL_RENDIMIENTO => 5, CatalogoAjustes::PROCESO_JORNADAS_PROMEDIO => 5,
             CatalogoAjustes::SEGURIDAD_DOS_PASOS => 'apagada'], AjustesFinca::todos());
         $this->assertSame(0, AjusteFinca::count());
 

@@ -5,5 +5,6 @@
     <x-pestanas class="overflow-x-auto [&>a]:whitespace-nowrap" :enlaces="[
         ['ruta' => 'especies.index', 'texto' => __('especies.pestanas.guia')],
         ['ruta' => 'admin.especies.index', 'texto' => __('especies.pestanas.catalogo')],
+        ['ruta' => 'admin.presentaciones.index', 'texto' => __('especies.pestanas.presentaciones')],
     ]" />
 @endif

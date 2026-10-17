@@ -29,12 +29,28 @@ final class RepartoCosecha
             return [];
         }
 
+        return self::proporcional($kg, $siembras->mapWithKeys(fn (Siembra $s) => [$s->id => (float) $s->peces_vivos * (float) $s->peso_actual_g])->all());
+    }
+
+    /**
+     * Reparte $kg en proporción a los pesos dados (si todos son cero, por partes iguales). En centésimas: suma exacto el
+     * total; lo que sobra al redondear va a los de mayor residuo. Lo usan el reparto según la biomasa y el del limpio.
+     *
+     * @param  array<int, float>  $pesos  clave => peso
+     * @return array<int, float> clave => kg
+     */
+    public static function proporcional(float $kg, array $pesos): array
+    {
+        if ($pesos === []) {
+            return [];
+        }
+
         $total = (int) round($kg * 100);
-        $pesos = $siembras->mapWithKeys(fn (Siembra $s) => [$s->id => max(0.0, (float) $s->peces_vivos * (float) $s->peso_actual_g)]);
-        $suma = $pesos->sum();
+        $pesos = array_map(fn (float $peso) => max(0.0, $peso), $pesos);
+        $suma = array_sum($pesos);
         if ($suma <= 0) {
-            $pesos = $pesos->map(fn () => 1.0);
-            $suma = (float) $pesos->count();
+            $pesos = array_map(fn () => 1.0, $pesos);
+            $suma = (float) count($pesos);
         }
 
         $partes = [];
@@ -57,21 +73,26 @@ final class RepartoCosecha
         return array_map(fn (int $centesimas) => $centesimas / 100, $partes);
     }
 
-    /** Peces que salen con $kg de una siembra: kg ÷ peso promedio, al menos 1 si hay kg. Null si no tiene peso. */
-    public static function peces(float $kg, Siembra $siembra): ?int
+    /**
+     * Peces que salen con $kg de una siembra: kg ÷ peso promedio (el medido al pescar, si se tomó la muestra; si no, el
+     * del registro), al menos 1 si hay kg. Null si no hay peso.
+     */
+    public static function peces(float $kg, Siembra $siembra, ?float $pesoMedido = null): ?int
     {
         if ($kg <= 0) {
             return 0;
         }
-        if ((float) $siembra->peso_actual_g <= 0) {
+        $peso = $pesoMedido ?? (float) $siembra->peso_actual_g;
+        if ($peso <= 0) {
             return null;
         }
 
-        return max(1, (int) round($kg * 1000 / (float) $siembra->peso_actual_g));
+        return max(1, (int) round($kg * 1000 / $peso));
     }
 
     /**
-     * Entero de cada especie en un lago de la jornada.
+     * Entero de cada especie en un lago de la jornada, menos la «reproducción» (esos peces vuelven al lago: no se
+     * cosechan). Puede quedar en cero o negativo si se registró más reproducción que entero: el cierre lo rechaza.
      *
      * @return array<int, float> especie_id => kg
      */
@@ -81,6 +102,9 @@ final class RepartoCosecha
         foreach ($jornadaLago->pesajes as $pesaje) {
             /** @var PesajeEntero $pesaje */
             $centesimas[$pesaje->especie_id] = ($centesimas[$pesaje->especie_id] ?? 0) + (int) round($pesaje->entero_kg * 100);
+        }
+        foreach ($jornadaLago->reproducciones as $reproduccion) {
+            $centesimas[$reproduccion->especie_id] = ($centesimas[$reproduccion->especie_id] ?? 0) - (int) round($reproduccion->kg * 100);
         }
 
         return array_map(fn (int $c) => $c / 100, $centesimas);
@@ -102,13 +126,16 @@ final class RepartoCosecha
      * Una especie pesada sin ninguna siembra activa en el lago va en «sin_siembra» (no se puede cerrar así).
      *
      * @param  Collection<int, Siembra>  $siembras  las de siembrasDelDia()
-     * @return array{filas: list<array{siembra: Siembra, kg: float, peces: ?int}>, sin_siembra: list<int>, totales: array<int, float>}
+     *                                              Una especie cuya reproducción iguala o supera su entero va en «sin_entero» (tampoco se puede cerrar así).
+     * @return array{filas: list<array{siembra: Siembra, kg: float, peces: ?int}>, sin_siembra: list<int>, sin_entero: list<int>, totales: array<int, float>}
      */
     public static function propuestaLago(JornadaLago $jornadaLago, Collection $siembras): array
     {
         $totales = self::totalesPorEspecie($jornadaLago);
         $kg = [];
         $sinSiembra = [];
+        $sinEntero = array_keys(array_filter($totales, fn (float $total) => $total <= 0));
+        $totales = array_filter($totales, fn (float $total) => $total > 0);
         foreach ($totales as $especieId => $total) {
             $deLaEspecie = $siembras->where('especie_id', $especieId)->values();
             if ($deLaEspecie->isEmpty()) {
@@ -126,6 +153,7 @@ final class RepartoCosecha
                 'peces' => self::peces($kg[$s->id] ?? 0.0, $s),
             ])->all(),
             'sin_siembra' => $sinSiembra,
+            'sin_entero' => $sinEntero,
             'totales' => $totales,
         ];
     }

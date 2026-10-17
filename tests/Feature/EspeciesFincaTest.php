@@ -85,6 +85,9 @@ class EspeciesFincaTest extends TestCase
         $concentrados = require database_path('migrations/2026_11_07_000001_create_concentrados_and_tabla_racion_tables.php');
         // Los pesajes enteros de las jornadas (F6a) también
         $jornadas = require database_path('migrations/2026_11_11_000001_create_jornadas_tables.php');
+        // Y las presentaciones, la reproducción y los rendimientos (F6b)
+        $presentaciones = require database_path('migrations/2026_11_12_000001_presentaciones_y_limpio.php');
+        $presentaciones->down();
         $jornadas->down();
         $concentrados->down();
         $fases->down();
@@ -103,6 +106,7 @@ class EspeciesFincaTest extends TestCase
         $fases->up();
         $concentrados->up();
         $jornadas->up();
+        $presentaciones->up();
 
         $this->assertFalse(Schema::hasColumn('siembras', 'especie'));   // el texto viejo ya no queda en uso
         $this->assertSame(7, Especie::count());                         // 6 por defecto + la que no estaba en el catálogo
@@ -329,16 +333,21 @@ class EspeciesFincaTest extends TestCase
     {
         $guia = route('especies.index');
         $catalogo = route('admin.especies.index');
+        // Presentaciones (F6b): la tercera pestaña
+        $presentaciones = route('admin.presentaciones.index');
 
         foreach ([$this->propietario, $this->administrador] as $persona) {
-            // En la guía: las dos pestañas, la guía activa
+            // En la guía: las tres pestañas, la guía activa
             $html = $this->actingAs($persona)->get($guia)->assertOk()->getContent();
-            $this->assertSame([$guia => true, $catalogo => false], $this->pestanasDe($html));
+            $this->assertSame([$guia => true, $catalogo => false, $presentaciones => false], $this->pestanasDe($html));
             $this->assertStringContainsString(__('especies.pestanas.guia'), $html);
             $this->assertStringContainsString(__('especies.pestanas.catalogo'), $html);
             // En el catálogo: el catálogo activo
             $html = $this->actingAs($persona)->get($catalogo)->assertOk()->getContent();
-            $this->assertSame([$guia => false, $catalogo => true], $this->pestanasDe($html));
+            $this->assertSame([$guia => false, $catalogo => true, $presentaciones => false], $this->pestanasDe($html));
+            // En presentaciones: esa pestaña activa
+            $html = $this->actingAs($persona)->get($presentaciones)->assertOk()->getContent();
+            $this->assertSame([$guia => false, $catalogo => false, $presentaciones => true], $this->pestanasDe($html));
 
             // El menú: ningún enlace propio al catálogo; la entrada «Especies» (la guía) activa en las dos pantallas
             foreach ([$guia, $catalogo] as $pantalla) {

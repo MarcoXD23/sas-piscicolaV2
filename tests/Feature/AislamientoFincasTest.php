@@ -22,6 +22,7 @@ use App\Models\HoraExtra;
 use App\Models\Ingreso;
 use App\Models\Jornada;
 use App\Models\JornadaLago;
+use App\Models\JornadaRendimiento;
 use App\Models\Lago;
 use App\Models\Liquidacion;
 use App\Models\MedicionAgua;
@@ -31,13 +32,18 @@ use App\Models\Muestreo;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
 use App\Models\PesajeEntero;
+use App\Models\PesajeLimpio;
+use App\Models\Presentacion;
+use App\Models\Proceso;
 use App\Models\RegistroSinConexion;
 use App\Models\ReglaFase;
+use App\Models\ReproduccionJornada;
 use App\Models\Rol;
 use App\Models\Ronda;
 use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\TablaRacion;
+use App\Models\Tamano;
 use App\Models\Tarea;
 use App\Models\Tenant;
 use App\Models\Tercero;
@@ -75,6 +81,7 @@ class AislamientoFincasTest extends TestCase
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
         'jornalero' => Tercero::class, 'proveedor' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class, 'ingreso' => Ingreso::class,
         'jornada' => Jornada::class, 'pesaje' => PesajeEntero::class,
+        'proceso' => Proceso::class, 'tamano' => Tamano::class, 'pesajeLimpio' => PesajeLimpio::class, 'reproduccion' => ReproduccionJornada::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -138,6 +145,10 @@ class AislamientoFincasTest extends TestCase
         AjusteFinca::create(['clave' => CatalogoAjustes::PROCESO_JORNADAS, 'valor' => 'encendida', 'cambiado_por' => $persona->id]);
         $jornada = Jornada::create(['fecha' => '2026-10-13', 'estado' => Jornada::ABIERTA, 'user_id' => $persona->id]);
         $jornadaLago = JornadaLago::create(['jornada_id' => $jornada->id, 'lago_id' => $lago->id]);
+        // Catálogo de presentaciones y limpio de la jornada (F6b)
+        $tamano = Tamano::create(['especie_id' => $this->especie('mojarra roja'), 'nombre' => "Tamaño {$sufijo}"]);
+        $proceso = Proceso::create(['nombre' => "Proceso {$sufijo}"]);
+        $presentacion = Presentacion::create(['especie_id' => $this->especie('mojarra roja'), 'tamano_id' => $tamano->id, 'proceso_id' => $proceso->id]);
 
         return [
             User::class => $persona,
@@ -165,6 +176,13 @@ class AislamientoFincasTest extends TestCase
             JornadaLago::class => $jornadaLago,
             PesajeEntero::class => PesajeEntero::create(['jornada_lago_id' => $jornadaLago->id, 'especie_id' => $this->especie('mojarra roja'), 'tipo' => PesajeEntero::TOTAL,
                 'bruto_kg' => 5, 'entero_kg' => 5, 'user_id' => $persona->id]),
+            Tamano::class => $tamano,
+            Proceso::class => $proceso,
+            Presentacion::class => $presentacion,
+            PesajeLimpio::class => PesajeLimpio::create(['jornada_id' => $jornada->id, 'presentacion_id' => $presentacion->id, 'tipo' => PesajeLimpio::TOTAL,
+                'bruto_kg' => 4, 'limpio_kg' => 4, 'user_id' => $persona->id]),
+            ReproduccionJornada::class => ReproduccionJornada::create(['jornada_lago_id' => $jornadaLago->id, 'especie_id' => $this->especie('mojarra roja'), 'kg' => 1, 'user_id' => $persona->id]),
+            JornadaRendimiento::class => JornadaRendimiento::create(['jornada_id' => $jornada->id, 'especie_id' => $this->especie('mojarra roja'), 'entero_kg' => 5]),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
             AceptacionLegal::class => AceptacionLegal::registrar($persona),
             Exportacion::class => Exportacion::create(['user_id' => $persona->id, 'estado' => Exportacion::LISTA, 'ruta' => "x/{$sufijo}.zip", 'bytes' => 1, 'vence_at' => now()->addDay()]),

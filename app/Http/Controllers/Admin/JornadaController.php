@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bitacora;
+use App\Models\Especie;
 use App\Models\Jornada;
 use App\Models\JornadaLago;
 use App\Models\Lago;
 use App\Models\PesajeEntero;
+use App\Models\PesajeLimpio;
+use App\Models\Presentacion;
+use App\Models\ReproduccionJornada;
 use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Tratamiento;
@@ -16,6 +20,7 @@ use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\CalculoPesaje;
 use App\Support\Proceso\Ayuno;
 use App\Support\Proceso\CierreJornada;
+use App\Support\Proceso\Rendimiento;
 use App\Support\Proceso\RepartoCosecha;
 use App\Support\Region;
 use Carbon\CarbonImmutable;
@@ -121,18 +126,119 @@ class JornadaController extends Controller implements HasMiddleware
 
     public function show(Request $request, Jornada $jornada): View
     {
-        $jornada->load(['lagos.lago.siembrasActivas', 'lagos.pesajes.especie', 'usuario', 'cerradaPor', 'canceladaPor', 'cosechas.siembra', 'cosechas.lago']);
+        $jornada->load(['lagos.lago.siembrasActivas', 'lagos.pesajes.especie', 'lagos.reproducciones.especie', 'usuario', 'cerradaPor', 'canceladaPor',
+            'cosechas.siembra', 'cosechas.lago', 'pesajesLimpio.presentacion.especie', 'pesajesLimpio.presentacion.tamano', 'pesajesLimpio.presentacion.proceso',
+            'rendimientos.especie']);
         $puedeOperar = $request->user()->tieneRol(Rol::ADMINISTRADOR) && $jornada->estaAbierta();
+        $especiesPorLago = $jornada->lagos->mapWithKeys(fn (JornadaLago $jl) => [$jl->id => $this->especiesDelLago($jl->lago)]);
 
         return view('admin.jornadas.show', [
             'jornada' => $jornada,
             'puedeOperar' => $puedeOperar,
             'puedePesar' => $puedeOperar && $jornada->yaEsSuDia(),
             'lagosParaAgregar' => $puedeOperar ? $this->lagosConPeces()->whereNotIn('id', $jornada->lagos->pluck('lago_id'))->values() : collect(),
-            'especiesPorLago' => $jornada->lagos->mapWithKeys(fn (JornadaLago $jl) => [$jl->id => $this->especiesDelLago($jl->lago)]),
+            'especiesPorLago' => $especiesPorLago,
+            'presentaciones' => $this->presentacionesDe($especiesPorLago->flatMap(fn ($especies) => $especies->keys())->unique()->all()),
+            'conReproduccion' => $this->reproduccionEncendida(),
+            'rendimientoAhora' => $jornada->estaAbierta() ? Rendimiento::deJornada($jornada) : null,
+            'nombresEspecie' => Especie::query()->pluck('nombre', 'id'),
             'pesoCanasta' => $request->user()->tenant->peso_canasta_kg,
             'pesoCanastilla' => $request->user()->tenant->peso_canastilla_kg,
         ]);
+    }
+
+    /** Pesada del limpio por presentación: en la jornada abierta y desde su día, con el mismo bloqueo que el entero. */
+    public function guardarLimpio(Request $request, Jornada $jornada): RedirectResponse
+    {
+        $datos = $request->validate($this->reglasPesadas() + [
+            'presentacion_id' => ['required', 'integer', Rule::exists('presentaciones', 'id')->where('tenant_id', $request->user()->tenant_id)->where('activo', true)],
+        ], $this->mensajesPesadas() + [
+            'presentacion_id.required' => __('jornadas.errores.elige_presentacion'),
+            'presentacion_id.exists' => __('jornadas.errores.elige_presentacion'),
+        ]);
+
+        $jornada->load('lagos.lago.siembrasActivas');
+        $presentacion = Presentacion::with(['especie', 'tamano', 'proceso'])->findOrFail($datos['presentacion_id']);
+        $especies = $jornada->lagos->flatMap(fn (JornadaLago $jl) => $this->especiesDelLago($jl->lago)->keys())->unique();
+        if (! $especies->contains((int) $presentacion->especie_id)) {
+            throw ValidationException::withMessages(['presentacion_id' => __('jornadas.errores.presentacion_sin_especie', ['especie' => $presentacion->especie->nombre])]);
+        }
+        $filas = $this->filasPesaje($datos);
+
+        $kg = DB::transaction(function () use ($request, $jornada, $presentacion, $filas) {
+            $bloqueada = $this->bloquearAbierta($jornada);
+            if (! $bloqueada->yaEsSuDia()) {
+                throw ValidationException::withMessages(['jornada' => __('jornadas.errores.antes_de_su_dia')]);
+            }
+            foreach ($filas as $fila) {
+                $limpio = $fila['entero_kg'];
+                unset($fila['entero_kg']);
+                $bloqueada->pesajesLimpio()->create($fila + ['limpio_kg' => $limpio, 'presentacion_id' => $presentacion->id, 'user_id' => $request->user()->id]);
+            }
+
+            return array_sum(array_column($filas, 'entero_kg'));
+        });
+
+        return back()->with('estado', __('jornadas.limpio_guardado', ['kg' => CalculoPesaje::kg($kg), 'presentacion' => $presentacion->nombre()]));
+    }
+
+    public function eliminarLimpio(Jornada $jornada, PesajeLimpio $pesajeLimpio): RedirectResponse
+    {
+        abort_unless($pesajeLimpio->jornada_id === $jornada->id, 404);
+
+        DB::transaction(function () use ($jornada, $pesajeLimpio) {
+            $this->bloquearAbierta($jornada);
+            $pesajeLimpio->delete();
+        });
+
+        return back()->with('estado', __('jornadas.pesaje_eliminado', ['kg' => CalculoPesaje::kg($pesajeLimpio->limpio_kg)]));
+    }
+
+    /** «Reproducción» de un lago y una especie (solo con el ajuste encendido): kg que vuelven al lago. */
+    public function guardarReproduccion(Request $request, Jornada $jornada): RedirectResponse
+    {
+        abort_unless($this->reproduccionEncendida(), 404);
+        $datos = $request->validate([
+            'jornada_lago_id' => ['required', 'integer', Rule::exists('jornada_lagos', 'id')->where('jornada_id', $jornada->id)],
+            'especie_id' => ['required', 'integer'],
+            'kg' => ['required', 'numeric', 'min:0.1', 'max:9999999'],
+        ], [
+            'jornada_lago_id.required' => __('jornadas.errores.elige_lago'),
+            'jornada_lago_id.exists' => __('jornadas.errores.elige_lago'),
+            'especie_id.required' => __('jornadas.errores.elige_especie'),
+            'kg.required' => __('jornadas.errores.kg_invalido'),
+            'kg.min' => __('jornadas.errores.kg_invalido'),
+        ]);
+
+        $jornadaLago = JornadaLago::with('lago.siembrasActivas')->findOrFail($datos['jornada_lago_id']);
+        if (! $this->especiesDelLago($jornadaLago->lago)->has((int) $datos['especie_id'])) {
+            throw ValidationException::withMessages(['especie_id' => __('jornadas.errores.especie_no_esta', ['lago' => $jornadaLago->lago->nombre])]);
+        }
+
+        DB::transaction(function () use ($request, $jornada, $jornadaLago, $datos) {
+            $bloqueada = $this->bloquearAbierta($jornada);
+            if (! $bloqueada->yaEsSuDia()) {
+                throw ValidationException::withMessages(['jornada' => __('jornadas.errores.antes_de_su_dia')]);
+            }
+            $jornadaLago->reproducciones()->create([
+                'especie_id' => (int) $datos['especie_id'], 'kg' => round((float) $datos['kg'], 2), 'user_id' => $request->user()->id,
+            ]);
+        });
+
+        return back()->with('estado', __('jornadas.reproduccion_guardada', ['kg' => CalculoPesaje::kg(round((float) $datos['kg'], 2)), 'lago' => $jornadaLago->lago->nombre]));
+    }
+
+    public function eliminarReproduccion(Jornada $jornada, ReproduccionJornada $reproduccion): RedirectResponse
+    {
+        abort_unless($this->reproduccionEncendida(), 404);
+        abort_unless($reproduccion->jornadaLago?->jornada_id === $jornada->id, 404);
+
+        DB::transaction(function () use ($jornada, $reproduccion) {
+            $this->bloquearAbierta($jornada);
+            $reproduccion->delete();
+        });
+
+        return back()->with('estado', __('jornadas.pesaje_eliminado', ['kg' => CalculoPesaje::kg($reproduccion->kg)]));
     }
 
     public function agregarLago(Request $request, Jornada $jornada): RedirectResponse
@@ -158,23 +264,13 @@ class JornadaController extends Controller implements HasMiddleware
 
     public function guardarPesaje(Request $request, Jornada $jornada): RedirectResponse
     {
-        $datos = $request->validate([
+        $datos = $request->validate($this->reglasPesadas() + [
             'jornada_lago_id' => ['required', 'integer', Rule::exists('jornada_lagos', 'id')->where('jornada_id', $jornada->id)],
             'especie_id' => ['required', 'integer'],
-            'kg' => ['nullable', 'required_without:pesadas', 'numeric', 'min:0.1', 'max:9999999'],
-            'pesadas' => ['nullable', 'array', 'min:1', 'max:'.CalculoPesaje::MAX_PESADAS],
-            'pesadas.*.tipo' => ['required', 'string', Rule::in(CalculoPesaje::TIPOS)],
-            'pesadas.*.cantidad' => ['required', 'integer', 'min:1', 'max:'.CalculoPesaje::MAX_CANTIDAD],
-            'pesadas.*.peso_pesado' => ['required', 'numeric', 'gt:0', 'max:'.CalculoPesaje::MAX_PESO_PESADA_KG],
-            'peso_canasta_kg' => ['nullable', 'required_with:pesadas', 'numeric', 'min:'.CalculoPesaje::MIN_PESO_VACIA_KG, 'max:'.CalculoPesaje::MAX_PESO_VACIA_KG],
-            'peso_canastilla_kg' => ['nullable', 'required_with:pesadas', 'numeric', 'min:'.CalculoPesaje::MIN_PESO_VACIA_KG, 'max:'.CalculoPesaje::MAX_PESO_VACIA_KG],
-        ], [
+        ], $this->mensajesPesadas() + [
             'jornada_lago_id.required' => __('jornadas.errores.elige_lago'),
             'jornada_lago_id.exists' => __('jornadas.errores.elige_lago'),
             'especie_id.required' => __('jornadas.errores.elige_especie'),
-            'kg.required_without' => __('mensajes.cosecha.registra_peso_entero_o_pesadas'),
-            'kg.min' => __('mensajes.cosecha.registra_peso_cosechado'),
-            'pesadas.max' => __('mensajes.cosecha.maximo_pesadas', ['maximo' => CalculoPesaje::MAX_PESADAS]),
         ]);
 
         $jornadaLago = JornadaLago::with('lago')->findOrFail($datos['jornada_lago_id']);
@@ -220,13 +316,16 @@ class JornadaController extends Controller implements HasMiddleware
             return redirect()->route('admin.jornadas.show', $jornada)->withErrors(['jornada' => __('jornadas.errores.antes_de_su_dia')]);
         }
 
-        $jornada->load(['lagos.lago.siembrasActivas', 'lagos.pesajes.especie']);
+        $jornada->load(['lagos.lago.siembrasActivas', 'lagos.pesajes.especie', 'lagos.reproducciones', 'pesajesLimpio.presentacion']);
 
         return view('admin.jornadas.cerrar', [
             'jornada' => $jornada,
             'propuestas' => $jornada->lagos->mapWithKeys(fn (JornadaLago $jl) => [
                 $jl->id => RepartoCosecha::propuestaLago($jl, RepartoCosecha::siembrasDelDia($jornada, $jl->lago->siembrasActivas)),
             ]),
+            // Rendimiento con lo pesado: avisa si sale bajo (con motivo opcional) o si no se pesó limpio
+            'rendimiento' => Rendimiento::deJornada($jornada),
+            'nombresEspecie' => Especie::query()->pluck('nombre', 'id'),
         ]);
     }
 
@@ -239,7 +338,19 @@ class JornadaController extends Controller implements HasMiddleware
             'lagos.*.kg.*' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
             'lagos.*.restante_kg' => ['nullable', 'array'],
             'lagos.*.restante_kg.*' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            // Muestra al pescar: peces y gramos totales por siembra (CierreJornada exige los dos o ninguno)
+            'lagos.*.muestra_peces' => ['nullable', 'array'],
+            'lagos.*.muestra_peces.*' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'lagos.*.muestra_g' => ['nullable', 'array'],
+            'lagos.*.muestra_g.*' => ['nullable', 'numeric', 'min:0.1', 'max:999999'],
+            'rendimientos' => ['nullable', 'array'],
+            'rendimientos.*.motivo' => ['nullable', 'string', 'max:300'],
         ], [
+            'lagos.*.muestra_peces.*.integer' => __('jornadas.errores.muestra_invalida'),
+            'lagos.*.muestra_peces.*.min' => __('jornadas.errores.muestra_invalida'),
+            'lagos.*.muestra_g.*.numeric' => __('jornadas.errores.muestra_invalida'),
+            'lagos.*.muestra_g.*.min' => __('jornadas.errores.muestra_invalida'),
+            'rendimientos.*.motivo.max' => __('jornadas.errores.motivo_largo', ['maximo' => 300]),
             'lagos.required' => __('jornadas.errores.elige_resultado_todos'),
             'lagos.*.kg.*.numeric' => __('jornadas.errores.kg_invalido'),
             'lagos.*.kg.*.min' => __('jornadas.errores.kg_invalido'),
@@ -247,7 +358,7 @@ class JornadaController extends Controller implements HasMiddleware
             'lagos.*.restante_kg.*.min' => __('jornadas.errores.kg_invalido'),
         ]);
 
-        $cerrada = CierreJornada::cerrar($jornada, $request->user(), $datos['lagos']);
+        $cerrada = CierreJornada::cerrar($jornada, $request->user(), $datos['lagos'], $datos['rendimientos'] ?? []);
         if ($cerrada === null) {
             // Doble clic o ya cerrada (o cancelada) por otra persona: no se hace nada otra vez
             return redirect()->route('admin.jornadas.show', $jornada)->with('estado', __('jornadas.ya_no_abierta'));
@@ -270,6 +381,49 @@ class JornadaController extends Controller implements HasMiddleware
         });
 
         return redirect()->route('admin.jornadas.show', $jornada)->with('estado', __('jornadas.cancelada'));
+    }
+
+    /** Reglas de una pesada (con canastas o el total escrito), las mismas para el entero y el limpio. */
+    private function reglasPesadas(): array
+    {
+        return [
+            'kg' => ['nullable', 'required_without:pesadas', 'numeric', 'min:0.1', 'max:9999999'],
+            'pesadas' => ['nullable', 'array', 'min:1', 'max:'.CalculoPesaje::MAX_PESADAS],
+            'pesadas.*.tipo' => ['required', 'string', Rule::in(CalculoPesaje::TIPOS)],
+            'pesadas.*.cantidad' => ['required', 'integer', 'min:1', 'max:'.CalculoPesaje::MAX_CANTIDAD],
+            'pesadas.*.peso_pesado' => ['required', 'numeric', 'gt:0', 'max:'.CalculoPesaje::MAX_PESO_PESADA_KG],
+            'peso_canasta_kg' => ['nullable', 'required_with:pesadas', 'numeric', 'min:'.CalculoPesaje::MIN_PESO_VACIA_KG, 'max:'.CalculoPesaje::MAX_PESO_VACIA_KG],
+            'peso_canastilla_kg' => ['nullable', 'required_with:pesadas', 'numeric', 'min:'.CalculoPesaje::MIN_PESO_VACIA_KG, 'max:'.CalculoPesaje::MAX_PESO_VACIA_KG],
+        ];
+    }
+
+    private function mensajesPesadas(): array
+    {
+        return [
+            'kg.required_without' => __('mensajes.cosecha.registra_peso_entero_o_pesadas'),
+            'kg.min' => __('mensajes.cosecha.registra_peso_cosechado'),
+            'pesadas.max' => __('mensajes.cosecha.maximo_pesadas', ['maximo' => CalculoPesaje::MAX_PESADAS]),
+        ];
+    }
+
+    private function reproduccionEncendida(): bool
+    {
+        return AjustesFinca::valor(CatalogoAjustes::PROCESO_REPRODUCCION) === CatalogoAjustes::ENCENDIDA;
+    }
+
+    /**
+     * Presentaciones activas de las especies dadas, para pesar el limpio (presentacion_id => nombre).
+     *
+     * @param  list<int>  $especies
+     * @return Collection<int, string>
+     */
+    private function presentacionesDe(array $especies): Collection
+    {
+        return Presentacion::query()->activas()->whereIn('especie_id', $especies)
+            ->whereHas('tamano', fn ($q) => $q->where('activo', true))->whereHas('proceso', fn ($q) => $q->where('activo', true))
+            ->with(['especie', 'tamano', 'proceso'])->get()
+            ->sortBy(fn (Presentacion $p) => [$p->especie->nombre, $p->tamano->orden, $p->proceso->orden])
+            ->mapWithKeys(fn (Presentacion $p) => [$p->id => $p->nombre()]);
     }
 
     /** Bloquea la jornada; si ya no está abierta (cerrada o cancelada), no deja seguir. */

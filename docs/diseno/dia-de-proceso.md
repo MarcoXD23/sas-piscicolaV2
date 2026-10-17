@@ -174,6 +174,8 @@ Cada tema separa:
 
 **Estado actual del sistema:** la tara de la canasta y la de la canastilla ya se configuran por finca (Ajustes de pesaje), y el pesaje por pesadas ya las descuenta. El sistema trae 2,00 kg por defecto para la canasta, así que la finca piloto tiene que poner sus 2,5 kg. Hoy la cosecha guarda solo el pescado entero; no hay limpio, rendimiento ni presentaciones. **Nombre único (resuelto el 2026-10-15, fase F0):** ese peso se llama **«entero»** en toda la app: el pescado sin procesar, ya sin el peso de las canastas o canastillas. Así lo dicen en la finca: en la mañana se pesa el entero y después del proceso el limpio. Antes la app lo llamaba «limpio». «Limpio» queda solo para el pescado procesado, y el rendimiento es limpio ÷ entero. En la base de datos la columna sigue llamándose `neto_kg`, pero guarda el entero.
 
+**Desde F6b:** el catálogo de presentaciones existe (pestaña «Presentaciones» de Especies), arranca vacío y se arma marcando tamaño × proceso por especie, con color de cabuya en texto libre. El limpio de la jornada se pesa por presentación y su total es la suma de las pesadas.
+
 ---
 
 ## 7. Pedidos, despachos y remisiones
@@ -398,6 +400,8 @@ Son dos comparaciones distintas.
 
 **Pendiente:** la tolerancia exacta, que se fija con los números de un día real.
 
+**Desde F6b:** el rendimiento (a) ya existe: por especie, contra la referencia del catálogo o el promedio real, con el umbral y el número de jornadas configurables y el motivo opcional. El cuadre (b) queda para F6c/F6d, con las salidas.
+
 ---
 
 ## 13. Bodega: recepción de concentrado
@@ -590,6 +594,7 @@ Revisión de los registros en papel y en Excel de la finca piloto (2026-10-15). 
 - La cosecha guarda el **entero** (por pesadas o por total): el pescado sin procesar, ya sin canastas. Hasta la fase F0 la app lo llamaba «limpio» por error de nombre (ver tema 6). Lo que no existe es el **limpio** procesado, así que tampoco hay rendimiento.
 - No hay «reproducción».
 - No hay comparación entre lo esperado y lo real.
+- **Desde F6b:** hay tallas (tamaños por especie), procesos y presentaciones en el catálogo de la finca; el limpio se pesa por presentación y da el rendimiento por especie; la «reproducción» se enciende o se apaga (apagada por defecto); y cada cosecha compara lo esperado con lo real, con la mortalidad no registrada cuando cierra el lote. El nombre «Nombre común (nombre científico)» en documentos queda para las remisiones (F6d).
 - La especie tiene nombre científico, pero los documentos no lo muestran como «Nombre común (nombre científico)».
 - No hay despacho ni remisión al cliente. Las alertas «despacho» que existen hoy son de la llegada del concentrado a la bodega, no de ventas.
 

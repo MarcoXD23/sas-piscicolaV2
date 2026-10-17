@@ -115,6 +115,8 @@ class EspecieController extends Controller
             'color' => ['nullable', 'string', 'max:200'],
             'aspecto' => ['nullable', 'string', 'max:500'],
             'ficha_orientativa' => ['nullable', 'boolean'],
+            // Referencia inicial del rendimiento de la finca, en % (F6b)
+            'rendimiento_referencia' => ['nullable', 'numeric', 'between:1,100'],
         ], [
             'cultivo.*.max' => __('mensajes.especie.texto_largo', ['maximo' => 2000]),
             'procesamiento.*.max' => __('mensajes.especie.texto_largo', ['maximo' => 2000]),

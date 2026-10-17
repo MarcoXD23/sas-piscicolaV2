@@ -47,6 +47,15 @@ final class CatalogoAjustes
     /** El día de la jornada no se alimenta en la finca (los fijos ayudan en el proceso; tema 5). */
     public const PROCESO_SIN_ALIMENTACION = 'proceso.sin_alimentacion';
 
+    /** «Reproducción»: kg de peces pequeños separados antes del proceso, que vuelven al lago (F6b). */
+    public const PROCESO_REPRODUCCION = 'proceso.reproduccion';
+
+    /** Puntos por debajo de la referencia desde los que el rendimiento de una especie avisa (tema 12). */
+    public const PROCESO_UMBRAL_RENDIMIENTO = 'proceso.umbral_rendimiento';
+
+    /** Jornadas con limpio que hacen falta para que el promedio real reemplace la referencia del catálogo. */
+    public const PROCESO_JORNADAS_PROMEDIO = 'proceso.jornadas_promedio';
+
     public const APAGADA = 'apagada';
 
     public const ENCENDIDA = 'encendida';
@@ -104,6 +113,29 @@ final class CatalogoAjustes
                 'tipo' => self::TIPO_OPCION,
                 'opciones' => [self::APAGADA, self::ENCENDIDA],
                 'defecto' => self::ENCENDIDA,
+            ],
+            // Por defecto apagada (la finca piloto no la usa): sin ella no se ve nada de reproducción
+            self::PROCESO_REPRODUCCION => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::APAGADA, self::ENCENDIDA],
+                'defecto' => self::APAGADA,
+            ],
+            // Por defecto 5 puntos por debajo de la referencia
+            self::PROCESO_UMBRAL_RENDIMIENTO => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_ENTERO,
+                'min' => 1,
+                'max' => 50,
+                'defecto' => 5,
+            ],
+            // Por defecto 5 jornadas: el promedio real (ponderado por el entero) de las últimas 5 con limpio
+            self::PROCESO_JORNADAS_PROMEDIO => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_ENTERO,
+                'min' => 1,
+                'max' => 50,
+                'defecto' => 5,
             ],
             // Por defecto apagada: como hoy (los dos pasos son opcionales para todos)
             self::SEGURIDAD_DOS_PASOS => [

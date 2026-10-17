@@ -15,4 +15,7 @@
 </fieldset>
 
 <x-seleccion nombre="alimentacion" :etiqueta="__('especies.catalogo_finca.alimentacion')" :opciones="$alimentaciones" :valor="$especie?->alimentacion ?? ''" />
+{{-- Referencia inicial del rendimiento (limpio ÷ entero) hasta que haya promedio real de las jornadas --}}
+<x-campo nombre="rendimiento_referencia" :etiqueta="__('especies.catalogo_finca.rendimiento_referencia')" tipo="number" step="0.01" min="1" max="100" inputmode="decimal"
+         :valor="$especie?->rendimiento_referencia" :ayuda="__('especies.catalogo_finca.rendimiento_referencia_ayuda')" />
 <p class="text-sm text-tinta-suave">{{ __('especies.catalogo_finca.rangos_opcionales') }}</p>
