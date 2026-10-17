@@ -216,6 +216,8 @@ Cada tema separa:
   - Si es de contado, se anota quién recibió el dinero, para cuadrar la caja del día.
   - Si el descuento es mayor que lo ganado en la jornada, el sistema avisa y deja el saldo pendiente para la siguiente. Nunca hay un pago negativo.
 
+**Pendiente de confirmar con la finca:** qué entra en «a crédito» (lo que se descuenta del pago): solo el pescado comprado, o también anticipos u otras cosas. Mientras tanto se construye configurable.
+
 **Configurable por finca:**
 
 - Los precios de venta, por especie y, si la finca lo necesita, por presentación.
@@ -264,9 +266,18 @@ Cada tema separa:
   - En la bitácora queda quién las propuso y quién las aprobó.
 - Las horas extra en Colombia llevan recargos distintos: diurna, nocturna, dominical y festiva. La reforma laboral reciente cambió la hora de inicio de la jornada nocturna y la jornada semanal.
 
+**Pago a jornaleros (decidido, 2026-10-16):**
+
+- Cada cargo cobra **por jornada** (una suma fija) o **por kilo**, según lo configure la finca.
+- Del pago se descuenta lo que el jornalero compró a crédito (tema 8). Si el descuento es mayor que lo ganado, queda un saldo pendiente para la siguiente jornada; nunca hay un pago negativo.
+- La planilla de pago de la jornada se imprime para firmar al recibir el pago (tema 11).
+- El administrador prepara el pago y el propietario lo aprueba, igual que la nómina. Nadie aprueba su propio pago.
+- Se construye en la fase F6c del plan. Al inicio de esa fase se cambia AGENTS.md para permitirlo (tema 11).
+
 **Configurable por finca:**
 
 - El valor por kilo de los procesadores.
+- Si cada cargo cobra por jornada o por kilo, y el valor de la jornada.
 - Los cargos del proceso: no todas las fincas tienen rayador o SESA.
 - La hora límite y el valor de la hora extra del pescador.
 - El período de la nómina.
@@ -275,6 +286,7 @@ Cada tema separa:
 
 **Pendiente:**
 
+- **Pago por jornada, pendiente de confirmar con la finca:** qué cargos cobran por jornada (una suma fija) y cuáles por kilo. Hoy solo está confirmado el pago por kilo de los procesadores y del rayador. Mientras tanto se construye configurable.
 - Los valores de los recargos, la hora nocturna y la jornada semanal, que se confirman con un contador.
 - **Antes de construirlo hay que cambiar una regla del proyecto** (ver el tema 11).
 
@@ -348,7 +360,7 @@ Cada tema separa:
 **Pendiente:**
 
 - La estructura de la nómina mensual de la finca piloto. Se recibe en foto, sin nombres ni valores.
-- **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que el personal, la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir, según la configuración de cada finca, quién prepara la nómina, quién aprueba los permisos y las horas extra, y si el administrador puede aprobar personal, con las reglas fijas de arriba. Se hace en una sola fase de permisos y nómina, después de Jornaleros.
+- **Antes de construirlo hay que cambiar las reglas del proyecto.** Hoy AGENTS.md dice que el personal, la nómina, las solicitudes y aprobar permisos y horas extra son exclusivos del propietario, y el sistema funciona así. Con la aprobación del dueño del proyecto, AGENTS.md tiene que pasar a decir, según la configuración de cada finca, quién prepara la nómina, quién aprueba los permisos y las horas extra, y si el administrador puede aprobar personal, con las reglas fijas de arriba. Se hace en una sola fase de permisos y nómina, después de Jornaleros. **Excepción:** la parte del pago a jornaleros (el administrador lo prepara y el propietario lo aprueba) se cambia antes, al inicio de F6c (tema 10).
 
 **Estado actual del sistema:**
 
@@ -615,6 +627,15 @@ Revisión de los registros en papel y en Excel de la finca piloto (2026-10-15). 
 
 **Configurable por finca:** las categorías de gasto. Las de la finca piloto son una plantilla.
 
+**Decidido para el módulo de Gastos (2026-10-16, fase F9 del plan):**
+
+- Cada gasto puede llevar la **foto del recibo**, guardada privada y separada por finca.
+- **Resumen mensual:** los gastos por categoría, con el alimento sacado de la bodega.
+- **Costo por kilo**, de dos formas:
+  - costo de producción por kilo producido (crecimiento de la biomasa), por lote y por lago;
+  - resultado del mes: gastos contra ventas, y costo por kilo vendido.
+- **Exportar a Excel** para el contador, con openspout, la misma librería que ya genera los Excel de los reportes.
+
 **Estado actual del sistema:**
 
 - No hay módulo de Gastos.
@@ -713,7 +734,9 @@ Con ellos se fijan la tolerancia del cuadre y los topes.
 
 - la foto de la nómina mensual;
 - quién pone el número de lote: la finca o el proveedor de alevinos;
-- qué color de hilo corresponde a cada concentrado.
+- qué color de hilo corresponde a cada concentrado;
+- qué cargos cobran por jornada y cuáles por kilo (tema 10);
+- qué entra en «a crédito» para descontar del pago: solo el pescado, o también anticipos u otras cosas (tema 8).
 
 **Otras decisiones abiertas:**
 
