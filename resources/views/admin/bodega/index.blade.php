@@ -5,6 +5,11 @@
 @section('contenido')
     @php
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
+        // Concentrados activos del catálogo de la finca (Ajustes › Concentrados): lista desplegable, con la proteína si la tiene
+        $opcionesConcentrado = ['' => __('bodega.concentrado_elige')] + $concentradosCatalogo->mapWithKeys(fn ($c) => [$c->id => $c->proteina_porcentaje !== null
+            ? __('bodega.opcion_concentrado_proteina', ['nombre' => $c->nombre, 'proteina' => $numero($c->proteina_porcentaje, fmod($c->proteina_porcentaje, 1.0) === 0.0 ? 0 : 1)])
+            : __('bodega.opcion_concentrado', ['nombre' => $c->nombre])])->all();
+        $sinCatalogo = $concentradosCatalogo->isEmpty();
         $estilos = [
             \App\Support\CoberturaBodega::AGOTADO => ['icono' => 'bg-alerta-fondo text-alerta', 'cifra' => 'text-alerta', 'chip' => 'bg-alerta-fondo text-alerta', 'texto' => __('bodega.agotado')],
             \App\Support\CoberturaBodega::BAJO => ['icono' => 'bg-atencion-fondo text-atencion', 'cifra' => 'text-atencion', 'chip' => 'bg-atencion-fondo text-atencion', 'texto' => __('bodega.stock_bajo')],
@@ -186,15 +191,14 @@
                 <fieldset class="space-y-4 rounded-ficha border border-renglon p-4">
                     <legend class="px-1 text-sm font-medium text-tinta-suave">{{ __('bodega.solo_sin_despacho') }}</legend>
                     <x-campo nombre="proveedor" id="recepcion-proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" />
-                    <x-campo nombre="tipo_concentrado" id="recepcion-tipo" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados"
-                             :ayuda="__('bodega.si_ya_existe_bodega_escribelo')" />
+                    @if ($sinCatalogo)
+                        {{-- Quien recibe es el administrador: Ajustes › Concentrados es del propietario --}}
+                        <x-aviso tono="atencion" class="text-sm">{{ __('bodega.sin_catalogo_administrador') }}</x-aviso>
+                    @endif
+                    <x-seleccion nombre="concentrado_id" id="recepcion-concentrado" :etiqueta="__('bodega.tipo_concentrado')" :opciones="$opcionesConcentrado"
+                                 :disabled="$sinCatalogo" />
                     <x-campo nombre="lote" id="recepcion-lote" :etiqueta="__('bodega.lote_produccion')" />
                 </fieldset>
-                <datalist id="concentrados">
-                    @foreach ($concentradosCatalogo->pluck('nombre')->merge($cobertura->map(fn ($item) => $item['stock']->tipo_concentrado))->unique() as $nombreConcentrado)
-                        <option value="{{ $nombreConcentrado }}"></option>
-                    @endforeach
-                </datalist>
 
                 <div class="grid grid-cols-2 gap-4">
                     <x-campo nombre="bultos" id="recepcion-bultos" :etiqueta="__('bodega.bultos_recibidos')" tipo="number" min="1" inputmode="numeric" required />
@@ -215,12 +219,15 @@
                 <x-aviso tono="info" icono="bodega" class="text-sm">{{ __('bodega.despacho_explicacion') }}</x-aviso>
                 <x-campo nombre="fecha" id="despacho-fecha" :etiqueta="__('bodega.fecha_despacho')" tipo="date" :valor="\App\Support\Region::ahora()->format('Y-m-d')" required />
                 <x-campo nombre="proveedor" id="despacho-proveedor" :etiqueta="__('bodega.proveedor')" :placeholder="__('bodega.ej_nombre_casa_comercial')" required />
-                <x-campo nombre="tipo_concentrado" id="despacho-tipo" :etiqueta="__('bodega.tipo_concentrado')" :placeholder="__('bodega.ej_engorde_32')" list="concentrados-despacho" required />
-                <datalist id="concentrados-despacho">
-                    @foreach ($concentradosCatalogo->pluck('nombre')->merge($cobertura->map(fn ($item) => $item['stock']->tipo_concentrado))->unique() as $nombreConcentrado)
-                        <option value="{{ $nombreConcentrado }}"></option>
-                    @endforeach
-                </datalist>
+                @if ($sinCatalogo)
+                    {{-- Sin concentrados en el catálogo no se puede despachar: primero se crean en Ajustes › Concentrados --}}
+                    <x-aviso tono="atencion" class="text-sm">
+                        {{ __('bodega.sin_catalogo_propietario') }}
+                        <a href="{{ route('admin.concentrados.index') }}" class="mt-1 block font-semibold underline underline-offset-2">{{ __('bodega.sin_catalogo_ir') }}</a>
+                    </x-aviso>
+                @endif
+                <x-seleccion nombre="concentrado_id" id="despacho-concentrado" :etiqueta="__('bodega.tipo_concentrado')" :opciones="$opcionesConcentrado"
+                             :disabled="$sinCatalogo" required />
                 <x-campo nombre="lote" id="despacho-lote" :etiqueta="__('bodega.lote_produccion')" required />
                 <div class="grid grid-cols-2 gap-4">
                     <x-campo nombre="bultos" id="despacho-bultos" :etiqueta="__('bodega.bultos')" tipo="number" min="1" inputmode="numeric" required />
@@ -229,7 +236,7 @@
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <x-boton tipo="button" variante="secundario" data-cerrar-modal>{{ __('comun.cancelar') }}</x-boton>
-                    <x-boton>{{ __('bodega.guardar_despacho') }}</x-boton>
+                    <x-boton :disabled="$sinCatalogo">{{ __('bodega.guardar_despacho') }}</x-boton>
                 </div>
             </x-formulario>
         </x-modal>

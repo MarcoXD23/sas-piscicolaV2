@@ -35,7 +35,8 @@ class BodegaTest extends TestCase
         $datos = [
             'fecha' => now()->format('Y-m-d'),
             'proveedor' => 'Proveedor Uno',
-            'tipo_concentrado' => 'Mojarra 32% Engorde',
+            // Se elige del catálogo de la finca (Ajustes › Concentrados)
+            'concentrado_id' => \App\Models\Concentrado::create(['nombre' => 'Engorde', 'proteina_porcentaje' => 32])->id,
             'bultos' => 10,
             'peso_bulto_kg' => 40,
             'lote' => 'LOTE-123',
@@ -47,10 +48,10 @@ class BodegaTest extends TestCase
 
         $this->assertDatabaseHas('movimientos_alimento', [
             'tipo_movimiento' => 'entrada',
-            'tipo_concentrado' => 'Mojarra 32% Engorde',
+            'tipo_concentrado' => 'Engorde',
             'cantidad_kg' => 400, // 10 bultos × 40 kg
             'despacho_id' => null,
         ]);
-        $this->assertDatabaseHas('stocks_alimento', ['tipo_concentrado' => 'Mojarra 32% Engorde', 'cantidad_kg' => 400.0]);
+        $this->assertDatabaseHas('stocks_alimento', ['tipo_concentrado' => 'Engorde', 'cantidad_kg' => 400.0]);
     }
 }

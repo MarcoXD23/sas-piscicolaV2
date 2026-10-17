@@ -71,7 +71,7 @@ class PermisosPorRolTest extends TestCase
             'alimentar' => ['post', route('admin.raciones.store', $this->lago), ['fecha' => '2026-10-15', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 10]],
             'tareas' => ['get', route('admin.tareas.index'), []],
             'asignar tarea' => ['post', route('admin.tareas.store'), ['asignada_a' => $trabajador->id, 'titulo' => 'Revisar malla', 'fecha' => '2026-10-15']],
-            'recepcion' => ['post', route('admin.bodega.recepciones.store'), ['fecha' => '2026-10-15', 'proveedor' => 'P', 'tipo_concentrado' => 'Engorde', 'lote' => 'L', 'bultos' => 1, 'peso_bulto_kg' => 40]],
+            'recepcion' => ['post', route('admin.bodega.recepciones.store'), ['fecha' => '2026-10-15', 'proveedor' => 'P', 'concentrado_id' => \App\Models\Concentrado::query()->firstOrCreate(['nombre' => 'Engorde'])->id, 'lote' => 'L', 'bultos' => 1, 'peso_bulto_kg' => 40]],
             'venta' => ['post', route('admin.ventas.store'), ['cosecha_id' => $cosecha->id, 'cliente' => 'Otro', 'fecha' => '2026-10-15', 'kg' => 5, 'precio_kg' => 1000, 'forma_pago' => 'contado']],
             'abono' => ['post', route('admin.ventas.abonar', $venta), ['valor' => 1000, 'fecha' => '2026-10-15', 'medio' => 'efectivo']],
         ];

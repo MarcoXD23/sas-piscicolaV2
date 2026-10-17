@@ -283,13 +283,11 @@ class ConcentradosYRacionTest extends TestCase
 
     public function test_despacho_y_recepcion_en_bodega_enlazan_el_concentrado_del_catalogo(): void
     {
+        // La bodega elige el concentrado de una lista del catálogo (no se escribe): queda su id y su nombre
         $catalogo = Concentrado::create(['nombre' => 'Finalizador 24%', 'nombre_corto' => 'Azul', 'proteina_porcentaje' => 24, 'peso_bulto_kg' => 40]);
-        $despachar = fn (string $tipo) => $this->actingAs($this->propietario)->post(route('admin.bodega.despachos.store'), [
-            'fecha' => '2026-10-15', 'proveedor' => 'Proveedor', 'tipo_concentrado' => $tipo, 'bultos' => 5, 'peso_bulto_kg' => 40, 'lote' => 'LOT-24',
+        $this->actingAs($this->propietario)->post(route('admin.bodega.despachos.store'), [
+            'fecha' => '2026-10-15', 'proveedor' => 'Proveedor', 'concentrado_id' => $catalogo->id, 'bultos' => 5, 'peso_bulto_kg' => 40, 'lote' => 'LOT-24',
         ])->assertRedirect(route('admin.bodega.index'));
-
-        // Por su nombre corto: queda con el nombre y el id del catálogo
-        $despachar('azul');
         $despacho = DespachoAlimento::query()->latest('id')->firstOrFail();
         $this->assertSame([$catalogo->id, 'Finalizador 24%'], [$despacho->concentrado_id, $despacho->tipo_concentrado]);
 
@@ -303,14 +301,6 @@ class ConcentradosYRacionTest extends TestCase
         $stock = StockAlimento::query()->where('tipo_concentrado', 'Finalizador 24%')->firstOrFail();
         $this->assertSame($catalogo->id, $stock->concentrado_id);
         $this->assertEquals(200.0, (float) $stock->cantidad_kg);
-
-        // Un nombre que no está en el catálogo se guarda como texto, sin concentrado: la bodega no agrega al catálogo
-        $despachar('Concentrado nuevo');
-        $this->assertNull(DespachoAlimento::query()->latest('id')->first()->concentrado_id);
-        $this->actingAs($this->admin)->post(route('admin.bodega.recepciones.store'), [
-            'fecha' => '2026-10-15', 'tipo_concentrado' => 'Otro sin catálogo', 'proveedor' => 'Proveedor', 'lote' => 'L2', 'bultos' => 2, 'peso_bulto_kg' => 40,
-        ])->assertSessionHasNoErrors();
-        $this->assertNull(StockAlimento::query()->where('tipo_concentrado', 'Otro sin catálogo')->sole()->concentrado_id);
         $this->assertSame(1, Concentrado::count());
     }
 

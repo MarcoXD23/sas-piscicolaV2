@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -68,21 +69,20 @@ class BodegaController extends Controller
         $datos = $request->validate([
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'proveedor' => ['required', 'string', 'max:255'],
-            'tipo_concentrado' => ['required', 'string', 'max:255'],
+            'concentrado_id' => ['required', 'integer', $this->delCatalogo($request)],
             'bultos' => ['required', 'integer', 'min:1', 'max:10000'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
             'lote' => ['required', 'string', 'max:255'],
-        ]);
+        ], $this->mensajesConcentrado());
 
         DB::transaction(function () use ($datos, $request) {
-            // Un nombre del catálogo queda ligado a su concentrado; uno que no está se guarda como texto (al catálogo
-            // solo se agrega desde Ajustes › Concentrados)
-            $concentrado = Concentrado::resolver($datos['tipo_concentrado']);
-            $datos['tipo_concentrado'] = $concentrado?->nombre ?? trim($datos['tipo_concentrado']);
+            // El concentrado se elige del catálogo de la finca (Ajustes › Concentrados); tipo_concentrado guarda su
+            // nombre, para que el stock, la ración y la cola sin conexión sigan funcionando con el texto
+            $concentrado = Concentrado::query()->findOrFail($datos['concentrado_id']);
 
             $despacho = DespachoAlimento::create($datos + [
                 'user_id' => $request->user()->id,
-                'concentrado_id' => $concentrado?->id,
+                'tipo_concentrado' => $concentrado->nombre,
                 'cantidad_kg' => round($datos['bultos'] * $datos['peso_bulto_kg'], 2),
             ]);
 
@@ -101,14 +101,15 @@ class BodegaController extends Controller
         $datos = $request->validate([
             'despacho_id' => ['nullable', 'integer', Rule::exists('despachos_alimento', 'id')->where('tenant_id', $request->user()->tenant_id)],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
-            'tipo_concentrado' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
+            // Sin despacho, el concentrado se elige del catálogo; con despacho, es el del despacho
+            'concentrado_id' => ['required_without:despacho_id', 'nullable', 'integer', $this->delCatalogo($request)],
             'proveedor' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
             'lote' => ['required_without:despacho_id', 'nullable', 'string', 'max:255'],
             'bultos' => ['required', 'integer', 'min:1', 'max:10000'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
         ], [
             'despacho_id.exists' => __('mensajes.bodega.despacho_no_existe'),
-        ]);
+        ] + $this->mensajesConcentrado());
 
         DB::transaction(function () use ($datos, $request) {
             $despacho = empty($datos['despacho_id']) ? null : DespachoAlimento::whereKey($datos['despacho_id'])->lockForUpdate()->first();
@@ -118,9 +119,11 @@ class BodegaController extends Controller
             }
 
             // Con despacho, el concentrado, el proveedor y el lote son los del despacho
-            $textoConcentrado = $despacho?->tipo_concentrado ?? $datos['tipo_concentrado'];
-            $concentrado = Concentrado::resolver($textoConcentrado, $despacho?->concentrado_id);
-            $tipo = $concentrado?->nombre ?? trim($textoConcentrado);
+            // (un despacho viejo sin catálogo se liga por su texto, como siempre)
+            $concentrado = $despacho !== null
+                ? Concentrado::resolver($despacho->tipo_concentrado, $despacho->concentrado_id)
+                : Concentrado::query()->findOrFail($datos['concentrado_id']);
+            $tipo = $concentrado?->nombre ?? trim($despacho->tipo_concentrado);
             $cantidad = round($datos['bultos'] * $datos['peso_bulto_kg'], 2);
 
             MovimientoAlimento::create([
@@ -167,5 +170,22 @@ class BodegaController extends Controller
         EvaluadorAlertas::paraFinca($despacho->tenant_id);
 
         return back()->with('estado', __('mensajes.bodega.despacho_revisado'));
+    }
+
+    /** El concentrado elegido es del catálogo de esta finca y está activo (Ajustes › Concentrados). */
+    private function delCatalogo(Request $request): Exists
+    {
+        return Rule::exists('concentrados', 'id')->where('tenant_id', $request->user()->tenant_id)->where('activo', true);
+    }
+
+    /** @return array<string, string> */
+    private function mensajesConcentrado(): array
+    {
+        return [
+            'concentrado_id.required' => __('bodega.concentrado_elige'),
+            'concentrado_id.required_without' => __('bodega.concentrado_elige'),
+            'concentrado_id.integer' => __('bodega.concentrado_no_valido'),
+            'concentrado_id.exists' => __('bodega.concentrado_no_valido'),
+        ];
     }
 }

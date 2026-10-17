@@ -140,8 +140,10 @@ class RegionalizacionTest extends TestCase
         $this->en($this->madrid);
         $this->assertSame('2026-10-16', Region::hoy()->toDateString());
 
+        // El concentrado se elige del catálogo de cada finca
+        $concentrado = fn (Tenant $finca) => \App\Support\TenantActual::sinFiltro(fn () => tap((new \App\Models\Concentrado(['nombre' => 'Engorde']))->forceFill(['tenant_id' => $finca->id]))->save()->id);
         $recibir = fn (Tenant $finca) => $this->actingAs($this->persona($finca, Rol::ADMINISTRADOR))->post(route('admin.bodega.recepciones.store'), [
-            'fecha' => '2026-10-16', 'proveedor' => 'P', 'tipo_concentrado' => 'Engorde', 'lote' => 'L1', 'bultos' => 1, 'peso_bulto_kg' => 40,
+            'fecha' => '2026-10-16', 'proveedor' => 'P', 'concentrado_id' => $concentrado($finca), 'lote' => 'L1', 'bultos' => 1, 'peso_bulto_kg' => 40,
         ]);
 
         $recibir($this->bogota)->assertInvalid(['fecha']);   // el 16 todavía es futuro en Bogotá

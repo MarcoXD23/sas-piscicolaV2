@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Alerta;
 use App\Models\Bitacora;
+use App\Models\Concentrado;
 use App\Models\DespachoAlimento;
 use App\Models\Lago;
 use App\Models\MovimientoAlimento;
@@ -48,10 +49,16 @@ class DespachoRecepcionTest extends TestCase
     private function despachar(array $datos = []): DespachoAlimento
     {
         $this->actingAs($this->propietario)->post(route('admin.bodega.despachos.store'), $datos + [
-            'fecha' => '2026-10-15', 'proveedor' => 'Proveedor Uno', 'tipo_concentrado' => 'Engorde', 'lote' => 'L-1', 'bultos' => 10, 'peso_bulto_kg' => 40,
+            'fecha' => '2026-10-15', 'proveedor' => 'Proveedor Uno', 'concentrado_id' => $this->concentrado('Engorde'), 'lote' => 'L-1', 'bultos' => 10, 'peso_bulto_kg' => 40,
         ])->assertSessionHasNoErrors();
 
         return DespachoAlimento::query()->latest('id')->first();
+    }
+
+    /** Id de un concentrado del catálogo de la finca (la bodega lo elige de una lista). */
+    private function concentrado(string $nombre): int
+    {
+        return Concentrado::query()->firstOrCreate(['nombre' => $nombre])->id;
     }
 
     private function recibir(array $datos): TestResponse
@@ -83,8 +90,8 @@ class DespachoRecepcionTest extends TestCase
 
     public function test_faltante_y_sobrante_alertan_al_propietario_sin_bloquear_y_se_cierran_al_revisarlos(): void
     {
-        $faltante = $this->despachar(['tipo_concentrado' => 'Engorde']);
-        $sobrante = $this->despachar(['tipo_concentrado' => 'Levante']);
+        $faltante = $this->despachar(['concentrado_id' => $this->concentrado('Engorde')]);
+        $sobrante = $this->despachar(['concentrado_id' => $this->concentrado('Levante')]);
 
         $this->recibir(['despacho_id' => $faltante->id, 'bultos' => 9])->assertSessionHasNoErrors();   // 360 de 400
         $this->recibir(['despacho_id' => $sobrante->id, 'bultos' => 11])->assertSessionHasNoErrors();  // 440 de 400
@@ -109,14 +116,14 @@ class DespachoRecepcionTest extends TestCase
 
     public function test_recepcion_sin_despacho(): void
     {
-        $this->recibir(['proveedor' => 'Vecino', 'tipo_concentrado' => 'Iniciación', 'lote' => 'X', 'bultos' => 2])->assertSessionHasNoErrors();
+        $this->recibir(['proveedor' => 'Vecino', 'concentrado_id' => $this->concentrado('Iniciación'), 'lote' => 'X', 'bultos' => 2])->assertSessionHasNoErrors();
 
         $this->assertSame(80.0, $this->stock('Iniciación'));
         $this->assertDatabaseHas('movimientos_alimento', ['tipo_movimiento' => 'entrada', 'despacho_id' => null, 'proveedor' => 'Vecino']);
         $this->actingAs($this->administrador)->get(route('admin.bodega.index'))->assertSee(__('bodega.sin_despacho'));
 
         // Sin despacho, el concentrado, el proveedor y el lote son obligatorios
-        $this->recibir(['bultos' => 2])->assertSessionHasErrors(['tipo_concentrado', 'proveedor', 'lote']);
+        $this->recibir(['bultos' => 2])->assertSessionHasErrors(['concentrado_id', 'proveedor', 'lote']);
     }
 
     public function test_despacho_sin_recepcion_alerta_despues_de_n_dias_configurables(): void
