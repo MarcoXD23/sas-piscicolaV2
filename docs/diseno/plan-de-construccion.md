@@ -45,7 +45,7 @@ Ver «Invitar una finca» en el README.
 
 ### Al final
 
-- **Limpiezas pendientes antes del piloto:** unificar el formulario de pesadas de la jornada y el de la cosecha manual (ver F6a).
+- **Limpiezas pendientes antes del piloto:** unificar el formulario de pesadas de la jornada y el de la cosecha manual (ver F6a), y que la línea de la cuenta de las pesadas del limpio diga «limpio» en vez de «enteros» (ver F6b).
 - **F14. Servidor:** ver la fase más abajo.
 - **Piloto en la finca:** la finca la usa en su trabajo diario. De los días de proceso del piloto salen los números reales que todavía son provisionales: tolerancias del cuadre, topes, rendimiento y pago a jornaleros.
 
@@ -204,7 +204,7 @@ Ver «Invitar una finca» en el README.
   - Quedó pescado: se resta lo calculado; si el administrador escribe los kg que estima que quedan, los peces que quedan son esos kg ÷ peso promedio y la diferencia queda registrada.
 - **Seguridad del cierre:** transacción con `lockForUpdate` de la jornada y de las siembras; si la jornada ya no está abierta no hace nada (doble clic). Vuelve a revisar el retiro de tratamiento. Cerrada no se reabre; cancelar solo si está abierta, conserva los pesajes.
 - **Ayuno** (`Ayuno`, calculado, con la fecha de la finca): Inicio, Lagos y Registro rápido dicen «en ayuno» en vez de sugerir ración; registrar ración avisa y no bloquea. El día sin alimentación se recuerda en Inicio y en Registro rápido.
-- **Para después:** la siembra vieja sin especie del catálogo no se puede pesar en la jornada (hay que ligarla). El limpio, el rendimiento y el pago a procesadores son de F6b; la venta por especie y por jornada, de F6c.
+- **Para después:** la siembra vieja sin especie del catálogo no se puede pesar en la jornada (hay que ligarla). El limpio y el rendimiento son de F6b; el pago a procesadores (por kilo limpio) y la venta por especie y por jornada, de F6c.
 - **Limpieza pendiente (antes del piloto):** unificar `admin/jornadas/_pesaje.blade.php` con el marcado de pesadas de `admin/cosechas/crear.blade.php` en un solo parcial. En F6a se copió para no tocar la cosecha manual; los dos usan `resources/js/pesaje.js`.
 
 ### F6b. Presentaciones, limpio y rendimiento (3 días)
@@ -214,6 +214,16 @@ Ver «Invitar una finca» en el README.
 - Rendimiento contra la referencia (86 % en la finca piloto, que luego se reemplaza por el promedio real).
 - «Reproducción» que se enciende o se apaga.
 - Esperado contra real.
+
+**Estado: hecha** (2026-10-17, rama `f6b-presentaciones`).
+- **Migración:** `2026_11_12_000001_presentaciones_y_limpio`. Crea `tamanos`, `procesos`, `presentaciones`, `pesajes_limpio` (CHECK de las cuentas), `reproducciones_jornada` y `jornada_rendimientos`, todas con `tenant_id`. Agrega `especies.rendimiento_referencia` y, en `cosechas`, `limpio_kg`, `peces_esperados`, `peso_esperado_g`, `peso_medido_g` y `cerro_lote`. Todo acepta vacío. Corrida en `sas_piscicola_v2` después del respaldo.
+- **Catálogo** (pestaña «Presentaciones» de Especies): el administrador edita y el propietario consulta. Arranca vacío; el ejemplo va solo en la ayuda. Tamaños por especie (rango de peso solo informativo), procesos de la finca y una tabla tamaño × proceso por especie con color de cabuya en texto libre. Lo que ya se pesó no se borra: se desactiva.
+- **Limpio:** se pesa por presentación en la jornada abierta, con el mismo bloqueo y chequeo que el entero (un solo parcial `_pesaje.blade.php` para los dos). Al cerrar, el limpio de cada especie se reparte entre sus cosechas en proporción a sus kg (`cosechas.limpio_kg`). Es opcional: sin limpio, el cierre avisa antes de confirmar y el rendimiento queda sin dato.
+- **Rendimiento** (`Rendimiento`): limpio ÷ (entero − reproducción), por especie. Referencia: la del catálogo hasta que haya N jornadas con limpio (`proceso.jornadas_promedio`, 5); desde ahí, el promedio ponderado por el entero de las últimas N. Avisa si sale `proceso.umbral_rendimiento` puntos (5) o más por debajo, con motivo opcional, en la jornada y en la bitácora (`rendimiento_bajo`). Sin alerta nueva.
+- **Reproducción** (`proceso.reproduccion`, apagada): kg por lago y especie que vuelven al lago; se restan del entero antes del reparto y del rendimiento. Las siembras no se tocan. Apagada no se ve nada y sus rutas dan 404.
+- **Muestra al pescar** (opcional, por siembra): peces y gramos de la muestra; el promedio reemplaza al del registro en las cuentas. Si el lago quedó pescado, queda como un muestreo normal (fecha de la jornada, usuario y bitácora) y actualiza el peso del lote.
+- **Esperado contra real** (`Cosecha::esperadoContraReal`), también en la cosecha manual: peso promedio siempre; peces y kg cuando la cosecha cierra el lote. La diferencia de población es la «mortalidad no registrada».
+- **Para después:** el cuadre del limpio contra las salidas (F6c/F6d). La línea de la cuenta de las pesadas del limpio dice «kg enteros» porque sale del mismo JS de la cosecha.
 
 ### F6c. Venta rápida, precios, cupo y obsequios (5 días)
 
