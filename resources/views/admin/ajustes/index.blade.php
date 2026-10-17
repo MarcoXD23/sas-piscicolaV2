@@ -8,7 +8,7 @@
     {{-- Índice de la página: cada enlace lleva a su tarjeta --}}
     <nav class="mb-6 max-w-2xl" aria-label="{{ __('seguridad.indice.titulo') }}">
         <ul class="flex flex-wrap gap-2">
-            @foreach (['finca', 'operacion', 'fases', 'concentrados', 'pesaje', 'seguridad', 'datos'] as $seccion)
+            @foreach (['finca', 'operacion', 'fases', 'concentrados', 'precios', 'pesaje', 'seguridad', 'datos'] as $seccion)
                 <li><a href="#{{ $seccion }}" class="inline-flex min-h-11 items-center rounded-full bg-ficha px-4 text-sm font-semibold text-marca-700 ring-1 ring-renglon transition-colors hover:bg-papel-hondo">{{ __('seguridad.indice.'.$seccion) }}</a></li>
             @endforeach
         </ul>
@@ -90,6 +90,11 @@
     {{-- Catálogo de concentrados y tabla de ración por especie (F3) --}}
     <x-tarjeta id="concentrados" class="mt-6 max-w-2xl scroll-mt-24" :titulo="__('concentrados.titulo')" :subtitulo="__('concentrados.subtitulo')">
         <x-boton variante="secundario" :href="route('admin.concentrados.index')">{{ __('concentrados.enlace') }}</x-boton>
+    </x-tarjeta>
+
+    {{-- Precios de venta por especie (F6c): solo el propietario los cambia --}}
+    <x-tarjeta id="precios" class="mt-6 max-w-2xl scroll-mt-24" :titulo="__('precios.titulo')" :subtitulo="__('precios.subtitulo')">
+        <x-boton variante="secundario" :href="route('admin.ajustes.precios')">{{ __('precios.enlace') }}</x-boton>
     </x-tarjeta>
 
     {{-- Pesos de las vacías: los cambia el administrador; aquí solo se consultan --}}

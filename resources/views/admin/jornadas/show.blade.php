@@ -233,6 +233,47 @@
         </x-tarjeta>
     @endif
 
+    {{-- Ventas rápidas y obsequios de la jornada (F6c) --}}
+    @if ($ventas->isNotEmpty() || $obsequios->isNotEmpty() || $venta)
+        <x-tarjeta class="mt-6" :titulo="__('ventas.rapida.titulo')" :subtitulo="__('ventas.rapida.subtitulo')">
+            @if ($ventas->isEmpty())
+                <p class="text-base text-tinta-suave">{{ __('ventas.rapida.sin_ventas') }}</p>
+            @else
+                <ul class="-mt-1 divide-y divide-renglon">
+                    @foreach ($ventas as $fila)
+                        <li class="py-2.5">
+                            <p class="text-base">{{ __('ventas.rapida.linea', ['cliente' => $fila->nombreCliente(), 'especie' => $fila->especie?->nombre, 'kg' => Formato::sinCeros($fila->kg),
+                                'total' => Formato::dinero($fila->total), 'forma' => __('ventas.formas_pago.'.$fila->forma_pago)]) }}</p>
+                            @if ($fila->kg_cupo !== null)
+                                <p class="text-sm text-tinta-suave">{{ __('ventas.cupo_y_exceso', ['cupo' => Formato::sinCeros($fila->kg_cupo), 'precio_cupo' => Formato::dinero((int) $fila->precio_cupo),
+                                    'exceso' => Formato::sinCeros($fila->kgExceso()), 'precio' => Formato::dinero($fila->precio_kg)]) }}</p>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+            @if ($venta)
+                @include('admin.jornadas._venta_rapida')
+            @endif
+
+            <h3 class="mt-6 text-lg font-bold">{{ __('obsequios.titulo') }}</h3>
+            <p class="text-sm text-tinta-suave">{{ __('obsequios.subtitulo') }}</p>
+            @if ($obsequios->isEmpty())
+                <p class="mt-2 text-base text-tinta-suave">{{ __('obsequios.sin_obsequios') }}</p>
+            @else
+                <ul class="mt-2 divide-y divide-renglon">
+                    @foreach ($obsequios as $obsequio)
+                        <li class="py-2.5 text-base">{{ __('obsequios.linea', ['kg' => Formato::sinCeros($obsequio->kg), 'especie' => $obsequio->especie?->nombre,
+                            'destinatario' => $obsequio->destinatario, 'autorizo' => $obsequio->autorizadoPor?->name, 'registro' => $obsequio->registradoPor?->name]) }}</li>
+                    @endforeach
+                </ul>
+            @endif
+            @if ($venta)
+                @include('admin.jornadas._obsequio')
+            @endif
+        </x-tarjeta>
+    @endif
+
     {{-- Rendimiento por especie: con lo pesado (abierta) o lo guardado al cerrar --}}
     @php
         $filasRendimiento = $jornada->estaAbierta()

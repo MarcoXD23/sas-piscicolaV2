@@ -9,6 +9,7 @@ use App\Models\HoraExtra;
 use App\Models\Ingreso;
 use App\Models\Lago;
 use App\Models\MedicionAgua;
+use App\Models\Obsequio;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Ronda;
@@ -69,6 +70,10 @@ class InicioController extends Controller
                 : collect(),
             'recordatorios' => $esPropietario
                 ? EventoAgenda::query()->with('lago')->paraRecordar()->orderBy('inicia_at')->limit(10)->get()
+                : collect(),
+            // Obsequios de los últimos 7 días: el propietario recibe el aviso (tema 9)
+            'obsequiosRecientes' => $esPropietario
+                ? Obsequio::query()->with(['especie', 'autorizadoPor', 'jornada'])->where('created_at', '>=', now()->subDays(7))->latest('id')->limit(10)->get()
                 : collect(),
             'solicitudesPendientes' => $esPropietario
                 ? Permiso::query()->pendientes()->count() + HoraExtra::query()->pendientes()->count()

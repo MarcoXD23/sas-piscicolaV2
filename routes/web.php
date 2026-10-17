@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\MortalidadController;
 use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
+use App\Http\Controllers\Admin\PrecioController;
 use App\Http\Controllers\Admin\PresentacionController;
 use App\Http\Controllers\Admin\PrimerUsoController;
 use App\Http\Controllers\Admin\ProveedorController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Admin\TrasladoController;
 use App\Http\Controllers\Admin\TratamientoController;
 use App\Http\Controllers\Admin\TurnoController;
 use App\Http\Controllers\Admin\VentaController;
+use App\Http\Controllers\Admin\VentaJornadaController;
 use App\Http\Controllers\AsistenteController;
 use App\Http\Controllers\Auth\DosPasosController;
 use App\Http\Controllers\Auth\InvitacionFincaController;
@@ -164,6 +166,9 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::get('/ajustes', [AjustesFincaController::class, 'edit'])->name('ajustes.edit');
         Route::put('/ajustes', [AjustesFincaController::class, 'update'])->name('ajustes.update');
         Route::put('/ajustes/operacion', [AjustesFincaController::class, 'guardarOperacion'])->name('ajustes.operacion');
+        // Precios de venta por especie (F6c): solo el propietario
+        Route::get('/ajustes/precios', [PrecioController::class, 'edit'])->name('ajustes.precios');
+        Route::put('/ajustes/precios', [PrecioController::class, 'update'])->name('ajustes.precios.update');
         // Seguridad de la finca: dos pasos obligatoria, cerrar la sesión del personal e ingresos del personal
         Route::put('/ajustes/seguridad', [SeguridadFincaController::class, 'guardar'])->name('ajustes.seguridad.guardar');
         Route::post('/ajustes/seguridad/cerrar-sesiones', [SeguridadFincaController::class, 'cerrarSesiones'])->middleware('throttle:cambiar-contrasena')->name('ajustes.seguridad.cerrar-sesiones');
@@ -252,6 +257,9 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::get('/jornadas/{jornada}/cerrar', [JornadaController::class, 'cerrar'])->whereNumber('jornada')->name('jornadas.cerrar');
         Route::post('/jornadas/{jornada}/cerrar', [JornadaController::class, 'guardarCierre'])->whereNumber('jornada')->name('jornadas.cerrar.guardar');
         Route::post('/jornadas/{jornada}/cancelar', [JornadaController::class, 'cancelar'])->whereNumber('jornada')->name('jornadas.cancelar');
+        // Venta rápida y obsequios de la jornada abierta (F6c)
+        Route::post('/jornadas/{jornada}/ventas', [VentaJornadaController::class, 'vender'])->whereNumber('jornada')->name('jornadas.ventas.store');
+        Route::post('/jornadas/{jornada}/obsequios', [VentaJornadaController::class, 'obsequiar'])->whereNumber('jornada')->name('jornadas.obsequios.store');
         Route::post('/jornadas/{jornada}/limpio', [JornadaController::class, 'guardarLimpio'])->whereNumber('jornada')->name('jornadas.limpio.store');
         Route::delete('/jornadas/{jornada}/limpio/{pesajeLimpio}', [JornadaController::class, 'eliminarLimpio'])->whereNumber(['jornada', 'pesajeLimpio'])->name('jornadas.limpio.destroy');
         Route::post('/jornadas/{jornada}/reproduccion', [JornadaController::class, 'guardarReproduccion'])->whereNumber('jornada')->name('jornadas.reproduccion.store');
