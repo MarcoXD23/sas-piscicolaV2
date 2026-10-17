@@ -87,6 +87,9 @@ class EspeciesFincaTest extends TestCase
         $jornadas = require database_path('migrations/2026_11_11_000001_create_jornadas_tables.php');
         // Y las presentaciones, la reproducción y los rendimientos (F6b)
         $presentaciones = require database_path('migrations/2026_11_12_000001_presentaciones_y_limpio.php');
+        // Y los precios, los obsequios y la especie de las ventas de jornada (F6c)
+        $ventasJornada = require database_path('migrations/2026_11_13_000001_ventas_por_jornada.php');
+        $ventasJornada->down();
         $presentaciones->down();
         $jornadas->down();
         $concentrados->down();
@@ -107,6 +110,7 @@ class EspeciesFincaTest extends TestCase
         $concentrados->up();
         $jornadas->up();
         $presentaciones->up();
+        $ventasJornada->up();
 
         $this->assertFalse(Schema::hasColumn('siembras', 'especie'));   // el texto viejo ya no queda en uso
         $this->assertSame(7, Especie::count());                         // 6 por defecto + la que no estaba en el catálogo

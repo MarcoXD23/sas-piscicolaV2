@@ -519,6 +519,7 @@ class ConcentradosYRacionTest extends TestCase
             CatalogoAjustes::campo(CatalogoAjustes::AGUA_QUIEN_MIDE) => 'ambos', $campo => 20, CatalogoAjustes::campo(CatalogoAjustes::LOTES_NUMERACION) => 'manual', CatalogoAjustes::campo(CatalogoAjustes::SEGURIDAD_DOS_PASOS) => 'apagada',
             CatalogoAjustes::campo(CatalogoAjustes::PROCESO_JORNADAS) => 'apagada', CatalogoAjustes::campo(CatalogoAjustes::PROCESO_DIAS_AYUNO) => 1, CatalogoAjustes::campo(CatalogoAjustes::PROCESO_SIN_ALIMENTACION) => 'encendida',
             CatalogoAjustes::campo(CatalogoAjustes::PROCESO_REPRODUCCION) => 'apagada', CatalogoAjustes::campo(CatalogoAjustes::PROCESO_UMBRAL_RENDIMIENTO) => 5, CatalogoAjustes::campo(CatalogoAjustes::PROCESO_JORNADAS_PROMEDIO) => 5,
+            CatalogoAjustes::campo(CatalogoAjustes::VENTAS_CUPO_KG) => 0, CatalogoAjustes::campo(CatalogoAjustes::VENTAS_CUPO_PERIODO) => 'semanal', CatalogoAjustes::campo(CatalogoAjustes::OBSEQUIOS_AUTORIZA) => 'propietario',
         ])->assertSessionHasNoErrors();
         $this->assertSame(20, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
         $this->assertFalse(Schema::hasColumn('tenants', 'alerta_muestreo_dias'));
