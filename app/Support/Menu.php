@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Support\Ajustes\AjustesFinca;
+use App\Support\Ajustes\CatalogoAjustes;
 use Illuminate\Support\Collection;
 
 /**
@@ -12,9 +14,10 @@ use Illuminate\Support\Collection;
 final class Menu
 {
     /**
-     * Todas las entradas, en el orden del menú. roles null = todos.
+     * Todas las entradas, en el orden del menú. roles null = todos. ajuste: la entrada solo aparece si ese ajuste de
+     * la finca (encendida/apagada) está encendido.
      *
-     * @return list<array{ruta: string, activa?: string|list<string>, texto: string, icono: string, roles: ?list<string>}>
+     * @return list<array{ruta: string, activa?: string|list<string>, texto: string, icono: string, roles: ?list<string>, ajuste?: string}>
      */
     public static function entradas(): array
     {
@@ -23,6 +26,8 @@ final class Menu
             // Registro rápido: registrar sin conexión con el paquete de trabajo del teléfono (no para el propietario)
             ['ruta' => 'campo', 'texto' => __('layout.menu.registro_rapido'), 'icono' => 'mas', 'roles' => ['administrador', 'trabajador', 'celador']],
             ['ruta' => 'admin.lagos.index', 'activa' => ['admin.lagos.*', 'admin.cosechas.*'], 'texto' => __('layout.menu.lagos'), 'icono' => 'lagos', 'roles' => ['propietario', 'administrador', 'trabajador']],
+            // Solo si la finca procesa por jornadas (ajuste proceso.jornadas)
+            ['ruta' => 'admin.jornadas.index', 'activa' => 'admin.jornadas.*', 'texto' => __('layout.menu.jornadas'), 'icono' => 'pez', 'roles' => ['propietario', 'administrador'], 'ajuste' => CatalogoAjustes::PROCESO_JORNADAS],
             ['ruta' => 'admin.bodega.index', 'texto' => __('layout.menu.bodega'), 'icono' => 'bodega', 'roles' => ['propietario', 'administrador']],
             ['ruta' => 'admin.ventas.index', 'activa' => 'admin.ventas.*', 'texto' => __('layout.menu.ventas'), 'icono' => 'dinero', 'roles' => ['propietario', 'administrador']],
             ['ruta' => 'admin.jornaleros.index', 'activa' => 'admin.jornaleros.*', 'texto' => __('layout.menu.jornaleros'), 'icono' => 'personal', 'roles' => ['propietario', 'administrador']],
@@ -55,6 +60,9 @@ final class Menu
         return collect(self::entradas())
             ->filter(fn (array $enlace) => $enlace['roles'] === null
                 || collect($enlace['roles'])->contains(fn (string $rol) => $usuario->tieneRol($rol)))
+            // Una función que la finca apagó no aparece en el menú (sin finca activa, tampoco: no hay ajustes que leer)
+            ->filter(fn (array $enlace) => ! isset($enlace['ajuste'])
+                || (app(TenantActual::class)->id() !== null && AjustesFinca::valor($enlace['ajuste']) === CatalogoAjustes::ENCENDIDA))
             ->values();
     }
 }
