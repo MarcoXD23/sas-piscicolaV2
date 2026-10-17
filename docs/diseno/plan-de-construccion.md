@@ -19,11 +19,11 @@ Los días son estimados de trabajo.
 
 ## Orden aprobado
 
-### Para empezar el piloto (unos 11 a 13 días)
+**Cambio de plan (2026-10-16):** el piloto en la finca ya no va después de F3. Queda **al final**, después de F13 y de montar el servidor. Mientras tanto se sigue construyendo en el orden del plan.
+
+### Primer bloque (hecho)
 
 **Orden:** F0 → F1 → F4 → F2 → F3. Las fases de los lagos van antes que la ración, porque la ración sugerida depende de la fase y del peso del lago.
-
-Mientras tanto, los días de proceso del piloto se registran como hoy, con la cosecha por pesadas. **De ellos salen los números reales** del día de proceso: tolerancias del cuadre, topes y rendimiento.
 
 ### Fase agregada: invitaciones de finca (2 días)
 
@@ -34,14 +34,19 @@ Pedida por el usuario el 2026-10-16 y construida antes de F5. Desde el panel de 
 
 Ver «Invitar una finca» en el README.
 
-### Después del piloto
+### Siguiente, en este orden
 
-**Orden:** F5 → F6a → F6b → F6c → F6d → F7 → F8a → F8b → F9 → F10 → F11 → F12 → F13.
+**Orden:** F5 → F6a → F6b → F6c → F6d → F7 → F8a → F8b → F9 → F10 → F11 → F12 → F13 → montar el servidor → piloto en la finca.
 
-- **Jornaleros (F6a a F6d):** la pausa está levantada. Se construye después del piloto, con los valores configurables y provisionales, que se ajustan con los números de los días de proceso del piloto.
+- **Jornaleros (F6a a F6d):** la pausa está levantada. Se construye con los valores configurables y provisionales. Se ajustan con los números de los días de proceso reales, a más tardar en el piloto.
 - **F12:** el Excel de ejemplo, sin nombres, lo prepara el usuario más adelante.
 
-**Total aproximado:** unos 55 a 60 días de trabajo.
+**Total aproximado:** unos 55 a 60 días de trabajo, sin contar el servidor ni el piloto.
+
+### Al final
+
+- **Montar el servidor:** la app en un servidor propio, para que la finca la use desde sus teléfonos.
+- **Piloto en la finca:** la finca la usa en su trabajo diario. De los días de proceso del piloto salen los números reales que todavía son provisionales: tolerancias del cuadre, topes, rendimiento y pago a jornaleros.
 
 ### Por qué este orden
 
@@ -187,6 +192,11 @@ Ver «Invitar una finca» en el README.
 - Cupo semanal.
 - Forma de pago con saldo pendiente.
 - Obsequios con su autorización.
+- **Pago a jornaleros** (temas 8, 10 y 11 del diseño):
+  - por jornada o por kilo, según el cargo y lo que configure la finca (por ejemplo, los procesadores por kilo limpio de la jornada, repartido en partes iguales);
+  - descuento de lo que el jornalero compró a crédito («descontar del pago»);
+  - si el descuento es mayor que lo ganado, queda un saldo pendiente para la siguiente jornada; nunca hay un pago negativo;
+  - planilla de pago de la jornada para imprimir y firmar al recibir el pago.
 - **Riesgo:** las ventas que ya existen están ligadas a una cosecha. Se mantienen; las nuevas van por jornada.
 
 ### F6d. Pedidos, despacho, remisión y canastas (5 días)
@@ -230,10 +240,12 @@ Ver «Invitar una finca» en el README.
 
 ### F9. Gastos e ingresos (3 días)
 
-- Categorías con la plantilla de la finca piloto.
-- Gastos del mes.
+- Categorías de gasto configurables por finca, con la plantilla de la finca piloto (tema 15.8).
+- Gastos del mes, con la foto del recibo (guardada privada y separada por finca).
 - Venta de alevinos.
-- Resumen con el alimento sacado de la bodega.
+- Resumen mensual: gastos por categoría, con el alimento sacado de la bodega.
+- Costo por kilo: el gasto del mes dividido por los kilos producidos.
+- Exportar a Excel para el contador.
 
 ### F10. Planilla mensual de ración (1,5 días)
 
@@ -260,5 +272,5 @@ Ver «Invitar una finca» en el README.
 
 - Equipos y mantenimiento (tema 15.10).
 - La unidad de cultivo para jaulas o canales (tema 14).
-- Finca demo: una finca con datos inventados y una cuenta de solo consulta para que los clientes vean la app antes de comprar. Se arma después del piloto con base en cómo se usa la finca piloto, sin sus datos reales.
+- Finca demo: una finca con datos inventados y una cuenta de solo consulta para que los clientes vean la app antes de comprar. Se arma después del piloto (que ahora va al final) con base en cómo se usa la finca piloto, sin sus datos reales.
 - Invitaciones: verificar el correo con un código de 6 dígitos enviado al correo invitado antes de crear la finca. Requiere tener configurado el envío de correos (`MAIL_MAILER`) en el servidor. Hasta entonces, el enlace es la única prueba: se envía solo por chat privado, vence en 7 días y se puede anular.
