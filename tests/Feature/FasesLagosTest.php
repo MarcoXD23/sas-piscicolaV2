@@ -223,7 +223,7 @@ class FasesLagosTest extends TestCase
         $this->assertTrue(Bitacora::query()->where('accion', 'lago_editado')->where('lago_id', $lago->id)->exists());
     }
 
-    public function test_el_detalle_del_lago_compara_peso_supervivencia_y_densidad_sin_dias_y_sin_datos_inventados(): void
+    public function test_el_detalle_del_lago_compara_dias_peso_supervivencia_y_densidad_sin_datos_inventados(): void
     {
         $engorde = Fase::query()->where('clave', 'engorde')->firstOrFail();
         $especieNueva = Especie::create(['nombre' => 'Carpa espejo', 'clima' => Especie::FRIO, 'activo' => true]);
@@ -238,7 +238,8 @@ class FasesLagosTest extends TestCase
 
         $estado = EstadoFase::paraSiembra($lago, $cachama);
         $this->assertTrue($estado['tiene_regla']);
-        $this->assertArrayNotHasKey('dias', $estado);   // los días en la fase llegan con F5
+        // Días en la fase (F5): el lago tomó la fase hoy (al crearlo), después de la siembra: cuenta desde hoy
+        $this->assertSame(['en_fase' => 0, 'desde' => '2026-11-06', 'esperados' => 90, 'atraso' => 0], $estado['dias']);
         $this->assertSame(['real_g' => 250.0, 'entrada_g' => 150.0, 'salida_g' => 850.0, 'estado' => EstadoFase::PESO_EN_FASE], $estado['peso']);
         $this->assertSame(['real' => 96.0, 'esperada' => null, 'baja' => null], $estado['supervivencia']);
         // Densidad total del lago: (1440 + 100) / 100 = 15,4 peces/m² (dentro de 15 a 24)

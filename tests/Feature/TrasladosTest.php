@@ -47,6 +47,7 @@ class TrasladosTest extends TestCase
             'fecha' => now()->toDateString(),
             'cantidad' => 400,
             'peso_promedio_g' => 50,
+            'modo' => 'aparte',
         ]);
     }
 
@@ -77,7 +78,7 @@ class TrasladosTest extends TestCase
         $origen = $this->siembra($this->origen, 'mojarra roja', 1000, 50);
         $existente = $this->siembra($this->destino, 'mojarra roja', 600, 100);
 
-        $this->trasladar($origen)->assertSessionHasNoErrors();
+        $this->trasladar($origen, ['modo' => 'sumar'])->assertSessionHasNoErrors();
 
         $existente->refresh();
         // (600 × 100 + 400 × 50) / 1000 = 80 g

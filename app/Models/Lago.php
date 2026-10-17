@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\PerteneceATenant;
+use App\Support\Region;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,13 +14,27 @@ class Lago extends Model
 {
     use HasFactory, PerteneceATenant;
 
-    protected $fillable = ['nombre', 'tipo', 'fase_id', 'area_m2'];
+    protected $fillable = ['nombre', 'tipo', 'fase_id', 'area_m2', 'fase_desde'];
 
     protected function casts(): array
     {
         return [
             'area_m2' => 'float',
+            'fase_desde' => 'date',
         ];
+    }
+
+    /**
+     * Desde cuándo el lago está en su fase (para los días en la fase): al ponerle o cambiarle la fase queda el día de
+     * hoy en la zona de la finca; sin fase, vacío. Si se escribe fase_desde a propósito, se respeta.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Lago $lago) {
+            if ($lago->isDirty('fase_id') && ! $lago->isDirty('fase_desde')) {
+                $lago->fase_desde = $lago->fase_id === null ? null : Region::hoy()->toDateString();
+            }
+        });
     }
 
     public const TIPOS = ['tierra', 'geomembrana', 'concreto'];

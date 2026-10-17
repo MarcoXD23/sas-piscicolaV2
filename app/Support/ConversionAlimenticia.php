@@ -285,6 +285,43 @@ class ConversionAlimenticia
             ->all();
     }
 
+    /**
+     * Último peso promedio conocido de la siembra (siembra, muestreo, cosecha o traslado de salida) y su fecha.
+     *
+     * @return array{fecha: string, gramos: float}
+     */
+    public function ultimoPeso(Siembra $siembra): array
+    {
+        $pesos = $this->ciclo($siembra)['pesos'];
+        $fecha = array_key_last($pesos);
+
+        return ['fecha' => $fecha, 'gramos' => $pesos[$fecha]];
+    }
+
+    /** Peces de la siembra al final del día $fecha (después de las mortalidades, cosechas y traslados de ese día). */
+    public function pecesAlFinalDel(Siembra $siembra, string $fecha): int
+    {
+        $ciclo = $this->ciclo($siembra);
+        $peces = $ciclo['peces_iniciales'];
+        foreach ($ciclo['movimientos'] as [$dia, $cambio]) {
+            if ($dia <= $fecha) {
+                $peces += $cambio;
+            }
+        }
+
+        return max($peces, 0);
+    }
+
+    /**
+     * Salidas de peces vivos de la siembra (cosechas y traslados a otro lago), en orden de fecha y de registro.
+     *
+     * @return list<array{fecha: string, tipo: string, id: int, peces: int}>
+     */
+    public function partidas(Siembra $siembra): array
+    {
+        return $this->ciclo($siembra)['partidas'];
+    }
+
     /** @return Collection<int, Siembra> */
     private function siembras(Lago $lago): Collection
     {
@@ -303,6 +340,7 @@ class ConversionAlimenticia
         $movimientos = [];
         $salidas = [];
         $recibidos = [];
+        $partidas = [];
 
         foreach (Muestreo::query()->where('siembra_id', $siembra->id)->orderBy('fecha')->orderBy('id')->get() as $muestreo) {
             $pesos[$muestreo->fecha->toDateString()] = (float) $muestreo->peso_promedio_g;
@@ -314,12 +352,14 @@ class ConversionAlimenticia
             $dia = $cosecha->fecha->toDateString();
             $movimientos[] = [$dia, -(int) $cosecha->peces];
             $salidas[] = [$dia, (int) $cosecha->peces, (float) $cosecha->kg];
+            $partidas[] = ['fecha' => $dia, 'tipo' => 'cosecha', 'id' => (int) $cosecha->id, 'peces' => (int) $cosecha->peces];
             $pesos[$dia] = (float) $cosecha->peso_promedio_g;
         }
         foreach (Traslado::query()->where('siembra_origen_id', $siembra->id)->get() as $traslado) {
             $dia = $traslado->fecha->toDateString();
             $movimientos[] = [$dia, -(int) $traslado->cantidad];
             $salidas[] = [$dia, (int) $traslado->cantidad, (float) $traslado->biomasa_kg];
+            $partidas[] = ['fecha' => $dia, 'tipo' => 'traslado', 'id' => (int) $traslado->id, 'peces' => (int) $traslado->cantidad];
             $pesos[$dia] = (float) $traslado->peso_promedio_g;
         }
 
@@ -338,6 +378,7 @@ class ConversionAlimenticia
         }
 
         ksort($pesos);
+        usort($partidas, fn (array $a, array $b) => [$a['fecha'], $a['tipo'], $a['id']] <=> [$b['fecha'], $b['tipo'], $b['id']]);
 
         return $this->ciclos[$siembra->id] = [
             'inicio' => $inicio,
@@ -348,6 +389,7 @@ class ConversionAlimenticia
             'movimientos' => $movimientos,
             'salidas' => $salidas,
             'recibidos' => $recibidos,
+            'partidas' => $partidas,
         ];
     }
 }

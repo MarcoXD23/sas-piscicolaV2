@@ -33,7 +33,7 @@ class LagoDetalleTest extends TestCase
         $this->actingAs($propietario)->post(route('admin.mortalidades.store', $siembra), ['fecha' => $hoy, 'cantidad' => 7]);
         $this->actingAs($propietario)->post(route('admin.muestreos.store', $siembra), ['fecha' => $hoy, 'peces_pesados' => 10, 'peso_total_g' => 600]);
         $this->actingAs($propietario)->post(route('admin.raciones.store', $lago), ['fecha' => $hoy, 'tipo_concentrado' => 'Levante 32 %', 'cantidad_kg' => 3]);
-        $this->actingAs($propietario)->post(route('admin.traslados.store', $siembra), ['lago_destino_id' => $otro->id, 'fecha' => $hoy, 'cantidad' => 100, 'peso_promedio_g' => 60]);
+        $this->actingAs($propietario)->post(route('admin.traslados.store', $siembra), ['lago_destino_id' => $otro->id, 'fecha' => $hoy, 'cantidad' => 100, 'peso_promedio_g' => 60, 'modo' => 'aparte']);
 
         $this->actingAs($propietario)->get(route('admin.lagos.show', $lago))
             ->assertOk()

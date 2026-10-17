@@ -133,9 +133,48 @@
                 @foreach ($lago->siembrasActivas as $siembra)
                 @if ($puedeOperar && $otrosLagos !== [])
                     <x-modal id="modal-traslado-{{ $siembra->id }}" :titulo="__('lagos.trasladar_especie', ['especie' => $etiquetasLote[$siembra->id]])">
-                        <x-formulario :action="route('admin.traslados.store', $siembra)">
+                        <x-formulario :action="route('admin.traslados.store', $siembra)" data-traslado>
                             <x-aviso tono="info" icono="lagos">{{ __('lagos.ayuda_traslado', ['especie' => $siembra->nombre_especie]) }}</x-aviso>
-                            <x-seleccion nombre="lago_destino_id" id="traslado-destino-{{ $siembra->id }}" :etiqueta="__('lagos.lago_destino')" :opciones="$otrosLagos" required />
+                            <x-seleccion nombre="lago_destino_id" id="traslado-destino-{{ $siembra->id }}" :etiqueta="__('lagos.lago_destino')" :opciones="$otrosLagos" required data-traslado-destino />
+
+                            {{-- Se pregunta siempre (nada marcado): sumar a un lote del destino o crear un lote aparte --}}
+                            <fieldset>
+                                <legend class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.traslado.que_hacer') }}<span class="ml-0.5 font-bold text-alerta" aria-hidden="true">*</span></legend>
+                                <div class="space-y-2">
+                                    @foreach ([\App\Models\Traslado::MODO_SUMAR, \App\Models\Traslado::MODO_APARTE] as $modo)
+                                        <label class="flex min-h-12 items-start gap-3 rounded-ficha border border-renglon-fuerte bg-ficha p-3 text-base text-tinta has-[:checked]:border-marca-700">
+                                            <input type="radio" name="modo" value="{{ $modo }}" class="mt-0.5 h-5 w-5 shrink-0 accent-marca-700" required data-traslado-modo @checked(old('modo') === $modo)>
+                                            <span><span class="font-semibold">{{ __('lagos.traslado.'.$modo) }}</span>
+                                                <span class="block text-sm text-tinta-suave">{{ __('lagos.traslado.'.$modo.'_ayuda') }}</span></span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @error('modo')
+                                    <p class="mt-1 flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
+                                @enderror
+                            </fieldset>
+
+                            {{-- Lote al que se suman: todos los lotes de la especie en otros lagos; el JS deja solo los del destino --}}
+                            @php $lotesEspecie = $lotesOtrosLagos->get($siembra->especie_id, collect()); @endphp
+                            <div data-traslado-lotes>
+                                <label for="traslado-lote-{{ $siembra->id }}" class="mb-1.5 block text-base font-semibold text-tinta">{{ __('lagos.traslado.lote_destino') }}</label>
+                                <select id="traslado-lote-{{ $siembra->id }}" name="siembra_destino_id" data-traslado-lote
+                                        class="block w-full min-h-12 cursor-pointer rounded-ficha border border-renglon-fuerte bg-ficha py-3 pl-4 pr-11 text-base text-tinta focus:border-marca-700 focus:outline-none focus:ring-4 focus:ring-marca-200/70">
+                                    <option value="">{{ __('lagos.traslado.unico_lote') }}</option>
+                                    @foreach ($lotesEspecie as $lote)
+                                        <option value="{{ $lote->id }}" data-lago="{{ $lote->lago_id }}" @selected((string) old('siembra_destino_id') === (string) $lote->id)>
+                                            {{ __($lote->numero_lote ? 'lagos.traslado.opcion_lote_numero' : 'lagos.traslado.opcion_lote', [
+                                                'lago' => $lote->lago->nombre, 'numero' => $lote->numero_lote,
+                                                'fecha' => $lote->fecha->format('d/m/Y'), 'peces' => $numero($lote->peces_vivos),
+                                            ]) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-sm text-tinta-suave">{{ __('lagos.traslado.lote_destino_ayuda') }}</p>
+                                @error('siembra_destino_id')
+                                    <p class="mt-1 flex items-start gap-1.5 text-sm font-semibold text-alerta"><x-icono nombre="alerta" class="mt-px h-4 w-4" /> {{ $message }}</p>
+                                @enderror
+                            </div>
                             <x-campo nombre="fecha" id="traslado-fecha-{{ $siembra->id }}" :etiqueta="__('comun.fecha')" tipo="date" :valor="\App\Support\Region::ahora()->toDateString()" required />
                             <div class="grid grid-cols-2 gap-4">
                                 <x-campo nombre="cantidad" id="traslado-cantidad-{{ $siembra->id }}" :etiqueta="__('lagos.peces')" tipo="number" min="1" :max="$siembra->peces_vivos" inputmode="numeric" required

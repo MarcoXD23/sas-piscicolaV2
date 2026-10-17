@@ -35,7 +35,19 @@ return [
     'ayuda_policultivo' => 'Policultivo: el lago ya tiene :especies. Una misma especie puede ir en otro lote con fecha distinta. Mezclar agua fría y cálida pide confirmación.',
     'confirmar_clima' => 'Si esta especie es de otro clima (agua fría o cálida) que las del lago, entiendo el riesgo y quiero seguir.',
     'racion_manual' => 'Sin ración sugerida para :especies: su especie no tiene tipo de alimentación. Registra la ración a mano.',
-    'ayuda_traslado' => 'Si trasladas una parte es un desdoble. Si el lago de destino ya tiene :especie, los peces se suman a esa siembra.',
+    'ayuda_traslado' => 'Si trasladas una parte es un desdoble. Elige si los peces se suman a un lote de :especie del lago de destino o forman un lote aparte (por ejemplo, si son de otro tamaño). Los días y el alimento de antes del traslado cuentan para la conversión de toda la vida del pez.',
+    'traslado' => [
+        'que_hacer' => '¿Qué hacer con los peces en el destino?',
+        'sumar' => 'Sumar al lote existente',
+        'sumar_ayuda' => 'Se suman a un lote de la misma especie, con el peso promedio ponderado. El lote conserva sus días.',
+        'aparte' => 'Crear lote aparte',
+        'aparte_ayuda' => 'Forman un lote nuevo con su peso, que conserva el proveedor y el número de lote del origen.',
+        'lote_destino' => 'Lote al que se suman',
+        'lote_destino_ayuda' => 'Solo hace falta si el lago de destino tiene varios lotes de esta especie.',
+        'unico_lote' => 'El lote de la especie en el destino',
+        'opcion_lote' => ':lago · sembrado el :fecha · :peces peces',
+        'opcion_lote_numero' => ':lago · n.º :numero · sembrado el :fecha · :peces peces',
+    ],
     'biomasa' => 'Biomasa',
     'calidad_agua' => 'Calidad del agua',
     'calidad_agua_de' => 'Calidad del agua · :lago',
@@ -182,6 +194,13 @@ return [
         'especie_con_lotes' => ':especie (:lotes lotes)',
         'etiqueta' => ':especie · lote :numero · :origen',
         'peso_con_rango' => ':promedio · de :min a :max g',
+    ],
+    // Vida del pez (F5): días y conversión con lo de antes de los traslados
+    'vida' => [
+        'dias' => ':dias días de vida (desde el :fecha)',
+        'fca' => 'conversión de vida :fca',
+        'fca_sin_dato' => 'conversión de vida: :motivo',
+        'llegaron' => 'Llegaron :peces peces de :lago el :fecha, con :dias días de vida',
     ],
     // Trazabilidad del lote (F5): número de lote de la finca, proveedor y lote del proveedor
     'trazabilidad' => [

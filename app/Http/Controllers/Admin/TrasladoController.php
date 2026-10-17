@@ -9,8 +9,10 @@ use App\Models\Rol;
 use App\Models\Siembra;
 use App\Models\Traslado;
 use App\Support\Formato;
+use App\Support\NumeroLote;
 use App\Support\Region;
 use App\Support\ReglasPolicultivo;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +21,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Traslada peces de una siembra a otro lago. Si la cantidad es parcial es un desdoble.
+ * Siempre se pregunta qué hacer en el destino (diseño, tema 4): «sumar» a un lote de la misma especie (con peso
+ * ponderado; el lote conserva sus días) o crear un lote «aparte», que conserva la trazabilidad del origen. Los días y el
+ * alimento de antes del traslado se arrastran al calcular (ConversionVida), sin copiarlos.
  */
 class TrasladoController extends Controller
 {
@@ -30,12 +35,19 @@ class TrasladoController extends Controller
             'cantidad' => ['required', 'integer', 'min:1', 'max:10000000'],
             'peso_promedio_g' => ['required', 'numeric', 'min:0.1', 'max:20000'],
             'observaciones' => ['nullable', 'string', 'max:500'],
+            // Preguntar siempre: sumar a un lote de la misma especie en el destino o crear un lote aparte
+            'modo' => ['required', Rule::in(Traslado::MODOS)],
+            'siembra_destino_id' => ['nullable', 'integer'],
         ], [
             'lago_destino_id.required' => __('mensajes.traslado.elige_lago_destino'),
             'lago_destino_id.exists' => __('mensajes.traslado.lago_destino_no_existe'),
             'fecha.after_or_equal' => __('mensajes.traslado.fecha_no_puede_ser_anterior'),
             'fecha.before_or_equal' => __('mensajes.traslado.fecha_no_puede_ser_futura'),
+            'modo.required' => __('mensajes.traslado.elige_modo'),
+            'modo.in' => __('mensajes.traslado.elige_modo'),
         ]);
+
+        $datos['fecha'] = CarbonImmutable::parse($datos['fecha'])->toDateString();
 
         if ((int) $datos['lago_destino_id'] === $siembra->lago_id) {
             throw ValidationException::withMessages(['lago_destino_id' => __('mensajes.traslado.lago_destino_debe_ser_distinto')]);
@@ -58,11 +70,25 @@ class TrasladoController extends Controller
 
             $peso = (float) $datos['peso_promedio_g'];
             $activasDestino = $lagoDestino->siembrasActivas()->lockForUpdate()->get();
-            // Se suman al lote MÁS ANTIGUO de la misma especie en el destino; si no hay, se crea un lote nuevo
-            $destino = $activasDestino->where('especie_id', $origen->especie_id)->sortBy(fn (Siembra $s) => $s->fecha->toDateString().'|'.$s->id)->first();
+            // Lotes de la misma especie en el destino a los que se puede sumar (sembrados a más tardar el día del traslado)
+            $candidatos = $activasDestino->where('especie_id', $origen->especie_id)
+                ->filter(fn (Siembra $s) => $s->fecha->toDateString() <= $datos['fecha'])->values();
 
-            if ($destino) {
-                // Se suman a la siembra de la misma especie con peso promedio ponderado
+            if ($datos['modo'] === Traslado::MODO_SUMAR) {
+                // Se pregunta, no se adivina: sin lote de la especie no hay a qué sumar; con varios, hay que elegir
+                if ($candidatos->isEmpty()) {
+                    throw ValidationException::withMessages(['modo' => __('mensajes.traslado.sin_lote_para_sumar', ['especie' => $origen->nombre_especie, 'lago' => $lagoDestino->nombre])]);
+                }
+                $elegido = isset($datos['siembra_destino_id']) ? (int) $datos['siembra_destino_id'] : null;
+                if ($elegido === null && $candidatos->count() > 1) {
+                    throw ValidationException::withMessages(['siembra_destino_id' => __('mensajes.traslado.elige_lote_destino')]);
+                }
+                $destino = $elegido === null ? $candidatos->first() : $candidatos->firstWhere('id', $elegido);
+                if ($destino === null) {
+                    throw ValidationException::withMessages(['siembra_destino_id' => __('mensajes.traslado.lote_destino_no_valido')]);
+                }
+
+                // Se suman al lote elegido con peso promedio ponderado; el lote conserva su fecha (sus días)
                 $total = $destino->peces_vivos + $cantidad;
                 $destino->peso_actual_g = (($destino->peces_vivos * $destino->peso_actual_g) + ($cantidad * $peso)) / $total;
                 $destino->peces_vivos = $total;
@@ -71,11 +97,15 @@ class TrasladoController extends Controller
             } else {
                 ReglasPolicultivo::verificarClima($activasDestino, $origen->especie, $request->boolean(ReglasPolicultivo::CAMPO_CONFIRMACION));
 
+                // Lote aparte: conserva la trazabilidad del origen (proveedor, lote del proveedor y número de lote).
+                // Si el origen no tiene número y la finca numera automáticamente, recibe uno nuevo.
+                $numeroLote = $origen->numero_lote ?? (NumeroLote::esAutomatica() ? NumeroLote::siguiente(CarbonImmutable::parse($datos['fecha'])) : null);
                 $destino = $lagoDestino->siembras()->create([
                     'especie_id' => $origen->especie_id,
-                    // Conserva el origen de los alevinos para la trazabilidad
+                    'proveedor_id' => $origen->proveedor_id,
                     'proveedor_alevinos' => $origen->proveedor_alevinos,
                     'lote_alevinos' => $origen->lote_alevinos,
+                    'numero_lote' => $numeroLote,
                     'fecha' => $datos['fecha'],
                     'cantidad_alevinos' => $cantidad,
                     'peso_promedio_inicial_g' => $peso,
@@ -111,6 +141,7 @@ class TrasladoController extends Controller
                 'peso_promedio_g' => $peso,
                 'biomasa_kg' => ($cantidad * $peso) / 1000,
                 'observaciones' => $datos['observaciones'] ?? null,
+                'modo' => $datos['modo'],
             ]);
         });
 

@@ -10,9 +10,16 @@ class Traslado extends Model
 {
     use PerteneceATenant;
 
+    /** Qué se hizo con los peces en el destino: sumarlos a un lote existente o crear un lote aparte (F5). */
+    public const MODO_SUMAR = 'sumar';
+
+    public const MODO_APARTE = 'aparte';
+
+    public const MODOS = [self::MODO_SUMAR, self::MODO_APARTE];
+
     protected $fillable = [
         'siembra_origen_id', 'siembra_destino_id', 'lago_origen_id', 'lago_destino_id',
-        'user_id', 'fecha', 'cantidad', 'peso_promedio_g', 'biomasa_kg', 'observaciones',
+        'user_id', 'fecha', 'cantidad', 'peso_promedio_g', 'biomasa_kg', 'observaciones', 'modo',
     ];
 
     protected function casts(): array

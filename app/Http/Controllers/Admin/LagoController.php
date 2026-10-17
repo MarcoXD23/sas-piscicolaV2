@@ -8,10 +8,12 @@ use App\Models\Especie;
 use App\Models\Fase;
 use App\Models\Lago;
 use App\Models\Rol;
+use App\Models\Siembra;
 use App\Models\StockAlimento;
 use App\Models\Tercero;
 use App\Models\Tratamiento;
 use App\Support\CalculadoraRacion;
+use App\Support\ConversionVida;
 use App\Support\EstadoFase;
 use App\Support\HistorialLago;
 use App\Support\NumeroLote;
@@ -72,6 +74,11 @@ class LagoController extends Controller
             'historial' => HistorialLago::eventos($lago, limitePorTipo: self::LIMITE_POR_TIPO)->take(60),
             'siembrasFinalizadas' => $lago->siembras()->whereNotNull('finalizada_at')->latest('finalizada_at')->get(),
             'otrosLagos' => Lago::query()->whereKeyNot($lago->id)->orderBy('nombre')->pluck('nombre', 'id')->all(),
+            // Días y conversión de vida de los lotes que recibieron peces (una sola instancia: comparte sus consultas)
+            'conversionVida' => new ConversionVida,
+            // Traslado «sumar»: lotes activos de los otros lagos, por especie (el formulario los filtra por el destino)
+            'lotesOtrosLagos' => Siembra::query()->activas()->where('lago_id', '!=', $lago->id)->with('lago')
+                ->orderBy('fecha')->orderBy('id')->get()->groupBy('especie_id'),
             'vias' => Tratamiento::opciones(),
         ]);
     }

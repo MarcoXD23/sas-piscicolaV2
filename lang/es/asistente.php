@@ -95,7 +95,7 @@ return [
             ],
             'admin.tareas.index' => 'asignar tareas al personal y ver cuáles están hechas.',
             'admin.alertas.index' => 'las alertas de la finca: stock bajo, mortalidad anormal, agua fuera de rango y despachos sin recibir.',
-            'admin.conversion.index' => 'la conversión alimenticia por lago y por especie.',
+            'admin.conversion.index' => 'la conversión alimenticia por lago, por especie y por proveedor de alevinos (crecimiento, supervivencia y conversión).',
             'admin.bitacora.index' => 'el registro de quién hizo qué en la app.',
             'admin.reportes.index' => 'el informe mensual y el libro de campo, para ver, imprimir o descargar en Excel y PDF.',
             'admin.ajustes-pesaje.edit' => 'el peso de la canasta y la canastilla vacías, que se descuenta en cada pesada de la cosecha.',

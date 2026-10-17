@@ -28,6 +28,20 @@
         @if ($trazabilidad !== [])
             <p class="text-sm text-tinta-suave">{{ implode(' · ', $trazabilidad) }}</p>
         @endif
+        {{-- Lote que recibió peces por traslado: días y conversión de toda la vida del pez (con lo de antes del traslado) --}}
+        @php $vida = $siembra->trasladosRecibidos->isNotEmpty() ? $conversionVida->deSiembra($siembra) : null; @endphp
+        @if ($vida !== null && $vida['arrastra'])
+            <p class="text-sm text-tinta" data-vida-lote>
+                {{ __('lagos.vida.dias', ['dias' => $numero($vida['dias_vida']), 'fecha' => \Carbon\CarbonImmutable::parse($vida['fecha_vida'])->format('d/m/Y')]) }}
+                · {{ $vida['fca'] !== null ? __('lagos.vida.fca', ['fca' => $numero($vida['fca'], 2)]) : __('lagos.vida.fca_sin_dato', ['motivo' => __('conversion.motivos.'.$vida['motivo'])]) }}
+            </p>
+            @foreach ($siembra->trasladosRecibidos as $traslado)
+                @php $diasAlTraslado = $conversionVida->diasDeVidaAlTraslado($traslado); @endphp
+                @if ($diasAlTraslado !== null)
+                    <p class="text-sm text-tinta-suave">{{ __('lagos.vida.llegaron', ['peces' => $numero($traslado->cantidad), 'lago' => $traslado->lagoOrigen?->nombre, 'fecha' => $traslado->fecha->format('d/m/Y'), 'dias' => $numero($diasAlTraslado)]) }}</p>
+                @endif
+            @endforeach
+        @endif
     </div>
 </div>
 
@@ -61,9 +75,21 @@
                 $corto = fn (float $valor) => $numero($valor, fmod($valor, 1.0) === 0.0 ? 0 : 1);
                 $dato = fn (?float $valor) => $valor === null ? __('fases.comparacion.sin_dato') : $corto($valor);
                 $gramos = fn (?float $valor) => $valor === null ? __('fases.comparacion.sin_dato') : __('fases.comparacion.gramos', ['valor' => $corto($valor)]);
-                ['peso' => $peso, 'supervivencia' => $supervivencia, 'densidad' => $densidad] = $estadoFase;
+                ['peso' => $peso, 'dias' => $dias, 'supervivencia' => $supervivencia, 'densidad' => $densidad] = $estadoFase;
             @endphp
-            <dl class="mt-2.5 grid gap-2.5 sm:grid-cols-3">
+            <dl class="mt-2.5 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
+                    <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.dias') }}</dt>
+                    <dd class="mt-0.5 font-bold tabular-nums text-tinta">{{ __('fases.comparacion.dias_valor', ['dias' => $numero($dias['en_fase'])]) }}</dd>
+                    <p class="text-xs text-tinta-suave">{{ __('fases.comparacion.dias_desde', ['fecha' => \Carbon\CarbonImmutable::parse($dias['desde'])->format('d/m/Y')]) }}
+                        · {{ __('fases.comparacion.dias_esperados', ['esperados' => $dias['esperados'] === null ? __('fases.comparacion.sin_dato') : $numero($dias['esperados'])]) }}</p>
+                    @if ($dias['atraso'] !== null)
+                        <p @class(['mt-0.5 text-sm font-semibold', 'text-atencion' => $dias['atraso'] > 0, 'text-bien' => $dias['atraso'] === 0])>
+                            {{ $dias['atraso'] > 0 ? trans_choice('fases.comparacion.dias_atraso', $dias['atraso'], ['dias' => $numero($dias['atraso'])]) : __('fases.comparacion.dias_a_tiempo') }}
+                        </p>
+                    @endif
+                </div>
+
                 <div class="rounded-ficha bg-ficha px-3.5 py-2.5 ring-1 ring-renglon">
                     <dt class="text-sm text-tinta-suave">{{ __('fases.comparacion.peso') }}</dt>
                     <dd class="mt-0.5 font-bold tabular-nums text-tinta">{{ $gramos($peso['real_g']) }}</dd>

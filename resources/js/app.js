@@ -132,6 +132,33 @@ document.querySelectorAll('[data-racion-unidad]').forEach((grupo) => {
     });
 });
 
+// Traslado (detalle del lago): la lista «Lote al que se suman» deja solo los lotes del lago de destino y se muestra
+// solo al sumar con varios lotes de la especie en ese lago. Sin JS se ven todos y el servidor valida la elección.
+document.querySelectorAll('[data-traslado]').forEach((formulario) => {
+    const destino = formulario.querySelector('[data-traslado-destino]');
+    const grupo = formulario.querySelector('[data-traslado-lotes]');
+    const lista = formulario.querySelector('[data-traslado-lote]');
+    if (!destino || !grupo || !lista) return;
+    const opciones = [...lista.options].filter((opcion) => opcion.value !== '');
+
+    const actualizar = () => {
+        const sumar = formulario.querySelector('[data-traslado-modo]:checked')?.value === 'sumar';
+        let visibles = 0;
+        opciones.forEach((opcion) => {
+            const delDestino = opcion.dataset.lago === destino.value;
+            opcion.hidden = !delDestino;
+            opcion.disabled = !delDestino;
+            if (delDestino) visibles++;
+        });
+        if (lista.selectedOptions[0]?.disabled) lista.value = '';
+        grupo.hidden = !sumar || visibles < 2;
+    };
+
+    destino.addEventListener('change', actualizar);
+    formulario.querySelectorAll('[data-traslado-modo]').forEach((radio) => radio.addEventListener('change', actualizar));
+    actualizar();
+});
+
 // Copiar un texto (el enlace de una invitación en el panel de plataforma). Sin portapapeles, queda seleccionado
 document.querySelectorAll('[data-copiar-grupo]').forEach((grupo) => {
     const texto = grupo.querySelector('[data-copiar-texto]');

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lago;
+use App\Support\ComparacionProveedores;
 use App\Support\ConversionAlimenticia;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Conversión alimenticia por lago, por siembra y por especie, con tendencia semanal (propietario y administrador).
+ * Conversión alimenticia por lago, por siembra, por especie y por proveedor de alevinos, con tendencia semanal
+ * (propietario y administrador).
  */
 class ConversionController extends Controller
 {
@@ -24,6 +26,8 @@ class ConversionController extends Controller
         return view('admin.conversion.index', [
             'porLago' => $conversion->porLago(),
             'porEspecie' => $conversion->porEspecie(),
+            // Comparación de proveedores: crecimiento, supervivencia y conversión (comparte las consultas de $conversion)
+            'porProveedor' => (new ComparacionProveedores($conversion))->filas(),
             'lagos' => $lagos,
             'lago' => $lago,
             'semanas' => $lago ? $conversion->semanal($lago, self::SEMANAS) : [],

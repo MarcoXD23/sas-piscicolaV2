@@ -240,6 +240,10 @@ return [
     ],
     'traslado' => [
         'elige_lago_destino' => 'Elige el lago de destino.',
+        'elige_modo' => 'Elige si los peces se suman a un lote del destino o forman un lote aparte.',
+        'sin_lote_para_sumar' => 'En el lago :lago no hay un lote de :especie al que sumar los peces. Elige «Crear lote aparte».',
+        'elige_lote_destino' => 'El lago de destino tiene varios lotes de esta especie: elige a cuál se suman los peces.',
+        'lote_destino_no_valido' => 'Ese lote no está en el lago de destino, no es de esta especie o se sembró después del traslado.',
         'esta_siembra_ya_esta_finalizada' => 'Esta siembra ya está finalizada.',
         'fecha_no_puede_ser_anterior' => 'La fecha no puede ser anterior a la siembra.',
         'fecha_no_puede_ser_futura' => 'La fecha no puede ser futura.',

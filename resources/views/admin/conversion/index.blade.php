@@ -62,6 +62,35 @@
         </x-tabla>
     </section>
 
+    {{-- Comparación de proveedores de alevinos (F5) --}}
+    <section class="mb-8" data-por-proveedor>
+        <h2 class="mb-1 text-lg font-semibold text-tinta">{{ __('conversion.por_proveedor') }}</h2>
+        <p class="mb-3 text-sm text-tinta-suave">{{ __('conversion.por_proveedor_ayuda') }}</p>
+        <x-tabla :columnas="[__('conversion.proveedor'), __('conversion.alevinos'), __('conversion.crecimiento'), __('conversion.supervivencia'), __('conversion.fca')]" :vacio="__('conversion.sin_siembras')">
+            @foreach ($porProveedor as $fila)
+                <tr>
+                    <td data-label="{{ __('conversion.proveedor') }}" class="font-semibold text-tinta">
+                        @if ($fila['clave'] === \App\Support\ComparacionProveedores::SIN_LIGAR)
+                            {{ __('conversion.proveedor_sin_ligar') }}
+                            <a href="{{ route('admin.proveedores.revision') }}" class="block text-sm font-normal text-marca-700 underline underline-offset-4">{{ __('proveedores.revision.enlace') }}</a>
+                        @elseif ($fila['clave'] === \App\Support\ComparacionProveedores::SIN_PROVEEDOR)
+                            {{ __('conversion.proveedor_ninguno') }}
+                        @else
+                            {{ $fila['nombre'] }}
+                        @endif
+                        <span class="block text-sm font-normal text-tinta-suave">{{ trans_choice('conversion.lotes', $fila['lotes'], ['lotes' => $fila['lotes']]) }}@if ($fila['mezcla']) · {{ __('conversion.mezcla') }}@endif</span>
+                    </td>
+                    <td data-label="{{ __('conversion.alevinos') }}" class="tabular-nums">{{ \App\Support\Formato::numero($fila['alevinos']) }}</td>
+                    <td data-label="{{ __('conversion.crecimiento') }}" class="tabular-nums">{{ $fila['crecimiento_g_dia'] === null ? '—' : __('conversion.gramos_dia', ['valor' => \App\Support\Formato::numero($fila['crecimiento_g_dia'], 2)]) }}</td>
+                    <td data-label="{{ __('conversion.supervivencia') }}" class="tabular-nums">{{ $fila['supervivencia'] === null ? '—' : __('conversion.porcentaje', ['valor' => \App\Support\Formato::numero($fila['supervivencia'], 1)]) }}</td>
+                    <td data-label="{{ __('conversion.fca') }}" class="font-bold tabular-nums">{{ $fca($fila) }}
+                        @if ($motivo($fila))<span class="block text-sm font-normal text-tinta-suave">{{ $motivo($fila) }}</span>@endif
+                    </td>
+                </tr>
+            @endforeach
+        </x-tabla>
+    </section>
+
     @if ($lago)
         <section>
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">

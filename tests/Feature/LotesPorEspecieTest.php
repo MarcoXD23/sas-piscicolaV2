@@ -62,9 +62,9 @@ class LotesPorEspecieTest extends TestCase
             'peso_promedio_inicial_g' => 5, 'peces_vivos' => $peces, 'peso_actual_g' => $peso, 'biomasa_kg' => $peces * $peso / 1000]);
     }
 
-    private function trasladar(Siembra $siembra, Lago $destino, int $cantidad, float $peso = 200)
+    private function trasladar(Siembra $siembra, Lago $destino, int $cantidad, float $peso = 200, array $modo = ['modo' => 'aparte'])
     {
-        return $this->actingAs($this->administrador)->post(route('admin.traslados.store', $siembra->id), [
+        return $this->actingAs($this->administrador)->post(route('admin.traslados.store', $siembra->id), $modo + [
             'lago_destino_id' => $destino->id, 'fecha' => '2026-11-04', 'cantidad' => $cantidad, 'peso_promedio_g' => $peso,
         ]);
     }
@@ -107,8 +107,8 @@ class LotesPorEspecieTest extends TestCase
         $this->assertSame(__('lagos.lotes.origen_traslado', ['lago' => 'L01', 'fecha' => '04/11/2026']), $creado->textoOrigen());
         $this->assertCount(0, $creado->trasladosSumados());
 
-        // L01 ya tiene bagre: el traslado desde L03 suma al lote más antiguo, que sigue siendo «siembra» y dice que recibió
-        $this->trasladar($creado, $this->l01, 40)->assertSessionHasNoErrors();
+        // L01 tiene dos lotes de bagre: el traslado desde L03 se suma al elegido, que sigue siendo «siembra» y dice que recibió
+        $this->trasladar($creado, $this->l01, 40, modo: ['modo' => 'sumar', 'siembra_destino_id' => $this->bagre1->id])->assertSessionHasNoErrors();
         $this->assertSame(Siembra::ORIGEN_SIEMBRA, $this->bagre1->fresh()->origen);
         $sumados = $this->bagre1->fresh()->trasladosSumados();
         $this->assertCount(1, $sumados);

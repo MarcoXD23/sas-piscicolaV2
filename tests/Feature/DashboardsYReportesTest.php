@@ -188,7 +188,7 @@ class DashboardsYReportesTest extends TestCase
         $destino = Lago::create(['nombre' => 'L02', 'tipo' => 'tierra']);
 
         $this->actingAs($this->propietario)->post(route('admin.traslados.store', $this->siembra), [
-            'lago_destino_id' => $destino->id, 'fecha' => '2026-10-20', 'cantidad' => 100, 'peso_promedio_g' => 200,
+            'lago_destino_id' => $destino->id, 'fecha' => '2026-10-20', 'cantidad' => 100, 'peso_promedio_g' => 200, 'modo' => 'aparte',
         ])->assertSessionHasNoErrors();
 
         $nueva = $destino->siembrasActivas()->sole();

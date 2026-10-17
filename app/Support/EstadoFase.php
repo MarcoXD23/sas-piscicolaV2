@@ -5,11 +5,11 @@ namespace App\Support;
 use App\Models\Lago;
 use App\Models\ReglaFase;
 use App\Models\Siembra;
+use Carbon\CarbonImmutable;
 
 /**
- * Comparación de lo real contra las reglas de la fase del lago: peso, supervivencia y densidad.
- * - Sin días ni «peso esperado hoy»: hasta F5 el lote solo conoce sus días desde la siembra, no los días en la fase
- *   (los traslados aún no los arrastran). F5 activa el atraso en días con los días en la fase.
+ * Comparación de lo real contra las reglas de la fase del lago: días en la fase, peso, supervivencia y densidad.
+ * - Días: los del lote en la fase contra los días esperados, con el atraso (F5; ver dias()). Sin «peso esperado hoy».
  * - El peso se compara con el rango de la fase: por debajo del peso de entrada, en la fase o en el peso de salida.
  * - Lo que la regla no tiene queda en null y la pantalla dice «sin dato» (nunca un valor inventado).
  * - Si el lago no tiene fase, devuelve null. Nunca divide por cero (área vacía o 0, lote sin alevinos).
@@ -40,6 +40,7 @@ final class EstadoFase
      *     fase: string,
      *     tiene_regla: bool,
      *     peso: ?array{real_g: float, entrada_g: ?float, salida_g: ?float, estado: ?string},
+     *     dias?: array{en_fase: int, desde: string, esperados: ?int, atraso: ?int},
      *     supervivencia: ?array{real: ?float, esperada: ?float, baja: ?bool},
      *     densidad: ?array{real: ?float, min: ?float, max: ?float, estado: ?string}
      * }|null
@@ -62,13 +63,45 @@ final class EstadoFase
             return ['fase' => $fase->nombre, 'tiene_regla' => false, 'peso' => null, 'supervivencia' => null, 'densidad' => null];
         }
 
+        $peso = self::peso($siembra, $regla);
+
         return [
             'fase' => $fase->nombre,
             'tiene_regla' => true,
-            'peso' => self::peso($siembra, $regla),
+            'peso' => $peso,
+            'dias' => self::dias($lago, $siembra, $regla, $peso['estado']),
             'supervivencia' => self::supervivencia($siembra, $regla),
             'densidad' => self::densidad($lago, $regla),
         ];
+    }
+
+    /**
+     * Días del lote en la fase del lago contra los días esperados de la regla. El lote está en la fase desde la fecha
+     * más reciente entre su llegada al lago (la fecha del lote: su siembra, o el traslado que lo creó; un traslado que
+     * suma peces no la cambia) y el día en que el lago tomó su fase (lagos.fase_desde; vacío en los lagos que ya tenían
+     * fase antes de F5).
+     * Atraso: los días de más sobre los esperados mientras el peso no llega al de salida (si llegó, 0). Sin días
+     * esperados en la regla no se juzga (null).
+     *
+     * @return array{en_fase: int, desde: string, esperados: ?int, atraso: ?int}
+     */
+    public static function dias(Lago $lago, Siembra $siembra, ReglaFase $regla, ?string $estadoPeso = null): array
+    {
+        $desde = $siembra->fecha->toDateString();
+        if ($lago->fase_desde !== null && $lago->fase_desde->toDateString() > $desde) {
+            $desde = $lago->fase_desde->toDateString();
+        }
+        $hasta = $siembra->finalizada_at !== null ? Region::local($siembra->finalizada_at)->toDateString() : Region::hoy()->toDateString();
+        $enFase = max(0, (int) CarbonImmutable::parse($desde, 'UTC')->diffInDays(CarbonImmutable::parse($hasta, 'UTC'), false));
+        $esperados = $regla->dias_esperados;
+
+        $atraso = match (true) {
+            $esperados === null => null,
+            $estadoPeso === self::PESO_SALIDA => 0,
+            default => max(0, $enFase - $esperados),
+        };
+
+        return ['en_fase' => $enFase, 'desde' => $desde, 'esperados' => $esperados, 'atraso' => $atraso];
     }
 
     /** Peso promedio de ahora (el del último muestreo o, sin muestreos, el de la siembra) contra el rango de la fase. */

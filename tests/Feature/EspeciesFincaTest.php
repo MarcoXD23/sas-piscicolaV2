@@ -194,7 +194,7 @@ class EspeciesFincaTest extends TestCase
 
     // --- Policultivo ---
 
-    public function test_varias_especies_y_la_misma_dos_veces_como_lotes_y_el_traslado_se_suma_al_lote_mas_antiguo(): void
+    public function test_varias_especies_y_la_misma_dos_veces_como_lotes_y_el_traslado_se_suma_al_lote_elegido(): void
     {
         $mojarra = $this->especie('mojarra roja');
         $antiguo = $this->sembrar($mojarra, '2026-08-01', 500);
@@ -208,6 +208,7 @@ class EspeciesFincaTest extends TestCase
 
         $this->actingAs($this->administrador)->post(route('admin.traslados.store', $origen), [
             'lago_destino_id' => $this->lago->id, 'fecha' => now()->toDateString(), 'cantidad' => 40, 'peso_promedio_g' => 100,
+            'modo' => 'sumar', 'siembra_destino_id' => $antiguo->id,   // el lago tiene dos lotes de mojarra: se elige
         ])->assertSessionHasNoErrors();
 
         $this->assertSame(540, $antiguo->fresh()->peces_vivos);

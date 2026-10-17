@@ -81,7 +81,7 @@ class BitacoraTest extends TestCase
 
         $this->actingAs($this->administrador)->post(route('admin.mortalidades.store', $this->siembra), ['fecha' => '2026-10-15', 'cantidad' => 7])->assertSessionHasNoErrors();
         $this->actingAs($this->administrador)->post(route('admin.muestreos.store', $this->siembra), ['fecha' => '2026-10-15', 'peces_pesados' => 10, 'peso_total_g' => 2500])->assertSessionHasNoErrors();
-        $this->actingAs($this->administrador)->post(route('admin.traslados.store', $this->siembra), ['lago_destino_id' => $otro->id, 'fecha' => '2026-10-15', 'cantidad' => 100, 'peso_promedio_g' => 250])->assertSessionHasNoErrors();
+        $this->actingAs($this->administrador)->post(route('admin.traslados.store', $this->siembra), ['lago_destino_id' => $otro->id, 'fecha' => '2026-10-15', 'cantidad' => 100, 'peso_promedio_g' => 250, 'modo' => 'aparte'])->assertSessionHasNoErrors();
         $this->actingAs($this->administrador)->post(route('admin.cosechas.store'), ['siembra_id' => $this->siembra->id, 'destino' => 'Plaza de mercado', 'fecha' => '2026-10-15', 'peces' => 50, 'kg' => 12.5])->assertSessionHasNoErrors();
 
         $registros = Bitacora::query()->orderBy('id')->get();

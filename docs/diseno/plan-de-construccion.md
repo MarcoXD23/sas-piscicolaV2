@@ -119,7 +119,7 @@ Ver «Invitar una finca» en el README.
 **Estado: hecha** (hecha con Antigravity, revisada en F2-F3c y unida a `main` el 2026-10-15, commit f6a4f6b).
 - Las reglas iniciales traen solo los datos de la finca piloto (tema 15.1): precría, levante y engorde para las especies de agua cálida. La trucha y el alevinaje quedan sin reglas, y lo que falta dice «sin dato».
 - El detalle del lago compara el peso con el rango de la fase, la supervivencia y la densidad.
-- **Pendiente para F5:** el atraso en días. Se compara con los días en la fase, cuando los traslados los arrastren.
+- **Pendiente para F5 (hecho en F5):** el atraso en días, con los días del lote en la fase.
 - **Pendiente de la finca:**
   - la supervivencia esperada y las densidades de alevinaje, precría y levante;
   - el peso de entrada a precría;
@@ -169,6 +169,23 @@ Ver «Invitar una finca» en el README.
   - conversión de vida a través de dos traslados;
   - siembras viejas sin proveedor del catálogo.
 - **Riesgo:** los proveedores escritos a mano se ligan con una pantalla de revisión, sin adivinar.
+
+**Estado: hecha** (2026-10-17, en dos commits a `main`).
+- **Migración:** una sola, `2026_11_10_000001_lotes_y_trazabilidad`, con todas las columnas vacías permitidas: `terceros.provee`, `siembras.proveedor_id` y `numero_lote`, `lagos.fase_desde` y `traslados.modo`. Antes de correrla en `sas_piscicola_v2` se sacó el respaldo.
+- **Proveedores:** pantalla «Proveedores» sobre `terceros`, con «qué provee» (alevinos, alimento, otros; uno o varios, en una lista JSON y sin enum). Sirve también para F7. El administrador la edita y el propietario la consulta. La siembra solo ofrece los proveedores activos de alevinos.
+- **Revisión:** las siembras viejas siguen mostrando el texto escrito a mano. Se ligan por texto exacto (sin espacios de más) a un proveedor que elige el administrador, o se crea uno con ese nombre. El texto escrito se conserva.
+- **Número de lote:** el ajuste `lotes.numeracion` de cada finca es manual por defecto. En modo automático el formato es `AAAA-NNN`, con consecutivo por finca y año. El lote aparte conserva el número del origen.
+- **Traslado:** siempre pregunta «sumar» o «aparte».
+  - Sumar: si el destino no tiene lote de esa especie, se niega; si tiene varios, hay que elegir uno. El lote conserva sus días.
+  - Aparte: el lote nuevo conserva el proveedor y los dos números de lote.
+- **Conversión de vida** (`ConversionVida`): se calcula, no se copia.
+  - Cada salida de peces vivos se lleva su parte de lo acumulado del lote: peces que salen ÷ peces que había.
+  - Se ve en el detalle del lago para los lotes que recibieron peces. Los totales siguen con el FCA propio.
+- **Atraso en días:** los días en la fase cuentan desde la fecha más reciente entre la llegada del lote y `lagos.fase_desde`, que se pone al asignar o cambiar la fase. Se comparan con `dias_esperados`. Los lagos que ya tenían fase antes de F5 cuentan desde la llegada del lote.
+- **Comparación de proveedores:** en Conversión. Supervivencia = (vivos + cosechados + trasladados afuera) ÷ (sembrados + recibidos); los traslados dentro del mismo grupo se cancelan. Además: crecimiento en g por día de vida y FCA.
+- **Para después:**
+  - La supervivencia del detalle del lago (F2) sigue siendo vivos ÷ peces del lote.
+  - Lo que queda al cerrar un lote sin cosechar cuenta como pérdida en la comparación hasta que F6a registre la diferencia.
 
 ### F6a. Jornada de proceso (5 días)
 

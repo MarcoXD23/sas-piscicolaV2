@@ -46,6 +46,12 @@ return [
         'sin_area' => 'Sin área del lago',
         'gramos' => ':valor g',
         'porcentaje' => ':valor %',
+        'dias' => 'Días en la fase',
+        'dias_valor' => ':dias días',
+        'dias_desde' => 'Desde el :fecha',
+        'dias_esperados' => 'esperados: :esperados',
+        'dias_atraso' => '{1} 1 día de atraso|[2,*] :dias días de atraso',
+        'dias_a_tiempo' => 'A tiempo',
         'peso' => 'Peso promedio',
         'peso_rango' => 'Entrada: :entrada · salida: :salida',
         'estados_peso' => [
