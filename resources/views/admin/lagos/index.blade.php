@@ -93,6 +93,9 @@
                         @if ($lago->en_retiro)
                             <x-insignia tono="atencion" como="p" class="mt-1.5">{{ __('lagos.retiro_sanitario') }}</x-insignia>
                         @endif
+                        @isset($enAyuno[$lago->id])
+                            <x-insignia tono="atencion" como="p" class="mt-1.5">{{ __('jornadas.ayuno.en_ayuno', ['fecha' => $enAyuno[$lago->id]->format('d/m')]) }}</x-insignia>
+                        @endisset
                     </div>
                 </div>
 

@@ -57,7 +57,10 @@ class AjustesFincaTest extends TestCase
         // Por defecto «ambos»: como funciona hoy (el administrador desde Lagos y el celador desde Seguridad & Noche)
         $this->assertSame(CatalogoAjustes::QUIEN_MIDE_AMBOS, AjustesFinca::valor(CatalogoAjustes::AGUA_QUIEN_MIDE));
         // Plazo del muestreo: 30 días (diseño, tema 15.3)
-        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30, CatalogoAjustes::LOTES_NUMERACION => 'manual', CatalogoAjustes::SEGURIDAD_DOS_PASOS => 'apagada'], AjustesFinca::todos());
+        // Jornadas de proceso apagadas (ninguna finca cambia); ayuno de 1 día y sin alimentación encendida solo actúan con ellas
+        $this->assertSame([CatalogoAjustes::AGUA_QUIEN_MIDE => 'ambos', CatalogoAjustes::MUESTREO_PLAZO_DIAS => 30, CatalogoAjustes::LOTES_NUMERACION => 'manual',
+            CatalogoAjustes::PROCESO_JORNADAS => 'apagada', CatalogoAjustes::PROCESO_DIAS_AYUNO => 1, CatalogoAjustes::PROCESO_SIN_ALIMENTACION => 'encendida',
+            CatalogoAjustes::SEGURIDAD_DOS_PASOS => 'apagada'], AjustesFinca::todos());
         $this->assertSame(0, AjusteFinca::count());
 
         $this->actingAs($this->propietario)->get(route('admin.ajustes.edit'))->assertOk()

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Alerta;
 use App\Models\Concentrado;
 use App\Models\DespachoAlimento;
+use App\Models\Especie;
+use App\Models\Fase;
 use App\Models\Lago;
 use App\Models\MovimientoAlimento;
 use App\Models\Muestreo;
@@ -24,6 +26,7 @@ use App\Support\TenantActual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ConcentradosYRacionTest extends TestCase
@@ -165,7 +168,7 @@ class ConcentradosYRacionTest extends TestCase
 
         $tramoDatos = fn ($proteina) => ['especie_id' => $especieId, 'peso_desde_g' => 5.01, 'peso_hasta_g' => 20,
             'porcentaje_biomasa' => 4.1, 'tomas_dia' => 4, 'proteina_porcentaje' => $proteina];
-        $guardado = __('mensajes.concentrado.tramo_guardado', ['especie' => \App\Models\Especie::query()->findOrFail($especieId)->nombre]);
+        $guardado = __('mensajes.concentrado.tramo_guardado', ['especie' => Especie::query()->findOrFail($especieId)->nombre]);
 
         // Fuera de la lista: no se guarda
         foreach (['9', '71', '36.4', 'abc'] as $malo) {
@@ -435,7 +438,7 @@ class ConcentradosYRacionTest extends TestCase
         TablaRacion::query()->where('especie_id', $especieId)->where('peso_hasta_g', 200)->update(['concentrado_id' => $delTramo->id]);
         StockAlimento::create(['tipo_concentrado' => 'veinticuatro en bodega', 'concentrado_id' => $deFase->id, 'cantidad_kg' => 100]);
 
-        $engorde = \App\Models\Fase::query()->where('clave', 'engorde')->firstOrFail();
+        $engorde = Fase::query()->where('clave', 'engorde')->firstOrFail();
         $lago = Lago::create(['nombre' => 'E1', 'tipo' => 'tierra', 'fase_id' => $engorde->id]);
         Siembra::create(['lago_id' => $lago->id, 'especie_id' => $especieId, 'fecha' => '2026-09-01', 'cantidad_alevinos' => 100,
             'peso_promedio_inicial_g' => 150, 'peces_vivos' => 100, 'peso_actual_g' => 180, 'biomasa_kg' => 18]);
@@ -514,9 +517,10 @@ class ConcentradosYRacionTest extends TestCase
         $campo = CatalogoAjustes::campo(CatalogoAjustes::MUESTREO_PLAZO_DIAS);
         $this->actingAs($this->propietario)->put(route('admin.ajustes.operacion'), [
             CatalogoAjustes::campo(CatalogoAjustes::AGUA_QUIEN_MIDE) => 'ambos', $campo => 20, CatalogoAjustes::campo(CatalogoAjustes::LOTES_NUMERACION) => 'manual', CatalogoAjustes::campo(CatalogoAjustes::SEGURIDAD_DOS_PASOS) => 'apagada',
+            CatalogoAjustes::campo(CatalogoAjustes::PROCESO_JORNADAS) => 'apagada', CatalogoAjustes::campo(CatalogoAjustes::PROCESO_DIAS_AYUNO) => 1, CatalogoAjustes::campo(CatalogoAjustes::PROCESO_SIN_ALIMENTACION) => 'encendida',
         ])->assertSessionHasNoErrors();
         $this->assertSame(20, AjustesFinca::valor(CatalogoAjustes::MUESTREO_PLAZO_DIAS));
-        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('tenants', 'alerta_muestreo_dias'));
+        $this->assertFalse(Schema::hasColumn('tenants', 'alerta_muestreo_dias'));
 
         EvaluadorAlertas::paraFinca($this->finca->id);
         $alertaNueva = Alerta::abiertas()->where('tipo', Alerta::MUESTREO)->where('referencia', (string) $otroLago->id)->sole();

@@ -16,7 +16,7 @@ final class Areas
 {
     /** área => patrones de nombre de ruta */
     public const AREAS = [
-        'campo' => ['admin.lagos.*', 'admin.cosechas.*', 'admin.especies.*', 'especies.*', 'admin.tareas.*', 'admin.ajustes-pesaje.*', 'admin.alertas.*', 'campo', 'noche.*'],
+        'campo' => ['admin.lagos.*', 'admin.cosechas.*', 'admin.jornadas.*', 'admin.especies.*', 'especies.*', 'admin.tareas.*', 'admin.ajustes-pesaje.*', 'admin.alertas.*', 'campo', 'noche.*'],
         'bodega' => ['admin.bodega.*', 'admin.proveedores.*'],
         'ventas' => ['admin.ventas.*'],
         'personal' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*', 'admin.nomina.*', 'admin.jornaleros.*', 'mi-trabajo.*'],

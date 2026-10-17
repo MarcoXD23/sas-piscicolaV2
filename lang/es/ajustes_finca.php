@@ -16,7 +16,32 @@ return [
         'agua' => 'Calidad del agua',
         'muestreo' => 'Muestreos',
         'lotes' => 'Lotes',
+        'proceso' => 'Día de proceso',
         'seguridad' => 'Seguridad',
+    ],
+
+    'proceso' => [
+        'jornadas' => [
+            'etiqueta' => 'Jornadas de proceso',
+            'ayuda' => 'Enciéndela si la finca procesa por jornadas: un día en que se pescan uno o varios lagos, se pesa el entero por lago y especie y, al cerrar, el sistema crea las cosechas. Apagada, la finca registra sus cosechas una por una, como siempre.',
+            'opciones' => [
+                'apagada' => 'Apagada (cosecha una por una)',
+                'encendida' => 'Encendida',
+            ],
+        ],
+        'dias_ayuno' => [
+            'etiqueta' => 'Días de ayuno antes de la pesca',
+            'ayuda' => 'Desde cuántos días antes de la jornada no se alimenta el lago que se va a pescar. Ese lago sale «en ayuno» en Inicio y en Registro rápido; si alguien le registra ración, la app avisa pero no la bloquea. Con 0, el ayuno es solo el día de la pesca. Solo cuenta con las jornadas encendidas.',
+            'valor' => ':valor días',
+        ],
+        'sin_alimentacion' => [
+            'etiqueta' => 'No se alimenta el día de proceso',
+            'ayuda' => 'El día de la jornada no se alimenta en la finca porque el personal ayuda en el proceso. Inicio y Registro rápido lo recuerdan. Solo cuenta con las jornadas encendidas.',
+            'opciones' => [
+                'apagada' => 'Apagada (se alimenta como cualquier día)',
+                'encendida' => 'Encendida',
+            ],
+        ],
     ],
 
     'lotes' => [

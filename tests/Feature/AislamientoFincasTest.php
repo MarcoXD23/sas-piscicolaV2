@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Abono;
-use App\Models\AjusteFinca;
 use App\Models\AceptacionLegal;
 use App\Models\Aireacion;
+use App\Models\AjusteFinca;
 use App\Models\Alerta;
 use App\Models\AvisoPesca;
 use App\Models\Bitacora;
@@ -20,6 +20,8 @@ use App\Models\Exportacion;
 use App\Models\Fase;
 use App\Models\HoraExtra;
 use App\Models\Ingreso;
+use App\Models\Jornada;
+use App\Models\JornadaLago;
 use App\Models\Lago;
 use App\Models\Liquidacion;
 use App\Models\MedicionAgua;
@@ -28,9 +30,10 @@ use App\Models\MovimientoAlimento;
 use App\Models\Muestreo;
 use App\Models\Permiso;
 use App\Models\PesajeCosecha;
+use App\Models\PesajeEntero;
+use App\Models\RegistroSinConexion;
 use App\Models\ReglaFase;
 use App\Models\Rol;
-use App\Models\RegistroSinConexion;
 use App\Models\Ronda;
 use App\Models\Siembra;
 use App\Models\StockAlimento;
@@ -43,6 +46,7 @@ use App\Models\Tratamiento;
 use App\Models\Turno;
 use App\Models\User;
 use App\Models\Venta;
+use App\Support\Ajustes\CatalogoAjustes;
 use App\Support\TenantActual;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +74,7 @@ class AislamientoFincasTest extends TestCase
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
         'jornalero' => Tercero::class, 'proveedor' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class, 'ingreso' => Ingreso::class,
+        'jornada' => Jornada::class, 'pesaje' => PesajeEntero::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */
@@ -129,6 +134,10 @@ class AislamientoFincasTest extends TestCase
             'bruto' => 800, 'descuento_pescado' => 0, 'total_pagar' => 800]);
         $despacho = DespachoAlimento::create(['user_id' => $persona->id, 'fecha' => '2026-10-12', 'proveedor' => "Proveedor {$sufijo}", 'tipo_concentrado' => 'Engorde',
             'bultos' => 1, 'peso_bulto_kg' => 40, 'cantidad_kg' => 40, 'lote' => 'L']);
+        // Jornadas de proceso encendidas: sus rutas responden y lo que frena el id ajeno es el filtro por finca
+        AjusteFinca::create(['clave' => CatalogoAjustes::PROCESO_JORNADAS, 'valor' => 'encendida', 'cambiado_por' => $persona->id]);
+        $jornada = Jornada::create(['fecha' => '2026-10-13', 'estado' => Jornada::ABIERTA, 'user_id' => $persona->id]);
+        $jornadaLago = JornadaLago::create(['jornada_id' => $jornada->id, 'lago_id' => $lago->id]);
 
         return [
             User::class => $persona,
@@ -138,7 +147,7 @@ class AislamientoFincasTest extends TestCase
             Venta::class => $venta,
             Liquidacion::class => $liquidacion,
             DespachoAlimento::class => $despacho,
-            AjusteFinca::class => AjusteFinca::create(['clave' => \App\Support\Ajustes\CatalogoAjustes::AGUA_QUIEN_MIDE, 'valor' => 'administrador', 'cambiado_por' => $persona->id]),
+            AjusteFinca::class => AjusteFinca::create(['clave' => CatalogoAjustes::AGUA_QUIEN_MIDE, 'valor' => 'administrador', 'cambiado_por' => $persona->id]),
             Abono::class => Abono::create(['venta_id' => $venta->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'valor' => 100, 'medio' => 'efectivo']),
             Aireacion::class => Aireacion::create(['lago_id' => $lago->id, 'user_id' => $persona->id, 'encendido_at' => now()]),
             Alerta::class => Alerta::create(['tipo' => Alerta::AGUA, 'referencia' => (string) $lago->id, 'severidad' => Alerta::ADVERTENCIA, 'datos' => [], 'abierta_at' => now()]),
@@ -152,6 +161,10 @@ class AislamientoFincasTest extends TestCase
             MovimientoAlimento::class => MovimientoAlimento::create(['user_id' => $persona->id, 'lago_id' => $lago->id, 'fecha' => '2026-10-12', 'tipo_movimiento' => 'salida', 'tipo_concentrado' => 'Engorde', 'cantidad_kg' => 1]),
             Muestreo::class => Muestreo::create(['siembra_id' => $siembra->id, 'user_id' => $persona->id, 'fecha' => '2026-10-12', 'peces_pesados' => 1, 'peso_total_g' => 200, 'peso_promedio_g' => 200]),
             Permiso::class => Permiso::create(['user_id' => $persona->id, 'fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-21', 'motivo' => 'm', 'estado' => 'pendiente']),
+            Jornada::class => $jornada,
+            JornadaLago::class => $jornadaLago,
+            PesajeEntero::class => PesajeEntero::create(['jornada_lago_id' => $jornadaLago->id, 'especie_id' => $this->especie('mojarra roja'), 'tipo' => PesajeEntero::TOTAL,
+                'bruto_kg' => 5, 'entero_kg' => 5, 'user_id' => $persona->id]),
             PesajeCosecha::class => PesajeCosecha::create(['cosecha_id' => $cosecha->id, 'numero' => 1, 'tipo' => 'canasta', 'canastas' => 1, 'tara_unitaria_kg' => 1, 'bruto_kg' => 3, 'tara_kg' => 1, 'neto_kg' => 2]),
             AceptacionLegal::class => AceptacionLegal::registrar($persona),
             Exportacion::class => Exportacion::create(['user_id' => $persona->id, 'estado' => Exportacion::LISTA, 'ruta' => "x/{$sufijo}.zip", 'bytes' => 1, 'vence_at' => now()->addDay()]),

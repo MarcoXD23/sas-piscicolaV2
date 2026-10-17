@@ -38,6 +38,15 @@ final class CatalogoAjustes
     /** Verificación en dos pasos obligatoria para propietario y administrador (DosPasosObligatoria). */
     public const SEGURIDAD_DOS_PASOS = 'seguridad.dos_pasos_obligatoria';
 
+    /** La finca procesa con jornadas (lo aplica la fase F6a). Apagada: menú y rutas de Jornadas no existen. */
+    public const PROCESO_JORNADAS = 'proceso.jornadas';
+
+    /** Días de ayuno antes de la pesca: el lago de una jornada no se alimenta desde N días antes (tema 5). */
+    public const PROCESO_DIAS_AYUNO = 'proceso.dias_ayuno';
+
+    /** El día de la jornada no se alimenta en la finca (los fijos ayudan en el proceso; tema 5). */
+    public const PROCESO_SIN_ALIMENTACION = 'proceso.sin_alimentacion';
+
     public const APAGADA = 'apagada';
 
     public const ENCENDIDA = 'encendida';
@@ -73,6 +82,28 @@ final class CatalogoAjustes
                 'tipo' => self::TIPO_OPCION,
                 'opciones' => [self::NUMERACION_MANUAL, self::NUMERACION_AUTOMATICA],
                 'defecto' => self::NUMERACION_MANUAL,
+            ],
+            // Por defecto apagada: ninguna finca cambia hasta que el propietario la enciende (la cosecha manual sigue igual)
+            self::PROCESO_JORNADAS => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::APAGADA, self::ENCENDIDA],
+                'defecto' => self::APAGADA,
+            ],
+            // Por defecto 1 (el día anterior, como en la finca piloto). Solo actúa con las jornadas encendidas
+            self::PROCESO_DIAS_AYUNO => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_ENTERO,
+                'min' => 0,
+                'max' => 7,
+                'defecto' => 1,
+            ],
+            // Por defecto encendida (finca piloto). Solo actúa con las jornadas encendidas
+            self::PROCESO_SIN_ALIMENTACION => [
+                'seccion' => 'proceso',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::APAGADA, self::ENCENDIDA],
+                'defecto' => self::ENCENDIDA,
             ],
             // Por defecto apagada: como hoy (los dos pasos son opcionales para todos)
             self::SEGURIDAD_DOS_PASOS => [

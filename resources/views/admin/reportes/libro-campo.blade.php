@@ -47,7 +47,7 @@
             <div class="mb-6 break-inside-avoid">
                 <p class="mb-2 text-base text-tinta">
                     <strong>{{ $cosecha->fecha->format('d/m/Y') }}</strong> · {{ $cosecha->siembra->nombre_especie }}
-                    · {{ __('reportes.destino_cosecha', ['destino' => $cosecha->destino ?: __('cosechas.sin_dato')]) }}
+                    · {{ __('reportes.destino_cosecha', ['destino' => $cosecha->textoDestino()]) }}
                     · {{ __('cosechas.despacho') }}: {{ $cosecha->despachadoPor?->name ?? __('cosechas.sin_dato') }}
                     · {{ __('reportes.kg_y_peces', ['kg' => \App\Support\CalculoPesaje::kg($cosecha->kg), 'peces' => \App\Support\Formato::numero($cosecha->peces)]) }}
                 </p>

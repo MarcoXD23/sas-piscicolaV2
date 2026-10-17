@@ -8,16 +8,19 @@ use App\Models\EventoAgenda;
 use App\Models\HoraExtra;
 use App\Models\Ingreso;
 use App\Models\Lago;
+use App\Models\MedicionAgua;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Ronda;
-use App\Support\PrimerUso;
 use App\Models\Tarea;
 use App\Models\Turno;
 use App\Models\Venta;
 use App\Support\CalculadoraRacion;
 use App\Support\Indicadores;
+use App\Support\PrimerUso;
+use App\Support\Proceso\Ayuno;
 use App\Support\Region;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -51,6 +54,8 @@ class InicioController extends Controller
             'proximoTurno' => $trabajaPorTurnos ? $usuario->proximoTurno() : null,
             'tareasPendientes' => $trabajaPorTurnos ? Tarea::query()->where('asignada_a', $usuario->id)->pendientes()->count() : 0,
             'racionesHoy' => $usuario->tieneRol(Rol::TRABAJADOR) ? $this->racionesHoy() : collect(),
+            // Día de proceso sin alimentación (solo con las jornadas encendidas)
+            'diaSinAlimentacion' => Ayuno::diaSinAlimentacion(),
 
             // Avisos
             // Avisos «listo para pescar» pendientes: los atiende el administrador
@@ -92,18 +97,24 @@ class InicioController extends Controller
         ]);
     }
 
-    /** @return Collection<int, array{lago: Lago, racion: array<string, mixed>}> */
+    /**
+     * Ración sugerida de hoy por lago. Un lago en ayuno (se pesca pronto) dice «en ayuno» en vez de sugerir ración.
+     *
+     * @return Collection<int, array{lago: Lago, racion: array<string, mixed>, ayuno: ?CarbonImmutable}>
+     */
     private function racionesHoy(): Collection
     {
+        $enAyuno = Ayuno::lagos();
+
         return Lago::query()->has('siembrasActivas')->with(['siembrasActivas', 'ultimaMedicion'])->orderBy('nombre')->get()
-            ->map(fn (Lago $lago) => ['lago' => $lago, 'racion' => CalculadoraRacion::paraLago($lago)]);
+            ->map(fn (Lago $lago) => ['lago' => $lago, 'racion' => CalculadoraRacion::paraLago($lago), 'ayuno' => $enAyuno[$lago->id] ?? null]);
     }
 
     /**
      * Lagos con siembra activa y su última medición. Si es más vieja que la vigencia de la ración, no cuenta:
      * el panel dice «sin medición reciente» en vez de mostrar un dato viejo como si fuera de hoy.
      *
-     * @return Collection<int, array{lago: Lago, medicion: ?\App\Models\MedicionAgua, problemas: list<array{parametro: string, texto: string}>}>
+     * @return Collection<int, array{lago: Lago, medicion: ?MedicionAgua, problemas: list<array{parametro: string, texto: string}>}>
      */
     private function aguaLagos(): Collection
     {

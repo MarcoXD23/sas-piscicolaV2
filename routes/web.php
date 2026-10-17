@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\DatosFincaController;
 use App\Http\Controllers\Admin\EspecieController as EspecieFincaController;
 use App\Http\Controllers\Admin\EspecieFotoController;
 use App\Http\Controllers\Admin\FaseController;
+use App\Http\Controllers\Admin\JornadaController;
 use App\Http\Controllers\Admin\JornaleroController;
 use App\Http\Controllers\Admin\LagoController;
 use App\Http\Controllers\Admin\MedicionAguaController;
@@ -24,8 +25,8 @@ use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\PrimerUsoController;
 use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Admin\RacionController;
-use App\Http\Controllers\Admin\SeguridadFincaController;
 use App\Http\Controllers\Admin\ReporteController;
+use App\Http\Controllers\Admin\SeguridadFincaController;
 use App\Http\Controllers\Admin\SiembraController;
 use App\Http\Controllers\Admin\SolicitudController;
 use App\Http\Controllers\Admin\TareaController;
@@ -218,6 +219,9 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::get('/proveedores/revision', [ProveedorController::class, 'revision'])->name('proveedores.revision');
         // Detalle de una cosecha (encabezado, pesadas y totales): el administrador y el propietario en solo lectura
         Route::get('/cosechas/{cosecha}', [CosechaController::class, 'show'])->whereNumber('cosecha')->name('cosechas.show');
+        // Jornadas de proceso (solo con el ajuste encendido; si no, 404): el propietario solo consulta
+        Route::get('/jornadas', [JornadaController::class, 'index'])->name('jornadas.index');
+        Route::get('/jornadas/{jornada}', [JornadaController::class, 'show'])->whereNumber('jornada')->name('jornadas.show');
 
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/reportes/mensual', [ReporteController::class, 'mensual'])->name('reportes.mensual');
@@ -237,6 +241,14 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::post('/siembras/{siembra}/traslados', [TrasladoController::class, 'store'])->name('traslados.store');
         Route::get('/cosechas/crear', [CosechaController::class, 'create'])->name('cosechas.create');
         Route::post('/cosechas', [CosechaController::class, 'store'])->name('cosechas.store');
+        Route::get('/jornadas/crear', [JornadaController::class, 'create'])->name('jornadas.create');
+        Route::post('/jornadas', [JornadaController::class, 'store'])->name('jornadas.store');
+        Route::post('/jornadas/{jornada}/lagos', [JornadaController::class, 'agregarLago'])->whereNumber('jornada')->name('jornadas.lagos.store');
+        Route::post('/jornadas/{jornada}/pesajes', [JornadaController::class, 'guardarPesaje'])->whereNumber('jornada')->name('jornadas.pesajes.store');
+        Route::delete('/jornadas/{jornada}/pesajes/{pesaje}', [JornadaController::class, 'eliminarPesaje'])->whereNumber(['jornada', 'pesaje'])->name('jornadas.pesajes.destroy');
+        Route::get('/jornadas/{jornada}/cerrar', [JornadaController::class, 'cerrar'])->whereNumber('jornada')->name('jornadas.cerrar');
+        Route::post('/jornadas/{jornada}/cerrar', [JornadaController::class, 'guardarCierre'])->whereNumber('jornada')->name('jornadas.cerrar.guardar');
+        Route::post('/jornadas/{jornada}/cancelar', [JornadaController::class, 'cancelar'])->whereNumber('jornada')->name('jornadas.cancelar');
         Route::get('/ajustes-pesaje', [AjustesPesajeController::class, 'edit'])->name('ajustes-pesaje.edit');
         Route::post('/especies', [EspecieFincaController::class, 'store'])->name('especies.store');
         Route::get('/especies/{especie}/editar', [EspecieFincaController::class, 'edit'])->name('especies.edit');

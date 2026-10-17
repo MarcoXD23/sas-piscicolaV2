@@ -73,6 +73,10 @@ return [
                 'administrador' => 'cada lago con sus siembras. Ahí se siembra, se cosecha, se trasladan peces y se registran muestreos, mortalidad, ración, mediciones del agua y tratamientos.',
                 'trabajador' => 'consultar cada lago y su ración sugerida.',
             ],
+            'admin.jornadas.index' => [
+                'propietario' => 'consultar las jornadas de proceso: los lagos pescados, el entero por lago y especie y las cosechas que crearon, sin registrar.',
+                'administrador' => 'las jornadas de proceso: programar el día de pesca con sus lagos (quedan en ayuno), pesar el entero por lago y especie y cerrar la jornada, que crea las cosechas.',
+            ],
             'admin.bodega.index' => [
                 'propietario' => 'el stock de concentrado y para cuántos días alcanza, y el despacho de concentrado (lo que se compró).',
                 'administrador' => 'el stock de concentrado y la recepción del concentrado que llega.',

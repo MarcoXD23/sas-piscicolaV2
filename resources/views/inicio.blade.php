@@ -138,6 +138,11 @@
         @include('inicio._primer_uso', ['pasos' => $primerUso])
     @endif
 
+    {{-- Día de proceso sin alimentación (ajustes proceso.*): ese día no se alimenta en la finca --}}
+    @if ($diaSinAlimentacion)
+        <x-aviso tono="atencion" icono="pez" class="mb-6">{{ __('jornadas.ayuno.dia_sin_alimentacion') }}</x-aviso>
+    @endif
+
     {{-- ── El turno y lo pendiente ────────────────────────────────────────────────── --}}
 
     @if ($trabajaPorTurnos)
@@ -197,14 +202,21 @@
                     <li class="flex items-center justify-between gap-3 py-3">
                         <div class="min-w-0">
                             <p class="font-bold">{{ __('lagos.lago_nombre', ['lago' => $item['lago']->nombre]) }}</p>
-                            <p class="text-sm text-tinta-suave">
-                                {{ __('lagos.tomas_de', ['tomas' => $item['racion']['tomas'], 'kg' => $numero($item['racion']['kg_por_toma'], 1)]) }}
-                                @if ($item['racion']['factor'] < 1) · <span class="font-bold text-atencion">{{ __('inicio.reducida_agua') }}</span>@endif
-                            </p>
+                            @if ($item['ayuno'])
+                                {{-- En ayuno antes de su pesca: no se sugiere ración --}}
+                                <p class="text-sm font-bold text-atencion">{{ __('jornadas.ayuno.en_ayuno', ['fecha' => $item['ayuno']->format('d/m')]) }}</p>
+                            @else
+                                <p class="text-sm text-tinta-suave">
+                                    {{ __('lagos.tomas_de', ['tomas' => $item['racion']['tomas'], 'kg' => $numero($item['racion']['kg_por_toma'], 1)]) }}
+                                    @if ($item['racion']['factor'] < 1) · <span class="font-bold text-atencion">{{ __('inicio.reducida_agua') }}</span>@endif
+                                </p>
+                            @endif
                         </div>
-                        <p class="shrink-0 text-2xl font-bold tabular-nums">
-                            {{ $numero($item['racion']['total_kg_dia'], 1) }} <span class="text-sm font-normal text-tinta-suave">{{ __('inicio.kg_dia') }}</span>
-                        </p>
+                        @unless ($item['ayuno'])
+                            <p class="shrink-0 text-2xl font-bold tabular-nums">
+                                {{ $numero($item['racion']['total_kg_dia'], 1) }} <span class="text-sm font-normal text-tinta-suave">{{ __('inicio.kg_dia') }}</span>
+                            </p>
+                        @endunless
                     </li>
                 @endforeach
             </ul>

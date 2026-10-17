@@ -96,7 +96,7 @@ class HistorialLago
         $filtrar(Cosecha::where('lago_id', $lago->id)->with('usuario')->withCount('pesajes'), 'fecha')
             ->each(fn (Cosecha $c) => $agregar($c->fecha, $c->created_at, 'pez', $t('actividades.cosecha'), $t('cosecha', ['especie' => $siembras[$c->siembra_id]->nombre_especie]),
                 $t($c->pesajes_count > 0 ? 'detalle_cosecha_pesadas' : 'detalle_cosecha', ['peces' => $numero($c->peces), 'kg' => $numero($c->kg, 2), 'gramos' => $numero($c->peso_promedio_g),
-                    'pesadas' => $c->pesajes_count, 'destino' => $c->destino ?: __('cosechas.sin_dato')]),
+                    'pesadas' => $c->pesajes_count, 'destino' => $c->textoDestino()]),
                 $c->usuario?->name, 'positivo', route('admin.cosechas.show', $c)));
 
         $filtrar(MedicionAgua::where('lago_id', $lago->id)->with('usuario'), 'medido_at', conHora: true)

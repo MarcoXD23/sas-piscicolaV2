@@ -52,6 +52,11 @@
         @endif
     </x-encabezado>
 
+    {{-- En ayuno antes de su pesca (jornada de proceso): no se alimenta; si se registra ración, la app avisa --}}
+    @if ($pescaEnAyuno)
+        <x-aviso tono="atencion" icono="pez" class="mb-3">{{ __('jornadas.ayuno.en_ayuno', ['fecha' => $pescaEnAyuno->format('d/m')]) }}</x-aviso>
+    @endif
+
     @foreach ($lago->tratamientosEnRetiro as $tratamiento)
         <x-aviso tono="atencion" class="mb-3">
             <strong class="font-bold">{{ __('lagos.retiro_hasta', ['fecha' => $tratamiento->finRetiro()->format('d/m/Y')]) }}</strong>

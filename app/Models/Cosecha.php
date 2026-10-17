@@ -11,7 +11,7 @@ class Cosecha extends Model
 {
     use PerteneceATenant;
 
-    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'despachado_por_id', 'destino', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones'];
+    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'despachado_por_id', 'destino', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones', 'jornada_id'];
 
     protected function casts(): array
     {
@@ -41,6 +41,28 @@ class Cosecha extends Model
     public function despachadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'despachado_por_id');
+    }
+
+    /** Jornada de proceso que creó esta cosecha al cerrarse (null en la cosecha manual). */
+    public function jornada(): BelongsTo
+    {
+        return $this->belongsTo(Jornada::class);
+    }
+
+    public function esDeJornada(): bool
+    {
+        return $this->jornada_id !== null;
+    }
+
+    /**
+     * Destino para mostrar: el de la cosecha manual, o «Jornada de proceso dd/mm» si la creó una jornada. Ese texto no
+     * se guarda en la base: sale de lang/es/jornadas.php (la cosecha tiene la misma fecha que su jornada).
+     */
+    public function textoDestino(): string
+    {
+        return $this->esDeJornada()
+            ? __('jornadas.destino_cosecha', ['fecha' => $this->fecha->format('d/m')])
+            : ($this->destino ?: __('cosechas.sin_dato'));
     }
 
     public function ventas(): HasMany

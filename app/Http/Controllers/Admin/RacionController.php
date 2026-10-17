@@ -10,7 +10,9 @@ use App\Models\MovimientoAlimento;
 use App\Models\Rol;
 use App\Models\StockAlimento;
 use App\Support\Formato;
+use App\Support\Proceso\Ayuno;
 use App\Support\Region;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -95,6 +97,13 @@ class RacionController extends Controller
             return $kg;
         });
 
-        return back()->with('estado', __('mensajes.racion.registrada', ['kg' => Formato::numero($cantidadKg, 1), 'lago' => $lago->nombre]));
+        $mensaje = __('mensajes.racion.registrada', ['kg' => Formato::numero($cantidadKg, 1), 'lago' => $lago->nombre]);
+        // Lago en ayuno antes de su pesca: se avisa por qué, pero no se bloquea (tema 5)
+        $pesca = Ayuno::delLago($lago->id, CarbonImmutable::parse($datos['fecha']));
+        if ($pesca !== null) {
+            $mensaje .= ' '.__('jornadas.ayuno.racion_registrada', ['lago' => $lago->nombre, 'fecha' => $pesca->format('d/m')]);
+        }
+
+        return back()->with('estado', $mensaje);
     }
 }
