@@ -11,7 +11,7 @@ class Cosecha extends Model
 {
     use PerteneceATenant;
 
-    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'despachado_por_id', 'destino', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones'];
+    protected $fillable = ['siembra_id', 'lago_id', 'user_id', 'despachado_por_id', 'destino', 'fecha', 'peces', 'kg', 'peso_promedio_g', 'observaciones', 'jornada_id'];
 
     protected function casts(): array
     {
@@ -41,6 +41,17 @@ class Cosecha extends Model
     public function despachadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'despachado_por_id');
+    }
+
+    /** Jornada de proceso que creó esta cosecha al cerrarse (null en la cosecha manual). */
+    public function jornada(): BelongsTo
+    {
+        return $this->belongsTo(Jornada::class);
+    }
+
+    public function esDeJornada(): bool
+    {
+        return $this->jornada_id !== null;
     }
 
     public function ventas(): HasMany

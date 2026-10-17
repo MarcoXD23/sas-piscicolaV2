@@ -83,6 +83,9 @@ class EspeciesFincaTest extends TestCase
         // Las reglas de las fases (F2) y la tabla de ración (F3) también tienen llave foránea a especies
         $fases = require database_path('migrations/2026_11_06_000001_create_fases_and_reglas_fase_tables.php');
         $concentrados = require database_path('migrations/2026_11_07_000001_create_concentrados_and_tabla_racion_tables.php');
+        // Los pesajes enteros de las jornadas (F6a) también
+        $jornadas = require database_path('migrations/2026_11_11_000001_create_jornadas_tables.php');
+        $jornadas->down();
         $concentrados->down();
         $fases->down();
         $fotos->down();
@@ -99,6 +102,7 @@ class EspeciesFincaTest extends TestCase
         $fotos->up();
         $fases->up();
         $concentrados->up();
+        $jornadas->up();
 
         $this->assertFalse(Schema::hasColumn('siembras', 'especie'));   // el texto viejo ya no queda en uso
         $this->assertSame(7, Especie::count());                         // 6 por defecto + la que no estaba en el catálogo
