@@ -183,9 +183,8 @@ Ver «Invitar una finca» en el README.
   - Se ve en el detalle del lago para los lotes que recibieron peces. Los totales siguen con el FCA propio.
 - **Atraso en días:** los días en la fase cuentan desde la fecha más reciente entre la llegada del lote y `lagos.fase_desde`, que se pone al asignar o cambiar la fase. Se comparan con `dias_esperados`. Los lagos que ya tenían fase antes de F5 cuentan desde la llegada del lote.
 - **Comparación de proveedores:** en Conversión. Supervivencia = (vivos + cosechados + trasladados afuera) ÷ (sembrados + recibidos); los traslados dentro del mismo grupo se cancelan. Además: crecimiento en g por día de vida y FCA.
-- **Para después:**
-  - La supervivencia del detalle del lago (F2) sigue siendo vivos ÷ peces del lote.
-  - Lo que queda al cerrar un lote sin cosechar cuenta como pérdida en la comparación hasta que F6a registre la diferencia.
+- **Supervivencia del detalle del lago (F2):** desde el arreglo posterior a F5 usa la misma fórmula, por lote.
+- **Para después:** lo que queda al cerrar un lote sin cosechar cuenta como pérdida en la comparación hasta que F6a registre la diferencia.
 
 ### F6a. Jornada de proceso (5 días)
 

@@ -2,15 +2,18 @@
 
 namespace App\Support;
 
+use App\Models\Cosecha;
 use App\Models\Lago;
 use App\Models\ReglaFase;
 use App\Models\Siembra;
+use App\Models\Traslado;
 use Carbon\CarbonImmutable;
 
 /**
  * Comparación de lo real contra las reglas de la fase del lago: días en la fase, peso, supervivencia y densidad.
  * - Días: los del lote en la fase contra los días esperados, con el atraso (F5; ver dias()). Sin «peso esperado hoy».
  * - El peso se compara con el rango de la fase: por debajo del peso de entrada, en la fase o en el peso de salida.
+ * - Supervivencia: (vivos + cosechados + trasladados afuera) ÷ (sembrados + recibidos), como la comparación de proveedores.
  * - Lo que la regla no tiene queda en null y la pantalla dice «sin dato» (nunca un valor inventado).
  * - Si el lago no tiene fase, devuelve null. Nunca divide por cero (área vacía o 0, lote sin alevinos).
  */
@@ -121,11 +124,19 @@ final class EstadoFase
         return ['real_g' => $real, 'entrada_g' => $entrada, 'salida_g' => $salida, 'estado' => $estado];
     }
 
-    /** Supervivencia del lote (vivos ÷ sembrados) contra la esperada de la fase; sin esperada, no se juzga. */
+    /**
+     * Supervivencia del lote contra la esperada de la fase; sin esperada, no se juzga. Misma fórmula que la comparación
+     * de proveedores: (vivos + cosechados + trasladados afuera) ÷ (sembrados + recibidos). Un lote creado por traslado
+     * no tiene sembrados: sus peces iniciales son el traslado que lo creó, que ya está entre los recibidos.
+     */
     private static function supervivencia(Siembra $siembra, ReglaFase $regla): array
     {
-        $sembrados = (int) $siembra->cantidad_alevinos;
-        $real = $sembrados > 0 ? round(min(100.0, max(0, (int) $siembra->peces_vivos) / $sembrados * 100), 1) : null;
+        $recibidos = $siembra->relationLoaded('trasladosRecibidos') ? $siembra->trasladosRecibidos : $siembra->trasladosRecibidos()->get();
+        $sembrados = $siembra->vinoDeTraslado() && $recibidos->isNotEmpty() ? 0 : (int) $siembra->cantidad_alevinos;
+        $entradas = $sembrados + (int) $recibidos->sum('cantidad');
+        $salidasVivas = (int) Cosecha::query()->where('siembra_id', $siembra->id)->sum('peces')
+            + (int) Traslado::query()->where('siembra_origen_id', $siembra->id)->sum('cantidad');
+        $real = $entradas > 0 ? round(min(100.0, (max(0, (int) $siembra->peces_vivos) + $salidasVivas) / $entradas * 100), 1) : null;
         $esperada = $regla->supervivencia_porcentaje;
 
         return ['real' => $real, 'esperada' => $esperada, 'baja' => $real !== null && $esperada !== null ? $real < $esperada : null];
