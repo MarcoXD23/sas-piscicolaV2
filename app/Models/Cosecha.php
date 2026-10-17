@@ -54,6 +54,17 @@ class Cosecha extends Model
         return $this->jornada_id !== null;
     }
 
+    /**
+     * Destino para mostrar: el de la cosecha manual, o «Jornada de proceso dd/mm» si la creó una jornada. Ese texto no
+     * se guarda en la base: sale de lang/es/jornadas.php (la cosecha tiene la misma fecha que su jornada).
+     */
+    public function textoDestino(): string
+    {
+        return $this->esDeJornada()
+            ? __('jornadas.destino_cosecha', ['fecha' => $this->fecha->format('d/m')])
+            : ($this->destino ?: __('cosechas.sin_dato'));
+    }
+
     public function ventas(): HasMany
     {
         return $this->hasMany(Venta::class);

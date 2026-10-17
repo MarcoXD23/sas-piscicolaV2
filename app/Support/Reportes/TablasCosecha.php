@@ -25,7 +25,7 @@ final class TablasCosecha
 
             return [
                 $c->fecha->format('d/m/Y'), $c->lago->nombre, $c->siembra->nombre_especie,
-                $c->destino ?: __('cosechas.sin_dato'), $c->despachadoPor?->name ?? __('cosechas.sin_dato'),
+                $c->textoDestino(), $c->despachadoPor?->name ?? __('cosechas.sin_dato'),
                 (int) $c->peces, $totales['pesadas'] ?? 0,
                 $totales['pesado'] ?? null, $totales['descuento'] ?? null, (float) $c->kg,
             ];
@@ -40,7 +40,7 @@ final class TablasCosecha
 
         foreach ($cosechas->filter(fn (Cosecha $c) => $c->pesajes->isNotEmpty()) as $c) {
             $pesaje = CalculoPesaje::deCosecha($c);
-            $encabezado = [$c->fecha->format('d/m/Y'), $c->lago->nombre, $c->destino ?: __('cosechas.sin_dato')];
+            $encabezado = [$c->fecha->format('d/m/Y'), $c->lago->nombre, $c->textoDestino()];
 
             foreach ($pesaje['filas'] as $fila) {
                 $filas[] = [...$encabezado, (string) $fila['numero'], __('cosechas.tipos.'.$fila['tipo']), $fila['cantidad'],
