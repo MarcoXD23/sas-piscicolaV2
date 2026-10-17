@@ -13,8 +13,10 @@ use App\Support\Ajustes\QuienMideAgua;
 use App\Support\CalculadoraRacion;
 use App\Support\Hora;
 use App\Support\LotesPorEspecie;
+use App\Support\Proceso\Ayuno;
 use App\Support\Region;
 use App\Support\UnidadesPeso;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
@@ -114,10 +116,13 @@ final class PaqueteTrabajo
             'formato_hora' => Hora::de($usuario),
             'secciones' => $secciones,
             'horas_limite' => (int) config('sin_conexion.horas'),
-            'lagos' => self::lagos($lagos->take($maximo), $tiene, $medicionAdministrador),
+            // Lagos en ayuno antes de su pesca (jornadas de proceso): sin ración sugerida y con aviso al registrarla
+            'lagos' => self::lagos($lagos->take($maximo), $tiene, $medicionAdministrador, $tiene(self::RACION) ? Ayuno::lagos() : []),
             'lagos_truncados' => $truncado,
             'max_lagos' => $maximo,
             'concentrados' => $tiene(self::RACION) ? self::concentrados() : [],
+            // Día de proceso sin alimentación: Registro rápido lo recuerda al registrar ración
+            'dia_sin_alimentacion' => $tiene(self::RACION) && Ayuno::diaSinAlimentacion(),
             'tipos_ronda' => $tiene(self::RONDA) ? collect(Ronda::opciones())->map(fn ($texto, $codigo) => ['codigo' => $codigo, 'texto' => $texto])->values()->all() : [],
             'sin_novedad' => Ronda::SIN_NOVEDAD,
             'medicion' => $tiene(self::MEDICION) ? self::medicion() : [],
@@ -139,28 +144,32 @@ final class PaqueteTrabajo
         ];
     }
 
-    /** @param  Collection<int, Lago>  $lagos */
-    private static function lagos(Collection $lagos, \Closure $tiene, bool $medicionAdministrador): array
+    /**
+     * @param  Collection<int, Lago>  $lagos
+     * @param  array<int, CarbonImmutable>  $enAyuno  lago_id => fecha de la pesca (Ayuno::lagos)
+     */
+    private static function lagos(Collection $lagos, \Closure $tiene, bool $medicionAdministrador, array $enAyuno): array
     {
         // La ración sugerida de todos los lagos con peces, con las mismas consultas (no una por lago)
         $raciones = $tiene(self::RACION) ? CalculadoraRacion::paraLagos($lagos->filter(fn (Lago $lago) => $lago->siembrasActivas->isNotEmpty())) : [];
 
-        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador, $raciones) {
+        return $lagos->map(function (Lago $lago) use ($tiene, $medicionAdministrador, $raciones, $enAyuno) {
             // Con varios lotes de la misma especie: número del lote dentro de su especie y su origen, para elegirlo
             $numeros = LotesPorEspecie::numeros($lago->siembrasActivas);
             $porEspecie = $lago->siembrasActivas->countBy(fn (Siembra $s) => (string) ($s->especie_id ?? $s->nombre_especie));
 
             return self::lago($lago, $tiene, $medicionAdministrador, fn (Siembra $siembra) => $porEspecie[(string) ($siembra->especie_id ?? $siembra->nombre_especie)] > 1
                 ? ['lote' => $numeros[$siembra->id], 'origen' => $siembra->textoOrigen()]
-                : [], $raciones[$lago->id] ?? null);
+                : [], $raciones[$lago->id] ?? null, isset($enAyuno[$lago->id]) ? $enAyuno[$lago->id]->toDateString() : null);
         })->values()->all();
     }
 
     /**
      * @param  \Closure(Siembra): array<string, mixed>  $lote
      * @param  ?array<string, mixed>  $racion  la de CalculadoraRacion, o null si el lago no tiene ración
+     * @param  ?string  $ayuno  fecha de la pesca (Y-m-d) si el lago está en ayuno
      */
-    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote, ?array $racion): array
+    private static function lago(Lago $lago, \Closure $tiene, bool $medicionAdministrador, \Closure $lote, ?array $racion, ?string $ayuno = null): array
     {
         return [
             'id' => $lago->id,
@@ -178,8 +187,10 @@ final class PaqueteTrabajo
                 'peso_actual_g' => $tiene(self::MUESTREO) ? round((float) $siembra->peso_actual_g, 2) : null,
                 'url_muestreo' => $tiene(self::MUESTREO) ? route('admin.muestreos.store', $siembra->id, absolute: false) : null,
             ], fn ($valor) => $valor !== null))->values()->all(),
-            'racion_sugerida_kg' => $racion ? $racion['kg_por_toma'] : null,
-            'concentrado_sugerido' => $racion['concentrado_sugerido'] ?? null,
+            // En ayuno: sin ración sugerida; en_ayuno es la fecha de la pesca
+            'racion_sugerida_kg' => $racion && $ayuno === null ? $racion['kg_por_toma'] : null,
+            'en_ayuno' => $ayuno,
+            'concentrado_sugerido' => $ayuno === null ? ($racion['concentrado_sugerido'] ?? null) : null,
             'aviso_pendiente' => $tiene(self::AVISO_PESCA) ? (bool) $lago->aviso_pendiente : null,
             'url_racion' => $tiene(self::RACION) && $lago->siembrasActivas->isNotEmpty() ? route('admin.raciones.store', $lago->id, absolute: false) : null,
             'url_aviso_pesca' => $tiene(self::AVISO_PESCA) && $lago->siembrasActivas->isNotEmpty() ? route('admin.avisos-pesca.store', $lago, absolute: false) : null,

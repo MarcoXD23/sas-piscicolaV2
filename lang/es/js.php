@@ -37,6 +37,8 @@ return [
     'campo_kg' => 'Kilos de esta toma',
     'campo_racion_sugerida' => 'Sugerida: :kg kg por toma.',
     'campo_racion_sugerida_con' => 'Sugerida: :kg kg por toma (:concentrado).',
+    'campo_racion_en_ayuno' => 'Este lago está en ayuno porque se pesca el :fecha. Si de verdad hay que darle ración, regístrala.',
+    'campo_dia_sin_alimentacion' => 'Hoy es día de proceso: no se alimenta en la finca.',
     'campo_unidad_bultos' => 'bultos',
     'campo_sin_concentrado' => 'No hay concentrado en bodega según los datos guardados.',
     'campo_lote' => 'Lote',

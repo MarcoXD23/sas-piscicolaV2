@@ -134,6 +134,8 @@ class AislamientoFincasTest extends TestCase
             'bruto' => 800, 'descuento_pescado' => 0, 'total_pagar' => 800]);
         $despacho = DespachoAlimento::create(['user_id' => $persona->id, 'fecha' => '2026-10-12', 'proveedor' => "Proveedor {$sufijo}", 'tipo_concentrado' => 'Engorde',
             'bultos' => 1, 'peso_bulto_kg' => 40, 'cantidad_kg' => 40, 'lote' => 'L']);
+        // Jornadas de proceso encendidas: sus rutas responden y lo que frena el id ajeno es el filtro por finca
+        AjusteFinca::create(['clave' => CatalogoAjustes::PROCESO_JORNADAS, 'valor' => 'encendida', 'cambiado_por' => $persona->id]);
         $jornada = Jornada::create(['fecha' => '2026-10-13', 'estado' => Jornada::ABIERTA, 'user_id' => $persona->id]);
         $jornadaLago = JornadaLago::create(['jornada_id' => $jornada->id, 'lago_id' => $lago->id]);
 

@@ -17,6 +17,7 @@ use App\Support\ConversionVida;
 use App\Support\EstadoFase;
 use App\Support\HistorialLago;
 use App\Support\NumeroLote;
+use App\Support\Proceso\Ayuno;
 use App\Support\RangoAgua;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,8 @@ class LagoController extends Controller
             'lagos' => $lagos,
             // Ración de todos los lagos con las mismas consultas (no una por lago)
             'raciones' => CalculadoraRacion::paraLagos($lagos),
+            // Lagos en ayuno antes de su pesca (jornadas de proceso): lago_id => fecha de la pesca
+            'enAyuno' => Ayuno::lagos(),
             'tipos' => Lago::opciones(),
             'fases' => $this->opcionesFases(),
             'especies' => $this->opcionesEspecies(),
@@ -69,6 +72,7 @@ class LagoController extends Controller
             'fases' => $this->opcionesFases(),
             'densidadActual' => EstadoFase::densidadLago($lago),
             'racion' => CalculadoraRacion::paraLago($lago),
+            'pescaEnAyuno' => Ayuno::delLago($lago->id),
             'alertasAgua' => $lago->ultimaMedicion?->alertas($lago->siembrasActivas->pluck('especie')) ?? [],
             'avisosRango' => RangoAgua::para($lago->siembrasActivas->pluck('especie'))['avisos'],
             'historial' => HistorialLago::eventos($lago, limitePorTipo: self::LIMITE_POR_TIPO)->take(60),

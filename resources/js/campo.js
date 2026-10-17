@@ -199,7 +199,11 @@ export const iniciarCampo = (t, cola) => {
                 const lago = lagos.find((uno) => String(uno.id) === selectorLago.value);
                 const sugerida = lago?.racion_sugerida_kg;
                 const sugerido = lago?.concentrado_sugerido;
-                if (sugerida && sugerido) {
+                if (lago?.en_ayuno) {
+                    // En ayuno antes de su pesca: se avisa por qué, sin sugerir ración (no se bloquea)
+                    const [, mes, dia] = lago.en_ayuno.split('-');
+                    ayuda.textContent = t('campo_racion_en_ayuno', { fecha: `${dia}/${mes}` });
+                } else if (sugerida && sugerido) {
                     ayuda.textContent = t('campo_racion_sugerida_con', { kg: sugerida.toLocaleString(document.documentElement.lang), concentrado: sugerido });
                 } else {
                     ayuda.textContent = sugerida ? t('campo_racion_sugerida', { kg: sugerida.toLocaleString(document.documentElement.lang) }) : '';
@@ -210,6 +214,7 @@ export const iniciarCampo = (t, cola) => {
                     if (enBodega) concentrados.value = enBodega.tipo;
                 }
             });
+            if (paquete.dia_sin_alimentacion) campos.push(el('p', 'rounded-ficha border border-atencion-borde bg-atencion-fondo p-4 text-base font-semibold text-atencion', t('campo_dia_sin_alimentacion')));
             if ((paquete.concentrados ?? []).length === 0) campos.push(el('p', 'rounded-ficha border border-alerta-borde bg-alerta-fondo p-4 text-base font-semibold text-alerta', t('campo_sin_concentrado')));
             campos.push(grupo('tipo_concentrado', t('campo_concentrado'), concentrados), cantidadYUnidad, fecha());
         }
