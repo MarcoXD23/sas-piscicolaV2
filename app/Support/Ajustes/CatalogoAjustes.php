@@ -28,6 +28,13 @@ final class CatalogoAjustes
     /** Días sin muestreo después de los cuales un lago con peces avisa «muestreo vencido» (lo aplica la fase F3). */
     public const MUESTREO_PLAZO_DIAS = 'muestreo.plazo_dias';
 
+    /** Número de lote de cada siembra: lo escribe la finca o lo genera la app (lo aplica la fase F5; ver NumeroLote). */
+    public const LOTES_NUMERACION = 'lotes.numeracion';
+
+    public const NUMERACION_MANUAL = 'manual';
+
+    public const NUMERACION_AUTOMATICA = 'automatica';
+
     /** Verificación en dos pasos obligatoria para propietario y administrador (DosPasosObligatoria). */
     public const SEGURIDAD_DOS_PASOS = 'seguridad.dos_pasos_obligatoria';
 
@@ -59,6 +66,13 @@ final class CatalogoAjustes
                 'min' => 1,
                 'max' => 180,
                 'defecto' => 30,
+            ],
+            // Por defecto manual: la finca escribe su número de lote (o lo deja vacío), como hoy
+            self::LOTES_NUMERACION => [
+                'seccion' => 'lotes',
+                'tipo' => self::TIPO_OPCION,
+                'opciones' => [self::NUMERACION_MANUAL, self::NUMERACION_AUTOMATICA],
+                'defecto' => self::NUMERACION_MANUAL,
             ],
             // Por defecto apagada: como hoy (los dos pasos son opcionales para todos)
             self::SEGURIDAD_DOS_PASOS => [

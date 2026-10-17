@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Persona externa de la finca, sin cuenta en la app: jornalero (y más adelante cliente o proveedor), en una sola tabla.
+ * Persona o empresa externa de la finca, sin cuenta en la app: jornalero, proveedor (y más adelante cliente), en una
+ * sola tabla. Un mismo tercero puede ser jornalero y proveedor.
+ * - El proveedor dice qué provee (provee: alevinos, alimento, otros; uno o varios). es_proveedor queda en true mientras
+ *   provea algo (asignarProvee), para filtrar rápido.
  * - El documento se guarda cifrado con la clave de la app (APP_KEY) y nunca en texto claro. Para no repetirlo dentro
  *   de la finca se guarda además una huella: HMAC-SHA256 del documento normalizado con una clave derivada de APP_KEY
  *   (no se puede adivinar probando documentos sin esa clave).
@@ -23,6 +26,15 @@ class Tercero extends Model
 
     /** Categorías de trabajo de un jornalero (no son roles de la app). */
     public const CATEGORIAS = ['procesador', 'pescador', 'rayador', 'lavado_canastas', 'otro'];
+
+    /** Qué puede proveer un proveedor (texto validado en la aplicación, sin enum). */
+    public const PROVEE_ALEVINOS = 'alevinos';
+
+    public const PROVEE_ALIMENTO = 'alimento';
+
+    public const PROVEE_OTROS = 'otros';
+
+    public const PROVEE = [self::PROVEE_ALEVINOS, self::PROVEE_ALIMENTO, self::PROVEE_OTROS];
 
     protected $table = 'terceros';
 
@@ -39,6 +51,7 @@ class Tercero extends Model
             'es_cliente' => 'boolean',
             'es_proveedor' => 'boolean',
             'activo' => 'boolean',
+            'provee' => 'array',
             'anonimizado_at' => 'immutable_datetime',
         ];
     }
@@ -47,6 +60,33 @@ class Tercero extends Model
     public static function categorias(): array
     {
         return collect(self::CATEGORIAS)->mapWithKeys(fn (string $codigo) => [$codigo => __('jornaleros.categorias.'.$codigo)])->all();
+    }
+
+    /** @return array<string, string> código => texto de lo que puede proveer */
+    public static function opcionesProvee(): array
+    {
+        return collect(self::PROVEE)->mapWithKeys(fn (string $codigo) => [$codigo => __('proveedores.provee.'.$codigo)])->all();
+    }
+
+    /** Asigna qué provee (en el orden de PROVEE, sin repetir ni códigos desconocidos) y mantiene es_proveedor al día. */
+    public function asignarProvee(array $provee): void
+    {
+        $provee = array_values(array_intersect(self::PROVEE, $provee));
+        $this->provee = $provee === [] ? null : $provee;
+        $this->es_proveedor = $provee !== [];
+    }
+
+    public function proveeDe(string $codigo): bool
+    {
+        return in_array($codigo, (array) $this->provee, true);
+    }
+
+    /** Lo que provee, en texto («Alevinos, Alimento»), o null si no provee nada. */
+    public function textoProvee(): ?string
+    {
+        $provee = array_values(array_intersect(self::PROVEE, (array) $this->provee));
+
+        return $provee === [] ? null : implode(', ', array_map(fn (string $codigo) => __('proveedores.provee.'.$codigo), $provee));
     }
 
     /** Partículas de nombres y apellidos que van en minúscula (salvo al inicio del campo). */
@@ -162,6 +202,17 @@ class Tercero extends Model
     public function scopeJornaleros(Builder $consulta): void
     {
         $consulta->where('es_jornalero', true);
+    }
+
+    public function scopeProveedores(Builder $consulta): void
+    {
+        $consulta->where('es_proveedor', true);
+    }
+
+    /** Proveedores que proveen algo en particular (alevinos, alimento u otros). */
+    public function scopeQueProveen(Builder $consulta, string $codigo): void
+    {
+        $consulta->where('es_proveedor', true)->whereJsonContains('provee', $codigo);
     }
 
     public function scopeActivos(Builder $consulta): void

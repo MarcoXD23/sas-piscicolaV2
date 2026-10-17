@@ -26,8 +26,10 @@ class Siembra extends Model
     protected $fillable = [
         'lago_id',
         'especie_id',
+        'proveedor_id',
         'proveedor_alevinos',
         'lote_alevinos',
+        'numero_lote',
         'fecha',
         'cantidad_alevinos',
         'peso_promedio_inicial_g',
@@ -59,6 +61,25 @@ class Siembra extends Model
     public function especie(): BelongsTo
     {
         return $this->belongsTo(Especie::class);
+    }
+
+    /** Proveedor de los alevinos, del catálogo de la finca (terceros que proveen alevinos). */
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Tercero::class, 'proveedor_id');
+    }
+
+    /**
+     * Nombre del proveedor de los alevinos: el del catálogo o, en las siembras viejas aún sin ligar, el texto escrito a
+     * mano (que nunca se borra). Null si no se registró.
+     */
+    public function nombreProveedor(): ?string
+    {
+        if ($this->proveedor_id !== null && $this->proveedor !== null) {
+            return $this->proveedor->nombreCompleto();
+        }
+
+        return filled($this->proveedor_alevinos) ? trim((string) $this->proveedor_alevinos) : null;
     }
 
     /** Lago de donde vinieron los peces, si el lote se creó por un traslado. */

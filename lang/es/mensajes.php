@@ -202,6 +202,7 @@ return [
     'siembra' => [
         'advertencia_clima' => 'Atención: :especie es de :clima y en el lago hay :otras, de otro clima. Las especies de agua fría y cálida no comparten rango de temperatura. Si quieres seguir, marca «Entiendo el riesgo».',
         'especie_no_disponible' => 'Elige una especie activa del catálogo de la finca.',
+        'proveedor_no_disponible' => 'Elige un proveedor activo de alevinos de la lista de Proveedores.',
         'esta_siembra_ya_estaba_finalizada' => 'Esta siembra ya estaba finalizada.',
         'finalizada' => 'Siembra de :especie finalizada en el lago :lago.',
         'lote_repetido' => 'Este lago ya tiene un lote activo de :especie sembrado el :fecha. Para otro lote usa una fecha distinta.',

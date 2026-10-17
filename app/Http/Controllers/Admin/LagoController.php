@@ -9,10 +9,12 @@ use App\Models\Fase;
 use App\Models\Lago;
 use App\Models\Rol;
 use App\Models\StockAlimento;
+use App\Models\Tercero;
 use App\Models\Tratamiento;
 use App\Support\CalculadoraRacion;
 use App\Support\EstadoFase;
 use App\Support\HistorialLago;
+use App\Support\NumeroLote;
 use App\Support\RangoAgua;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +43,10 @@ class LagoController extends Controller
             'tipos' => Lago::opciones(),
             'fases' => $this->opcionesFases(),
             'especies' => $this->opcionesEspecies(),
+            // Para la siembra: proveedores activos que proveen alevinos, y si el número de lote lo pone la app
+            'proveedores' => Tercero::query()->queProveen(Tercero::PROVEE_ALEVINOS)->activos()->orderBy('nombres')->get()
+                ->mapWithKeys(fn (Tercero $proveedor) => [$proveedor->id => $proveedor->nombreCompleto()])->all(),
+            'numeracionAutomatica' => NumeroLote::esAutomatica(),
             // El trabajador solo puede alimentar y registrar mortalidad dentro de su turno
             'puedeRegistrar' => $request->user()->puedeTrabajarComo(Rol::TRABAJADOR),
             // El propietario sin rol de administrador solo consulta (sin botones de alimentar ni mortalidad)
@@ -53,7 +59,7 @@ class LagoController extends Controller
 
     public function show(Lago $lago): View
     {
-        $lago->load(['fase.reglas', 'siembrasActivas.lagoOrigen', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'tratamientosEnRetiro']);
+        $lago->load(['fase.reglas', 'siembrasActivas.lagoOrigen', 'siembrasActivas.proveedor', 'siembrasActivas.trasladosRecibidos.lagoOrigen', 'ultimaMedicion', 'tratamientosEnRetiro']);
 
         return view('admin.lagos.show', [
             'lago' => $lago,

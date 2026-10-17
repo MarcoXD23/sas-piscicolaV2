@@ -23,6 +23,7 @@ return [
     'fin_siembra' => 'Fin de la siembra de :especie',
     'hasta_el' => 'hasta el :fecha',
     'lote' => 'lote :lote',
+    'numero_lote' => 'n.º de lote :numero',
     'mortalidad' => 'Mortalidad · :especie',
     'muestreo' => 'Muestreo · :especie',
     'nitritos' => 'nitritos :valor mg/L',

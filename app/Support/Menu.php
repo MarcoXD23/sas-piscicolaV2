@@ -26,6 +26,7 @@ final class Menu
             ['ruta' => 'admin.bodega.index', 'texto' => __('layout.menu.bodega'), 'icono' => 'bodega', 'roles' => ['propietario', 'administrador']],
             ['ruta' => 'admin.ventas.index', 'activa' => 'admin.ventas.*', 'texto' => __('layout.menu.ventas'), 'icono' => 'dinero', 'roles' => ['propietario', 'administrador']],
             ['ruta' => 'admin.jornaleros.index', 'activa' => 'admin.jornaleros.*', 'texto' => __('layout.menu.jornaleros'), 'icono' => 'personal', 'roles' => ['propietario', 'administrador']],
+            ['ruta' => 'admin.proveedores.index', 'activa' => 'admin.proveedores.*', 'texto' => __('layout.menu.proveedores'), 'icono' => 'bodega', 'roles' => ['propietario', 'administrador']],
             ['ruta' => 'admin.agenda.index', 'activa' => 'admin.agenda.*', 'texto' => __('layout.menu.agenda'), 'icono' => 'calendario', 'roles' => ['propietario']],
             ['ruta' => 'admin.personal.index', 'activa' => ['admin.personal.*', 'admin.turnos.*', 'admin.solicitudes.*', 'admin.nomina.*'], 'texto' => __('layout.menu.personal'), 'icono' => 'personal', 'roles' => ['propietario']],
             ['ruta' => 'noche.index', 'activa' => 'noche.*', 'texto' => __('layout.menu.noche'), 'icono' => 'luna', 'roles' => ['propietario', 'administrador', 'celador']],

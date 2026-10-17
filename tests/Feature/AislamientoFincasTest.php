@@ -69,7 +69,7 @@ class AislamientoFincasTest extends TestCase
         'venta' => Venta::class, 'tarea' => Tarea::class, 'turno' => Turno::class, 'evento' => EventoAgenda::class,
         'liquidacion' => Liquidacion::class, 'permiso' => Permiso::class, 'horaExtra' => HoraExtra::class,
         'aireacion' => Aireacion::class, 'usuario' => User::class, 'cosecha' => Cosecha::class, 'especie' => Especie::class, 'foto' => EspecieFoto::class, 'exportacion' => Exportacion::class,
-        'jornalero' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class, 'ingreso' => Ingreso::class,
+        'jornalero' => Tercero::class, 'proveedor' => Tercero::class, 'fase' => Fase::class, 'concentrado' => Concentrado::class, 'tramo' => TablaRacion::class, 'ingreso' => Ingreso::class,
     ];
 
     /** Datos válidos para rutas que validan el formulario antes de buscar el registro (sin ellos responderían 302). */

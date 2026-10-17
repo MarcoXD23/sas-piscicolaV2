@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Especie;
 use App\Models\Lago;
 use App\Models\Siembra;
+use App\Models\Tercero;
+use App\Support\NumeroLote;
 use App\Support\Region;
 use Carbon\CarbonImmutable;
 use App\Support\ReglasPolicultivo;
@@ -22,18 +24,30 @@ class SiembraController extends Controller
         $datos = $request->validate([
             // Solo especies activas del catálogo de esta finca
             'especie_id' => ['required', 'integer', Rule::exists('especies', 'id')->where('tenant_id', $request->user()->tenant_id)->where('activo', true)],
-            'proveedor_alevinos' => ['nullable', 'string', 'max:255'],
+            // Proveedor del catálogo: un tercero activo de esta finca que provee alevinos (se comprueba abajo)
+            'proveedor_id' => ['nullable', 'integer'],
             'lote_alevinos' => ['nullable', 'string', 'max:100'],
+            'numero_lote' => ['nullable', 'string', 'max:40'],
             'fecha' => ['required', 'date', 'before_or_equal:'.Region::hoy()->toDateString()],
             'cantidad_alevinos' => ['required', 'integer', 'min:1', 'max:10000000'],
             'peso_promedio_inicial_g' => ['required', 'numeric', 'min:0.1', 'max:20000'],
         ], [
             'especie_id.exists' => __('mensajes.siembra.especie_no_disponible'),
         ]);
+        if (! empty($datos['proveedor_id']) && ! Tercero::query()->queProveen(Tercero::PROVEE_ALEVINOS)->activos()->whereKey($datos['proveedor_id'])->exists()) {
+            throw ValidationException::withMessages(['proveedor_id' => __('mensajes.siembra.proveedor_no_disponible')]);
+        }
+        $datos['proveedor_id'] = ! empty($datos['proveedor_id']) ? (int) $datos['proveedor_id'] : null;
+        $datos['numero_lote'] = filled($datos['numero_lote'] ?? null) ? trim($datos['numero_lote']) : null;
         $especie = Especie::findOrFail($datos['especie_id']);
         $confirmado = $request->boolean(ReglasPolicultivo::CAMPO_CONFIRMACION);
 
         DB::transaction(function () use ($lago, $datos, $especie, $confirmado) {
+            // Número de lote: con numeración automática lo pone la app (lo que llegue escrito no cuenta)
+            if (NumeroLote::esAutomatica()) {
+                $datos['numero_lote'] = NumeroLote::siguiente(CarbonImmutable::parse($datos['fecha']));
+            }
+
             // Bloquea el lago para que dos siembras simultáneas no se salten las reglas de policultivo
             Lago::whereKey($lago->id)->lockForUpdate()->first();
             $activas = $lago->siembrasActivas()->get();

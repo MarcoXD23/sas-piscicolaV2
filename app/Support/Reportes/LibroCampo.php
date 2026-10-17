@@ -21,7 +21,7 @@ class LibroCampo
             'siembras' => $lago->siembras()
                 ->where('fecha', '<=', $hasta->toDateString())
                 ->where(fn ($q) => $q->whereNull('finalizada_at')->orWhere('finalizada_at', '>=', $desde))
-                ->orderBy('fecha')->get(),
+                ->with('proveedor')->orderBy('fecha')->get(),
             // Cosechas del lago en el período, con sus pesadas
             'cosechas' => $lago->cosechas()->with(['lago', 'siembra', 'despachadoPor', 'pesajes'])
                 ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])->orderBy('fecha')->get(),
@@ -40,10 +40,10 @@ class LibroCampo
 
         return [
             new Tabla($t('hoja_siembras'),
-                [[$t('especie'), null], [$t('fecha'), null], [$t('peces'), 0], [$t('peso_g'), 2], [$t('proveedor'), null], [$t('lote'), null], [$t('estado'), null]],
+                [[$t('especie'), null], [$t('fecha'), null], [$t('peces'), 0], [$t('peso_g'), 2], [$t('proveedor'), null], [$t('numero_lote'), null], [$t('lote'), null], [$t('estado'), null]],
                 $d['siembras']->map(fn ($s) => [
                     $s->nombre_especie, $s->fecha->format('d/m/Y'), (int) $s->cantidad_alevinos, (float) $s->peso_promedio_inicial_g,
-                    $s->proveedor_alevinos ?: __('reportes.sin_registrar'), $s->lote_alevinos ?: __('reportes.sin_registrar'),
+                    $s->nombreProveedor() ?? __('reportes.sin_registrar'), $s->numero_lote ?: __('reportes.sin_registrar'), $s->lote_alevinos ?: __('reportes.sin_registrar'),
                     $s->estaActiva() ? __('reportes.activa') : __('reportes.finalizada_el', ['fecha' => $s->finalizada_at->format('d/m/Y')]),
                 ])->all()),
             new Tabla($t('hoja_registro'),

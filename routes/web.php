@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\MuestreoController;
 use App\Http\Controllers\Admin\NominaController;
 use App\Http\Controllers\Admin\PersonalController;
 use App\Http\Controllers\Admin\PrimerUsoController;
+use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Admin\RacionController;
 use App\Http\Controllers\Admin\SeguridadFincaController;
 use App\Http\Controllers\Admin\ReporteController;
@@ -212,6 +213,9 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::post('/primer-uso/ocultar', [PrimerUsoController::class, 'ocultar'])->name('primer-uso.ocultar');
         // Catálogo de especies de la finca: el propietario lo consulta, el administrador lo edita
         Route::get('/especies', [EspecieFincaController::class, 'index'])->name('especies.index');
+        // Proveedores (alevinos, alimento, otros): el propietario consulta, el administrador edita
+        Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+        Route::get('/proveedores/revision', [ProveedorController::class, 'revision'])->name('proveedores.revision');
         // Detalle de una cosecha (encabezado, pesadas y totales): el administrador y el propietario en solo lectura
         Route::get('/cosechas/{cosecha}', [CosechaController::class, 'show'])->whereNumber('cosecha')->name('cosechas.show');
 
@@ -238,6 +242,11 @@ Route::middleware(['auth', 'tenant', 'aceptacion', 'dos_pasos_obligatoria'])->gr
         Route::get('/especies/{especie}/editar', [EspecieFincaController::class, 'edit'])->name('especies.edit');
         Route::put('/especies/{especie}', [EspecieFincaController::class, 'update'])->name('especies.update');
         Route::post('/especies/{especie}/activo', [EspecieFincaController::class, 'cambiarActivo'])->name('especies.activo');
+        Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
+        Route::get('/proveedores/{proveedor}/editar', [ProveedorController::class, 'edit'])->whereNumber('proveedor')->name('proveedores.edit');
+        Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->whereNumber('proveedor')->name('proveedores.update');
+        Route::post('/proveedores/{proveedor}/activo', [ProveedorController::class, 'cambiarActivo'])->whereNumber('proveedor')->name('proveedores.activo');
+        Route::post('/proveedores/revision', [ProveedorController::class, 'ligar'])->name('proveedores.ligar');
         Route::delete('/especies/{especie}', [EspecieFincaController::class, 'destroy'])->name('especies.destroy');
         // Fotos de una especie: la foto debe ser de esa especie (scopeBindings)
         Route::scopeBindings()->group(function () {

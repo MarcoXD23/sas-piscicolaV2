@@ -34,6 +34,7 @@ return [
         'especies' => 'Especies',
         'inicio' => 'Inicio',
         'jornaleros' => 'Jornaleros',
+        'proveedores' => 'Proveedores',
         'lagos' => 'Lagos',
         'mi_trabajo' => 'Mi trabajo',
         'noche' => 'Noche',

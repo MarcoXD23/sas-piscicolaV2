@@ -17,6 +17,17 @@
             <h3 class="text-lg font-bold">{{ $siembra->nombre_especie }}</h3>
         @endisset
         <p class="text-sm text-tinta-suave">{{ __('lagos.desde_dias', ['fecha' => $siembra->fecha->format('d/m/Y'), 'dias' => $siembra->dias_cultivo]) }}</p>
+        {{-- Trazabilidad: número de lote de la finca, proveedor de los alevinos y lote del proveedor (lo que haya) --}}
+        @php
+            $trazabilidad = array_filter([
+                $siembra->numero_lote ? __('lagos.trazabilidad.numero_lote', ['numero' => $siembra->numero_lote]) : null,
+                $siembra->nombreProveedor() ? __('lagos.trazabilidad.proveedor', ['proveedor' => $siembra->nombreProveedor()]) : null,
+                $siembra->lote_alevinos ? __('lagos.trazabilidad.lote_proveedor', ['lote' => $siembra->lote_alevinos]) : null,
+            ]);
+        @endphp
+        @if ($trazabilidad !== [])
+            <p class="text-sm text-tinta-suave">{{ implode(' · ', $trazabilidad) }}</p>
+        @endif
     </div>
 </div>
 

@@ -355,9 +355,20 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <x-campo nombre="cantidad_alevinos" id="siembra-alevinos-{{ $lago->id }}" :etiqueta="__('lagos.alevinos')" tipo="number" min="1" inputmode="numeric" required />
                                 <x-campo nombre="peso_promedio_inicial_g" id="siembra-peso-{{ $lago->id }}" :etiqueta="__('lagos.peso_inicial_g')" tipo="number" step="0.1" min="0.1" inputmode="decimal" required />
-                                <x-campo nombre="proveedor_alevinos" id="siembra-proveedor-{{ $lago->id }}" :etiqueta="__('lagos.proveedor_opcional')" />
-                                <x-campo nombre="lote_alevinos" id="siembra-lote-{{ $lago->id }}" :etiqueta="__('lagos.lote_opcional')" />
                             </div>
+                            {{-- Proveedor del catálogo (Proveedores: los que proveen alevinos) --}}
+                            <x-seleccion nombre="proveedor_id" id="siembra-proveedor-{{ $lago->id }}" :etiqueta="__('lagos.proveedor_opcional')"
+                                         :opciones="['' => __('lagos.sin_proveedor')] + $proveedores"
+                                         :ayuda="$proveedores === [] ? __('lagos.sin_proveedores') : null" />
+                            <div class="grid grid-cols-2 gap-4">
+                                <x-campo nombre="lote_alevinos" id="siembra-lote-{{ $lago->id }}" :etiqueta="__('lagos.lote_opcional')" maxlength="100" />
+                                @unless ($numeracionAutomatica)
+                                    <x-campo nombre="numero_lote" id="siembra-numero-lote-{{ $lago->id }}" :etiqueta="__('lagos.numero_lote_opcional')" maxlength="40" />
+                                @endunless
+                            </div>
+                            @if ($numeracionAutomatica)
+                                <p class="text-sm text-tinta-suave">{{ __('lagos.numero_lote_automatico') }}</p>
+                            @endif
 
                             @if ($siembras->isNotEmpty())
                                 {{-- Agua fría con cálida: es una advertencia que se confirma, no un bloqueo --}}

@@ -11,13 +11,14 @@
 
     <section class="mb-6 break-inside-avoid">
         <h2 class="mb-2 text-lg font-semibold text-tinta">{{ __('reportes.siembras_periodo') }}</h2>
-        <x-tabla :columnas="[__('reportes.especie'), __('comun.fecha'), __('reportes.peces_sembrados'), __('reportes.proveedor'), __('reportes.lote'), __('reportes.estado')]" :vacio="__('reportes.no_hubo_siembras_periodo')">
+        <x-tabla :columnas="[__('reportes.especie'), __('comun.fecha'), __('reportes.peces_sembrados'), __('reportes.proveedor'), __('reportes.numero_lote'), __('reportes.lote'), __('reportes.estado')]" :vacio="__('reportes.no_hubo_siembras_periodo')">
             @foreach ($siembras as $siembra)
                 <tr>
                     <td data-label="{{ __('reportes.especie') }}" class="font-semibold">{{ $siembra->nombre_especie }}</td>
                     <td data-label="{{ __('comun.fecha') }}">{{ $siembra->fecha->format('d/m/Y') }}</td>
                     <td data-label="{{ __('reportes.peces_sembrados') }}" class="tabular-nums">{{ __('reportes.peces_con_peso', ['peces' => $numero($siembra->cantidad_alevinos), 'gramos' => $numero($siembra->peso_promedio_inicial_g, 2)]) }}</td>
-                    <td data-label="{{ __('reportes.proveedor') }}">{{ $siembra->proveedor_alevinos ?: __('reportes.sin_registrar') }}</td>
+                    <td data-label="{{ __('reportes.proveedor') }}">{{ $siembra->nombreProveedor() ?? __('reportes.sin_registrar') }}</td>
+                    <td data-label="{{ __('reportes.numero_lote') }}">{{ $siembra->numero_lote ?: __('reportes.sin_registrar') }}</td>
                     <td data-label="{{ __('reportes.lote') }}">{{ $siembra->lote_alevinos ?: __('reportes.sin_registrar') }}</td>
                     <td data-label="{{ __('reportes.estado') }}">{{ $siembra->estaActiva() ? __('reportes.activa') : __('reportes.finalizada_el', ['fecha' => $siembra->finalizada_at->format('d/m/Y')]) }}</td>
                 </tr>

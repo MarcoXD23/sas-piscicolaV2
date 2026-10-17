@@ -82,6 +82,10 @@ return [
                 'administrador' => 'registrar ventas de pescado, créditos y abonos.',
             ],
             'admin.jornaleros.index' => 'la lista de jornaleros: personas que trabajan por jornada y no tienen cuenta en la app.',
+            'admin.proveedores.index' => [
+                'propietario' => 'consultar los proveedores de la finca (alevinos, alimento y otros), sin editar.',
+                'administrador' => 'los proveedores de la finca (alevinos, alimento y otros): agregarlos, editarlos y ligar a ellos las siembras viejas con el proveedor escrito a mano.',
+            ],
             'admin.agenda.index' => 'recordatorios y eventos de la finca.',
             'admin.personal.index' => 'las personas de la finca y sus roles, con las pestañas Turnos, Solicitudes (permisos y horas extra) y Nómina.',
             'noche.index' => [

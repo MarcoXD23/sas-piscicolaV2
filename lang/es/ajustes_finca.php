@@ -15,7 +15,19 @@ return [
     'secciones' => [
         'agua' => 'Calidad del agua',
         'muestreo' => 'Muestreos',
+        'lotes' => 'Lotes',
         'seguridad' => 'Seguridad',
+    ],
+
+    'lotes' => [
+        'numeracion' => [
+            'etiqueta' => 'Número de lote',
+            'ayuda' => 'Manual: al sembrar, el administrador escribe el número de lote que usa la finca (o lo deja vacío). Automático: la app lo pone sola, con el año de la siembra y un consecutivo (por ejemplo 2026-001). El lote que nace de un traslado conserva el número del lote de origen.',
+            'opciones' => [
+                'manual' => 'Manual (lo escribe la finca)',
+                'automatica' => 'Automático (lo genera la app)',
+            ],
+        ],
     ],
 
     'agua' => [

@@ -30,7 +30,7 @@ class HistorialLago
         $numero = fn ($valor, $decimales = 0) => Formato::numero((float) $valor, $decimales);
         $t = fn (string $clave, array $datos = []) => __('historial.'.$clave, $datos);
         $unir = fn (?string ...$partes) => implode(' · ', array_filter($partes, fn ($parte) => $parte !== null && $parte !== ''));
-        $siembras = $lago->siembras()->get()->keyBy('id');
+        $siembras = $lago->siembras()->with('proveedor')->get()->keyBy('id');
         $ids = $siembras->keys();
         $eventos = collect();
         // $enlace: página de detalle del evento, si la tiene (por ejemplo, una cosecha con sus pesadas)
@@ -61,7 +61,8 @@ class HistorialLago
             if ($enPeriodo($siembra->fecha)) {
                 $agregar($siembra->fecha, $siembra->created_at, 'pez', $t('actividades.siembra'), $t('siembra', ['especie' => $siembra->nombre_especie]),
                     $unir($t('peces_de_gramos', ['peces' => $numero($siembra->cantidad_alevinos), 'gramos' => $numero($siembra->peso_promedio_inicial_g, 2)]),
-                        $siembra->proveedor_alevinos ? $t('proveedor', ['proveedor' => $siembra->proveedor_alevinos]) : null,
+                        $siembra->nombreProveedor() ? $t('proveedor', ['proveedor' => $siembra->nombreProveedor()]) : null,
+                        $siembra->numero_lote ? $t('numero_lote', ['numero' => $siembra->numero_lote]) : null,
                         $siembra->lote_alevinos ? $t('lote', ['lote' => $siembra->lote_alevinos]) : null),
                     null, 'positivo');
             }

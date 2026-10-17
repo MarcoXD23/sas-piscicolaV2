@@ -21,6 +21,7 @@ class Bitacora extends Model
 
     public const ACCIONES = ['racion', 'mortalidad', 'traslado', 'muestreo', 'ronda', 'novedad', 'cosecha', 'venta', 'despacho', 'recepcion', 'aviso_pesca', 'aviso_atendido', 'medicion', 'aprobacion', 'roles', 'dos_pasos', 'exportacion', 'eliminacion', 'eliminacion_anulada', 'ajustes',
         'jornalero_creado', 'jornalero_editado', 'jornalero_activado', 'jornalero_inactivo', 'jornalero_anonimo',
+        'proveedor_creado', 'proveedor_editado', 'proveedor_activado', 'proveedor_inactivo', 'proveedor_ligado',
         'fase_creada', 'fase_editada', 'fase_eliminada', 'regla_fase', 'lago_editado',
         'concentrado_creado', 'concentrado_editado', 'tabla_racion', 'sesiones_cerradas'];
 
