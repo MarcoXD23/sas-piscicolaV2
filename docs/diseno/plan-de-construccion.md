@@ -206,6 +206,7 @@ Ver «Invitar una finca» en el README.
 - Factura, remisión, entrega total o parcial, precio por bulto y quién recibió.
 - Conteo del trabajador sin conexión, con confirmación (tema 13).
 - Costo del alimento por lago y por kilo producido.
+- El proveedor del despacho se elige de un catálogo de proveedores de la finca (hoy es texto libre).
 - **Riesgos:**
   - las recepciones viejas quedan sin precio, y el costo de ese período se muestra «sin dato»;
   - el conteo sin conexión entra a la cola.

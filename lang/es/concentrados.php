@@ -14,6 +14,8 @@ return [
     'nombre_corto_ejemplo' => 'Ej. Azul, Blanco, Harina 45',
     'nombre_corto_ayuda' => 'Cómo lo reconocen en la finca (por ejemplo el color del hilo del bulto). Aparece en Registro rápido.',
     'proteina_porcentaje' => 'Proteína (%)',
+    'proteina_obligatoria' => 'Escribe la proteína del concentrado (%): con ella se elige en la bodega.',
+    'proteina_ayuda' => 'Obligatoria: en la bodega el concentrado se elige por su proteína.',
     'pellet_mm' => 'Tamaño del pellet (opcional)',
     'pellet_ejemplo' => 'Ej. Harina, 2 mm, 4.5 mm',
     'peso_bulto_kg' => 'Peso del bulto (kg)',

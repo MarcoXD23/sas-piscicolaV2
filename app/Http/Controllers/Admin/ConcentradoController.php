@@ -189,12 +189,13 @@ class ConcentradoController extends Controller
                     ->when($concentrado, fn ($regla) => $regla->ignore($concentrado->id)),
             ],
             'nombre_corto' => ['nullable', 'string', 'max:60'],
-            'proteina_porcentaje' => ['nullable', 'numeric', 'min:10', 'max:70'],
+            'proteina_porcentaje' => ['required', 'numeric', 'min:10', 'max:70'],
             'pellet_mm' => ['nullable', 'string', 'max:40'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
             'activo' => ['nullable', 'boolean'],
         ], [
             'nombre.unique' => __('mensajes.concentrado.nombre_repetido'),
+            'proteina_porcentaje.required' => __('concentrados.proteina_obligatoria'),
         ]);
 
         return [

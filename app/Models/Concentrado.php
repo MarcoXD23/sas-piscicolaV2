@@ -76,6 +76,32 @@ class Concentrado extends Model
     }
 
     /**
+     * Texto en la lista de la bodega: la proteína primero («24 %») y después el nombre, solo si dice algo distinto de
+     * la proteína («24 % · Azul (Finalizador)»). Un nombre como «32» o «32 %» con 32 % de proteína sale solo «32 %».
+     * Sin proteína (los de antes de que fuera obligatoria): solo su nombre.
+     */
+    public function textoProteina(): string
+    {
+        if ($this->proteina_porcentaje === null) {
+            return $this->etiqueta();
+        }
+
+        $proteina = \App\Support\Formato::numero($this->proteina_porcentaje, fmod($this->proteina_porcentaje, 1.0) === 0.0 ? 0 : 1);
+        $repiteProteina = fn (?string $texto) => $texto === null || $texto === ''
+            || (is_numeric($limpio = str_replace([' ', '%', ','], ['', '', '.'], $texto)) && abs((float) $limpio - $this->proteina_porcentaje) < 0.01);
+        $partes = array_values(array_filter([$this->nombre_corto, $this->nombre], fn ($texto) => ! $repiteProteina($texto)));
+        $nombre = match (count($partes)) {
+            0 => null,
+            1 => $partes[0],
+            default => "{$partes[0]} ({$partes[1]})",
+        };
+
+        return $nombre === null
+            ? __('bodega.opcion_proteina', ['proteina' => $proteina])
+            : __('bodega.opcion_proteina_nombre', ['proteina' => $proteina, 'nombre' => $nombre]);
+    }
+
+    /**
      * Busca un concentrado en la finca activa por su id o por su nombre o nombre corto (sin importar mayúsculas).
      * Permite que la cola sin conexión siga enviando el nombre o el nombre corto como texto.
      */

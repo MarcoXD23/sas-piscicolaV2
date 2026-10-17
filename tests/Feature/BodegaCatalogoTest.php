@@ -64,15 +64,20 @@ class BodegaCatalogoTest extends TestCase
     public function test_la_lista_desplegable_trae_solo_los_activos_de_la_finca(): void
     {
         Concentrado::create(['nombre' => 'Engorde', 'proteina_porcentaje' => 32]);
-        Concentrado::create(['nombre' => 'Levante']);
-        Concentrado::create(['nombre' => 'Viejo', 'activo' => false]);
+        Concentrado::create(['nombre' => 'Sin proteína (de antes)']);
+        Concentrado::create(['nombre' => 'Finalizador', 'nombre_corto' => 'Azul', 'proteina_porcentaje' => 24]);
+        Concentrado::create(['nombre' => '38', 'proteina_porcentaje' => 38]);
+        Concentrado::create(['nombre' => 'Viejo', 'proteina_porcentaje' => 20, 'activo' => false]);
         $this->deOtraFinca();
 
         $html = $this->actingAs($this->propietario)->get(route('admin.bodega.index'))->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/<select[^>]*name="concentrado_id"[^>]*id="despacho-concentrado"|<select[^>]*id="despacho-concentrado"[^>]*name="concentrado_id"/', $html);
-        $this->assertStringContainsString(__('bodega.concentrado_elige'), $html);
-        $this->assertStringContainsString('Engorde · 32 % de proteína', $html);
-        $this->assertStringContainsString('>Levante</option>', $html);
+        $this->assertStringContainsString(__('bodega.proteina_concentrado'), $html);
+        // Por proteína de menor a mayor, la proteína primero; el nombre solo si dice algo distinto («38» con 38 % sale «38 %»);
+        // los que no tienen proteína, al final con su nombre
+        preg_match_all('/<select[^>]*id="despacho-concentrado".*?<\/select>/s', $html, $lista);
+        preg_match_all('/<option[^>]*>([^<]*)<\/option>/', $lista[0][0], $opciones);
+        $this->assertSame([__('bodega.concentrado_elige'), '24 % · Azul (Finalizador)', '32 % · Engorde', '38 %', 'Sin proteína (de antes)'], array_map('trim', $opciones[1]));
         $this->assertStringNotContainsString('Viejo', $html);
         $this->assertStringNotContainsString('De la otra finca', $html);
         // Ni texto libre ni sugerencias
@@ -80,7 +85,7 @@ class BodegaCatalogoTest extends TestCase
         $this->assertStringNotContainsString('name="tipo_concentrado"', $html);
 
         $this->actingAs($this->administrador)->get(route('admin.bodega.index'))->assertOk()
-            ->assertSee('id="recepcion-concentrado"', false)->assertSee('Engorde · 32 % de proteína')->assertDontSee('<datalist', false);
+            ->assertSee('id="recepcion-concentrado"', false)->assertSee('32 % · Engorde')->assertDontSee('<datalist', false);
     }
 
     public function test_despacho_y_recepcion_guardan_el_concentrado_del_catalogo(): void

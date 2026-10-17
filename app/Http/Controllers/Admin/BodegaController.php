@@ -52,7 +52,8 @@ class BodegaController extends Controller
 
         return view('admin.bodega.index', [
             'cobertura' => CoberturaBodega::calcular(),
-            'concentradosCatalogo' => Concentrado::query()->activos()->orderBy('nombre')->get(),
+            // Ordenados por proteína, de menor a mayor; los que no tienen (de antes de que fuera obligatoria) al final
+            'concentradosCatalogo' => Concentrado::query()->activos()->orderByRaw('proteina_porcentaje IS NULL')->orderBy('proteina_porcentaje')->orderBy('nombre')->get(),
             'movimientos' => $movimientos,
             'tipo' => $tipo,
             'despachos' => $despachos,

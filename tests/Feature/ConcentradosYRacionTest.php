@@ -63,6 +63,22 @@ class ConcentradosYRacionTest extends TestCase
         $this->assertEquals(45.0, (float) $tramos->first()->proteina_porcentaje);
     }
 
+    public function test_la_proteina_es_obligatoria_al_crear_y_al_editar(): void
+    {
+        $datos = ['nombre' => 'Engorde', 'peso_bulto_kg' => 40];
+        $this->actingAs($this->propietario)->post(route('admin.concentrados.store'), $datos)
+            ->assertSessionHasErrors(['proteina_porcentaje' => __('concentrados.proteina_obligatoria')]);
+        $this->assertSame(0, Concentrado::count());
+
+        // Uno de antes, sin proteína, sigue funcionando; al editarlo hay que ponérsela
+        $viejo = Concentrado::create(['nombre' => '32']);
+        $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $viejo), ['nombre' => '32', 'peso_bulto_kg' => 40, 'activo' => 1])
+            ->assertSessionHasErrors('proteina_porcentaje');
+        $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $viejo), ['nombre' => '32', 'proteina_porcentaje' => 32, 'peso_bulto_kg' => 40, 'activo' => 1])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('32 %', $viejo->fresh()->textoProteina());
+    }
+
     public function test_catalogo_de_concentrados_crear_editar_y_sincronizar_bodega(): void
     {
         // Lo que ya estaba en bodega con ese nombre queda ligado al crearlo en el catálogo, sin cambiar su texto

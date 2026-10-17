@@ -5,10 +5,9 @@
 @section('contenido')
     @php
         $numero = fn ($valor, $decimales = 0) => \App\Support\Formato::numero((float) $valor, $decimales);
-        // Concentrados activos del catálogo de la finca (Ajustes › Concentrados): lista desplegable, con la proteína si la tiene
-        $opcionesConcentrado = ['' => __('bodega.concentrado_elige')] + $concentradosCatalogo->mapWithKeys(fn ($c) => [$c->id => $c->proteina_porcentaje !== null
-            ? __('bodega.opcion_concentrado_proteina', ['nombre' => $c->nombre, 'proteina' => $numero($c->proteina_porcentaje, fmod($c->proteina_porcentaje, 1.0) === 0.0 ? 0 : 1)])
-            : __('bodega.opcion_concentrado', ['nombre' => $c->nombre])])->all();
+        // Concentrados activos del catálogo de la finca (Ajustes › Concentrados), ordenados por proteína: lista
+        // desplegable con la proteína primero («24 %» o «24 % · nombre»; ver Concentrado::textoProteina)
+        $opcionesConcentrado = ['' => __('bodega.concentrado_elige')] + $concentradosCatalogo->mapWithKeys(fn ($c) => [$c->id => $c->textoProteina()])->all();
         $sinCatalogo = $concentradosCatalogo->isEmpty();
         $estilos = [
             \App\Support\CoberturaBodega::AGOTADO => ['icono' => 'bg-alerta-fondo text-alerta', 'cifra' => 'text-alerta', 'chip' => 'bg-alerta-fondo text-alerta', 'texto' => __('bodega.agotado')],
@@ -195,7 +194,7 @@
                         {{-- Quien recibe es el administrador: Ajustes › Concentrados es del propietario --}}
                         <x-aviso tono="atencion" class="text-sm">{{ __('bodega.sin_catalogo_administrador') }}</x-aviso>
                     @endif
-                    <x-seleccion nombre="concentrado_id" id="recepcion-concentrado" :etiqueta="__('bodega.tipo_concentrado')" :opciones="$opcionesConcentrado"
+                    <x-seleccion nombre="concentrado_id" id="recepcion-concentrado" :etiqueta="__('bodega.proteina_concentrado')" :opciones="$opcionesConcentrado"
                                  :disabled="$sinCatalogo" />
                     <x-campo nombre="lote" id="recepcion-lote" :etiqueta="__('bodega.lote_produccion')" />
                 </fieldset>
@@ -226,7 +225,7 @@
                         <a href="{{ route('admin.concentrados.index') }}" class="mt-1 block font-semibold underline underline-offset-2">{{ __('bodega.sin_catalogo_ir') }}</a>
                     </x-aviso>
                 @endif
-                <x-seleccion nombre="concentrado_id" id="despacho-concentrado" :etiqueta="__('bodega.tipo_concentrado')" :opciones="$opcionesConcentrado"
+                <x-seleccion nombre="concentrado_id" id="despacho-concentrado" :etiqueta="__('bodega.proteina_concentrado')" :opciones="$opcionesConcentrado"
                              :disabled="$sinCatalogo" required />
                 <x-campo nombre="lote" id="despacho-lote" :etiqueta="__('bodega.lote_produccion')" required />
                 <div class="grid grid-cols-2 gap-4">

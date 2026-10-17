@@ -90,7 +90,7 @@ En **Ajustes › Concentrados y ración** el propietario lleva el catálogo de c
 - El concentrado sugerido es el de la regla de la fase del lago. Si la fase no tiene uno, es el del tramo de peso.
 - Cuando el lago venía comiendo otro concentrado, avisa el cambio gradual (¼, ½ y ¾).
 - La ración se registra en kilos o en bultos.
-- En la bodega, «Registrar despacho» y «Recibir sin despacho» eligen el concentrado de una lista desplegable con los activos del catálogo de la finca (con su proteína). No se escribe a mano. Sin catálogo, el formulario avisa y no deja despachar; un despacho pendiente se sigue recibiendo. Registro rápido y la cola sin conexión siguen enviando el nombre como texto, y `Concentrado::resolver` lo liga.
+- En la bodega, «Registrar despacho» y «Recibir sin despacho» eligen el concentrado de una lista desplegable («Proteína del concentrado») con los activos del catálogo de la finca, ordenados por proteína y con la proteína primero («24 % · nombre»). En Ajustes › Concentrados la proteína es obligatoria. No se escribe a mano. Sin catálogo, el formulario avisa y no deja despachar; un despacho pendiente se sigue recibiendo. Registro rápido y la cola sin conexión siguen enviando el nombre como texto, y `Concentrado::resolver` lo liga.
 - Renombrar un concentrado no cambia los registros guardados. El nombre viejo sigue llevando al mismo concentrado, también desde la cola de un teléfono.
 - El plazo del muestreo (30 días por defecto) es el ajuste «Plazo del muestreo» de Operación de la finca. Pasado ese plazo, Alertas avisa «muestreo vencido».
 
