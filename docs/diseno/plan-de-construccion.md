@@ -19,7 +19,7 @@ Los días son estimados de trabajo.
 
 ## Orden aprobado
 
-**Cambio de plan (2026-10-16):** el piloto en la finca ya no va después de F3. Queda **al final**, después de F13 y de montar el servidor. Mientras tanto se sigue construyendo en el orden del plan.
+**Cambio de plan (2026-10-16):** el piloto en la finca ya no va después de F3. Queda **al final**, después de F13 y de F14 (servidor). Mientras tanto se sigue construyendo en el orden del plan.
 
 ### Primer bloque (hecho)
 
@@ -36,16 +36,16 @@ Ver «Invitar una finca» en el README.
 
 ### Siguiente, en este orden
 
-**Orden:** F5 → F6a → F6b → F6c → F6d → F7 → F8a → F8b → F9 → F10 → F11 → F12 → F13 → montar el servidor → piloto en la finca.
+**Orden:** F5 → F6a → F6b → F6c → F6d → F7 → F8a → F8b → F9 → F10 → F11 → F12 → F13 → F14 (servidor) → piloto en la finca.
 
 - **Jornaleros (F6a a F6d):** la pausa está levantada. Se construye con los valores configurables y provisionales. Se ajustan con los números de los días de proceso reales, a más tardar en el piloto.
 - **F12:** el Excel de ejemplo, sin nombres, lo prepara el usuario más adelante.
 
-**Total aproximado:** unos 55 a 60 días de trabajo, sin contar el servidor ni el piloto.
+**Total aproximado:** unos 57 a 63 días de trabajo con F14, sin contar el piloto.
 
 ### Al final
 
-- **Montar el servidor:** la app en un servidor propio, para que la finca la use desde sus teléfonos.
+- **F14. Servidor:** ver la fase más abajo.
 - **Piloto en la finca:** la finca la usa en su trabajo diario. De los días de proceso del piloto salen los números reales que todavía son provisionales: tolerancias del cuadre, topes, rendimiento y pago a jornaleros.
 
 ### Por qué este orden
@@ -188,6 +188,7 @@ Ver «Invitar una finca» en el README.
 
 ### F6c. Venta rápida, precios, cupo y obsequios (5 días)
 
+- **Al inicio de la fase, el cambio de AGENTS.md** (con la aprobación del dueño del proyecto): el administrador prepara el pago a jornaleros y el propietario lo aprueba, igual que la nómina. Este cambio va aquí y no en F8a, porque el pago a jornaleros se construye en esta fase.
 - Precios por especie y tipo de comprador.
 - Cupo semanal.
 - Forma de pago con saldo pendiente.
@@ -196,7 +197,11 @@ Ver «Invitar una finca» en el README.
   - por jornada o por kilo, según el cargo y lo que configure la finca (por ejemplo, los procesadores por kilo limpio de la jornada, repartido en partes iguales);
   - descuento de lo que el jornalero compró a crédito («descontar del pago»);
   - si el descuento es mayor que lo ganado, queda un saldo pendiente para la siguiente jornada; nunca hay un pago negativo;
-  - planilla de pago de la jornada para imprimir y firmar al recibir el pago.
+  - planilla de pago de la jornada para imprimir y firmar al recibir el pago;
+  - lo prepara el administrador y lo aprueba el propietario; nadie aprueba su propio pago.
+- **Pendiente de la finca** (mientras tanto, F6c usa valores configurables):
+  - qué cargos cobran por jornada (una suma fija) y cuáles por kilo;
+  - qué entra en «a crédito»: solo el pescado comprado, o también anticipos u otras cosas.
 - **Riesgo:** las ventas que ya existen están ligadas a una cosecha. Se mantienen; las nuevas van por jornada.
 
 ### F6d. Pedidos, despacho, remisión y canastas (5 días)
@@ -223,7 +228,7 @@ Ver «Invitar una finca» en el README.
 
 ### F8a. Permisos y personal configurables (2–3 días)
 
-- **Primero se cambia AGENTS.md, con la aprobación del dueño del proyecto.**
+- **Primero se cambia AGENTS.md, con la aprobación del dueño del proyecto.** (El cambio para el pago a jornaleros ya se hizo al inicio de F6c.)
 - Quién aprueba permisos, horas extra y personal, y nadie se aprueba a sí mismo.
 - Aviso de solicitudes de acceso.
 - **Riesgo:** reglas de seguridad. Todo se comprueba en el servidor, con pruebas por rol.
@@ -244,8 +249,10 @@ Ver «Invitar una finca» en el README.
 - Gastos del mes, con la foto del recibo (guardada privada y separada por finca).
 - Venta de alevinos.
 - Resumen mensual: gastos por categoría, con el alimento sacado de la bodega.
-- Costo por kilo: el gasto del mes dividido por los kilos producidos.
-- Exportar a Excel para el contador.
+- Costo por kilo, de dos formas:
+  - **costo de producción por kilo producido** (crecimiento de la biomasa), por lote y por lago;
+  - **resultado del mes:** gastos contra ventas, y costo por kilo vendido.
+- Exportar a Excel para el contador, con openspout (ya está en el proyecto y genera los Excel de los reportes, en `ExportadorExcel`). Sin paquete nuevo.
 
 ### F10. Planilla mensual de ración (1,5 días)
 
@@ -268,9 +275,19 @@ Ver «Invitar una finca» en el README.
 - El asistente al día con los módulos nuevos.
 - La fase 3 del asistente: espera las preguntas reales de la finca.
 
+### F14. Servidor (2–3 días)
+
+Va al final, antes del piloto en la finca. La guía paso a paso es `docs/DESPLIEGUE.md`.
+
+- VPS, dominio y HTTPS.
+- Envío de correos y, con él, la verificación por código en las invitaciones (ver «Para más adelante»).
+- Respaldos diarios, también copiados fuera del servidor.
+- El cron del programador de Laravel, para que corra el comando de vigilancia (`piscicola:vigilar`) y las demás tareas programadas.
+- La lista de lo que debe tener el `.env` de producción según `DESPLIEGUE.md`. **El `.env` lo edita el usuario**, nunca quien programa.
+
 ### Para más adelante (sin fecha)
 
 - Equipos y mantenimiento (tema 15.10).
 - La unidad de cultivo para jaulas o canales (tema 14).
 - Finca demo: una finca con datos inventados y una cuenta de solo consulta para que los clientes vean la app antes de comprar. Se arma después del piloto (que ahora va al final) con base en cómo se usa la finca piloto, sin sus datos reales.
-- Invitaciones: verificar el correo con un código de 6 dígitos enviado al correo invitado antes de crear la finca. Requiere tener configurado el envío de correos (`MAIL_MAILER`) en el servidor. Hasta entonces, el enlace es la única prueba: se envía solo por chat privado, vence en 7 días y se puede anular.
+- Invitaciones (se construye en F14): verificar el correo con un código de 6 dígitos enviado al correo invitado antes de crear la finca. Requiere tener configurado el envío de correos (`MAIL_MAILER`) en el servidor. Hasta entonces, el enlace es la única prueba: se envía solo por chat privado, vence en 7 días y se puede anular.
