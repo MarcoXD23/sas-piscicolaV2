@@ -17,6 +17,10 @@ class Concentrado extends Model
 
     public const PESO_BULTO_POR_DEFECTO = 40.0;
 
+    public const PROTEINA_MINIMA = 10;
+
+    public const PROTEINA_MAXIMA = 70;
+
     protected $table = 'concentrados';
 
     protected $fillable = [
@@ -73,6 +77,41 @@ class Concentrado extends Model
         return $this->nombre_corto !== null && $this->nombre_corto !== ''
             ? "{$this->nombre_corto} ({$this->nombre})"
             : $this->nombre;
+    }
+
+    /**
+     * Lista desplegable de la proteína (concentrados y tramos de ración): los enteros de 10 a 70 %. La proteína se
+     * elige de aquí, nunca se escribe.
+     *
+     * @return array<int, string>
+     */
+    public static function opcionesProteina(): array
+    {
+        $opciones = [];
+        foreach (range(self::PROTEINA_MINIMA, self::PROTEINA_MAXIMA) as $proteina) {
+            $opciones[$proteina] = __('concentrados.opcion_proteina', ['proteina' => $proteina]);
+        }
+
+        return $opciones;
+    }
+
+    /** La proteína guardada, redondeada al entero más cercano, para marcarla en la lista (las de antes podían tener decimales). */
+    public static function proteinaEntera(?float $proteina): ?int
+    {
+        return $proteina === null ? null : (int) round($proteina);
+    }
+
+    /** Aviso para el mensaje de «guardado» cuando la proteína de antes tenía decimales y quedó en un entero de la lista. */
+    public static function avisoProteinaRedondeada(?float $antes, ?float $ahora): ?string
+    {
+        if ($antes === null || $ahora === null || fmod($antes, 1.0) === 0.0) {
+            return null;
+        }
+
+        return __('concentrados.proteina_redondeada', [
+            'antes' => \App\Support\Formato::numero($antes, 1),
+            'ahora' => \App\Support\Formato::numero($ahora, 0),
+        ]);
     }
 
     /**

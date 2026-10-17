@@ -5,6 +5,9 @@
 @section('contenido')
     @php
         $numero = fn ($valor, $decimales = 1) => \App\Support\Formato::numero((float) $valor, $decimales);
+        $proteinas = \App\Models\Concentrado::opcionesProteina();
+        $proteinasConcentrado = ['' => __('concentrados.proteina_elige')] + $proteinas;
+        $proteinasTramo = ['' => __('concentrados.sin_proteina')] + $proteinas;
     @endphp
 
     <a href="{{ route('admin.ajustes.edit') }}" class="-ml-1 mb-2 inline-flex min-h-12 items-center gap-1 text-base font-semibold text-marca-700 underline decoration-renglon-fuerte underline-offset-4 hover:decoration-marca-700">
@@ -20,7 +23,7 @@
                 <x-campo nombre="nombre_corto" id="nuevo-concentrado-corto" :etiqueta="__('concentrados.nombre_corto')" :placeholder="__('concentrados.nombre_corto_ejemplo')" :ayuda="__('concentrados.nombre_corto_ayuda')" />
             </div>
             <div class="grid grid-cols-3 gap-4">
-                <x-campo nombre="proteina_porcentaje" id="nuevo-concentrado-proteina" :etiqueta="__('concentrados.proteina_porcentaje')" tipo="number" step="0.1" min="10" max="70" inputmode="decimal" required :ayuda="__('concentrados.proteina_ayuda')" />
+                <x-seleccion nombre="proteina_porcentaje" id="nuevo-concentrado-proteina" :etiqueta="__('concentrados.proteina_porcentaje')" :opciones="$proteinasConcentrado" required :ayuda="__('concentrados.proteina_ayuda')" />
                 <x-campo nombre="pellet_mm" id="nuevo-concentrado-pellet" :etiqueta="__('concentrados.pellet_mm')" :placeholder="__('concentrados.pellet_ejemplo')" />
                 <x-campo nombre="peso_bulto_kg" id="nuevo-concentrado-bulto" :etiqueta="__('concentrados.peso_bulto_kg')" tipo="number" step="0.1" min="1" max="1000" inputmode="decimal" :valor="\App\Models\Concentrado::PESO_BULTO_POR_DEFECTO" required />
             </div>
@@ -45,7 +48,7 @@
                                              :opciones="[1 => __('concentrados.activo'), 0 => __('concentrados.inactivo')]" :valor="$concentrado->activo ? 1 : 0" />
                             </div>
                             <div class="grid grid-cols-3 gap-4">
-                                <x-campo nombre="proteina_porcentaje" id="concentrado-proteina-{{ $concentrado->id }}" :etiqueta="__('concentrados.proteina_porcentaje')" tipo="number" step="0.1" min="10" max="70" inputmode="decimal" :valor="$concentrado->proteina_porcentaje" required />
+                                <x-seleccion nombre="proteina_porcentaje" id="concentrado-proteina-{{ $concentrado->id }}" :etiqueta="__('concentrados.proteina_porcentaje')" :opciones="$proteinasConcentrado" :valor="\App\Models\Concentrado::proteinaEntera($concentrado->proteina_porcentaje)" required />
                                 <x-campo nombre="pellet_mm" id="concentrado-pellet-{{ $concentrado->id }}" :etiqueta="__('concentrados.pellet_mm')" :valor="$concentrado->pellet_mm" />
                                 <x-campo nombre="peso_bulto_kg" id="concentrado-bulto-{{ $concentrado->id }}" :etiqueta="__('concentrados.peso_bulto_kg')" tipo="number" step="0.1" min="1" max="1000" inputmode="decimal" :valor="$concentrado->peso_bulto_kg" required />
                             </div>
@@ -89,7 +92,7 @@
                                 </td>
                                 <td data-label="{{ __('concentrados.porcentaje_biomasa') }}" class="tabular-nums">{{ $numero($tramo->porcentaje_biomasa, 1) }} %</td>
                                 <td data-label="{{ __('concentrados.tomas_dia') }}" class="tabular-nums">{{ $tramo->tomas_dia }}</td>
-                                <td data-label="{{ __('concentrados.proteina_porcentaje') }}" class="tabular-nums">{{ $tramo->proteina_porcentaje !== null ? $numero($tramo->proteina_porcentaje, 1).' %' : '—' }}</td>
+                                <td data-label="{{ __('concentrados.proteina_porcentaje') }}" class="tabular-nums">{{ $tramo->proteina_porcentaje !== null ? __('concentrados.opcion_proteina', ['proteina' => \App\Models\Concentrado::proteinaEntera($tramo->proteina_porcentaje)]) : '—' }}</td>
                                 <td data-label="{{ __('concentrados.pellet_mm') }}">{{ $tramo->pellet ?? '—' }}</td>
                                 <td data-label="{{ __('concentrados.concentrado_sugerido') }}">{{ $tramo->concentrado?->etiqueta() ?? __('concentrados.sin_concentrado_fijo') }}</td>
                                 <td class="text-right">
@@ -113,7 +116,7 @@
                                 <x-campo nombre="peso_hasta_g" id="tramo-hasta-{{ $especie->id }}" :etiqueta="__('concentrados.peso_hasta_g')" tipo="number" step="0.01" min="0.1" max="99999" inputmode="decimal" required />
                                 <x-campo nombre="porcentaje_biomasa" id="tramo-porc-{{ $especie->id }}" :etiqueta="__('concentrados.porcentaje_biomasa')" tipo="number" step="0.1" min="0.1" max="30" inputmode="decimal" required />
                                 <x-campo nombre="tomas_dia" id="tramo-tomas-{{ $especie->id }}" :etiqueta="__('concentrados.tomas_dia')" tipo="number" min="1" max="12" inputmode="numeric" required />
-                                <x-campo nombre="proteina_porcentaje" id="tramo-prot-{{ $especie->id }}" :etiqueta="__('concentrados.proteina_porcentaje')" tipo="number" step="0.1" min="10" max="70" inputmode="decimal" />
+                                <x-seleccion nombre="proteina_porcentaje" id="tramo-prot-{{ $especie->id }}" :etiqueta="__('concentrados.proteina_porcentaje')" :opciones="$proteinasTramo" />
                                 <x-campo nombre="pellet" id="tramo-pellet-{{ $especie->id }}" :etiqueta="__('concentrados.pellet_mm')" />
                             </div>
                             <x-seleccion nombre="concentrado_id" id="tramo-conc-{{ $especie->id }}" :etiqueta="__('concentrados.concentrado_sugerido')" :opciones="$opcionesConcentrados" />

@@ -73,6 +73,7 @@ class ConcentradoController extends Controller
     public function update(Request $request, Concentrado $concentrado): RedirectResponse
     {
         $datos = $this->validarConcentrado($request, $concentrado);
+        $proteinaAntes = $concentrado->proteina_porcentaje;
 
         // Renombrar no cambia la historia: la bodega, los movimientos y los despachos guardados conservan su texto y
         // siguen ligados por concentrado_id (Concentrado::resolver encuentra también el nombre viejo)
@@ -85,7 +86,10 @@ class ConcentradoController extends Controller
         });
 
         return redirect()->route('admin.concentrados.index')
-            ->with('estado', __('mensajes.concentrado.actualizado', ['nombre' => $concentrado->nombre]));
+            ->with('estado', $this->conAviso(
+                __('mensajes.concentrado.actualizado', ['nombre' => $concentrado->nombre]),
+                Concentrado::avisoProteinaRedondeada($proteinaAntes, $concentrado->proteina_porcentaje),
+            ));
     }
 
     public function guardarTramo(Request $request): RedirectResponse
@@ -101,13 +105,13 @@ class ConcentradoController extends Controller
             'peso_hasta_g' => ['required', 'numeric', 'min:0.1', 'max:99999'],
             'porcentaje_biomasa' => ['required', 'numeric', 'min:0.1', 'max:30'],
             'tomas_dia' => ['required', 'integer', 'min:1', 'max:12'],
-            'proteina_porcentaje' => ['nullable', 'numeric', 'min:10', 'max:70'],
+            'proteina_porcentaje' => ['nullable', 'integer', Rule::in(array_keys(Concentrado::opcionesProteina()))],
             'pellet' => ['nullable', 'string', 'max:40'],
             'concentrado_id' => [
                 'nullable', 'integer',
                 Rule::exists('concentrados', 'id')->where('tenant_id', $tenantId),
             ],
-        ]);
+        ], $this->mensajesProteina());
 
         if ((float) $datos['peso_desde_g'] > (float) $datos['peso_hasta_g']) {
             throw ValidationException::withMessages([
@@ -116,9 +120,12 @@ class ConcentradoController extends Controller
         }
 
         $especie = Especie::query()->where('tenant_id', $tenantId)->findOrFail((int) $datos['especie_id']);
+        // Si el tramo ya existía con una proteína con decimales (de antes de la lista), se avisa que quedó en un entero
+        $proteinaAntes = TablaRacion::query()->where('especie_id', $especie->id)
+            ->where('peso_hasta_g', (float) $datos['peso_hasta_g'])->value('proteina_porcentaje');
 
-        DB::transaction(function () use ($request, $especie, $datos) {
-            TablaRacion::updateOrCreate(
+        $tramo = DB::transaction(function () use ($request, $especie, $datos) {
+            $guardado = TablaRacion::updateOrCreate(
                 [
                     'especie_id' => $especie->id,
                     'peso_hasta_g' => (float) $datos['peso_hasta_g'],
@@ -136,10 +143,15 @@ class ConcentradoController extends Controller
             Bitacora::registrar($request->user(), 'tabla_racion', null, [Rol::PROPIETARIO], [
                 'especie' => $especie->nombre,
             ]);
+
+            return $guardado;
         });
 
         return redirect()->route('admin.concentrados.index')
-            ->with('estado', __('mensajes.concentrado.tramo_guardado', ['especie' => $especie->nombre]));
+            ->with('estado', $this->conAviso(
+                __('mensajes.concentrado.tramo_guardado', ['especie' => $especie->nombre]),
+                Concentrado::avisoProteinaRedondeada($proteinaAntes !== null ? (float) $proteinaAntes : null, $tramo->proteina_porcentaje),
+            ));
     }
 
     public function eliminarTramo(Request $request, TablaRacion $tramo): RedirectResponse
@@ -189,14 +201,14 @@ class ConcentradoController extends Controller
                     ->when($concentrado, fn ($regla) => $regla->ignore($concentrado->id)),
             ],
             'nombre_corto' => ['nullable', 'string', 'max:60'],
-            'proteina_porcentaje' => ['required', 'numeric', 'min:10', 'max:70'],
+            'proteina_porcentaje' => ['required', 'integer', Rule::in(array_keys(Concentrado::opcionesProteina()))],
             'pellet_mm' => ['nullable', 'string', 'max:40'],
             'peso_bulto_kg' => ['required', 'numeric', 'min:1', 'max:1000'],
             'activo' => ['nullable', 'boolean'],
         ], [
             'nombre.unique' => __('mensajes.concentrado.nombre_repetido'),
             'proteina_porcentaje.required' => __('concentrados.proteina_obligatoria'),
-        ]);
+        ] + $this->mensajesProteina());
 
         return [
             'nombre' => trim($datos['nombre']),
@@ -206,6 +218,20 @@ class ConcentradoController extends Controller
             'peso_bulto_kg' => (float) $datos['peso_bulto_kg'],
             'activo' => array_key_exists('activo', $datos) ? (bool) $datos['activo'] : true,
         ];
+    }
+
+    /** La proteína solo se acepta si es uno de los enteros de la lista (10 a 70 %). @return array<string, string> */
+    private function mensajesProteina(): array
+    {
+        return [
+            'proteina_porcentaje.integer' => __('concentrados.proteina_no_valida'),
+            'proteina_porcentaje.in' => __('concentrados.proteina_no_valida'),
+        ];
+    }
+
+    private function conAviso(string $mensaje, ?string $aviso): string
+    {
+        return $aviso === null ? $mensaje : "{$mensaje} {$aviso}";
     }
 }
 

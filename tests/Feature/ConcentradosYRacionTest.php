@@ -79,6 +79,113 @@ class ConcentradosYRacionTest extends TestCase
         $this->assertSame('32 %', $viejo->fresh()->textoProteina());
     }
 
+    /** @return list<string> textos de las opciones de una lista desplegable de la página */
+    private function opcionesDe(string $html, string $id): array
+    {
+        $this->assertSame(1, preg_match('/<select[^>]*id="'.preg_quote($id, '/').'".*?<\/select>/s', $html, $lista), "Falta la lista {$id}");
+        preg_match_all('/<option[^>]*>([^<]*)<\/option>/', $lista[0], $opciones);
+
+        return array_map('trim', $opciones[1]);
+    }
+
+    private function marcadaEn(string $html, string $id): ?string
+    {
+        preg_match('/<select[^>]*id="'.preg_quote($id, '/').'".*?<\/select>/s', $html, $lista);
+
+        return preg_match('/<option value="([^"]*)"[^>]*selected/', $lista[0], $marcada) === 1 ? $marcada[1] : null;
+    }
+
+    public function test_la_proteina_se_elige_de_una_lista_de_10_a_70_al_crear(): void
+    {
+        $html = $this->actingAs($this->propietario)->get(route('admin.concentrados.index'))->assertOk()->getContent();
+        $esperadas = array_map(fn ($p) => "{$p} %", range(10, 70));
+
+        $this->assertSame([__('concentrados.proteina_elige'), ...$esperadas], $this->opcionesDe($html, 'nuevo-concentrado-proteina'));
+        $this->assertSame(range(10, 70), array_keys(Concentrado::opcionesProteina()));
+        // Nada de escribir la proteína
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="proteina_porcentaje"/', $html);
+
+        $this->actingAs($this->propietario)->post(route('admin.concentrados.store'), [
+            'nombre' => 'Engorde', 'proteina_porcentaje' => '32', 'peso_bulto_kg' => 40,
+        ])->assertSessionHasNoErrors()->assertSessionHas('estado', __('mensajes.concentrado.creado', ['nombre' => 'Engorde']));
+        $this->assertEquals(32.0, Concentrado::query()->sole()->proteina_porcentaje);
+    }
+
+    public function test_al_editar_la_lista_marca_su_proteina_y_redondea_la_que_tenia_decimales(): void
+    {
+        $entero = Concentrado::create(['nombre' => 'Engorde', 'proteina_porcentaje' => 32]);
+        $conDecimales = Concentrado::create(['nombre' => 'Levante', 'proteina_porcentaje' => 34.6]);
+
+        $html = $this->actingAs($this->propietario)->get(route('admin.concentrados.index'))->assertOk()->getContent();
+        $this->assertSame('32', $this->marcadaEn($html, "concentrado-proteina-{$entero->id}"));
+        $this->assertSame('35', $this->marcadaEn($html, "concentrado-proteina-{$conDecimales->id}"));
+
+        // Guardar el de decimales: queda en el entero de la lista y se avisa
+        $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $conDecimales), [
+            'nombre' => 'Levante', 'proteina_porcentaje' => 35, 'peso_bulto_kg' => 40, 'activo' => 1,
+        ])->assertSessionHasNoErrors()->assertSessionHas('estado', __('mensajes.concentrado.actualizado', ['nombre' => 'Levante'])
+            .' '.__('concentrados.proteina_redondeada', ['antes' => '34,6', 'ahora' => '35']));
+        $this->assertEquals(35.0, $conDecimales->fresh()->proteina_porcentaje);
+
+        // El entero se guarda sin aviso
+        $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $entero), [
+            'nombre' => 'Engorde', 'proteina_porcentaje' => 30, 'peso_bulto_kg' => 40, 'activo' => 1,
+        ])->assertSessionHas('estado', __('mensajes.concentrado.actualizado', ['nombre' => 'Engorde']));
+        $this->assertEquals(30.0, $entero->fresh()->proteina_porcentaje);
+    }
+
+    public function test_rechaza_una_proteina_que_no_esta_en_la_lista(): void
+    {
+        $existente = Concentrado::create(['nombre' => 'Engorde', 'proteina_porcentaje' => 32]);
+
+        foreach (['9', '71', '32.5', '32,5', 'abc'] as $malo) {
+            $this->actingAs($this->propietario)->post(route('admin.concentrados.store'), [
+                'nombre' => "Nuevo {$malo}", 'proteina_porcentaje' => $malo, 'peso_bulto_kg' => 40,
+            ])->assertSessionHasErrors(['proteina_porcentaje' => __('concentrados.proteina_no_valida')]);
+            $this->actingAs($this->propietario)->put(route('admin.concentrados.update', $existente), [
+                'nombre' => 'Engorde', 'proteina_porcentaje' => $malo, 'peso_bulto_kg' => 40, 'activo' => 1,
+            ])->assertSessionHasErrors(['proteina_porcentaje' => __('concentrados.proteina_no_valida')]);
+        }
+
+        $this->assertSame(1, Concentrado::count());
+        $this->assertEquals(32.0, $existente->fresh()->proteina_porcentaje);
+    }
+
+    public function test_la_proteina_del_tramo_se_elige_de_la_lista_es_opcional_y_se_redondea(): void
+    {
+        $especieId = $this->especie('mojarra roja');
+        $tramo = TablaRacion::query()->where('especie_id', $especieId)->where('peso_hasta_g', 20)->sole();
+        $tramo->update(['proteina_porcentaje' => 36.4]);
+
+        $html = $this->actingAs($this->propietario)->get(route('admin.concentrados.index'))->assertOk()->getContent();
+        $this->assertSame([__('concentrados.sin_proteina'), ...array_map(fn ($p) => "{$p} %", range(10, 70))], $this->opcionesDe($html, "tramo-prot-{$especieId}"));
+        // En la tabla, la de decimales se muestra redondeada
+        $this->assertStringContainsString('>36 %</td>', $html);
+        $this->assertStringNotContainsString('36,4 %', $html);
+
+        $tramoDatos = fn ($proteina) => ['especie_id' => $especieId, 'peso_desde_g' => 5.01, 'peso_hasta_g' => 20,
+            'porcentaje_biomasa' => 4.1, 'tomas_dia' => 4, 'proteina_porcentaje' => $proteina];
+        $guardado = __('mensajes.concentrado.tramo_guardado', ['especie' => \App\Models\Especie::query()->findOrFail($especieId)->nombre]);
+
+        // Fuera de la lista: no se guarda
+        foreach (['9', '71', '36.4', 'abc'] as $malo) {
+            $this->actingAs($this->propietario)->post(route('admin.concentrados.racion.guardar'), $tramoDatos($malo))
+                ->assertSessionHasErrors(['proteina_porcentaje' => __('concentrados.proteina_no_valida')]);
+        }
+        $this->assertEquals(36.4, $tramo->fresh()->proteina_porcentaje);
+
+        // Guardar el tramo de decimales con un entero de la lista: se avisa
+        $this->actingAs($this->propietario)->post(route('admin.concentrados.racion.guardar'), $tramoDatos('36'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', $guardado.' '.__('concentrados.proteina_redondeada', ['antes' => '36,4', 'ahora' => '36']));
+        $this->assertEquals(36.0, $tramo->fresh()->proteina_porcentaje);
+
+        // Opcional: «Sin proteína» la deja vacía, sin aviso
+        $this->actingAs($this->propietario)->post(route('admin.concentrados.racion.guardar'), $tramoDatos(''))
+            ->assertSessionHasNoErrors()->assertSessionHas('estado', $guardado);
+        $this->assertNull($tramo->fresh()->proteina_porcentaje);
+    }
+
     public function test_catalogo_de_concentrados_crear_editar_y_sincronizar_bodega(): void
     {
         // Lo que ya estaba en bodega con ese nombre queda ligado al crearlo en el catálogo, sin cambiar su texto
